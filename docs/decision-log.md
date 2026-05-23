@@ -50,3 +50,11 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Sources & Docs**: Context7 library docs for `/vercel/ai` and `/websites/ai-sdk_dev`.
 *   **Revisit When**: Model architecture shifts or multi-turn agent integrations are required.
 
+### 5. Data Retention Cleanup Engine & Active Shared Links Exemption (2026-05-23)
+*   **Decision**: Implement a database deletion utility running through `getSupabaseAdminClient` (to bypass RLS limitations), triggered manually via CLI (`scripts/retention-cleanup.ts`) or automatically via a cron REST endpoint (`/api/cron/cleanup`), applying distinct expiration thresholds. Explicitly exempt records with `is_share_enabled = true` from the 30-day purge.
+*   **Reason**: Respect user sharing intent and keep public shared links active while adhering to the privacy-committed lifetime limits for other telemetry and unshared items. Exposing a secure endpoint with a `CRON_SECRET` bearer check allows standard, serverless scheduling via Vercel Crons.
+*   **Alternatives Considered**: Cascading deletion for shared records (which would break links in 30 days) or full anonymization (wiping values of columns instead of dropping rows).
+*   **Risk & Mitigation**: Unauthorized route trigger causing data deletion. **Mitigation**: Standardized authorization checks against the server-exclusive `CRON_SECRET` environment variable and introduced a parameter-activated `dryRun` mode for safe previews.
+*   **Sources & Docs**: `docs/retention-policy.md` and standard Vercel Cron practices.
+*   **Revisit When**: Scalability demands or additional shared link features require dedicated pagination/archival states.
+

@@ -10,7 +10,11 @@ export const serverEnvSchema = z.object({
   ANONYMOUS_DAILY_LIMIT: z.coerce.number().int().positive().default(3),
   MAX_PROMPT_CHARS: z.coerce.number().int().positive().default(12000),
   MIN_PROMPT_CHARS: z.coerce.number().int().positive().default(20),
-  SENSITIVE_DATA_BLOCK_HIGH_RISK: z.coerce.boolean().default(true)
+  SENSITIVE_DATA_BLOCK_HIGH_RISK: z.coerce.boolean().default(true),
+  RETENTION_ANONYMOUS_ANALYSIS_DAYS: z.coerce.number().int().positive().default(30),
+  RETENTION_USAGE_EVENT_DAYS: z.coerce.number().int().positive().default(90),
+  RETENTION_FEEDBACK_EVENT_DAYS: z.coerce.number().int().positive().default(180),
+  CRON_SECRET: z.string().optional()
 })
 
 export const serverEnv = serverEnvSchema.parse(process.env)

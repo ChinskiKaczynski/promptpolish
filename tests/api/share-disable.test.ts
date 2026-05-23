@@ -1,0 +1,117 @@
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+vi.mock('server-only', () => ({}))
+
+vi.mock('@/lib/identity/anonymous', () => ({
+  getOwnerIdFromCookies: vi.fn()
+}))
+
+vi.mock('@/lib/supabase/queries', () => ({
+  disableShareLink: vi.fn(),
+  createUsageEvent: vi.fn()
+}))
+
+import { POST } from '@/app/api/share/disable/route'
+import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
+import { disableShareLink, createUsageEvent } from '@/lib/supabase/queries'
+
+const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
+const OWNER_ID = 'owner-anon-uuid'
+
+const makeRequest = (body: Record<string, unknown>) =>
+  new Request('http://localhost/api/share/disable', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+
+describe('POST /api/share/disable', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(getOwnerIdFromCookies).mockResolvedValue(OWNER_ID)
+    vi.mocked(disableShareLink).mockResolvedValue(true)
+    vi.mocked(createUsageEvent).mockResolvedValue(null)
+  })
+
+  describe('Validation', () => {
+    it('returns 400 when body is malformed JSON', async () => {
+      const request = new Request('http://localhost/api/share/disable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: 'not-json'
+      })
+      const response = await POST(request)
+      expect(response.status).toBe(400)
+      expect((await response.json()).error).toBe('invalid_input')
+    })
+
+    it('returns 400 when analysis_id is not a UUID', async () => {
+      const response = await POST(makeRequest({ analysis_id: 'not-a-uuid' }))
+      expect(response.status).toBe(400)
+      expect((await response.json()).error).toBe('invalid_input')
+    })
+  })
+
+  describe('Authentication', () => {
+    it('returns 401 when no anonymous session cookie is present', async () => {
+      vi.mocked(getOwnerIdFromCookies).mockResolvedValue(null)
+
+      const response = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
+      const data = await response.json()
+
+      expect(response.status).toBe(401)
+      expect(data.error).toBe('unauthorized')
+      expect(disableShareLink).not.toHaveBeenCalled()
+      expect(createUsageEvent).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('Ownership enforcement', () => {
+    it('returns 403 when caller does not own the analysis (non-owner cannot disable)', async () => {
+      // disableShareLink returns false when no owned row was updated
+      vi.mocked(disableShareLink).mockResolvedValue(false)
+
+      const response = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
+      const data = await response.json()
+
+      expect(response.status).toBe(403)
+      expect(data.error).toBe('forbidden')
+
+      // Must NOT log a share_link_disabled event for failed attempts
+      expect(createUsageEvent).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('Successful disable', () => {
+    it('disables the share link, logs share_link_disabled event, and returns success', async () => {
+      const response = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.success).toBe(true)
+
+      expect(disableShareLink).toHaveBeenCalledWith(ANALYSIS_ID, OWNER_ID)
+
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          owner_anonymous_id: OWNER_ID,
+          event_type: 'share_link_disabled',
+          metadata_json: { analysis_id: ANALYSIS_ID }
+        })
+      )
+    })
+
+    it('disabled token does not produce a subsequent valid response (disableShareLink returns false on retry)', async () => {
+      // First call: owner disables successfully
+      vi.mocked(disableShareLink).mockResolvedValueOnce(true)
+      const first = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
+      expect(first.status).toBe(200)
+
+      // Second call: token already cleared, no row matches → returns false → 403
+      vi.mocked(disableShareLink).mockResolvedValueOnce(false)
+      const second = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
+      expect(second.status).toBe(403)
+      expect((await second.json()).error).toBe('forbidden')
+    })
+  })
+})

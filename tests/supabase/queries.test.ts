@@ -255,8 +255,9 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
     })
 
     it('disables public share by setting is_share_enabled=false and clearing token', async () => {
+      // Fixed implementation: returns data with the updated row id to confirm ownership match
       mockMaybeSingle.mockResolvedValue({
-        data: null,
+        data: { id: 'analysis-uuid' },
         error: null
       })
 

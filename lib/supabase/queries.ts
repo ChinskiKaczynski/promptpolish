@@ -190,6 +190,10 @@ export async function createShareLink(
 /**
  * Disables public sharing by setting is_share_enabled = false and clearing the share token.
  * Verifies ownership first.
+ *
+ * Returns true only when a row owned by ownerAnonymousId was found and updated.
+ * Returns false for non-owners, missing records, or DB errors — preventing
+ * a silent false-success when the WHERE clause matches 0 rows.
  */
 export async function disableShareLink(
   analysisId: string,
@@ -197,7 +201,7 @@ export async function disableShareLink(
 ): Promise<boolean> {
   const supabase = getSupabaseServerClient() as any
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('prompt_analyses')
     .update({
       is_share_enabled: false,
@@ -205,13 +209,16 @@ export async function disableShareLink(
     })
     .eq('id', analysisId)
     .eq('owner_anonymous_id', ownerAnonymousId)
+    .select('id')
+    .maybeSingle()
 
   if (error) {
     console.error('Error disabling share link:', error)
     return false
   }
 
-  return true
+  // data is null when the WHERE clause matched 0 rows (non-owner or wrong id)
+  return data !== null
 }
 
 /**
