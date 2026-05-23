@@ -11,6 +11,7 @@ export const analysisCriterionSchema = z.object({
 })
 
 export const analysisResultSchema = z.object({
+  analysis_schema_version: z.string().min(1),
   overall_summary: z.string().min(1),
   detected_task_type: z.string().min(1),
   criteria_scores: z.array(analysisCriterionSchema).length(scoringCriteria.length),

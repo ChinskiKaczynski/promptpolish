@@ -1,4 +1,4 @@
-import type { AnalysisResult } from './schemas'
+import { type AnalysisResult, analysisSchemaVersion } from './schemas'
 import { calculateScore } from '@/lib/scoring/calculate-score'
 
 const criteria_scores: AnalysisResult['criteria_scores'] = [
@@ -17,6 +17,7 @@ const criteria_scores: AnalysisResult['criteria_scores'] = [
 const score = calculateScore(criteria_scores)
 
 export const mockAnalysisResult: AnalysisResult & { overallScore: number; scoreLevel: string } = {
+  analysis_schema_version: analysisSchemaVersion,
   overall_summary: 'Prompt ma dobry kierunek, ale wymaga jaśniejszego celu, formatu odpowiedzi i kryteriów jakości.',
   detected_task_type: 'general_prompt_improvement',
   criteria_scores,
