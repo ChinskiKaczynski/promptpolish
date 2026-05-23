@@ -51,11 +51,17 @@ vi.mock('@/lib/supabase/billing', () => ({
 
 vi.mock('@/lib/supabase/queries', () => ({
   getUserProfile: vi.fn(),
-  createUserProfile: vi.fn()
+  createUserProfile: vi.fn(),
+  createUsageEvent: vi.fn()
 }))
 
 vi.mock('@/lib/identity/auth', () => ({
   getAuthUser: vi.fn()
+}))
+
+vi.mock('@/lib/identity/anonymous', () => ({
+  getOwnerIdFromCookies: vi.fn(() => Promise.resolve('mock-owner-id')),
+  resolveOrCreateOwnerId: vi.fn(() => Promise.resolve({ id: 'mock-owner-id' }))
 }))
 
 import { POST as checkoutHandler } from '@/app/api/billing/checkout/route'

@@ -18,6 +18,11 @@ export interface AnalyzePromptParams {
 export type AnalysisServiceResult = {
   analysis: AnalysisResult
   scores: CalculatedScore
+  usage?: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  }
 }
 
 /**
@@ -61,16 +66,17 @@ export async function analyzePrompt(
   })
 
   // 3. Execute low-level AI structured generation
-  const rawResult = await executeGeminiAnalysis(systemInstruction, userPrompt, options)
+  const response = await executeGeminiAnalysis(systemInstruction, userPrompt, options)
 
   // 4. Perform strict semantic validation (Zod & custom constraints)
-  const validatedResult = validateAnalysisResult(rawResult)
+  const validatedResult = validateAnalysisResult(response.output)
 
   // 5. Compute mathematical score breakdown
   const scores = calculateScore(validatedResult.criteria_scores)
 
   return {
     analysis: validatedResult,
-    scores
+    scores,
+    usage: response.usage
   }
 }

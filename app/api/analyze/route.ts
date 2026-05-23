@@ -13,6 +13,7 @@ import {
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
+import { recordProviderError } from '@/lib/monitoring/observability'
 import { serverEnv, checkProductionEnv } from '@/lib/env/server'
 import { hashValue } from '@/lib/rate-limit/hash-ip'
 import { PLAN_LIMITS, canAnalyzePrompt } from '@/lib/plans/config'
@@ -30,6 +31,9 @@ const analyzeRequestSchema = z.object({
 })
 
 export async function POST(request: Request) {
+  let selectedProfileSlug: string | undefined
+  let workingLanguage: 'pl' | 'en' | undefined
+
   try {
     // 0. Ensure production environment is correctly configured
     const envCheck = checkProductionEnv()
@@ -67,6 +71,9 @@ export async function POST(request: Request) {
       expected_output_format,
       constraints
     } = parsed.data
+
+    selectedProfileSlug = selected_profile_slug
+    workingLanguage = working_language
 
     // 2. Resolve owner_anonymous_id and authenticated user server-side (do not trust request body)
     const { id: ownerAnonymousId } = await resolveOrCreateOwnerId()
@@ -262,6 +269,11 @@ export async function POST(request: Request) {
     }
 
     // 14. Save successful usage_event record
+    const promptTokens = analysisResult.usage?.promptTokens || 0
+    const completionTokens = analysisResult.usage?.completionTokens || 0
+    const totalTokens = analysisResult.usage?.totalTokens || 0
+    const calculatedCost = (promptTokens * 0.075 + completionTokens * 0.30) / 1000000
+
     await createUsageEvent({
       owner_anonymous_id: ownerAnonymousId,
       user_id: userId,
@@ -269,7 +281,33 @@ export async function POST(request: Request) {
       metadata_json: {
         analysis_id: createdRecord.id,
         selected_profile_slug,
-        working_language
+        working_language,
+        token_usage: analysisResult.usage ? {
+          prompt_tokens: promptTokens,
+          completion_tokens: completionTokens,
+          total_tokens: totalTokens
+        } : null,
+        cost_estimate: analysisResult.usage ? calculatedCost : null
+      },
+      ip_hash: ipHash,
+      user_agent_hash: userAgentHash
+    })
+
+    // 14a. Save analysis_completed usage_event record
+    await createUsageEvent({
+      owner_anonymous_id: ownerAnonymousId,
+      user_id: userId,
+      event_type: 'analysis_completed',
+      metadata_json: {
+        analysis_id: createdRecord.id,
+        selected_profile_slug,
+        working_language,
+        token_usage: analysisResult.usage ? {
+          prompt_tokens: promptTokens,
+          completion_tokens: completionTokens,
+          total_tokens: totalTokens
+        } : null,
+        cost_estimate: analysisResult.usage ? calculatedCost : null
       },
       ip_hash: ipHash,
       user_agent_hash: userAgentHash
@@ -288,6 +326,12 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
+    // Invoke provider error monitoring hook
+    recordProviderError(error, {
+      selected_profile_slug: selectedProfileSlug,
+      working_language: workingLanguage
+    })
+
     // Graceful error boundaries and standardized provider error recovery
     if (error instanceof ProviderError) {
       const isTransient = error.statusCode === 429 || error.statusCode === 503

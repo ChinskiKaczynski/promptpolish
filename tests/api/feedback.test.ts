@@ -8,7 +8,8 @@ vi.mock('@/lib/identity/anonymous', () => ({
 
 vi.mock('@/lib/supabase/queries', () => ({
   getPromptAnalysisForOwner: vi.fn(),
-  createFeedbackEvent: vi.fn()
+  createFeedbackEvent: vi.fn(),
+  createUsageEvent: vi.fn()
 }))
 
 import { POST } from '@/app/api/feedback/route'

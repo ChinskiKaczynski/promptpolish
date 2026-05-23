@@ -3,7 +3,8 @@ import { z } from 'zod'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import {
   getPromptAnalysisForOwner,
-  createFeedbackEvent
+  createFeedbackEvent,
+  createUsageEvent
 } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
 
@@ -99,6 +100,18 @@ export async function POST(request: Request) {
         { status: 500 }
       )
     }
+
+    // Telemetry: record feedback_submitted event
+    await createUsageEvent({
+      owner_anonymous_id: ownerAnonymousId,
+      user_id: ownedRecord.user_id,
+      event_type: 'feedback_submitted',
+      metadata_json: {
+        analysis_id,
+        rating,
+        feedback_id: saved.id
+      }
+    })
 
     return NextResponse.json({ success: true })
 

@@ -20,13 +20,30 @@ import { checkProductionEnv } from '@/lib/env/server'
  * - owner_anonymous_id is resolved from the signed server-side cookie.
  */
 
-const ALLOWED_EVENT_TYPES = ['copy_improved_prompt', 'export_markdown', 'export_pdf'] as const
+const ALLOWED_EVENT_TYPES = [
+  'signup_started',
+  'signup_completed',
+  'checkout_started',
+  'checkout_completed',
+  'checkout_failed',
+  'subscription_activated',
+  'subscription_canceled',
+  'subscription_past_due',
+  'customer_portal_opened',
+  'upgrade_cta_clicked',
+  'limit_reached',
+  'export_markdown',
+  'export_pdf',
+  'analysis_completed',
+  'copy_improved_prompt',
+  'feedback_submitted'
+] as const
 
 const eventSchema = z.object({
   event_type: z.enum(ALLOWED_EVENT_TYPES, {
     message: `event_type must be one of: ${ALLOWED_EVENT_TYPES.join(', ')}`
   }),
-  analysis_id: z.string().uuid('analysis_id must be a valid UUID')
+  analysis_id: z.string().uuid('analysis_id must be a valid UUID').optional()
 })
 
 export async function POST(request: Request) {
@@ -75,7 +92,7 @@ export async function POST(request: Request) {
     await createUsageEvent({
       owner_anonymous_id: ownerAnonymousId,
       event_type,
-      metadata_json: { analysis_id }
+      metadata_json: analysis_id ? { analysis_id } : {}
     })
 
     return NextResponse.json({ success: true })

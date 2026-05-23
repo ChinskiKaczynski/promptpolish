@@ -14,6 +14,13 @@ export function CheckoutButton({ lang = 'pl' }: CheckoutButtonProps) {
     setIsLoading(true)
     setError(null)
 
+    // Telemetry: upgrade_cta_clicked
+    fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: 'upgrade_cta_clicked' })
+    }).catch(() => null)
+
     try {
       const response = await fetch('/api/billing/checkout', {
         method: 'POST',

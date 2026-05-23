@@ -3,6 +3,8 @@ import Stripe from 'stripe'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getStripeCustomer } from '@/lib/supabase/billing'
 import { checkProductionEnv } from '@/lib/env/server'
+import { createUsageEvent } from '@/lib/supabase/queries'
+import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 
 export async function POST() {
   try {
@@ -69,6 +71,19 @@ export async function POST() {
 
     if (!session.url) {
       throw new Error('Stripe failed to return a valid Billing Portal redirect URL.')
+    }
+
+    // Resolve owner anonymous id for telemetry
+    const ownerAnonymousId = await getOwnerIdFromCookies()
+    if (ownerAnonymousId) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: user.id,
+        event_type: 'customer_portal_opened',
+        metadata_json: {
+          stripe_customer_id: stripeCustomerId
+        }
+      })
     }
 
     return NextResponse.json({ portalUrl: session.url })

@@ -16,8 +16,8 @@ describe('Gemini Analysis Client & Error Normalization', () => {
         { mockMode: true }
       )
       expect(result).toBeDefined()
-      expect(result.overall_summary).toContain('Prompt ma dobry kierunek')
-      expect(result.criteria_scores).toHaveLength(10)
+      expect(result.output.overall_summary).toContain('Prompt ma dobry kierunek')
+      expect(result.output.criteria_scores).toHaveLength(10)
     })
 
     it('returns custom mock response when provided in options', async () => {
@@ -30,7 +30,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
         'polished prompt',
         { mockResponse: customMock }
       )
-      expect(result.overall_summary).toBe('Custom test summary')
+      expect(result.output.overall_summary).toBe('Custom test summary')
     })
   })
 

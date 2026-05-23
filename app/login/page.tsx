@@ -38,6 +38,14 @@ export default function LoginPage() {
           }
         })
         if (error) throw error
+        
+        // Telemetry: signup_completed
+        fetch('/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event_type: 'signup_completed' })
+        }).catch(() => null)
+
         setSuccessMsg(
           'Rejestracja przebiegła pomyślnie! Sprawdź swoją skrzynkę e-mail, aby potwierdzić konto.'
         )
@@ -116,6 +124,12 @@ export default function LoginPage() {
                 setIsSignUp(true)
                 setErrorMsg(null)
                 setSuccessMsg(null)
+                // Telemetry: signup_started
+                fetch('/api/events', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ event_type: 'signup_started' })
+                }).catch(() => null)
               }}
             >
               Rejestracja

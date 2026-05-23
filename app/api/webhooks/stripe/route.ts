@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { getUserIdByStripeCustomerId, saveStripeCustomer, saveSubscription, cancelSubscriptionInDatabase } from '@/lib/supabase/billing'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
+import { recordStripeWebhookFailure } from '@/lib/monitoring/observability'
+import { createUsageEvent } from '@/lib/supabase/queries'
 
 
 export async function POST(request: Request) {
@@ -31,6 +33,7 @@ export async function POST(request: Request) {
   try {
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
   } catch (err) {
+    recordStripeWebhookFailure('signature_verification', err)
     const errorMessage = err instanceof Error ? err.message : String(err)
     console.error(`Webhook signature verification failed: ${errorMessage}`)
     return new NextResponse('Webhook signature verification failed', { status: 400 })
@@ -100,6 +103,40 @@ export async function POST(request: Request) {
           cancel_at_period_end: subscription.cancel_at_period_end
         })
 
+        // Telemetry: Log subscription/checkout success states
+        if (subscription.status === 'active') {
+          await createUsageEvent({
+            owner_anonymous_id: 'stripe_webhook',
+            user_id: userId,
+            event_type: 'subscription_activated',
+            metadata_json: {
+              stripe_subscription_id: stripeSubscriptionId,
+              stripe_customer_id: stripeCustomerId,
+              price_id: stripePriceId,
+              plan_slug: planSlug
+            }
+          })
+          await createUsageEvent({
+            owner_anonymous_id: 'stripe_webhook',
+            user_id: userId,
+            event_type: 'checkout_completed',
+            metadata_json: {
+              stripe_subscription_id: stripeSubscriptionId,
+              stripe_customer_id: stripeCustomerId
+            }
+          })
+        } else if (subscription.status === 'past_due') {
+          await createUsageEvent({
+            owner_anonymous_id: 'stripe_webhook',
+            user_id: userId,
+            event_type: 'subscription_past_due',
+            metadata_json: {
+              stripe_subscription_id: stripeSubscriptionId,
+              stripe_customer_id: stripeCustomerId
+            }
+          })
+        }
+
         console.log(`Successfully synced subscription status ${subscription.status} for user_id ${userId}`)
         break
       }
@@ -107,9 +144,43 @@ export async function POST(request: Request) {
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription
         const stripeSubscriptionId = subscription.id
+        const stripeCustomerId = subscription.customer as string
+
+        const userId = await getUserIdByStripeCustomerId(stripeCustomerId)
 
         await cancelSubscriptionInDatabase(stripeSubscriptionId)
         console.log(`Successfully processed deleted subscription: ${stripeSubscriptionId}`)
+
+        // Telemetry: Log subscription_canceled event
+        await createUsageEvent({
+          owner_anonymous_id: 'stripe_webhook',
+          user_id: userId || null,
+          event_type: 'subscription_canceled',
+          metadata_json: {
+            stripe_subscription_id: stripeSubscriptionId,
+            stripe_customer_id: stripeCustomerId
+          }
+        })
+        break
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice
+        const stripeCustomerId = invoice.customer as string
+        const userId = await getUserIdByStripeCustomerId(stripeCustomerId)
+
+        // Telemetry: Log checkout_failed event
+        await createUsageEvent({
+          owner_anonymous_id: 'stripe_webhook',
+          user_id: userId || null,
+          event_type: 'checkout_failed',
+          metadata_json: {
+            invoice_id: invoice.id,
+            stripe_customer_id: stripeCustomerId,
+            amount_due: invoice.amount_due,
+            failure_reason: invoice.billing_reason
+          }
+        })
         break
       }
 
@@ -123,6 +194,7 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
+    recordStripeWebhookFailure(eventType, error)
     console.error(`Error processing webhook event (${eventType}):`, error)
     return new NextResponse('Webhook processing error', { status: 500 })
   }
