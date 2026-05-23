@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
 import { PLAN_LIMITS } from '@/lib/plans/config'
-import { WaitlistForm } from '@/components/pricing/waitlist-form'
 import { CheckoutButton } from '@/components/pricing/checkout-button'
 
 export default async function PricingPage() {
