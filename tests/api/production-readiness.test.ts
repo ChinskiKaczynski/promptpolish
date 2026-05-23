@@ -49,6 +49,9 @@ describe('Production Readiness Env Safeguards', () => {
     process.env.SUPABASE_SECRET_KEY = 'test-secret'
     process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co'
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-pub-key'
+    process.env.STRIPE_SECRET_KEY = 'sk_test_key'
+    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_key'
+    process.env.STRIPE_PRICE_ID_PRO = 'price_pro'
 
     const result = checkProductionEnv()
     expect(result.valid).toBe(true)

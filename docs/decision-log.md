@@ -66,4 +66,13 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Sources & Docs**: `docs/paid-readiness-report.md` and `paid-saas-roadmap_v1.1.md`.
 *   **Revisit When**: Upon completing 50–100 real anonymous analyses and verifying a positive copy rate (>30%) and repeat usage signals.
 
+### 7. Stripe Billing & Subscription Plan Implementation Decision (2026-05-24)
+*   **Decision**: Standardize on a single, monthly "Pro" subscription plan priced in USD without a free trial, utilizing Stripe Checkout and Customer Portal, mapped to a custom server-side plan entitlement layer and synced asynchronously via Stripe webhooks.
+*   **Reason**: Minimizes technical proration overhead and database layout complexity. Eliminates fraud and trial abuse by relying on the robust, anonymous free tier as a permanent, zero-friction trial. Ensures security by verifying entitlements strictly on the server side and isolating Stripe secrets from client bundles.
+*   **Alternatives Considered**: Credit packages (rejected due to user transactional friction), dual monthly/annual billing (rejected for launch velocity), and a 7-day credit-card-required trial (rejected to prevent check-out abandonment).
+*   **Risk & Mitigation**: Webhook timeouts (mitigated by quick DB writes and immediate 200 OK responses within 3 seconds), Vercel serverless request constraints (mitigated by parsing the raw body via `req.text()` for signature checks), and legal/VAT compliance (mitigated by proposing Stripe Tax and deferring production rollout until formal legal/tax reviews are complete).
+*   **Sources & Docs**: `docs/billing-decision.md`, Context7 documentation for `/websites/stripe`, `/supabase/supabase`, `/websites/vercel`.
+*   **Revisit When**: Upon successful integration of Supabase Auth (Stage 1 of SaaS Roadmap) and acquisition of stable premium waitlist telemetry.
+
+
 

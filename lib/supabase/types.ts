@@ -92,6 +92,28 @@ export interface UserProfileRow {
   updated_at: string
 }
 
+export interface StripeCustomerRow {
+  user_id: string
+  stripe_customer_id: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SubscriptionRow {
+  id: string
+  user_id: string
+  stripe_customer_id: string
+  stripe_subscription_id: string
+  stripe_price_id: string
+  plan_slug: string
+  status: string
+  current_period_start: string
+  current_period_end: string
+  cancel_at_period_end: boolean
+  created_at: string
+  updated_at: string
+}
+
 // ─── Supabase Database Generic Type ─────────────────────────────────────────
 // Row types use Record<string, unknown> to satisfy GenericTable's structural
 // constraint required by SupabaseClient<Database> type inference.
@@ -277,6 +299,54 @@ export interface Database {
         }
         Relationships: []
       }
+      stripe_customers: {
+        Row: Record<string, unknown>
+        Insert: {
+          user_id: string
+          stripe_customer_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          stripe_customer_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: Record<string, unknown>
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          stripe_price_id: string
+          plan_slug: string
+          status: string
+          current_period_start: string
+          current_period_end: string
+          cancel_at_period_end?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
+          stripe_price_id?: string
+          plan_slug?: string
+          status?: string
+          current_period_start?: string
+          current_period_end?: string
+          cancel_at_period_end?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -290,3 +360,5 @@ export type PromptAnalysisInsert = Database['public']['Tables']['prompt_analyses
 export type UsageEventInsert = Database['public']['Tables']['usage_events']['Insert']
 export type FeedbackEventInsert = Database['public']['Tables']['feedback_events']['Insert']
 export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert']
+export type StripeCustomerInsert = Database['public']['Tables']['stripe_customers']['Insert']
+export type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert']

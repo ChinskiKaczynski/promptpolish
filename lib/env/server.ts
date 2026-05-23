@@ -15,7 +15,11 @@ export const serverEnvSchema = z.object({
   RETENTION_ANONYMOUS_ANALYSIS_DAYS: z.coerce.number().int().positive().default(30),
   RETENTION_USAGE_EVENT_DAYS: z.coerce.number().int().positive().default(90),
   RETENTION_FEEDBACK_EVENT_DAYS: z.coerce.number().int().positive().default(180),
-  CRON_SECRET: z.string().optional()
+  CRON_SECRET: z.string().optional(),
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_ID_PRO: z.string().optional(),
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional()
 })
 
 export const serverEnv = serverEnvSchema.parse(process.env)
@@ -40,6 +44,15 @@ export function checkProductionEnv() {
     }
     if (!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
       missing.push('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
+    }
+    if (!process.env.STRIPE_SECRET_KEY) {
+      missing.push('STRIPE_SECRET_KEY')
+    }
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      missing.push('STRIPE_WEBHOOK_SECRET')
+    }
+    if (!process.env.STRIPE_PRICE_ID_PRO) {
+      missing.push('STRIPE_PRICE_ID_PRO')
     }
 
     if (missing.length > 0) {
