@@ -5,6 +5,7 @@ import {
   getPromptAnalysisForOwner,
   createFeedbackEvent
 } from '@/lib/supabase/queries'
+import { checkProductionEnv } from '@/lib/env/server'
 
 /**
  * POST /api/feedback
@@ -30,6 +31,17 @@ const feedbackSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const envCheck = checkProductionEnv()
+    if (!envCheck.valid) {
+      return NextResponse.json(
+        {
+          error: 'configuration_error',
+          message: envCheck.error
+        },
+        { status: 500 }
+      )
+    }
+
     // 1. Parse and validate request body
     const body = await request.json().catch(() => null)
     const parsed = feedbackSchema.safeParse(body)

@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /result/
+Disallow: /api/
+Allow: /
+
+# Host
+Host: http://localhost:3000

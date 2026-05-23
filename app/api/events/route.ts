@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { createUsageEvent } from '@/lib/supabase/queries'
+import { checkProductionEnv } from '@/lib/env/server'
 
 /**
  * POST /api/events
@@ -30,6 +31,17 @@ const eventSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const envCheck = checkProductionEnv()
+    if (!envCheck.valid) {
+      return NextResponse.json(
+        {
+          error: 'configuration_error',
+          message: envCheck.error
+        },
+        { status: 500 }
+      )
+    }
+
     // 1. Parse and validate
     const body = await request.json().catch(() => null)
     const parsed = eventSchema.safeParse(body)

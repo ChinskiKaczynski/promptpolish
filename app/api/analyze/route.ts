@@ -9,7 +9,7 @@ import {
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
-import { serverEnv } from '@/lib/env/server'
+import { serverEnv, checkProductionEnv } from '@/lib/env/server'
 import { checkAnonymousLimit } from '@/lib/rate-limit/check-limit'
 import { hashValue } from '@/lib/rate-limit/hash-ip'
 
@@ -26,6 +26,18 @@ const analyzeRequestSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    // 0. Ensure production environment is correctly configured
+    const envCheck = checkProductionEnv()
+    if (!envCheck.valid) {
+      return NextResponse.json(
+        {
+          error: 'configuration_error',
+          message: envCheck.error
+        },
+        { status: 500 }
+      )
+    }
+
     // 1. Validate request syntax and structure with Zod
     const body = await request.json().catch(() => null)
     const parsed = analyzeRequestSchema.safeParse(body)

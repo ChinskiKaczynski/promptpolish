@@ -19,9 +19,11 @@
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "server-only": "^0.0.1",
     "zod": "latest"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
@@ -31,7 +33,6 @@
     "postcss": "latest",
     "tailwindcss": "^3.4.17",
     "typescript": "latest",
-    "vitest": "latest",
-    "@eslint/eslintrc": "latest"
+    "vitest": "latest"
   }
 }

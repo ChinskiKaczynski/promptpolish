@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { createShareLink, createUsageEvent } from '@/lib/supabase/queries'
+import { checkProductionEnv } from '@/lib/env/server'
 
 const shareRequestSchema = z.object({
   analysis_id: z.string().uuid()
@@ -9,6 +10,17 @@ const shareRequestSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const envCheck = checkProductionEnv()
+    if (!envCheck.valid) {
+      return NextResponse.json(
+        {
+          error: 'configuration_error',
+          message: envCheck.error
+        },
+        { status: 500 }
+      )
+    }
+
     const body = await request.json().catch(() => null)
     const parsed = shareRequestSchema.safeParse(body)
 

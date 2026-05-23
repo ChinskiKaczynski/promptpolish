@@ -1,3 +1,4 @@
+import 'server-only'
 import { z } from 'zod'
 
 export const serverEnvSchema = z.object({
@@ -18,3 +19,36 @@ export const serverEnvSchema = z.object({
 })
 
 export const serverEnv = serverEnvSchema.parse(process.env)
+
+/**
+ * Checks if all critical environment variables required for production are present.
+ * This runs at request-time (or within page loads) to ensure Next.js builds can
+ * succeed without production credentials being forced, while safely failing
+ * live requests if they are missing in production.
+ */
+export function checkProductionEnv() {
+  if (process.env.NODE_ENV === 'production') {
+    const missing: string[] = []
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      missing.push('GOOGLE_GENERATIVE_AI_API_KEY')
+    }
+    if (!process.env.SUPABASE_SECRET_KEY) {
+      missing.push('SUPABASE_SECRET_KEY')
+    }
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      missing.push('NEXT_PUBLIC_SUPABASE_URL')
+    }
+    if (!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
+      missing.push('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
+    }
+
+    if (missing.length > 0) {
+      return {
+        valid: false,
+        error: `Błąd konfiguracji serwera: brak wymaganych zmiennych środowiskowych w trybie produkcyjnym.`,
+        missing
+      }
+    }
+  }
+  return { valid: true, missing: [] }
+}
