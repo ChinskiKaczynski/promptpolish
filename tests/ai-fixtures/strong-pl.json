@@ -1,0 +1,122 @@
+[
+  {
+    "id": "strong-pl-01",
+    "input_prompt": "Jesteś doświadczonym copywriterem e-commerce. Stwórz perswazyjny opis produktu dla ergonomicznego fotela biurowego 'AeroFlex' przeznaczonego dla programistów pracujących zdalnie. Kontekst: fotel posiada regulację 3D podłokietników, podparcie lędźwiowe i siatkę przepuszczającą powietrze. Format wyjściowy: 1. Chwytliwy nagłówek (maks. 10 słów), 2. Krótki akapit wprowadzający, 3. Lista 4 kluczowych zalet w formie wypunktowania z ikonami, 4. Wezwanie do działania (CTA). Ograniczenia: unikaj pustych frazesów marketingowych, skup się na zdrowiu kręgosłupa i ergonomii, długość opisu 150-200 słów.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [80, 100],
+    "expected_strengths": ["rola copywritera e-commerce", "pełny kontekst produktu", "strukturalny format wyjściowy", "szczegółowe ograniczenia długości"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Wzorcowy prompt marketingowy w języku polskim. Posiada wszystkie cztery filary inżynierii promptów."
+  },
+  {
+    "id": "strong-pl-02",
+    "input_prompt": "Działasz jako starszy programista i architekt systemów Python. Twoim zadaniem jest przeprowadzenie refaktoryzacji poniższej funkcji pod kątem czytelności, wydajności oraz zgodności z PEP 8. Oto kod do analizy:\n```python\ndef f(l):\n  r = []\n  for i in l:\n    if i % 2 == 0:\n      r.append(i * 2)\n  return r\n```\nFormat odpowiedzi: 1. Ulepszona funkcja w bloku kodu z jawnym typowaniem, 2. Lista 3 głównych zmian wraz z uzasadnieniem technicznym, 3. Krótka informacja o złożoności obliczeniowej (Big O). Ograniczenia: nie używaj zewnętrznych bibliotek, zachowaj oryginalną logikę biznesową.",
+    "working_language": "pl",
+    "profile_slug": "google-gemini-3-5-flash",
+    "expected_score_range": [85, 100],
+    "expected_strengths": ["rola architekta systemów", "wklejony kod wejściowy", "wymagania PEP 8", "czysty format wyjściowy"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Strong PL coding prompt. Clearly presents source code block, formatting constraints, and output requirements."
+  },
+  {
+    "id": "strong-pl-03",
+    "input_prompt": "Jesteś ekspertem SEO i content managerem. Napisz zoptymalizowany pod kątem wyszukiwarek artykuł na bloga na temat 'Jak zacząć oszczędzać na emeryturę przed trzydziestką'. Grupa docelowa: młodzi dorośli (20-29 lat) w Polsce, zarabiający średnią krajową. Słowa kluczowe do użycia: 'oszczędzanie na emeryturę', 'IKE i IKZE', 'inwestowanie dla początkujących'. Format: 1. Tytuł zoptymalizowany pod H1, 2. Spis treści, 3. 3 sekcje tematyczne (nagłówki H2), 4. Podsumowanie z checklistą w tabeli Markdown. Ograniczenia: długość 800-1000 słów, ton profesjonalny ale przystępny, unikaj skomplikowanego żargonu finansowego.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [80, 98],
+    "expected_strengths": ["rola eksperta SEO", "docelowa grupa wiekowa", "lista słów kluczowych", "struktura nagłówków HTML/Markdown"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Strong Polish SEO content prompt. Excellent keyword guidance and structural specifications."
+  },
+  {
+    "id": "strong-pl-04",
+    "input_prompt": "Jesteś specjalistą ds. obsługi klienta w sklepie internetowym z elektroniką. Napisz szablon odpowiedzi e-mail do klienta, którego zamówienie (smartfon za 3000 zł) opóźni się o 5 dni roboczych z powodu braku towaru w magazynie centralnym. Cel: załagodzenie sytuacji i utrzymanie zaufania klienta. Format maila: 1. Jasny temat wiadomości, 2. Przeprosiny z podaniem przyczyny, 3. Informacja o nowym terminie dostawy (28 maja 2026), 4. Propozycja rekompensaty (kod rabatowy 10% na kolejne zakupy), 5. Profesjonalne podpisanie. Ton: empatyczny, profesjonalny, oficjalny.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [80, 98],
+    "expected_strengths": ["rola specjalisty supportu", "konkretna przyczyna i cena towaru", "propozycja rekompensaty", "jasno zdefiniowany ton"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Strong PL support response email template instruction set."
+  },
+  {
+    "id": "strong-pl-05",
+    "input_prompt": "Jesteś analitykiem prawnym. Przygotuj streszczenie menedżerskie poniższego wyciągu z umowy najmu lokalu komercyjnego. Kontekst: skup się wyłącznie na obowiązkach najemcy, terminach płatności kar umownych oraz procedurze wypowiedzenia. Oto tekst umowy:\n[Sekcja 12: Wypowiedzenie najmu wymaga 3-miesięcznego okresu wypowiedzenia ze skutkiem na koniec miesiąca kalendarzowego. W przypadku zwłoki z zapłatą czynszu przekraczającej 14 dni, Wynajmujący ma prawo rozwiązać umowę bez zachowania okresu wypowiedzenia po uprzednim pisemnym wezwaniu z dodatkowym 7-dniowym terminem.]\nFormat wyjściowy: lista wypunktowana 3 kluczowych ryzyk dla najemcy oraz tabela Markdown podsumowująca terminy. Ograniczenia: maksymalnie 150 słów, zachowaj ścisłą terminologię prawną.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [80, 99],
+    "expected_strengths": ["rola analityka prawnego", "wyciąg tekstowy z umowy", "skupienie na kluczowych elementach ryzyk", "tabela Markdown w formacie"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Strong legal summary prompt. Restricts scope to specific risk vectors and forces strict compliance."
+  },
+  {
+    "id": "strong-pl-06",
+    "input_prompt": "Działasz jako doświadczony technical writer. Dokonaj edycji i uproszczenia poniższego akapitu dokumentacji technicznej API dla integratorów płatności. Cel: usunięcie pasywnej strony, poprawa przejrzystości, sformatowanie kroków jako numerowanej listy. Tekst:\n[W celu zainicjowania transakcji płatniczej przez integratora, żądanie POST musi zostać wysłane na endpoint /v1/charge, do którego załączony musi zostać nagłówek autoryzacyjny oraz poprawny JSON zawierający kwotę i walutę.]\nFormat wyjściowy: 1. Poprawiony akapit, 2. Krok po kroku lista wymagań technicznych, 3. Przykładowe nagłówki HTTP w bloku kodu.",
+    "working_language": "pl",
+    "profile_slug": "google-gemini-3-5-flash",
+    "expected_score_range": [80, 97],
+    "expected_strengths": ["rola technical writera", "konkretny tekst źródłowy", "wymóg usunięcia strony biernej", "blok kodu dla nagłówków HTTP"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Strong editing prompt for technical writer profile. Good use of input transformations."
+  },
+  {
+    "id": "strong-pl-07",
+    "input_prompt": "Jesteś ekspertem ds. baz danych PostgreSQL. Zoptymalizuj poniższe zapytanie SQL, które wykonuje się zbyt wolno na tabeli z milionem rekordów. Zapytanie:\n```sql\nSELECT * FROM orders WHERE status = 'completed' AND EXTRACT(YEAR FROM created_at) = 2025;\n```\nFormat odpowiedzi: 1. Zoptymalizowane zapytanie SQL, 2. Rekomendacja dotycząca utworzenia indeksu (DDL) wraz z wyjaśnieniem, dlaczego funkcja EXTRACT uniemożliwiała użycie zwykłego indeksu, 3. Alternatywne podejście (np. filtrowanie zakresów dat). Ograniczenia: zapytanie musi być zgodne z PostgreSQL 15, unikaj używania niestandardowych rozszerzeń.",
+    "working_language": "pl",
+    "profile_slug": "google-gemini-3-5-flash",
+    "expected_score_range": [85, 100],
+    "expected_strengths": ["rola database administratora", "wklejona linijka zapytania", "wyjaśnienie problemu z indeksowaniem", "zgodność z wersją PG 15"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Excellent database optimization prompt. Covers engine versions, index strategies, and ranges."
+  },
+  {
+    "id": "strong-pl-08",
+    "input_prompt": "Jesteś licencjonowanym dietetykiem i trenerem personalnym. Przygotuj 1-dniowy przykładowy jadłospis redukcyjny oraz krótki zestaw ćwiczeń domowych dla 35-letniego mężczyzny pracującego przy biurku. Dane: waga 90 kg, wzrost 180 cm, cel: redukcja wagi, brak kontuzji, dostępny sprzęt: 2 hantle po 5 kg. Wymagania kaloryczne: 2000 kcal, wysoka zawartość białka (min. 130g). Format wyjściowy: 1. Tabela Markdown z 4 posiłkami (składniki, kalorie, makroskładniki), 2. Opis 3 ćwiczeń siłowych (seria, powtórzenia, technika), 3. Wskazówki dotyczące nawodnienia.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [80, 97],
+    "expected_strengths": ["rola dietetyka", "szczegółowe dane antropometryczne", "ograniczenia kaloryczne i makro", "tabela posiłków w tabeli Markdown"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Strong customized fitness/diet plan prompt. Highly detailed inputs and constraints."
+  },
+  {
+    "id": "strong-pl-09",
+    "input_prompt": "Jesteś projektantem UX i specjalistą ds. mikrocopy. Napisz 3 alternatywne wersje tekstu na przycisk finalizacji zakupu oraz powiązany komunikat błędu płatności w koszyku e-commerce. Kontekst: koszyk jest minimalistyczny, zależy nam na zmniejszeniu wskaźnika porzuceń koszyka o 5%. Wersje mają reprezentować style: 1. Standardowy/Jasny, 2. Aktywny/Zorientowany na korzyść (benefit-oriented), 3. Krótki/Minimalistyczny. Format wyjściowy: tabela Markdown porównująca alternatywy pod kątem tekstu na przycisku i opisu błędu.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [80, 96],
+    "expected_strengths": ["rola projektanta UX", "kontekst porzucania koszyka", "trzy style komunikacji", "porównanie w tabeli Markdown"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Strong UX copywriting prompt focusing on specific styles and metrics."
+  },
+  {
+    "id": "strong-pl-10",
+    "input_prompt": "Działasz jako senior product owner. Przygotuj kompletną User Story oraz kryteria akceptacji (Acceptance Criteria) dla funkcji 'Integracja logowania przez Google' w aplikacji mobilnej. Format wyjściowy: 1. Szablon: Jako [rola], chcę [funkcja], aby [korzyść], 2. Kryteria akceptacji w formacie Given-When-Then (min. 3 scenariusze: sukces logowania, anulowanie przez użytkownika, błąd sieci), 3. Uwagi techniczne dotyczące bezpieczeństwa tokenów OAuth 2.0. Ograniczenia: ton formalny, struktura zgodna ze standardami zwinnego Agile.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [82, 100],
+    "expected_strengths": ["rola product ownera", "szablon Agile User Story", "Acceptance Criteria w formacie Gherkin GWT", "wymagania bezpieczeństwa OAuth 2.0"],
+    "expected_weaknesses": [],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Excellent software analysis prompt. Very clear agile specification syntax."
+  }
+]

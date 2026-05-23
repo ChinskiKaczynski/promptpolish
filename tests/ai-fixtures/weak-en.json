@@ -1,0 +1,122 @@
+[
+  {
+    "id": "weak-en-01",
+    "input_prompt": "Write a product description for a lamp.",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_score_range": [10, 35],
+    "expected_strengths": [],
+    "expected_weaknesses": ["missing role", "missing context", "missing output format", "missing constraints"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Extremely vague product description. Should score very low across all categories."
+  },
+  {
+    "id": "weak-en-02",
+    "input_prompt": "Write a Facebook post about our shoes.",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_score_range": [15, 38],
+    "expected_strengths": [],
+    "expected_weaknesses": ["missing audience", "missing CTA", "missing footwear features", "missing tone"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Vague marketing request lacking details on the shoes and call to action."
+  },
+  {
+    "id": "weak-en-03",
+    "input_prompt": "Translate this text to Spanish: 'Hello, how are you today?'",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_score_range": [20, 39],
+    "expected_strengths": ["clear goal"],
+    "expected_weaknesses": ["missing tone register", "missing context of usage", "missing layout guidance"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Translation is clear but lacks formality constraints or regional settings."
+  },
+  {
+    "id": "weak-en-04",
+    "input_prompt": "Write Python code to sort a list.",
+    "working_language": "en",
+    "profile_slug": "google-gemini-3-5-flash",
+    "expected_score_range": [15, 38],
+    "expected_strengths": [],
+    "expected_weaknesses": ["missing algorithm preference", "missing sample data", "missing complexity requirements"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Vague programming request lacking algorithm type and documentation constraints."
+  },
+  {
+    "id": "weak-en-05",
+    "input_prompt": "Summarize this article quickly.",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_score_range": [10, 35],
+    "expected_strengths": [],
+    "expected_weaknesses": ["missing article text", "vague definition of quickly", "missing output format"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Missing source text and length constraints."
+  },
+  {
+    "id": "weak-en-06",
+    "input_prompt": "Prepare interview questions for a developer.",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_score_range": [15, 39],
+    "expected_strengths": [],
+    "expected_weaknesses": ["missing tech stack", "missing experience level", "missing count of questions"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Vague recruiting prompt missing engineering stack and experience level."
+  },
+  {
+    "id": "weak-en-07",
+    "input_prompt": "Write an email to a client saying their package is late.",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_score_range": [20, 39],
+    "expected_strengths": ["clear task"],
+    "expected_weaknesses": ["missing reason for delay", "missing tone constraints", "missing compensation details"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Vague email generation prompt lacking basic parameters and tone guidelines."
+  },
+  {
+    "id": "weak-en-08",
+    "input_prompt": "Give me a recipe for dinner with chicken.",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_score_range": [15, 39],
+    "expected_strengths": [],
+    "expected_weaknesses": ["missing dietary restrictions", "missing preparation time", "missing available ingredients"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Recipe request missing difficulty, cooking style, and prep duration constraints."
+  },
+  {
+    "id": "weak-en-09",
+    "input_prompt": "Create a workout plan.",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_score_range": [10, 30],
+    "expected_strengths": [],
+    "expected_weaknesses": ["missing fitness goal", "missing experience level", "missing equipment constraints"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Workout request missing target age, gym equipment accessibility, and injury constraints."
+  },
+  {
+    "id": "weak-en-10",
+    "input_prompt": "Write a blog post about travel.",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_score_range": [10, 35],
+    "expected_strengths": [],
+    "expected_weaknesses": ["missing travel destination", "missing article length", "missing SEO keywords"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Generic travel writing prompt missing focus keywords and targeted location."
+  }
+]

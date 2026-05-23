@@ -1,0 +1,122 @@
+[
+  {
+    "id": "weak-pl-01",
+    "input_prompt": "Napisz opis produktu dla lampy.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [10, 35],
+    "expected_strengths": [],
+    "expected_weaknesses": ["brak zdefiniowanej roli", "brak kontekstu", "brak formatu wyjściowego", "brak ograniczeń"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Bardzo krótki i ogólny prompt. Powinien otrzymać niską ocenę za brak jakiejkolwiek struktury."
+  },
+  {
+    "id": "weak-pl-02",
+    "input_prompt": "Napisz post na Facebooka o naszych butach.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [15, 38],
+    "expected_strengths": [],
+    "expected_weaknesses": ["brak grupy docelowej", "brak CTA", "brak cech butów", "brak tonu wypowiedzi"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Vague marketing prompt. Lack of target audience and footwear features yields low score."
+  },
+  {
+    "id": "weak-pl-03",
+    "input_prompt": "Przetłumacz ten tekst na angielski: 'Cześć, jak się masz dzisiaj?'",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [20, 39],
+    "expected_strengths": ["posiada jasny cel"],
+    "expected_weaknesses": ["brak tonu tłumaczenia", "brak kontekstu użycia", "brak wskazówek dotyczących formatu"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Translation request is simple but lacks details on registers (formal/informal)."
+  },
+  {
+    "id": "weak-pl-04",
+    "input_prompt": "Napisz kod w Pythonie do sortowania listy.",
+    "working_language": "pl",
+    "profile_slug": "google-gemini-3-5-flash",
+    "expected_score_range": [15, 38],
+    "expected_strengths": [],
+    "expected_weaknesses": ["brak podania algorytmu", "brak przykładowych danych", "brak wymagań wydajnościowych"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Vague coding request. Should flag lack of constraints and complexity requirements."
+  },
+  {
+    "id": "weak-pl-05",
+    "input_prompt": "Streszcz ten artykuł krótko.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [10, 35],
+    "expected_strengths": [],
+    "expected_weaknesses": ["brak artykułu wejściowego", "brak definicji 'krótko'", "brak formatu (np. wypunktowanie)"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Incomplete input prompt lacking the actual source content to summarize."
+  },
+  {
+    "id": "weak-pl-06",
+    "input_prompt": "Przygotuj pytania na rozmowę kwalifikacyjną dla programisty.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [15, 39],
+    "expected_strengths": [],
+    "expected_weaknesses": ["brak podania technologii", "brak poziomu doświadczenia", "brak liczby pytań"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Recruiting prompt missing experience tier (junior/senior) and technology stack."
+  },
+  {
+    "id": "weak-pl-07",
+    "input_prompt": "Napisz maila do klienta, że paczka się opóźni.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [20, 39],
+    "expected_strengths": ["jasne zadanie"],
+    "expected_weaknesses": ["brak przyczyny opóźnienia", "brak tonu (uprzejmy/formalny)", "brak propozycji rekompensaty"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Vague client communication. Lacks basic parameters like ETA and apology tone guidelines."
+  },
+  {
+    "id": "weak-pl-08",
+    "input_prompt": "Daj mi przepis na obiad z kurczakiem.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [15, 39],
+    "expected_strengths": [],
+    "expected_weaknesses": ["brak ograniczeń dietetycznych", "brak czasu przygotowania", "brak listy dostępnych składników"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Vague recipe request missing time, difficulty level, and dietary exclusions."
+  },
+  {
+    "id": "weak-pl-09",
+    "input_prompt": "Ułóż plan treningowy.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [10, 30],
+    "expected_strengths": [],
+    "expected_weaknesses": ["brak celu treningowego", "brak poziomu zaawansowania", "brak dostępnego sprzętu"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Extremely generic fitness prompt lacking age, injuries context, and workout split specs."
+  },
+  {
+    "id": "weak-pl-10",
+    "input_prompt": "Napisz artykuł na bloga o podróżach.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [10, 35],
+    "expected_strengths": [],
+    "expected_weaknesses": ["brak tematu przewodniego", "brak długości artykułu", "brak słów kluczowych SEO"],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Vague blog generation prompt missing region, focus, and SEO requirements."
+  }
+]
