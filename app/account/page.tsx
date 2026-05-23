@@ -3,7 +3,9 @@ import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getUserProfile, createUserProfile, getPromptAnalysesForUser } from '@/lib/supabase/queries'
+import { getSubscriptionByUserId } from '@/lib/supabase/billing'
 import { SignOutButton } from '@/components/auth/sign-out-button'
+import { PortalButton } from '@/components/billing/portal-button'
 
 export default async function AccountPage() {
   // 1. Resolve secure server-side authenticated user session
@@ -26,6 +28,9 @@ export default async function AccountPage() {
   // 3. Resolve history combining user_id and current anonymous owner ID
   const ownerAnonymousId = await getOwnerIdFromCookies()
   const history = await getPromptAnalysesForUser(user.id, ownerAnonymousId || '')
+
+  // 4. Fetch subscription mapping from the database
+  const subscription = await getSubscriptionByUserId(user.id)
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50/50 selection:bg-indigo-100 antialiased font-sans">
@@ -65,14 +70,135 @@ export default async function AccountPage() {
               <p className="mt-1 text-sm text-slate-500">{profile?.email}</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 px-4 py-2.5 text-center">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 block">Twój Plan</span>
-                <span className="mt-1 text-sm font-black text-indigo-700 uppercase tracking-wide block">
-                  {profile?.plan_slug === 'free' ? 'Darmowy (Free)' : 'Pro Tier'}
-                </span>
-              </div>
+              {profile?.plan_slug === 'free' ? (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-center">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block">Twój Plan</span>
+                  <span className="mt-1 text-sm font-black text-slate-700 uppercase tracking-wide block">
+                    Free
+                  </span>
+                </div>
+              ) : (
+                <div className="rounded-2xl border-2 border-indigo-500/30 bg-indigo-50 px-4 py-2.5 text-center shadow-sm">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 block">Twój Plan</span>
+                  <span className="mt-1 text-sm font-black bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent uppercase tracking-wide block">
+                    PRO TIER
+                  </span>
+                </div>
+              )}
             </div>
           </div>
+        </div>
+
+        {/* Billing Status UI Section */}
+        <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-md shadow-slate-100/50">
+          <h3 className="text-base font-bold tracking-tight text-slate-900 border-b border-slate-100 pb-4">
+            Subskrypcja i Rozliczenia
+          </h3>
+
+          {!subscription ? (
+            /* Free Tier Upgrade Prompt */
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-2 w-2 rounded-full bg-slate-300" />
+                  <p className="text-sm font-bold text-slate-800">Korzystasz z bezpłatnego planu Free</p>
+                </div>
+                <p className="text-xs text-slate-500 max-w-xl">
+                  Twój limit to 20 analiz miesięcznie bez możliwości eksportu do PDF/Markdown oraz zbiorczego audytu promptów. Odblokuj pełne możliwości platformy, przechodząc na plan Pro.
+                </p>
+              </div>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+              >
+                Ulepsz do Pro
+              </Link>
+            </div>
+          ) : (
+            /* Stripe Subscription Details */
+            <div className="mt-6 space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Status Subskrypcji</span>
+                  <div className="mt-2.5 flex items-center gap-2">
+                    {subscription.status === 'active' || subscription.status === 'trialing' ? (
+                      subscription.cancel_at_period_end ? (
+                        <>
+                          <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
+                          <span className="text-sm font-bold text-amber-600">Aktywna (Anulowana)</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-sm font-bold text-emerald-600">Aktywna</span>
+                        </>
+                      )
+                    ) : subscription.status === 'past_due' ? (
+                      <>
+                        <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
+                        <span className="text-sm font-bold text-amber-600">Zaległa płatność (Grace)</span>
+                      </>
+                    ) : subscription.status === 'unpaid' ? (
+                      <>
+                        <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
+                        <span className="text-sm font-bold text-rose-600">Nieopłacona (Zawieszona)</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="h-2.5 w-2.5 rounded-full bg-slate-400" />
+                        <span className="text-sm font-bold text-slate-500">Wygasła ({subscription.status})</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Okres rozliczeniowy</span>
+                  <span className="mt-2 text-sm font-bold text-slate-800 block">
+                    {new Date(subscription.current_period_start).toLocaleDateString('pl-PL')} – {new Date(subscription.current_period_end).toLocaleDateString('pl-PL')}
+                  </span>
+                </div>
+
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                    {subscription.cancel_at_period_end ? 'Wygaśnięcie subskrypcji' : 'Następna płatność'}
+                  </span>
+                  <span className="mt-2 text-sm font-bold text-slate-800 block">
+                    {new Date(subscription.current_period_end).toLocaleDateString('pl-PL')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Status Specific Warnings */}
+              {subscription.cancel_at_period_end && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 text-xs text-amber-800 leading-relaxed">
+                  ⚠️ <strong>Uwaga:</strong> Twoja subskrypcja została anulowana i wygaśnie dnia <strong>{new Date(subscription.current_period_end).toLocaleDateString('pl-PL')}</strong>. Do tego czasu masz pełny dostęp do wszystkich funkcji Pro. Żadne kolejne opłaty nie zostaną pobrane.
+                </div>
+              )}
+
+              {subscription.status === 'past_due' && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 text-xs text-amber-800 leading-relaxed">
+                  ⚠️ <strong>Zaległość w płatności:</strong> Nie udało się pobrać opłaty za kolejny okres rozliczeniowy. Karta zostanie obciążona ponownie przez Stripe. Utrzymujemy Twój dostęp do funkcji Pro przez okres przejściowy. Zaktualizuj dane płatnicze, aby uniknąć przerw w dostępie.
+                </div>
+              )}
+
+              {subscription.status === 'unpaid' && (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-4 text-xs text-rose-800 leading-relaxed">
+                  🚫 <strong>Dostęp zawieszony:</strong> Twoje konto Pro zostało zawieszone z powodu braku pomyślnej płatności. Zaktualizuj dane płatnicze w portalu Stripe poniżej, aby natychmiast odzyskać dostęp do Pro.
+                </div>
+              )}
+
+              {/* Manage Billing Action */}
+              <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <p className="text-xs text-slate-500">
+                  Zarządzaj kartami płatniczymi, sprawdzaj faktury VAT lub anuluj/odnów subskrypcję w bezpiecznym panelu Stripe Customer Portal.
+                </p>
+                <div className="shrink-0">
+                  <PortalButton lang="pl" />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* History Section */}

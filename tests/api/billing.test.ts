@@ -331,5 +331,119 @@ describe('Stripe Billing Foundation API Suite', () => {
 
       expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith('sub_test_456')
     })
+
+    it('processes customer.subscription.updated with active status', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_test_3',
+        data: {
+          object: {
+            id: 'sub_test_789',
+            customer: 'cus_test_789',
+            status: 'active',
+            current_period_start: 1700000000,
+            current_period_end: 1703000000,
+            cancel_at_period_end: false,
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_mapped_uuid_3')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'user_mapped_uuid_3',
+        status: 'active',
+        plan_slug: 'pro'
+      }))
+    })
+
+    it('processes customer.subscription.updated with past_due status (grace period)', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_test_4',
+        data: {
+          object: {
+            id: 'sub_test_789',
+            customer: 'cus_test_789',
+            status: 'past_due',
+            current_period_start: 1700000000,
+            current_period_end: 1703000000,
+            cancel_at_period_end: false,
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_mapped_uuid_4')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'user_mapped_uuid_4',
+        status: 'past_due',
+        plan_slug: 'pro'
+      }))
+    })
+
+    it('processes customer.subscription.updated with unpaid status', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_test_5',
+        data: {
+          object: {
+            id: 'sub_test_789',
+            customer: 'cus_test_789',
+            status: 'unpaid',
+            current_period_start: 1700000000,
+            current_period_end: 1703000000,
+            cancel_at_period_end: false,
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_mapped_uuid_5')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'user_mapped_uuid_5',
+        status: 'unpaid',
+        plan_slug: 'pro'
+      }))
+    })
   })
 })

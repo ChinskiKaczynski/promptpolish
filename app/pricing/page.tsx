@@ -3,6 +3,7 @@ import { getAuthUser } from '@/lib/identity/auth'
 import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
 import { PLAN_LIMITS } from '@/lib/plans/config'
 import { WaitlistForm } from '@/components/pricing/waitlist-form'
+import { CheckoutButton } from '@/components/pricing/checkout-button'
 
 export default async function PricingPage() {
   const user = await getAuthUser()
@@ -182,13 +183,35 @@ export default async function PricingPage() {
             </div>
 
             <div className="mt-8 pt-4 space-y-4">
-              {/* Waitlist Signup Block for Users */}
-              <div className="rounded-2xl bg-slate-950/50 border border-slate-900 p-4 space-y-2.5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center">
-                  Zapisz się do zamkniętej Bety
-                </p>
-                <WaitlistForm initialEmail={user?.email || ''} lang="pl" />
-              </div>
+              {profile?.plan_slug === 'pro' ? (
+                <div className="space-y-3">
+                  <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 py-3 rounded-xl animate-pulse-subtle">
+                    🎉 Masz aktywny plan Pro!
+                  </div>
+                  <Link
+                    href="/account"
+                    className="block text-center w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 text-xs active:scale-[0.98] transition cursor-pointer"
+                  >
+                    Przejdź do panelu konta
+                  </Link>
+                </div>
+              ) : user ? (
+                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <CheckoutButton lang="pl" />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Link
+                    href="/login?redirectTo=/pricing"
+                    className="block text-center w-full rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3 text-xs active:scale-[0.98] transition cursor-pointer"
+                  >
+                    Zaloguj się, aby odblokować Pro
+                  </Link>
+                  <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+                    Konta są darmowe i bezpieczne.
+                  </p>
+                </div>
+              )}
 
               {/* Developer Simulation Gate */}
               <div className="border-t border-slate-900 pt-3">
@@ -196,9 +219,14 @@ export default async function PricingPage() {
                   Tryb Deweloperski / Testy Integracyjne
                 </p>
                 {profile?.plan_slug === 'pro' ? (
-                  <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 py-2 rounded-xl">
-                    Symulacja Pro Aktywna!
-                  </div>
+                  <form action="/api/entitlements/simulate-pro" method="POST">
+                    <button
+                      type="submit"
+                      className="w-full text-center rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white font-semibold py-2 text-xs border border-slate-800 transition active:scale-[0.98] cursor-pointer"
+                    >
+                      Wyłącz Symulację Pro (Wróć do Free)
+                    </button>
+                  </form>
                 ) : user ? (
                   <form action="/api/entitlements/simulate-pro" method="POST">
                     <button

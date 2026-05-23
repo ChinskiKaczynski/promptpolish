@@ -114,7 +114,8 @@ export async function saveSubscription(insertData: {
   }
 
   // Update user_profiles plan slug immediately
-  const isActive = insertData.status === 'active' || insertData.status === 'trialing'
+  // active, trialing, and past_due (grace period) statuses grant Pro entitlements ONLY if the plan_slug is 'pro'
+  const isActive = (insertData.status === 'active' || insertData.status === 'trialing' || insertData.status === 'past_due') && insertData.plan_slug === 'pro'
   const planSlug = isActive ? 'pro' : 'free'
 
   const currentProfile = await getUserProfile(insertData.user_id)
