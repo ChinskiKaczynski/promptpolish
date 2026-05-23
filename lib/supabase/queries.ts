@@ -67,6 +67,7 @@ export async function getPromptAnalysisForOwner(
     .from('prompt_analyses')
     .select('*')
     .eq('id', id)
+    .is('deleted_at', null)
 
   if (userId) {
     query = query.or(`owner_anonymous_id.eq.${ownerAnonymousId},user_id.eq.${userId}`)
@@ -111,14 +112,39 @@ export async function linkAnonymousAnalyses(
  */
 export async function getPromptAnalysesForUser(
   userId: string,
-  ownerAnonymousId: string
+  ownerAnonymousId: string,
+  filters?: {
+    search?: string
+    lang?: string
+    profile?: string
+    taskType?: string
+    isFavorite?: boolean
+  }
 ): Promise<PromptAnalysisRow[]> {
   const supabase = getSupabaseServerClient() as any
-  const { data, error } = await supabase
+  let query = supabase
     .from('prompt_analyses')
     .select('*')
+    .is('deleted_at', null)
     .or(`user_id.eq.${userId},owner_anonymous_id.eq.${ownerAnonymousId}`)
-    .order('created_at', { ascending: false })
+
+  if (filters?.lang && filters.lang !== 'all') {
+    query = query.eq('working_language', filters.lang)
+  }
+  if (filters?.profile && filters.profile !== 'all') {
+    query = query.eq('selected_profile_slug', filters.profile)
+  }
+  if (filters?.taskType && filters.taskType !== 'all') {
+    query = query.eq('task_type', filters.taskType)
+  }
+  if (filters?.isFavorite) {
+    query = query.eq('is_favorite', true)
+  }
+  if (filters?.search) {
+    query = query.or(`input_prompt.ilike.%${filters.search}%,title.ilike.%${filters.search}%`)
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false })
 
   if (error) {
     console.error('Error fetching prompt analyses for user:', error)
@@ -179,6 +205,7 @@ export async function getSharedPromptAnalysis(
     .select('input_prompt, working_language, selected_profile_slug, overall_score, score_level, analysis_json, improved_prompt, created_at, is_share_enabled')
     .eq('share_token', shareToken)
     .eq('is_share_enabled', true)
+    .is('deleted_at', null)
     .maybeSingle()
 
   if (error) {
@@ -342,5 +369,66 @@ export async function getUsageCountToday(ownerAnonymousId: string): Promise<numb
     return 0
   }
   return count ?? 0
+}
+
+/**
+ * Soft deletes a prompt analysis by updating deleted_at = now().
+ * Enforces ownership check directly in the database.
+ */
+export async function softDeleteAnalysis(
+  id: string,
+  ownerAnonymousId: string,
+  userId?: string
+): Promise<boolean> {
+  const supabase = getSupabaseServerClient() as any
+  let query = supabase
+    .from('prompt_analyses')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (userId) {
+    query = query.or(`owner_anonymous_id.eq.${ownerAnonymousId},user_id.eq.${userId}`)
+  } else {
+    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { data, error } = await query.select('id').maybeSingle()
+
+  if (error || !data) {
+    console.error('Error soft deleting analysis:', error)
+    return false
+  }
+  return true
+}
+
+/**
+ * Toggles the favorite flag on a prompt analysis.
+ * Enforces ownership check directly in the database.
+ */
+export async function toggleFavoriteAnalysis(
+  id: string,
+  ownerAnonymousId: string,
+  userId: string | undefined,
+  isFavorite: boolean
+): Promise<boolean> {
+  const supabase = getSupabaseServerClient() as any
+  let query = supabase
+    .from('prompt_analyses')
+    .update({ is_favorite: isFavorite })
+    .eq('id', id)
+
+  if (userId) {
+    query = query.or(`owner_anonymous_id.eq.${ownerAnonymousId},user_id.eq.${userId}`)
+  } else {
+    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { data, error } = await query.select('id').maybeSingle()
+
+  if (error || !data) {
+    console.error('Error toggling favorite analysis:', error)
+    return false
+  }
+  return true
 }
 

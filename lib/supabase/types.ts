@@ -47,6 +47,9 @@ export interface PromptAnalysisRow {
   share_token: string | null
   is_share_enabled: boolean
   expires_at: string | null
+  title: string | null
+  is_favorite: boolean
+  deleted_at: string | null
   created_at: string
 }
 
@@ -177,6 +180,9 @@ export interface Database {
           share_token?: string | null
           is_share_enabled?: boolean
           expires_at?: string | null
+          title?: string | null
+          is_favorite?: boolean
+          deleted_at?: string | null
           created_at?: string
         }
         Update: {
@@ -205,6 +211,9 @@ export interface Database {
           share_token?: string | null
           is_share_enabled?: boolean
           expires_at?: string | null
+          title?: string | null
+          is_favorite?: boolean
+          deleted_at?: string | null
           created_at?: string
         }
         Relationships: []

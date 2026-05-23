@@ -33,6 +33,9 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
   const mockInsert = vi.fn()
   const mockUpdate = vi.fn()
   const mockEq = vi.fn()
+  const mockIs = vi.fn()
+  const mockOr = vi.fn()
+  const mockOrder = vi.fn()
 
   const mockSupabaseClient = {
     from: vi.fn(() => ({
@@ -46,27 +49,26 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
     vi.clearAllMocks()
 
     // Setup standard builder pattern chain
-    mockSelect.mockReturnValue({
+    const builder: any = {
       eq: mockEq,
-      maybeSingle: mockMaybeSingle,
-      single: mockSingle
-    })
-    mockInsert.mockReturnValue({
-      select: vi.fn(() => ({
-        single: mockSingle
-      }))
-    })
-    mockUpdate.mockReturnValue({
-      eq: mockEq
-    })
-    mockEq.mockReturnValue({
-      eq: mockEq,
+      is: mockIs,
+      or: mockOr,
+      order: mockOrder,
       maybeSingle: mockMaybeSingle,
       single: mockSingle,
-      select: vi.fn(() => ({
-        maybeSingle: mockMaybeSingle
-      }))
+      select: vi.fn(() => builder)
+    }
+
+    mockSelect.mockReturnValue(builder)
+    mockInsert.mockReturnValue({
+      select: vi.fn(() => builder)
     })
+    mockUpdate.mockReturnValue(builder)
+
+    mockEq.mockReturnValue(builder)
+    mockIs.mockReturnValue(builder)
+    mockOr.mockReturnValue(builder)
+    mockOrder.mockReturnValue(builder)
 
     // Mock getSupabaseServerClient to return our builder mock client
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as any)

@@ -124,6 +124,7 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
   const mockMaybeSingle = vi.fn()
   const mockEq = vi.fn()
   const mockSelect = vi.fn()
+  const mockIs = vi.fn()
 
   const mockSupabaseClient = {
     from: vi.fn(() => ({ select: mockSelect }))
@@ -132,8 +133,14 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockSelect.mockReturnValue({ eq: mockEq })
-    mockEq.mockReturnValue({ eq: mockEq, maybeSingle: mockMaybeSingle })
+    const builder: any = {
+      eq: mockEq,
+      is: mockIs,
+      maybeSingle: mockMaybeSingle
+    }
+    mockSelect.mockReturnValue(builder)
+    mockEq.mockReturnValue(builder)
+    mockIs.mockReturnValue(builder)
 
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as any)
   })
@@ -248,9 +255,14 @@ describe('disableShareLink — Ownership Verification', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockUpdate.mockReturnValue({ eq: mockEq })
-    mockEq.mockReturnValue({ eq: mockEq, select: mockSelect })
-    mockSelect.mockReturnValue({ maybeSingle: mockMaybeSingle })
+    const builder: any = {
+      eq: mockEq,
+      select: mockSelect,
+      maybeSingle: mockMaybeSingle
+    }
+    mockUpdate.mockReturnValue(builder)
+    mockEq.mockReturnValue(builder)
+    mockSelect.mockReturnValue(builder)
 
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as any)
   })
