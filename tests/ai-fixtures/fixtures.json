@@ -1,0 +1,35 @@
+[
+  {
+    "input_prompt": "Napisz opis produktu",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_strengths": [],
+    "expected_weaknesses": ["brak celu", "brak formatu", "brak kontekstu"],
+    "expected_score_range": [0, 45],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Weak PL prompt."
+  },
+  {
+    "input_prompt": "Act as a senior e-commerce copywriter. Create a concise product description for a premium desk lamp for remote workers. Output: headline, 3 bullets, short CTA. Avoid unsupported claims.",
+    "working_language": "en",
+    "profile_slug": "general-llm",
+    "expected_strengths": ["role", "context", "format", "constraints"],
+    "expected_weaknesses": [],
+    "expected_score_range": [75, 95],
+    "should_warn_sensitive_data": false,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Strong EN prompt."
+  },
+  {
+    "input_prompt": "OPENAI_API_KEY=sk-exampleexampleexampleexample Napisz mail do klienta.",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_strengths": [],
+    "expected_weaknesses": ["contains secret"],
+    "expected_score_range": [0, 40],
+    "should_warn_sensitive_data": true,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Should be blocked before provider call."
+  }
+]
