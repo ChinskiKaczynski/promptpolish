@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 import { mvpModelProfiles } from '@/lib/ai/model-profiles'
+import { UpgradeModal } from './upgrade-modal'
+
 
 type ResultViewProps = {
   result: AnalysisResult & { 
@@ -13,7 +15,9 @@ type ResultViewProps = {
     shareToken?: string | null;
   }
   mode: 'private' | 'share' | 'public'
+  planSlug?: 'free' | 'pro'
 }
+
 
 // English to Polish translations for score levels
 const scoreLevelTranslations: Record<string, { label: string; desc: string; bg: string; text: string; border: string; bar: string }> = {
@@ -73,7 +77,7 @@ const criterionTranslations: Record<string, string> = {
   testability: 'Testowalność i ocena'
 }
 
-export function ResultView({ result, mode }: ResultViewProps) {
+export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps) {
   const [isCopied, setIsCopied] = useState(false)
   const [feedbackVote, setFeedbackVote] = useState<'up' | 'down' | null>(null)
   const [feedbackComment, setFeedbackComment] = useState('')
@@ -86,8 +90,46 @@ export function ResultView({ result, mode }: ResultViewProps) {
   const [expandedCriteria, setExpandedCriteria] = useState<Record<string, boolean>>({})
   const [shareError, setShareError] = useState<string | null>(null)
 
+  // Upgrade Modal states
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false)
+  const [selectedFeature, setSelectedFeature] = useState('')
+
+  // Export handlers
+  const handleExportMarkdown = () => {
+    if (planSlug !== 'pro') {
+      setSelectedFeature('Eksport Markdown')
+      setIsUpgradeModalOpen(true)
+      return
+    }
+
+    const mdContent = `# Raport Audytu Promptu\n\n## Ogólna Ocena: ${result.overallScore} / 100 (${scoreMeta.label})\n\n### Poprawiony Prompt:\n\`\`\`\n${result.improved_prompt}\n\`\`\`\n\n### Wyjaśnienia:\n${result.change_explanations.map(e => `- ${e}`).join('\n')}`
+    const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `prompt-audit-${result.id || 'export'}.md`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const handleExportPdf = () => {
+    if (planSlug !== 'pro') {
+      setSelectedFeature('Eksport PDF')
+      setIsUpgradeModalOpen(true)
+      return
+    }
+    window.print()
+  }
+
+  const handleUseBatchAudit = () => {
+    setSelectedFeature('Audyt Zbiorczy (Batch Audit)')
+    setIsUpgradeModalOpen(true)
+  }
+
   // Find the model profile corresponding to the detected_task_type or a default
   const activeProfile = mvpModelProfiles.find(p => p.slug === 'google-gemini-3-5-flash') || mvpModelProfiles[0]
+
 
   const handleCopyPrompt = async () => {
     try {
@@ -257,7 +299,7 @@ export function ResultView({ result, mode }: ResultViewProps) {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleCopyPrompt}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 active:scale-[0.98] transition-all"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 active:scale-[0.98] transition-all cursor-pointer"
           >
             {isCopied ? (
               <>
@@ -275,8 +317,39 @@ export function ResultView({ result, mode }: ResultViewProps) {
               </>
             )}
           </button>
+
+          <button
+            onClick={handleExportMarkdown}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-5 py-3 text-sm font-semibold transition active:scale-[0.98] cursor-pointer"
+          >
+            <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span>Pobierz MD {planSlug !== 'pro' && <span className="ml-1 text-[9px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 rounded px-1 py-0.5 uppercase tracking-wider">Pro</span>}</span>
+          </button>
+
+          <button
+            onClick={handleExportPdf}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-5 py-3 text-sm font-semibold transition active:scale-[0.98] cursor-pointer"
+          >
+            <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            <span>Drukuj PDF {planSlug !== 'pro' && <span className="ml-1 text-[9px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 rounded px-1 py-0.5 uppercase tracking-wider">Pro</span>}</span>
+          </button>
+
+          <button
+            onClick={handleUseBatchAudit}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-5 py-3 text-sm font-semibold transition active:scale-[0.98] cursor-pointer"
+          >
+            <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <span>Batch Audit <span className="ml-1 text-[9px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 rounded px-1 py-0.5 uppercase tracking-wider">Pro</span></span>
+          </button>
         </div>
       </div>
+
 
       {/* Main Score & Warning Cards Layout */}
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
@@ -793,6 +866,12 @@ export function ResultView({ result, mode }: ResultViewProps) {
           </div>
         </div>
       )}
+
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        featureName={selectedFeature}
+      />
     </div>
   )
 }

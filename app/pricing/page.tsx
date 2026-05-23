@@ -1,0 +1,237 @@
+import Link from 'next/link'
+import { getAuthUser } from '@/lib/identity/auth'
+import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
+import { PLAN_LIMITS } from '@/lib/plans/config'
+
+export default async function PricingPage() {
+  const user = await getAuthUser()
+  let profile = null
+
+  if (user) {
+    profile = await getUserProfile(user.id)
+    if (!profile) {
+      profile = await createUserProfile({
+        user_id: user.id,
+        email: user.email || '',
+        display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || null,
+        plan_slug: 'free'
+      })
+    }
+  }
+
+  const freeLimits = PLAN_LIMITS.free
+  const proLimits = PLAN_LIMITS.pro
+
+  return (
+    <div className="flex min-h-screen flex-col bg-slate-905 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))] text-slate-100 antialiased font-sans pb-16">
+      {/* Navigation Header */}
+      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20">
+              <span className="font-bold text-white text-base">P</span>
+            </div>
+            <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+              PromptPolish
+            </span>
+          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/analyze"
+              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition active:scale-95 cursor-pointer"
+            >
+              Ulepsz prompt
+            </Link>
+            {user ? (
+              <Link href="/account" className="text-sm font-semibold text-slate-300 hover:text-white">
+                Moje konto
+              </Link>
+            ) : (
+              <Link href="/login" className="text-sm font-semibold text-slate-300 hover:text-white">
+                Zaloguj się
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Main Section */}
+      <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-12">
+        {/* Title */}
+        <div className="text-center max-w-2xl mx-auto space-y-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-indigo-400">Plany i Cennik</p>
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
+            Wybierz plan dopasowany do swoich potrzeb
+          </h1>
+          <p className="text-sm text-slate-400 leading-relaxed">
+            Przestań zgadywać. Poleruj swoje instrukcje za pomocą precyzyjnych audytów zoptymalizowanych pod kątem najnowszych modeli językowych.
+          </p>
+        </div>
+
+        {/* Plan Grid */}
+        <div className="mt-16 grid gap-8 md:grid-cols-2 max-w-4xl mx-auto items-stretch">
+          {/* Free Plan */}
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 flex flex-col justify-between hover:border-slate-700 transition duration-300 relative group">
+            <div>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold text-white">{freeLimits.name}</h3>
+                  <p className="mt-2 text-xs text-slate-400">Dla hobbystów i osób testujących narzędzie.</p>
+                </div>
+                {profile?.plan_slug === 'free' && (
+                  <span className="rounded-full bg-slate-800 border border-slate-700 px-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    Twój aktualny plan
+                  </span>
+                )}
+              </div>
+              <div className="mt-6 flex items-baseline">
+                <span className="text-4xl font-extrabold text-white">0 PLN</span>
+                <span className="ml-1 text-sm text-slate-400">/ na zawsze</span>
+              </div>
+
+              <div className="mt-8 border-t border-slate-800/80 pt-6 space-y-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Co zawiera plan Free:</p>
+                <ul className="space-y-3.5 text-sm text-slate-300">
+                  <li className="flex items-center gap-2.5">
+                    <span className="text-emerald-500 text-base">✓</span>
+                    <span><strong>{freeLimits.monthlyAnalyses}</strong> analiz promptów miesięcznie</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <span className="text-emerald-500 text-base">✓</span>
+                    <span>Maksymalnie <strong>12,000</strong> znaków na prompt</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <span className="text-emerald-500 text-base">✓</span>
+                    <span>Pełna historia analiz (wymaga logowania)</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-slate-500">
+                    <span>✗</span>
+                    <span>Eksport raportów do PDF / Markdown</span>
+                  </li>
+                  <li className="flex items-center gap-2.5 text-slate-500">
+                    <span>✗</span>
+                    <span>Zbiorczy audyt (Batch Audit) wielu promptów</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-4">
+              <Link
+                href="/analyze"
+                className="block text-center w-full rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 text-xs active:scale-[0.98] transition-all cursor-pointer"
+              >
+                Rozpocznij za darmo
+              </Link>
+            </div>
+          </div>
+
+          {/* Pro Plan */}
+          <div className="rounded-3xl border-2 border-indigo-500/80 bg-slate-900/60 p-8 flex flex-col justify-between hover:shadow-2xl hover:shadow-indigo-500/5 transition duration-300 relative group">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-1 text-[10px] font-black text-white uppercase tracking-widest shadow-md">
+              Najpopularniejszy
+            </div>
+
+            <div>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-bold text-white">{proLimits.name} Tier</h3>
+                  <p className="mt-2 text-xs text-slate-300">Dla zaawansowanych twórców i profesjonalistów.</p>
+                </div>
+                {profile?.plan_slug === 'pro' && (
+                  <span className="rounded-full bg-indigo-500/20 border border-indigo-500/30 px-3 py-1 text-[10px] font-black text-indigo-400 uppercase tracking-wider">
+                    Twój aktualny plan
+                  </span>
+                )}
+              </div>
+              <div className="mt-6 flex items-baseline">
+                <span className="text-4xl font-black bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">39 PLN</span>
+                <span className="ml-1 text-sm text-slate-400">/ miesiąc</span>
+              </div>
+
+              <div className="mt-8 border-t border-indigo-950 pt-6 space-y-4">
+                <p className="text-xs font-bold uppercase tracking-widest text-indigo-400">Wszystkie zalety Pro:</p>
+                <ul className="space-y-3.5 text-sm text-slate-200">
+                  <li className="flex items-center gap-2.5">
+                    <span className="text-indigo-400 text-base">✓</span>
+                    <span><strong>{proLimits.monthlyAnalyses}</strong> analiz promptów miesięcznie</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <span className="text-indigo-400 text-base">✓</span>
+                    <span>Maksymalnie <strong>24,000</strong> znaków na prompt</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <span className="text-indigo-400 text-base">✓</span>
+                    <span><strong>Eksport Markdown (Pro)</strong> – pobierz natychmiast</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <span className="text-indigo-400 text-base">✓</span>
+                    <span><strong>Eksport PDF (Pro)</strong> – elegancki raport dla klienta</span>
+                  </li>
+                  <li className="flex items-center gap-2.5">
+                    <span className="text-indigo-400 text-base">✓</span>
+                    <span><strong>Batch Audit (Pro)</strong> – analizuj wiele promptów naraz</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-4">
+              {profile?.plan_slug === 'pro' ? (
+                <div className="text-center text-xs font-semibold text-indigo-400 py-3">
+                  W pełni aktywowane! Korzystasz z wersji Pro.
+                </div>
+              ) : user ? (
+                <form action="/api/entitlements/simulate-pro" method="POST">
+                  <button
+                    type="submit"
+                    className="w-full text-center rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3.5 text-xs active:scale-[0.98] shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all cursor-pointer"
+                  >
+                    Przetestuj Pro Tier (Symulacja bez opłaty)
+                  </button>
+                </form>
+              ) : (
+                <Link
+                  href="/login"
+                  className="block text-center w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3.5 text-xs active:scale-[0.98] shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all cursor-pointer"
+                >
+                  Zaloguj się, aby odblokować Pro
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* FAQs */}
+        <div className="mt-20 border-t border-slate-800 pt-16 max-w-3xl mx-auto space-y-8">
+          <h3 className="text-xl font-bold text-center text-white">Najczęściej zadawane pytania</h3>
+          <div className="grid gap-6">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/20 p-5 space-y-2">
+              <h4 className="text-sm font-bold text-white">Czy mogę korzystać z narzędzia za darmo?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Tak! Zarejestrowani użytkownicy otrzymują 20 bezpłatnych analiz miesięcznie, a użytkownicy anonimowi mają dzienny limit chroniący infrastrukturę.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/20 p-5 space-y-2">
+              <h4 className="text-sm font-bold text-white">Czym jest „Symulacja Pro Tier”?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Ponieważ system płatności Stripe nie został jeszcze zintegrowany, w celach demonstracyjnych i ewaluacyjnych umożliwiamy natychmiastowe darmowe przypisanie rangi Pro do Twojego konta deweloperskiego za pomocą jednego kliknięcia!
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/20 p-5 space-y-2">
+              <h4 className="text-sm font-bold text-white">Czy moje dane są bezpieczne?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Zdecydowanie. Nasz wbudowany bezpieczny skaner danych preflight natychmiast blokuje i uniemożliwia zapisywanie promptów zawierających wrażliwe dane lub sekrety (jak klucze API).
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-850 bg-slate-950 py-8 px-6 text-center text-xs text-slate-500 mt-auto">
+        © {new Date().getFullYear()} PromptPolish. Wszystkie prawa zastrzeżone.
+      </footer>
+    </div>
+  )
+}

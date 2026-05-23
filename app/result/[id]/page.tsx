@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getPromptAnalysisForOwner } from '@/lib/supabase/queries'
+import { getPromptAnalysisForOwner, getUserProfile } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { ResultView } from '@/components/result/result-view'
@@ -28,6 +28,15 @@ export default async function PrivateResultPage({ params }: PageProps) {
     notFound()
   }
 
+  // 2b. Resolve plan slug
+  let planSlug: 'free' | 'pro' = 'free'
+  if (user) {
+    const profile = await getUserProfile(user.id)
+    if (profile?.plan_slug === 'pro') {
+      planSlug = 'pro'
+    }
+  }
+
   // 3. Map database values to schema structure expected by the ResultView UI component
   const analysisJson = record.analysis_json as unknown as AnalysisResult
   const mappedResult = {
@@ -42,7 +51,8 @@ export default async function PrivateResultPage({ params }: PageProps) {
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-10">
-      <ResultView result={mappedResult} mode="private" />
+      <ResultView result={mappedResult} mode="private" planSlug={planSlug} />
     </main>
   )
 }
+

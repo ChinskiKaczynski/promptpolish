@@ -1,0 +1,84 @@
+'use client'
+
+import Link from 'next/link'
+
+interface UpgradeModalProps {
+  isOpen: boolean
+  onClose: () => void
+  featureName: string
+}
+
+export function UpgradeModal({ isOpen, onClose, featureName }: UpgradeModalProps) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/80 backdrop-blur-md transition-all duration-300">
+      <div className="relative w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/90 p-8 shadow-2xl shadow-indigo-500/5 animate-in fade-in zoom-in-95 duration-200">
+        
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute right-6 top-6 rounded-xl border border-slate-800 bg-slate-950/60 p-2 text-slate-400 hover:text-white transition cursor-pointer"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Header Icon */}
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 shadow-lg shadow-indigo-500/20">
+          <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+          </svg>
+        </div>
+
+        {/* Text */}
+        <div className="mt-6 text-center space-y-2">
+          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Funkcja Premium Pro</span>
+          <h3 className="text-xl font-extrabold tracking-tight text-white">
+            Odblokuj {featureName}
+          </h3>
+          <p className="text-xs leading-relaxed text-slate-400 px-2">
+            Ta funkcja jest zarezerwowana dla subskrybentów planu **Pro**. Podnieś jakość swojej pracy dzięki rozszerzonym narzędziom inżynierii promptów.
+          </p>
+        </div>
+
+        {/* Pro features checklist */}
+        <div className="mt-6 rounded-2xl bg-slate-950/40 border border-slate-800/80 p-4 space-y-3.5">
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-indigo-400 text-sm font-bold">✓</span>
+            <span className="text-slate-300">Nielimitowany eksport Markdown i PDF</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-indigo-400 text-sm font-bold">✓</span>
+            <span className="text-slate-300">Zwiększony limit do 500 analiz miesięcznie</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-indigo-400 text-sm font-bold">✓</span>
+            <span className="text-slate-300">Wyższe limity długości instrukcji (24k znaków)</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="text-indigo-400 text-sm font-bold">✓</span>
+            <span className="text-slate-300">Dostęp do modułu audytów zbiorczych (Batch Audit)</span>
+          </div>
+        </div>
+
+        {/* CTAs */}
+        <div className="mt-8 flex flex-col gap-3">
+          <Link
+            href="/pricing"
+            className="w-full text-center rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3 text-xs active:scale-[0.98] shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all cursor-pointer"
+          >
+            Zobacz Cennik i plany
+          </Link>
+          <button
+            onClick={onClose}
+            className="w-full rounded-2xl bg-slate-950 border border-slate-850 py-3 text-xs font-bold text-slate-400 hover:text-slate-200 transition cursor-pointer"
+          >
+            Wróć do darmowej wersji
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

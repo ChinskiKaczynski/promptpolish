@@ -372,6 +372,72 @@ export async function getUsageCountToday(ownerAnonymousId: string): Promise<numb
 }
 
 /**
+ * Counts successful prompt analyses in the current UTC calendar day for a user (either logged-in or anonymous).
+ */
+export async function getUsageCountTodayForUser(
+  ownerAnonymousId: string,
+  userId?: string | null
+): Promise<number> {
+  const supabase = getSupabaseServerClient()
+  const startOfDay = new Date()
+  startOfDay.setUTCHours(0, 0, 0, 0)
+
+  let query = supabase
+    .from('usage_events')
+    .select('*', { count: 'exact', head: true })
+    .eq('event_type', 'analyze')
+    .gte('created_at', startOfDay.toISOString())
+
+  if (userId) {
+    query = query.eq('user_id', userId)
+  } else {
+    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { count, error } = await query
+
+  if (error) {
+    console.error('Error counting usage events today for user:', error)
+    return 0
+  }
+  return count ?? 0
+}
+
+/**
+ * Counts successful prompt analyses in the current UTC calendar month for a user (either logged-in or anonymous).
+ */
+export async function getUsageCountThisMonthForUser(
+  ownerAnonymousId: string,
+  userId?: string | null
+): Promise<number> {
+  const supabase = getSupabaseServerClient()
+  const startOfMonth = new Date()
+  startOfMonth.setUTCDate(1)
+  startOfMonth.setUTCHours(0, 0, 0, 0)
+
+  let query = supabase
+    .from('usage_events')
+    .select('*', { count: 'exact', head: true })
+    .eq('event_type', 'analyze')
+    .gte('created_at', startOfMonth.toISOString())
+
+  if (userId) {
+    query = query.eq('user_id', userId)
+  } else {
+    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { count, error } = await query
+
+  if (error) {
+    console.error('Error counting usage events this month for user:', error)
+    return 0
+  }
+  return count ?? 0
+}
+
+
+/**
  * Soft deletes a prompt analysis by updating deleted_at = now().
  * Enforces ownership check directly in the database.
  */

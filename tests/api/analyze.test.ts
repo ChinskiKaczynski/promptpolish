@@ -11,13 +11,12 @@ vi.mock('@/lib/identity/anonymous', () => ({
 vi.mock('@/lib/supabase/queries', () => ({
   getModelProfileBySlug: vi.fn(),
   createPromptAnalysis: vi.fn(),
-  createUsageEvent: vi.fn()
+  createUsageEvent: vi.fn(),
+  getUserProfile: vi.fn(),
+  getUsageCountTodayForUser: vi.fn(),
+  getUsageCountThisMonthForUser: vi.fn()
 }))
 
-// checkAnonymousLimit is the route's direct rate-limit dependency
-vi.mock('@/lib/rate-limit/check-limit', () => ({
-  checkAnonymousLimit: vi.fn()
-}))
 
 vi.mock('@/lib/ai/analyze-prompt', () => ({
   analyzePrompt: vi.fn()
@@ -29,14 +28,17 @@ import { resolveOrCreateOwnerId } from '@/lib/identity/anonymous'
 import {
   getModelProfileBySlug,
   createPromptAnalysis,
-  createUsageEvent
+  createUsageEvent,
+  getUserProfile,
+  getUsageCountTodayForUser,
+  getUsageCountThisMonthForUser
 } from '@/lib/supabase/queries'
-import { checkAnonymousLimit } from '@/lib/rate-limit/check-limit'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import { serverEnv } from '@/lib/env/server'
 import type { ModelProfileRow, PromptAnalysisRow } from '@/lib/supabase/types'
 import type { AnalysisServiceResult } from '@/lib/ai/analyze-prompt'
+
 
 describe('POST /api/analyze API Route Handler', () => {
   beforeEach(() => {
@@ -44,8 +46,11 @@ describe('POST /api/analyze API Route Handler', () => {
 
     // Default mock implementation setup
     vi.mocked(resolveOrCreateOwnerId).mockResolvedValue({ id: 'mocked-owner-id', isNew: false })
-    // Default: limit not reached
-    vi.mocked(checkAnonymousLimit).mockResolvedValue({ allowed: true, count: 0, limit: serverEnv.ANONYMOUS_DAILY_LIMIT })
+    vi.mocked(getUserProfile).mockResolvedValue(null)
+    vi.mocked(getUsageCountTodayForUser).mockResolvedValue(0)
+    vi.mocked(getUsageCountThisMonthForUser).mockResolvedValue(0)
+    vi.mocked(createUsageEvent).mockResolvedValue(null)
+
     vi.mocked(getModelProfileBySlug).mockResolvedValue({
       id: 'profile-uuid',
       slug: 'google-gemini-3-5-flash',
@@ -163,12 +168,8 @@ describe('POST /api/analyze API Route Handler', () => {
   })
 
   describe('Usage Rate Limits Check', () => {
-    it('returns 429 Too Many Requests when daily anonymous limits are reached and saves a limit_reached event', async () => {
-      vi.mocked(checkAnonymousLimit).mockResolvedValue({
-        allowed: false,
-        count: serverEnv.ANONYMOUS_DAILY_LIMIT,
-        limit: serverEnv.ANONYMOUS_DAILY_LIMIT
-      })
+    it('returns 429 Too Many Requests when daily limits are reached and saves a limit_reached event', async () => {
+      vi.mocked(getUsageCountTodayForUser).mockResolvedValue(5) // Free plan daily limit is 5
 
       const response = await POST(makeRequest(validPayload))
       const data = await response.json()
@@ -178,15 +179,22 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(data.message).toContain('Przekroczono dzienny limit')
       expect(analyzePrompt).not.toHaveBeenCalled()
 
-      // checkAnonymousLimit is called with the verified owner id;
-      // ip/ua hashes are null in this headerless test environment (correct — no headers sent)
-      expect(checkAnonymousLimit).toHaveBeenCalledWith(
-        'mocked-owner-id',
-        null, // no x-forwarded-for / x-real-ip header in test request
-        null  // no user-agent header in test request
-      )
+      expect(getUsageCountTodayForUser).toHaveBeenCalledWith('mocked-owner-id', null)
+    })
+
+    it('returns 402 Payment Required when monthly limits are reached', async () => {
+      vi.mocked(getUsageCountThisMonthForUser).mockResolvedValue(20) // Free plan monthly limit is 20
+
+      const response = await POST(makeRequest(validPayload))
+      const data = await response.json()
+
+      expect(response.status).toBe(402)
+      expect(data.error).toBe('monthly_limit_reached')
+      expect(data.message).toContain('Przekroczono miesięczny limit')
+      expect(analyzePrompt).not.toHaveBeenCalled()
     })
   })
+
 
   describe('Model Profile Availability', () => {
     it('returns 404 Not Found when selected model profile slug is missing from database', async () => {

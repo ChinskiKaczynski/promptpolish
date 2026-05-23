@@ -6,13 +6,17 @@ import { getAuthUser } from '@/lib/identity/auth'
 import {
   createPromptAnalysis,
   createUsageEvent,
-  getModelProfileBySlug
+  getModelProfileBySlug,
+  getUserProfile,
+  getUsageCountTodayForUser,
+  getUsageCountThisMonthForUser
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import { serverEnv, checkProductionEnv } from '@/lib/env/server'
-import { checkAnonymousLimit } from '@/lib/rate-limit/check-limit'
 import { hashValue } from '@/lib/rate-limit/hash-ip'
+import { PLAN_LIMITS, canAnalyzePrompt } from '@/lib/plans/config'
+
 
 // Input validation schema using Zod
 const analyzeRequestSchema = z.object({
@@ -137,19 +141,60 @@ export async function POST(request: Request) {
       )
     }
 
-    // 6. Check daily anonymous usage limits.
-    //    checkAnonymousLimit also saves a limit_reached event when blocked.
-    const limitCheck = await checkAnonymousLimit(ownerAnonymousId, ipHash, userAgentHash)
+    // 6. Check plan-based daily abuse and monthly usage limits.
+    let planSlug: 'free' | 'pro' = 'free'
+    if (userId) {
+      const profile = await getUserProfile(userId)
+      if (profile?.plan_slug === 'pro') {
+        planSlug = 'pro'
+      }
+    }
+
+    const dailyCount = await getUsageCountTodayForUser(ownerAnonymousId, userId)
+    const monthlyCount = await getUsageCountThisMonthForUser(ownerAnonymousId, userId)
+
+    const planConfig = PLAN_LIMITS[planSlug]
+    const limitCheck = canAnalyzePrompt(planSlug, monthlyCount, dailyCount)
+
     if (!limitCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: 'limit_reached',
-          message: 'Przekroczono dzienny limit analiz dla użytkownika anonimowego. Spróbuj ponownie jutro.',
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'limit_reached',
+        metadata_json: {
+          plan: planSlug,
+          dailyCount,
+          monthlyCount,
+          reason: limitCheck.reason,
           limit: limitCheck.limit
         },
-        { status: 429 }
-      )
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
+      if (limitCheck.reason === 'daily_abuse_limit_reached') {
+        return NextResponse.json(
+          {
+            error: 'limit_reached',
+            message: `Przekroczono dzienny limit analiz (${limitCheck.limit}) dla planu ${planConfig.name}. Spróbuj ponownie jutro.`,
+            limit: limitCheck.limit,
+            reason: 'daily_abuse_limit_reached'
+          },
+          { status: 429 }
+        )
+      } else {
+        return NextResponse.json(
+          {
+            error: 'monthly_limit_reached',
+            message: `Przekroczono miesięczny limit analiz (${limitCheck.limit}) dla planu ${planConfig.name}. Rozszerz plan do Pro, aby uzyskać większe limity.`,
+            limit: limitCheck.limit,
+            reason: 'monthly_limit_reached'
+          },
+          { status: 402 }
+        )
+      }
     }
+
 
     // 7. Load selected model profile from database
     const dbProfile = await getModelProfileBySlug(selected_profile_slug)
