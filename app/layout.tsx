@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { AuthListener } from '@/components/auth/auth-listener'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -38,8 +39,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="pl">
       <body className="min-h-screen bg-background font-sans antialiased">
+        <AuthListener />
         {children}
       </body>
     </html>
   )
 }
+

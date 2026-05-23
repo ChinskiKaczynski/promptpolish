@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getPromptAnalysisForOwner } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
+import { getAuthUser } from '@/lib/identity/auth'
 import { ResultView } from '@/components/result/result-view'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 
@@ -11,14 +12,18 @@ interface PageProps {
 export default async function PrivateResultPage({ params }: PageProps) {
   const { id } = await params
 
-  // 1. Resolve owner identity from signed secure cookie
+  // 1. Resolve owner identity from signed secure cookie and logged-in user
   const ownerAnonymousId = await getOwnerIdFromCookies()
-  if (!ownerAnonymousId) {
+  const user = await getAuthUser()
+
+  if (!ownerAnonymousId && !user) {
     notFound()
   }
 
   // 2. Fetch prompt analysis and strictly verify owner identity in database filter
-  const record = await getPromptAnalysisForOwner(id, ownerAnonymousId)
+  const record = user
+    ? await getPromptAnalysisForOwner(id, ownerAnonymousId || '', user.id)
+    : await getPromptAnalysisForOwner(id, ownerAnonymousId || '')
   if (!record) {
     notFound()
   }

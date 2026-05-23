@@ -54,20 +54,27 @@ export async function createPromptAnalysis(
 }
 
 /**
- * Retrieves a prompt analysis by UUID and owner anonymous ID.
+ * Retrieves a prompt analysis by UUID and owner anonymous ID or authenticated userId.
  * Enforces ownership check directly in the database query.
  */
 export async function getPromptAnalysisForOwner(
   id: string,
-  ownerAnonymousId: string
+  ownerAnonymousId: string,
+  userId?: string
 ): Promise<PromptAnalysisRow | null> {
   const supabase = getSupabaseServerClient() as any
-  const { data, error } = await supabase
+  let query = supabase
     .from('prompt_analyses')
     .select('*')
     .eq('id', id)
-    .eq('owner_anonymous_id', ownerAnonymousId)
-    .maybeSingle()
+
+  if (userId) {
+    query = query.or(`owner_anonymous_id.eq.${ownerAnonymousId},user_id.eq.${userId}`)
+  } else {
+    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { data, error } = await query.maybeSingle()
 
   if (error) {
     console.error('Error fetching prompt analysis for owner:', error)
@@ -75,6 +82,89 @@ export async function getPromptAnalysisForOwner(
   }
   return data
 }
+
+/**
+ * Links any anonymous prompt analyses owned by a secure session owner cookie
+ * to the newly authenticated user_id, merging guest history transparently.
+ */
+export async function linkAnonymousAnalyses(
+  ownerAnonymousId: string,
+  userId: string
+): Promise<boolean> {
+  const supabase = getSupabaseServerClient() as any
+  const { error } = await supabase
+    .from('prompt_analyses')
+    .update({ user_id: userId })
+    .eq('owner_anonymous_id', ownerAnonymousId)
+    .is('user_id', null)
+
+  if (error) {
+    console.error('Error linking anonymous analyses:', error)
+    return false
+  }
+  return true
+}
+
+/**
+ * Retrieves the complete prompt history for a user, combining records
+ * belonging to either their authenticated user_id or their current anonymous cookie.
+ */
+export async function getPromptAnalysesForUser(
+  userId: string,
+  ownerAnonymousId: string
+): Promise<PromptAnalysisRow[]> {
+  const supabase = getSupabaseServerClient() as any
+  const { data, error } = await supabase
+    .from('prompt_analyses')
+    .select('*')
+    .or(`user_id.eq.${userId},owner_anonymous_id.eq.${ownerAnonymousId}`)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching prompt analyses for user:', error)
+    return []
+  }
+  return data || []
+}
+
+/**
+ * Retrieves the user profile from the database matching the userId.
+ */
+export async function getUserProfile(userId: string): Promise<Database['public']['Tables']['user_profiles']['Row'] | null> {
+  const supabase = getSupabaseServerClient() as any
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Error fetching user profile:', error)
+    return null
+  }
+  return data
+}
+
+/**
+ * Creates or updates the user profile when a user logs in or registers.
+ */
+export async function createUserProfile(
+  profile: Database['public']['Tables']['user_profiles']['Insert']
+): Promise<Database['public']['Tables']['user_profiles']['Row'] | null> {
+  const supabase = getSupabaseServerClient() as any
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .upsert(profile)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating user profile:', error)
+    return null
+  }
+  return data
+}
+
 
 /**
  * Retrieves a prompt analysis by share token where public sharing is enabled.

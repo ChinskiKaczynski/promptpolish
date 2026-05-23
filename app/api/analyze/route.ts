@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { detectSensitiveData } from '@/lib/privacy/sensitive-data-detector'
 import { resolveOrCreateOwnerId } from '@/lib/identity/anonymous'
+import { getAuthUser } from '@/lib/identity/auth'
 import {
   createPromptAnalysis,
   createUsageEvent,
@@ -63,8 +64,10 @@ export async function POST(request: Request) {
       constraints
     } = parsed.data
 
-    // 2. Resolve owner_anonymous_id server-side from signed HTTP cookie (do not trust request body)
+    // 2. Resolve owner_anonymous_id and authenticated user server-side (do not trust request body)
     const { id: ownerAnonymousId } = await resolveOrCreateOwnerId()
+    const user = await getAuthUser()
+    const userId = user?.id || null
 
     // 2a. Hash IP and User-Agent server-side for abuse telemetry.
     //     Raw values are never stored — only SHA-256 hashes salted with APP_URL.
@@ -84,6 +87,7 @@ export async function POST(request: Request) {
       // Record a sensitive data blocked telemetry usage event without saving the raw prompt
       await createUsageEvent({
         owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
         event_type: 'sensitive_data_blocked',
         metadata_json: {
           selected_profile_slug,
@@ -180,6 +184,7 @@ export async function POST(request: Request) {
     // 13. Save prompt_analyses record to database
     const createdRecord = await createPromptAnalysis({
       owner_anonymous_id: ownerAnonymousId,
+      user_id: userId,
       input_prompt,
       working_language,
       selected_profile_slug,
@@ -214,6 +219,7 @@ export async function POST(request: Request) {
     // 14. Save successful usage_event record
     await createUsageEvent({
       owner_anonymous_id: ownerAnonymousId,
+      user_id: userId,
       event_type: 'analyze',
       metadata_json: {
         analysis_id: createdRecord.id,

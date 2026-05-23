@@ -69,9 +69,38 @@ export interface FeedbackEventRow {
   created_at: string
 }
 
+export interface UserProfileRow {
+  user_id: string
+  email: string
+  display_name: string | null
+  plan_slug: string
+  created_at: string
+  updated_at: string
+}
+
 export interface Database {
   public: {
     Tables: {
+      user_profiles: {
+        Row: UserProfileRow
+        Insert: {
+          user_id: string
+          email: string
+          display_name?: string | null
+          plan_slug?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          email?: string
+          display_name?: string | null
+          plan_slug?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       model_profiles: {
         Row: ModelProfileRow
         Insert: {
