@@ -5,12 +5,13 @@ import { resolveOrCreateOwnerId } from '@/lib/identity/anonymous'
 import {
   createPromptAnalysis,
   createUsageEvent,
-  getModelProfileBySlug,
-  getUsageCountToday
+  getModelProfileBySlug
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import { serverEnv } from '@/lib/env/server'
+import { checkAnonymousLimit } from '@/lib/rate-limit/check-limit'
+import { hashValue } from '@/lib/rate-limit/hash-ip'
 
 // Input validation schema using Zod
 const analyzeRequestSchema = z.object({
@@ -53,6 +54,16 @@ export async function POST(request: Request) {
     // 2. Resolve owner_anonymous_id server-side from signed HTTP cookie (do not trust request body)
     const { id: ownerAnonymousId } = await resolveOrCreateOwnerId()
 
+    // 2a. Hash IP and User-Agent server-side for abuse telemetry.
+    //     Raw values are never stored — only SHA-256 hashes salted with APP_URL.
+    //     Headers may be absent (null) — we never fabricate values.
+    const rawIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      ?? request.headers.get('x-real-ip')
+      ?? null
+    const rawUa = request.headers.get('user-agent') ?? null
+    const ipHash = rawIp ? hashValue(rawIp) : null
+    const userAgentHash = rawUa ? hashValue(rawUa) : null
+
     // 3. Run sensitive-data detection server-side
     const detection = detectSensitiveData(input_prompt)
 
@@ -71,7 +82,9 @@ export async function POST(request: Request) {
             message: f.message,
             redactedValue: f.redactedValue
           }))
-        }
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
       })
 
       // Exclude prompt value from logs for privacy
@@ -108,13 +121,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // 6. Check daily anonymous usage limits
-    const usageCount = await getUsageCountToday(ownerAnonymousId)
-    if (usageCount >= serverEnv.ANONYMOUS_DAILY_LIMIT) {
+    // 6. Check daily anonymous usage limits.
+    //    checkAnonymousLimit also saves a limit_reached event when blocked.
+    const limitCheck = await checkAnonymousLimit(ownerAnonymousId, ipHash, userAgentHash)
+    if (!limitCheck.allowed) {
       return NextResponse.json(
         {
           error: 'limit_reached',
-          message: 'Przekroczono dzienny limit analiz dla użytkownika anonimowego. Spróbuj ponownie jutro.'
+          message: 'Przekroczono dzienny limit analiz dla użytkownika anonimowego. Spróbuj ponownie jutro.',
+          limit: limitCheck.limit
         },
         { status: 429 }
       )
@@ -192,7 +207,9 @@ export async function POST(request: Request) {
         analysis_id: createdRecord.id,
         selected_profile_slug,
         working_language
-      }
+      },
+      ip_hash: ipHash,
+      user_agent_hash: userAgentHash
     })
 
     // 15. Return analysis ID and result payload safely

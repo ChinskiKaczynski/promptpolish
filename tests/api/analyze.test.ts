@@ -10,9 +10,13 @@ vi.mock('@/lib/identity/anonymous', () => ({
 
 vi.mock('@/lib/supabase/queries', () => ({
   getModelProfileBySlug: vi.fn(),
-  getUsageCountToday: vi.fn(),
   createPromptAnalysis: vi.fn(),
   createUsageEvent: vi.fn()
+}))
+
+// checkAnonymousLimit is the route's direct rate-limit dependency
+vi.mock('@/lib/rate-limit/check-limit', () => ({
+  checkAnonymousLimit: vi.fn()
 }))
 
 vi.mock('@/lib/ai/analyze-prompt', () => ({
@@ -24,10 +28,10 @@ import { POST } from '@/app/api/analyze/route'
 import { resolveOrCreateOwnerId } from '@/lib/identity/anonymous'
 import {
   getModelProfileBySlug,
-  getUsageCountToday,
   createPromptAnalysis,
   createUsageEvent
 } from '@/lib/supabase/queries'
+import { checkAnonymousLimit } from '@/lib/rate-limit/check-limit'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import { serverEnv } from '@/lib/env/server'
@@ -40,7 +44,8 @@ describe('POST /api/analyze API Route Handler', () => {
 
     // Default mock implementation setup
     vi.mocked(resolveOrCreateOwnerId).mockResolvedValue({ id: 'mocked-owner-id', isNew: false })
-    vi.mocked(getUsageCountToday).mockResolvedValue(0)
+    // Default: limit not reached
+    vi.mocked(checkAnonymousLimit).mockResolvedValue({ allowed: true, count: 0, limit: serverEnv.ANONYMOUS_DAILY_LIMIT })
     vi.mocked(getModelProfileBySlug).mockResolvedValue({
       id: 'profile-uuid',
       slug: 'google-gemini-3-5-flash',
@@ -158,8 +163,12 @@ describe('POST /api/analyze API Route Handler', () => {
   })
 
   describe('Usage Rate Limits Check', () => {
-    it('returns 429 Too Many Requests when daily anonymous limits are reached', async () => {
-      vi.mocked(getUsageCountToday).mockResolvedValue(serverEnv.ANONYMOUS_DAILY_LIMIT)
+    it('returns 429 Too Many Requests when daily anonymous limits are reached and saves a limit_reached event', async () => {
+      vi.mocked(checkAnonymousLimit).mockResolvedValue({
+        allowed: false,
+        count: serverEnv.ANONYMOUS_DAILY_LIMIT,
+        limit: serverEnv.ANONYMOUS_DAILY_LIMIT
+      })
 
       const response = await POST(makeRequest(validPayload))
       const data = await response.json()
@@ -168,6 +177,14 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(data.error).toBe('limit_reached')
       expect(data.message).toContain('Przekroczono dzienny limit')
       expect(analyzePrompt).not.toHaveBeenCalled()
+
+      // checkAnonymousLimit is called with the verified owner id;
+      // ip/ua hashes are null in this headerless test environment (correct — no headers sent)
+      expect(checkAnonymousLimit).toHaveBeenCalledWith(
+        'mocked-owner-id',
+        null, // no x-forwarded-for / x-real-ip header in test request
+        null  // no user-agent header in test request
+      )
     })
   })
 
