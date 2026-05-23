@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getPromptAnalysisForOwner } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { ResultView } from '@/components/result/result-view'
+import type { AnalysisResult } from '@/lib/ai/schemas'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -23,11 +24,15 @@ export default async function PrivateResultPage({ params }: PageProps) {
   }
 
   // 3. Map database values to schema structure expected by the ResultView UI component
+  const analysisJson = record.analysis_json as unknown as AnalysisResult
   const mappedResult = {
-    ...(record.analysis_json as any),
+    ...analysisJson,
     overallScore: record.overall_score,
     scoreLevel: record.score_level,
-    improved_prompt: record.improved_prompt
+    improved_prompt: record.improved_prompt,
+    id: record.id,
+    isShareEnabled: record.is_share_enabled,
+    shareToken: record.share_token
   }
 
   return (

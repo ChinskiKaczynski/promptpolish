@@ -31,6 +31,8 @@ import {
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import { serverEnv } from '@/lib/env/server'
+import type { ModelProfileRow, PromptAnalysisRow } from '@/lib/supabase/types'
+import type { AnalysisServiceResult } from '@/lib/ai/analyze-prompt'
 
 describe('POST /api/analyze API Route Handler', () => {
   beforeEach(() => {
@@ -56,11 +58,11 @@ describe('POST /api/analyze API Route Handler', () => {
       profile_version: '1.0.0',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
-    } as any)
+    } as unknown as ModelProfileRow)
   })
 
   // Helper to create a request
-  const makeRequest = (body: any) => {
+  const makeRequest = (body: Record<string, unknown>) => {
     return new Request('http://localhost/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -70,8 +72,8 @@ describe('POST /api/analyze API Route Handler', () => {
 
   const validPayload = {
     input_prompt: 'To jest w pełni poprawny prompt o minimalnej długości dwudziestu znaków potrzebny do pomyślnego przejścia walidacji.',
-    working_language: 'pl',
-    selected_profile_slug: 'google-gemini-3-5-flash'
+    working_language: 'pl' as const,
+    selected_profile_slug: 'google-gemini-3-5-flash' as const
   }
 
   describe('Request Schema & Validation Checks', () => {
@@ -89,8 +91,8 @@ describe('POST /api/analyze API Route Handler', () => {
     })
 
     it('returns 400 Bad Request when mandatory fields are missing', async () => {
-      const payload = { working_language: 'pl' } // missing input_prompt
-      const response = await POST(makeRequest(payload))
+      const payload = { working_language: 'pl' }
+      const response = await POST(makeRequest(payload as unknown as Record<string, unknown>))
       const data = await response.json()
 
       expect(response.status).toBe(400)
@@ -249,12 +251,12 @@ describe('POST /api/analyze API Route Handler', () => {
         }
       }
 
-      vi.mocked(analyzePrompt).mockResolvedValue(mockResult as any)
+      vi.mocked(analyzePrompt).mockResolvedValue(mockResult as unknown as AnalysisServiceResult)
       vi.mocked(createPromptAnalysis).mockResolvedValue({
         id: 'new-analysis-uuid',
         overall_score: 85,
         score_level: 'strong'
-      } as any)
+      } as unknown as PromptAnalysisRow)
 
       const response = await POST(makeRequest(validPayload))
       const data = await response.json()

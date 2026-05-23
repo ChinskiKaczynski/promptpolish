@@ -5,8 +5,14 @@ import type { AnalysisResult } from '@/lib/ai/schemas'
 import { mvpModelProfiles } from '@/lib/ai/model-profiles'
 
 type ResultViewProps = {
-  result: AnalysisResult & { overallScore: number; scoreLevel: string }
-  mode: 'private' | 'share'
+  result: AnalysisResult & { 
+    overallScore: number; 
+    scoreLevel: string;
+    id?: string;
+    isShareEnabled?: boolean;
+    shareToken?: string | null;
+  }
+  mode: 'private' | 'share' | 'public'
 }
 
 // English to Polish translations for score levels
@@ -70,9 +76,11 @@ const criterionTranslations: Record<string, string> = {
 export function ResultView({ result, mode }: ResultViewProps) {
   const [isCopied, setIsCopied] = useState(false)
   const [feedbackVote, setFeedbackVote] = useState<'up' | 'down' | null>(null)
-  const [isShareEnabled, setIsShareEnabled] = useState(false)
+  const [isShareEnabled, setIsShareEnabled] = useState(result.isShareEnabled ?? false)
+  const [shareToken, setShareToken] = useState<string | null>(result.shareToken ?? null)
   const [isShareLinkCopied, setIsShareLinkCopied] = useState(false)
   const [expandedCriteria, setExpandedCriteria] = useState<Record<string, boolean>>({})
+  const [shareError, setShareError] = useState<string | null>(null)
 
   // Find the model profile corresponding to the detected_task_type or a default
   const activeProfile = mvpModelProfiles.find(p => p.slug === 'google-gemini-3-5-flash') || mvpModelProfiles[0]
@@ -93,9 +101,13 @@ export function ResultView({ result, mode }: ResultViewProps) {
     }
   }, [isCopied])
 
+  const shareUrl = typeof window !== 'undefined' && shareToken
+    ? `${window.location.origin}/share/${shareToken}`
+    : ''
+
   const handleCopyShareLink = async () => {
+    if (!shareUrl) return
     try {
-      const shareUrl = `${window.location.origin}/share/mock-prompt-audit-74`
       await navigator.clipboard.writeText(shareUrl)
       setIsShareLinkCopied(true)
     } catch (err) {
@@ -109,6 +121,49 @@ export function ResultView({ result, mode }: ResultViewProps) {
       return () => clearTimeout(timer)
     }
   }, [isShareLinkCopied])
+
+  const handleToggleShare = async () => {
+    if (!result.id) return
+    setShareError(null)
+    const targetState = !isShareEnabled
+
+    try {
+      if (targetState) {
+        // Enable public sharing via API
+        const res = await fetch('/api/share', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ analysis_id: result.id })
+        })
+
+        if (!res.ok) {
+          throw new Error('Nie udało się włączyć udostępniania publicznego.')
+        }
+
+        const data = await res.json()
+        setIsShareEnabled(true)
+        setShareToken(data.share_token)
+      } else {
+        // Disable public sharing via API
+        const res = await fetch('/api/share/disable', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ analysis_id: result.id })
+        })
+
+        if (!res.ok) {
+          throw new Error('Nie udało się wyłączyć udostępniania publicznego.')
+        }
+
+        setIsShareEnabled(false)
+        setShareToken(null)
+      }
+    } catch (err: unknown) {
+      const errorObject = err instanceof Error ? err : new Error(String(err))
+      console.error(errorObject)
+      setShareError(errorObject.message)
+    }
+  }
 
   const toggleCriterion = (criterionKey: string) => {
     setExpandedCriteria(prev => ({
@@ -126,6 +181,8 @@ export function ResultView({ result, mode }: ResultViewProps) {
   const circumference = 2 * Math.PI * radius
   const strokeDashoffset = circumference - (result.overallScore / 100) * circumference
 
+  const isPublicMode = mode === 'share' || mode === 'public'
+
   return (
     <div className="space-y-8 pb-16">
       {/* Top Breadcrumb/Header */}
@@ -133,9 +190,11 @@ export function ResultView({ result, mode }: ResultViewProps) {
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
-              {mode === 'share' ? 'Publiczny raport' : 'Prywatny audyt'}
+              {isPublicMode ? 'Publiczny raport' : 'Prywatny audyt'}
             </span>
-            <span className="text-xs text-slate-400">ID: mock-74a9b</span>
+            {!isPublicMode && result.id && (
+              <span className="text-xs text-slate-400">ID: {result.id.slice(0, 8)}</span>
+            )}
           </div>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Raport Audytu Promptu</h1>
         </div>
@@ -167,7 +226,6 @@ export function ResultView({ result, mode }: ResultViewProps) {
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
         {/* Score Display Card */}
         <div className={`relative flex flex-col justify-between overflow-hidden rounded-3xl border p-6 sm:p-8 shadow-sm transition-all ${scoreMeta.bg} ${scoreMeta.border}`}>
-          {/* Subtle Decorative Background Glow */}
           <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-white opacity-40 blur-xl" />
           
           <div className="flex items-center justify-between gap-6">
@@ -180,7 +238,6 @@ export function ResultView({ result, mode }: ResultViewProps) {
             {/* SVG Circular Progress Meter */}
             <div className="relative h-24 w-24 shrink-0">
               <svg className="h-full w-full -rotate-90">
-                {/* Background Ring */}
                 <circle
                   cx="48"
                   cy="48"
@@ -189,7 +246,6 @@ export function ResultView({ result, mode }: ResultViewProps) {
                   strokeWidth={strokeWidth}
                   fill="transparent"
                 />
-                {/* Colored Ring with gradient */}
                 <circle
                   cx="48"
                   cy="48"
@@ -419,7 +475,6 @@ export function ResultView({ result, mode }: ResultViewProps) {
         {/* Editor Top Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 bg-slate-900/60 px-6 py-4">
           <div className="flex items-center gap-3">
-            {/* Window control dots */}
             <div className="flex items-center gap-1.5 shrink-0">
               <span className="h-3 w-3 rounded-full bg-rose-500/80" />
               <span className="h-3 w-3 rounded-full bg-amber-500/80" />
@@ -454,13 +509,11 @@ export function ResultView({ result, mode }: ResultViewProps) {
 
         {/* Editor Code Area */}
         <div className="flex overflow-x-auto p-6 font-mono text-sm leading-relaxed text-indigo-200 selection:bg-indigo-500/30">
-          {/* Line Numbers */}
           <div className="select-none pr-5 text-right text-slate-600 shrink-0 border-r border-slate-800/40">
             {promptLines.map((_, i) => (
               <div key={i} className="h-6">{i + 1}</div>
             ))}
           </div>
-          {/* Code text */}
           <pre className="pl-5 whitespace-pre font-mono h-full flex-1">
             {promptLines.map((line, i) => (
               <div key={i} className="h-6 hover:bg-white/5 transition-colors duration-150 rounded px-1 -mx-1">{line || ' '}</div>
@@ -527,100 +580,114 @@ export function ResultView({ result, mode }: ResultViewProps) {
       </div>
 
       {/* Footer Interactive Actions Section: Feedback & Public Sharing */}
-      <div className="grid gap-6 md:grid-cols-2">
-        
-        {/* Feedback Section */}
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Czy ten audyt był pomocny?</h3>
-            <p className="mt-1 text-xs text-slate-500">Twój feedback pozwala nam stale ulepszać filtry inżynierii promptów.</p>
-          </div>
-
-          <div className="mt-6">
-            {feedbackVote ? (
-              <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-100 px-4 py-3 text-xs font-bold text-emerald-700 animate-pulse">
-                <svg className="h-4.5 w-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Dziękujemy za przesłanie opinii! (Feedback)</span>
-              </div>
-            ) : (
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setFeedbackVote('up')}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 py-3 text-xs font-semibold text-slate-700 active:scale-95 transition-all"
-                >
-                  <span className="text-base">👍</span>
-                  <span>Tak, bardzo</span>
-                </button>
-                <button
-                  onClick={() => setFeedbackVote('down')}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 py-3 text-xs font-semibold text-slate-700 active:scale-95 transition-all"
-                >
-                  <span className="text-base">👎</span>
-                  <span>Nie, słaba jakość</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Share Link Generation Placeholder */}
-        <div className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between">
+      {!isPublicMode && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Feedback Section */}
+          <div className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
             <div>
-              <h3 className="text-base font-bold text-slate-900">Udostępnij raport</h3>
-              <p className="mt-1 text-xs text-slate-500">
-                Stwórz publiczny link. Domyślnie wyłączone (prywatny).
-              </p>
+              <h3 className="text-base font-bold text-slate-900">Czy ten audyt był pomocny?</h3>
+              <p className="mt-1 text-xs text-slate-500">Twój feedback pozwala nam stale ulepszać filtry inżynierii promptów.</p>
             </div>
-            
-            {/* Toggle Switch */}
-            <button
-              onClick={() => setIsShareEnabled(prev => !prev)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                isShareEnabled ? 'bg-indigo-600' : 'bg-slate-200'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                  isShareEnabled ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
 
-          <div className="mt-6">
-            {isShareEnabled ? (
-              <div className="space-y-2.5 animate-fadeIn">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 block">Publiczny adres URL:</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/share/mock-prompt-audit-74`}
-                    className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-500 focus:outline-none"
-                  />
+            <div className="mt-6">
+              {feedbackVote ? (
+                <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-100 px-4 py-3 text-xs font-bold text-emerald-700 animate-pulse">
+                  <svg className="h-4.5 w-4.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Dziękujemy za przesłanie opinii! (Feedback)</span>
+                </div>
+              ) : (
+                <div className="flex gap-4">
                   <button
-                    onClick={handleCopyShareLink}
-                    className="shrink-0 rounded-2xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white px-4 py-2.5 transition-colors"
+                    onClick={() => setFeedbackVote('up')}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 py-3 text-xs font-semibold text-slate-700 active:scale-95 transition-all"
                   >
-                    {isShareLinkCopied ? 'Copied!' : 'Copy'}
+                    <span className="text-base">👍</span>
+                    <span>Tak, bardzo</span>
+                  </button>
+                  <button
+                    onClick={() => setFeedbackVote('down')}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 py-3 text-xs font-semibold text-slate-700 active:scale-95 transition-all"
+                  >
+                    <span className="text-base">👎</span>
+                    <span>Nie, słaba jakość</span>
                   </button>
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Share Link Generation */}
+          <div className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Udostępnij raport</h3>
+                <p className="mt-1 text-xs text-slate-500">
+                  Stwórz publiczny link. Domyślnie wyłączone (prywatny).
+                </p>
               </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-center">
-                <span className="text-xs font-medium text-slate-400">
-                  Włącz toggle u góry, aby wygenerować link udostępniania
-                </span>
-              </div>
-            )}
+              
+              {/* Toggle Switch */}
+              <button
+                onClick={handleToggleShare}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  isShareEnabled ? 'bg-indigo-600' : 'bg-slate-200'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    isShareEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="mt-6">
+              {shareError && (
+                <p className="text-xs font-semibold text-red-600 mb-2">⚠️ {shareError}</p>
+              )}
+
+              {isShareEnabled && shareToken ? (
+                <div className="space-y-2.5 animate-fadeIn">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 block">Publiczny adres URL:</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={shareUrl}
+                      className="flex-1 min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={handleCopyShareLink}
+                      className="shrink-0 rounded-2xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white px-4 py-2.5 transition-colors"
+                    >
+                      {isShareLinkCopied ? 'Skopiowano!' : 'Kopiuj'}
+                    </button>
+                  </div>
+                  
+                  {/* Public link safety warning block */}
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-3 text-[10px] leading-relaxed text-amber-900 flex gap-2">
+                    <svg className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                      <strong className="block mb-0.5">Uwaga: Raport staje się publiczny!</strong>
+                      Każdy, kto posiada ten adres URL, będzie mógł go wyświetlić. Prywatne tokeny sesji i dane techniczne są ukrywane, lecz zachowaj ostrożność.
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-center">
+                  <span className="text-xs font-medium text-slate-400">
+                    Włącz toggle u góry, aby wygenerować link udostępniania
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-
-      </div>
-
+      )}
     </div>
   )
 }

@@ -5,15 +5,23 @@ import { useRouter } from 'next/navigation'
 import { detectSensitiveData } from '@/lib/privacy/sensitive-data-detector'
 
 const MIN_PROMPT_CHARS = 20
-const MAX_PROMPT_CHARS = 4000
-const WARN_PROMPT_CHARS = 3000
+const MAX_PROMPT_CHARS = 12000
+const WARN_PROMPT_CHARS = 11000
 
-const loadingSteps = [
+const loadingStepsPl = [
   'Uruchamianie preflighta bezpieczeństwa...',
   'Sprawdzanie limitów użytkowania...',
   'Inicjowanie modelu Gemini 3.5 Flash...',
   'Audytowanie struktury promptu (rola, kontekst, ograniczenia)...',
   'Generowanie ulepszonego promptu i wyjaśnień...'
+]
+
+const loadingStepsEn = [
+  'Launching safety preflight check...',
+  'Checking usage quotas and limits...',
+  'Initializing Gemini 3.5 Flash engine...',
+  'Auditing prompt structures (role, context, constraints)...',
+  'Generating improved prompt and explanations...'
 ]
 
 export function AnalyzeForm() {
@@ -42,16 +50,23 @@ export function AnalyzeForm() {
   const isApproachingLimit = inputPrompt.length >= WARN_PROMPT_CHARS && inputPrompt.length <= MAX_PROMPT_CHARS
   const isBlocked = detection.riskLevel === 'high'
 
+  const loadingSteps = workingLanguage === 'pl' ? loadingStepsPl : loadingStepsEn
+
   // Animate mock audit loading checkpoints and redirect dynamically
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isSubmitting && !errorMessage) {
       interval = setInterval(() => {
         setCurrentStepIndex((prevIndex) => {
+          // If server ID is ready, fast-track progress to the last step instantly
+          if (createdId && prevIndex < loadingSteps.length - 1) {
+            return loadingSteps.length - 1
+          }
+
           if (prevIndex < loadingSteps.length - 1) {
             return prevIndex + 1
           } else {
-            // Once mock stages complete, redirect immediately if server resolved the database ID
+            // Once stages complete, redirect immediately if server resolved the database ID
             if (createdId) {
               clearInterval(interval)
               setIsSubmitting(false)
@@ -63,10 +78,11 @@ export function AnalyzeForm() {
       }, 750)
     }
     return () => clearInterval(interval)
-  }, [isSubmitting, createdId, errorMessage, router])
+  }, [isSubmitting, createdId, errorMessage, router, loadingSteps.length])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Local preflight safety check - do not submit if blocked, too short, or too long
     if (isTooShort || isTooLong || isBlocked) return
     
     setErrorMessage(null)
@@ -91,18 +107,79 @@ export function AnalyzeForm() {
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}))
-        throw new Error(errData.message || errData.error || 'Wystąpił błąd serwera podczas analizy.')
+        const errorSlug = errData.error || 'internal_error'
+        
+        let msg = ''
+        if (workingLanguage === 'pl') {
+          switch (errorSlug) {
+            case 'invalid_input':
+              msg = 'Nieprawidłowe dane wejściowe. Upewnij się, że Twój prompt ma co najmniej 20 znaków.'
+              break
+            case 'prompt_too_long':
+              msg = `Wprowadzony prompt jest za długi. Maksymalna długość to ${MAX_PROMPT_CHARS} znaków.`
+              break
+            case 'high_risk_sensitive_data_detected':
+              msg = 'Analiza zablokowana. Wykryto poufne dane wysokiego ryzyka (np. klucze API lub hasła). Usuń je przed ponowną próbą.'
+              break
+            case 'limit_reached':
+              msg = 'Osiągnięto dzienny limit analiz dla użytkownika anonimowego. Spróbuj ponownie jutro.'
+              break
+            case 'model_profile_unavailable':
+              msg = 'Wybrany profil kalibracyjny modelu jest obecnie niedostępny.'
+              break
+            case 'provider_unavailable':
+              msg = 'Usługa analizy AI jest tymczasowo przeciążona lub niedostępna. Spróbuj ponownie za chwilę.'
+              break
+            case 'provider_error':
+              msg = 'Wystąpił błąd komunikacji z silnikiem analizy AI. Spróbuj ponownie.'
+              break
+            default:
+              msg = errData.message || 'Wystąpił nieoczekiwany błąd serwera. Spróbuj ponownie później.'
+          }
+        } else {
+          switch (errorSlug) {
+            case 'invalid_input':
+              msg = 'Invalid input parameters. Please ensure your prompt is at least 20 characters.'
+              break
+            case 'prompt_too_long':
+              msg = `The input prompt is too long. The maximum length is ${MAX_PROMPT_CHARS} characters.`
+              break
+            case 'high_risk_sensitive_data_detected':
+              msg = 'Analysis blocked. High-risk sensitive credentials (e.g. API keys or passwords) were detected. Please remove them.'
+              break
+            case 'limit_reached':
+              msg = 'Daily anonymous analysis limit reached. Please try again tomorrow.'
+              break
+            case 'model_profile_unavailable':
+              msg = 'The selected model calibration profile is temporarily unavailable.'
+              break
+            case 'provider_unavailable':
+              msg = 'The AI analysis service is currently overloaded or down. Please try again shortly.'
+              break
+            case 'provider_error':
+              msg = 'An error occurred while communicating with the AI analysis engine. Please try again.'
+              break
+            default:
+              msg = errData.message || 'An unexpected internal server error occurred. Please try again later.'
+          }
+        }
+        throw new Error(msg)
       }
 
       const data = await response.json()
       if (!data.id) {
-        throw new Error('Serwer nie zwrócił poprawnego identyfikatora wyniku.')
+        throw new Error(
+          workingLanguage === 'pl' 
+            ? 'Serwer nie zwrócił poprawnego identyfikatora wyniku.' 
+            : 'Server did not return a valid result identifier.'
+        )
       }
 
       setCreatedId(data.id)
-    } catch (err: any) {
-      console.error(err)
-      setErrorMessage(err.message || 'Wystąpił nieznany błąd podczas łączenia z serwerem.')
+    } catch (err: unknown) {
+      const errorObject = err instanceof Error ? err : new Error(String(err))
+      console.error(errorObject)
+      setErrorMessage(errorObject.message || (workingLanguage === 'pl' ? 'Wystąpił nieznany błąd podczas łączenia z serwerem.' : 'An unknown error occurred while connecting to the server.'))
       setIsSubmitting(false)
     }
   }
@@ -121,7 +198,9 @@ export function AnalyzeForm() {
               </svg>
             </div>
             
-            <h3 className="mt-8 text-lg font-bold text-white tracking-tight">Trwa inżynieryjny audyt promptu...</h3>
+            <h3 className="mt-8 text-lg font-bold text-white tracking-tight">
+              {workingLanguage === 'pl' ? 'Trwa inżynieryjny audyt promptu...' : 'Conducting prompt engineering audit...'}
+            </h3>
             
             {/* Steps Progress Indicator */}
             <div className="mt-6 w-72 rounded-full bg-slate-800 p-1">
@@ -132,7 +211,7 @@ export function AnalyzeForm() {
             </div>
             
             <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-indigo-400">
-              Krok {currentStepIndex + 1} z {loadingSteps.length}
+              {workingLanguage === 'pl' ? `Krok ${currentStepIndex + 1} z ${loadingSteps.length}` : `Step ${currentStepIndex + 1} of ${loadingSteps.length}`}
             </p>
             
             <p className="mt-2 text-sm text-slate-400 leading-relaxed min-h-[40px] animate-fade-in">
@@ -143,18 +222,22 @@ export function AnalyzeForm() {
       )}
 
       {/* Main Analyzer Form */}
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 shadow-sm">
         
         {/* Upper Dashboard: Safety Warnings & Daily Quotas */}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {/* Privacy Disclaimer Card */}
           <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4 text-xs leading-relaxed text-amber-900 flex gap-3">
             <svg className="h-5 w-5 shrink-0 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0-6h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
             </svg>
             <div>
-              <span className="font-bold block mb-0.5">Ochrona Prywatności</span>
-              Przed analizą system automatycznie skanuje instrukcje w poszukiwaniu danych wrażliwe. Nigdy nie wklejaj haseł, kluczy ani tajemnic firmy.
+              <span className="font-bold block mb-0.5">
+                {workingLanguage === 'pl' ? 'Ochrona Prywatności' : 'Privacy Protection'}
+              </span>
+              {workingLanguage === 'pl' 
+                ? 'Przed analizą system automatycznie skanuje instrukcje w poszukiwaniu danych wrażliwych. Nigdy nie wklejaj haseł ani kluczy prywatnych.'
+                : 'Before analysis, the system automatically scans prompts for sensitive details. Never paste passwords or private credentials.'}
             </div>
           </div>
 
@@ -164,8 +247,12 @@ export function AnalyzeForm() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <div>
-              <span className="font-bold block mb-0.5">Dzienny limit bezpłatny</span>
-              Wykorzystano dzisiaj: <strong className="text-indigo-700">0 / 5 analiz</strong>. Bezpłatne kwoty odnawiają się codziennie o północy.
+              <span className="font-bold block mb-0.5">
+                {workingLanguage === 'pl' ? 'Dzienny Limit Analiz' : 'Daily Analysis Limit'}
+              </span>
+              {workingLanguage === 'pl' 
+                ? 'Każdy użytkownik anonimowy otrzymuje bezpłatny dzienny limit. Pula odnawia się o północy UTC.' 
+                : 'Every anonymous user receives a free daily limit. Quotas reset daily at midnight UTC.'}
             </div>
           </div>
         </div>
@@ -173,9 +260,9 @@ export function AnalyzeForm() {
         {/* Mandatory Selections */}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-2 text-sm font-semibold text-slate-800">
-            Język roboczy
+            {workingLanguage === 'pl' ? 'Język roboczy' : 'Working language'}
             <select 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 px-4 py-3 text-sm font-medium transition cursor-pointer" 
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 px-4 py-3 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-100" 
               value={workingLanguage} 
               onChange={(e) => setWorkingLanguage(e.target.value as 'pl' | 'en')}
             >
@@ -185,9 +272,9 @@ export function AnalyzeForm() {
           </label>
 
           <label className="space-y-2 text-sm font-semibold text-slate-800">
-            Profil kalibracyjny modelu
+            {workingLanguage === 'pl' ? 'Profil kalibracyjny modelu' : 'Model calibration profile'}
             <select 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 px-4 py-3 text-sm font-medium transition cursor-pointer" 
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 px-4 py-3 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-100" 
               value={profileSlug} 
               onChange={(e) => setProfileSlug(e.target.value)}
             >
@@ -200,9 +287,11 @@ export function AnalyzeForm() {
         {/* Primary Prompt Input Textarea */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-semibold text-slate-800">Prompt do audytu (Wymagany)</label>
+            <label className="text-sm font-semibold text-slate-800">
+              {workingLanguage === 'pl' ? 'Prompt do audytu (Wymagany)' : 'Prompt to audit (Required)'}
+            </label>
             <span className={`text-xs font-semibold ${isTooLong ? 'text-red-600' : isApproachingLimit ? 'text-amber-600' : 'text-slate-400'}`}>
-              {inputPrompt.length} / {MAX_PROMPT_CHARS} znaków
+              {inputPrompt.length.toLocaleString()} / {MAX_PROMPT_CHARS.toLocaleString()} {workingLanguage === 'pl' ? 'znaków' : 'characters'}
             </span>
           </div>
           <textarea
@@ -211,7 +300,9 @@ export function AnalyzeForm() {
               isApproachingLimit ? 'border-amber-300 focus:ring-amber-100 bg-amber-50/10' : 
               'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100 bg-slate-50/30'
             }`}
-            placeholder="Wklej tutaj treść promptu, który chcesz przetestować i ulepszyć (minimum 20 znaków)..."
+            placeholder={workingLanguage === 'pl' 
+              ? 'Wklej tutaj treść promptu, który chcesz przetestować i ulepszyć (minimum 20 znaków)...' 
+              : 'Paste the content of the prompt you want to test and improve here (minimum 20 characters)...'}
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
           />
@@ -219,7 +310,7 @@ export function AnalyzeForm() {
 
         {/* Real-time Sensitive Data Scans Result */}
         {detection.riskLevel !== 'none' && (
-          <div className={`rounded-2xl border p-5 text-xs flex gap-3.5 transition-all shadow-sm ${
+          <div className={`rounded-2xl border p-4 sm:p-5 text-xs flex gap-3.5 transition-all shadow-sm ${
             detection.riskLevel === 'high' ? 'border-red-200 bg-red-50/50 text-red-950 animate-shake' :
             detection.riskLevel === 'medium' ? 'border-amber-200 bg-amber-50/50 text-amber-950' :
             'border-slate-200 bg-slate-50/60 text-slate-800'
@@ -243,16 +334,20 @@ export function AnalyzeForm() {
                 </svg>
               )}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="font-bold text-sm leading-tight">
-                {detection.riskLevel === 'high' ? 'Zablokowano: Wykryto dane krytyczne' :
-                 detection.riskLevel === 'medium' ? 'Ostrzeżenie: Potencjalne dane poufne' :
-                 'Informacja: Zidentyfikowano dane kontaktowe'}
+                {detection.riskLevel === 'high' 
+                  ? (workingLanguage === 'pl' ? 'Zablokowano: Wykryto dane krytyczne' : 'Blocked: High-Risk Credentials Detected') :
+                 detection.riskLevel === 'medium' 
+                  ? (workingLanguage === 'pl' ? 'Ostrzeżenie: Potencjalne dane poufne' : 'Warning: Potential Secrets Found') :
+                 (workingLanguage === 'pl' ? 'Informacja: Zidentyfikowano dane kontaktowe' : 'Notice: Contact Identifiers Identified')}
               </p>
-              <p className="mt-1 text-slate-600 leading-relaxed">
-                {detection.riskLevel === 'high' ? 'Nasz skaner preflight zidentyfikował wzorce krytycznych sekretów. Aby odblokować audyt, usuń je ze swojego promptu:' :
-                 detection.riskLevel === 'medium' ? 'Wykryliśmy wzorce o średnim poziomie ryzyka (np. hasła). Zalecamy upewnić się, że nie są to dane produkcyjne przed kontynuacją:' :
-                 'Wykryliśmy podstawowe dane kontaktowe (np. adres e-mail). Narzędzie działa w 100% anonimowo, ale zalecamy ostrożność:'}
+              <p className="mt-1 text-slate-600 leading-relaxed break-words">
+                {detection.riskLevel === 'high' 
+                  ? (workingLanguage === 'pl' ? 'Nasz skaner preflight zidentyfikował wzorce krytycznych sekretów. Aby odblokować audyt, usuń je ze swojego promptu:' : 'Our safety preflight scan identified high-risk secret patterns. To unlock the audit button, please remove them from your prompt:') :
+                 detection.riskLevel === 'medium' 
+                  ? (workingLanguage === 'pl' ? 'Wykryliśmy wzorce o średnim poziomie ryzyka (np. hasła). Zalecamy upewnić się, że nie są to dane produkcyjne przed kontynuacją:' : 'We detected medium-risk parameters (e.g. passwords). We highly recommend verifying these are non-production placeholders:') :
+                 (workingLanguage === 'pl' ? 'Wykryliśmy podstawowe dane kontaktowe (np. adres e-mail). Narzędzie działa w 100% anonimowo, ale zalecamy ostrożność:' : 'We detected common contact details (e.g. email). Although this tool is 100% anonymous, please stay cautious:')}
               </p>
               <ul className="mt-3.5 space-y-2.5">
                 {detection.findings.map((finding, idx) => (
@@ -263,7 +358,7 @@ export function AnalyzeForm() {
                         finding.riskLevel === 'medium' ? 'bg-amber-100 text-amber-800' :
                         'bg-slate-100 text-slate-800'
                       }`}>
-                        {finding.riskLevel === 'high' ? 'Krytyczne' : finding.riskLevel === 'medium' ? 'Ostrzeżenie' : 'Info'}
+                        {finding.riskLevel === 'high' ? (workingLanguage === 'pl' ? 'Krytyczne' : 'Critical') : finding.riskLevel === 'medium' ? (workingLanguage === 'pl' ? 'Ostrzeżenie' : 'Warning') : 'Info'}
                       </span>
                       <span className="font-mono text-xs font-bold text-slate-700 break-all">{finding.redactedValue}</span>
                     </div>
@@ -278,12 +373,16 @@ export function AnalyzeForm() {
         {/* Warning messages */}
         {isApproachingLimit && (
           <p className="text-xs font-semibold text-amber-700 flex items-center gap-1.5 animate-pulse">
-            ⚠️ Zbliżasz się do maksymalnego limitu 4,000 znaków. Ogranicz tekst, aby zmieścił się w oknie analizy.
+            ⚠️ {workingLanguage === 'pl' 
+              ? `Zbliżasz się do maksymalnego limitu ${MAX_PROMPT_CHARS.toLocaleString()} znaków. Ogranicz tekst.`
+              : `You are approaching the limit of ${MAX_PROMPT_CHARS.toLocaleString()} characters. Please trim the text.`}
           </p>
         )}
         {isTooLong && (
           <p className="text-xs font-semibold text-red-700 flex items-center gap-1.5">
-            ❌ Błąd: Twój prompt przekracza maksymalny dopuszczalny limit 4,000 znaków (obecnie {inputPrompt.length}).
+            ❌ {workingLanguage === 'pl'
+              ? `Błąd: Twój prompt przekracza maksymalny dopuszczalny limit ${MAX_PROMPT_CHARS.toLocaleString()} znaków (obecnie ${inputPrompt.length.toLocaleString()}).`
+              : `Error: Your prompt exceeds the maximum allowed limit of ${MAX_PROMPT_CHARS.toLocaleString()} characters (currently ${inputPrompt.length.toLocaleString()}).`}
           </p>
         )}
 
@@ -294,7 +393,7 @@ export function AnalyzeForm() {
           </div>
           <div className="relative flex justify-center">
             <span className="bg-white px-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-              Opcjonalne Uściślenia Celu (Rekomendowane)
+              {workingLanguage === 'pl' ? 'Opcjonalne Uściślenia Celu (Rekomendowane)' : 'Optional Task Calibration (Recommended)'}
             </span>
           </div>
         </div>
@@ -302,51 +401,57 @@ export function AnalyzeForm() {
         {/* Optional Contextual Parameters Fields */}
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-2 text-sm font-semibold text-slate-800">
-            Cel zadania (Goal)
+            {workingLanguage === 'pl' ? 'Cel zadania (Goal)' : 'Task goal (Goal)'}
             <input 
               className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 focus:border-indigo-500 focus:bg-white focus:outline-none px-4 py-3 text-sm transition"
-              placeholder="np. Napisanie posta blogowego SEO"
+              placeholder={workingLanguage === 'pl' ? 'np. Napisanie posta blogowego SEO' : 'e.g. Writing an SEO blog post'}
               value={taskGoal} 
               onChange={(e) => setTaskGoal(e.target.value)} 
             />
           </label>
 
           <label className="space-y-2 text-sm font-semibold text-slate-800">
-            Typ zadania (Task Type)
+            {workingLanguage === 'pl' ? 'Typ zadania (Task Type)' : 'Task type (Task Type)'}
             <input 
               className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 focus:border-indigo-500 focus:bg-white focus:outline-none px-4 py-3 text-sm transition"
-              placeholder="np. Kreatywne pisanie, Analiza danych, Kodowanie"
+              placeholder={workingLanguage === 'pl' ? 'np. Kreatywne pisanie, Analiza danych, Kodowanie' : 'e.g. Creative writing, Data analysis, Coding'}
               value={taskType} 
               onChange={(e) => setTaskType(e.target.value)} 
             />
           </label>
 
           <label className="space-y-2 text-sm font-semibold text-slate-800">
-            Oczekiwany format wyjściowy (Expected Format)
+            {workingLanguage === 'pl' ? 'Oczekiwany format wyjściowy (Expected Format)' : 'Expected output format (Expected Format)'}
             <input 
               className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 focus:border-indigo-500 focus:bg-white focus:outline-none px-4 py-3 text-sm transition"
-              placeholder="np. Tabela Markdown, Lista bulletpoints, Kod JSON"
+              placeholder={workingLanguage === 'pl' ? 'np. Tabela Markdown, Lista bulletpoints, Kod JSON' : 'e.g. Markdown table, Bulletpoints, JSON code'}
               value={expectedOutputFormat} 
               onChange={(e) => setExpectedOutputFormat(e.target.value)} 
             />
           </label>
 
           <label className="space-y-2 text-sm font-semibold text-slate-800">
-            Szczególne ograniczenia (Constraints)
+            {workingLanguage === 'pl' ? 'Szczególne ograniczenia (Constraints)' : 'Specific constraints (Constraints)'}
             <input 
               className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 focus:border-indigo-500 focus:bg-white focus:outline-none px-4 py-3 text-sm transition"
-              placeholder="np. Maksymalnie 300 słów, Ton profesjonalny"
+              placeholder={workingLanguage === 'pl' ? 'np. Maksymalnie 300 słów, Ton profesjonalny' : 'e.g. Maximum 300 words, Professional tone'}
               value={constraints} 
               onChange={(e) => setConstraints(e.target.value)} 
             />
           </label>
         </div>
 
-        {/* Error Messages */}
+        {/* Mapped Localized Error Banners */}
         {errorMessage && (
-          <p className="text-center text-xs font-semibold text-red-600 animate-pulse">
-            ⚠️ {errorMessage}
-          </p>
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-800 flex gap-3 shadow-sm items-center animate-pulse">
+            <svg className="h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <span className="font-bold block mb-0.5">{workingLanguage === 'pl' ? 'Wystąpił Błąd' : 'An Error Occurred'}</span>
+              {errorMessage}
+            </div>
+          </div>
         )}
 
         {/* Submission Button */}
@@ -359,19 +464,25 @@ export function AnalyzeForm() {
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 00-2-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            Przeprowadź audyt promptu
+            {workingLanguage === 'pl' ? 'Przeprowadź audyt promptu' : 'Conduct prompt audit'}
           </button>
         </div>
 
         {/* Validation Warnings Labels at Footer */}
         {isTooShort && (
           <p className="text-center text-xs font-medium text-slate-500">
-            💡 Aby rozpocząć analizę, wpisz prompt o długości przynajmniej <strong className="text-slate-700">{MIN_PROMPT_CHARS} znaków</strong> (obecnie: {inputPrompt.length}).
+            💡 {workingLanguage === 'pl' 
+              ? `Aby rozpocząć analizę, wpisz prompt o długości przynajmniej ` 
+              : `To start the analysis, enter a prompt of at least `}
+            <strong className="text-slate-700">{MIN_PROMPT_CHARS} {workingLanguage === 'pl' ? 'znaków' : 'characters'}</strong> 
+            {workingLanguage === 'pl' ? ` (obecnie: ${inputPrompt.length}).` : ` (currently: ${inputPrompt.length}).`}
           </p>
         )}
         {isBlocked && (
           <p className="text-center text-xs font-semibold text-red-600">
-            ⚠️ Ostrzeżenie: Wykryto wrażliwe dane. Usuń klucze API lub poufne teksty, aby odblokować przycisk audytu.
+            ⚠️ {workingLanguage === 'pl' 
+              ? 'Ostrzeżenie: Wykryto wrażliwe dane. Usuń klucze API lub poufne teksty, aby odblokować przycisk audytu.'
+              : 'Warning: Sensitive data detected. Remove API keys or credentials to unlock the audit button.'}
           </p>
         )}
       </form>

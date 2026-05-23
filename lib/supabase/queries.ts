@@ -219,7 +219,17 @@ export async function disableShareLink(
  * in the current UTC calendar day.
  */
 export async function getUsageCountToday(ownerAnonymousId: string): Promise<number> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient() as unknown as {
+    from: (table: string) => {
+      select: (columns: string, options?: { count: 'exact' | 'planned' | 'estimated'; head: boolean }) => {
+        eq: (col: string, val: string) => {
+          eq: (col: string, val: string) => {
+            gte: (col: string, val: string) => Promise<{ count: number | null; error: { message: string } | null }>
+          }
+        }
+      }
+    }
+  }
   const startOfDay = new Date()
   startOfDay.setUTCHours(0, 0, 0, 0)
   
