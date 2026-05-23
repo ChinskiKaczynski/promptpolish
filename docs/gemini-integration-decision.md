@@ -92,7 +92,44 @@ Before any changes are committed to the AI provider integration, the developer o
 *   **Standard Endpoint Chosen**: We explicitly use the standard Google Generative AI `:generateContent` and `:streamGenerateContent` endpoints via the `google('model-id')` model instance creator.
 *   **Interactions API Avoided**: We explicitly **DO NOT** use the Gemini Interactions API (`google.interactions(...)` endpoint). The Interactions API targets a separate stateful `POST /v1beta/interactions` endpoint that maintains server-side state, utilizes different event SSE vocabularies, and is intended for agent presets or multi-turn conversational agents. Our anonymous single-turn prompt analysis requires simple, stateless, fast execution, which is perfectly served by standard `generateContent`.
 
-### Integration Testing & Smoke Test Deferrals
+### Upgraded Production Schema Smoke Test
+*   **Upgrade Completed (2026-05-23)**: The deferred minimal smoke test has been replaced with a robust, production-equivalent structured output smoke test using the actual `analysisResultSchema`.
+*   **Prompt Matrix Coverage**: The upgraded script (`scripts/smoke-test-gemini.ts`) validates 4 standard calibration scenarios:
+    1. Polish (PL) Weak Prompt
+    2. Polish (PL) Strong Prompt
+    3. English (EN) Weak Prompt
+    4. English (EN) Strong Prompt
+*   **Telemetry Collected**: The script records precise telemetry for:
+    - Invalid output rate (Zod schema violations / total calls)
+    - Model ID used (`process.env.GEMINI_MODEL_ID` or `gemini-3.5-flash`)
+    - Token usage (input, output, cumulative total)
+    - Provider error counts
+    - Retries count (with exponential backoff / simple wait retry mechanism)
+    - Invalid schema counts
+    - Cost estimation based on live token counts.
+
+### Cost Benchmark & Estimation Formula
+We establish a standard benchmark for cost estimation per single-turn prompt analysis.
+For **Gemini 1.5 Flash** (or `gemini-3.5-flash`), the pricing is:
+- **Input Tokens**: $0.075 / 1,000,000 tokens ($0.000000075 per token)
+- **Output Tokens**: $0.30 / 1,000,000 tokens ($0.000000300 per token)
+
+**Cost Formula**:
+$$\text{Cost per Analysis} = (\text{Input Tokens} \times 0.000000075) + (\text{Output Tokens} \times 0.000000300)$$
+
+*Based on prompt size (avg. 500-1000 input tokens, 800-1200 output tokens), the typical analysis cost ranges between $0.00025 and $0.00045.*
+
+### Execution Instructions
+To run the production schema smoke test locally:
+1. Open [**`.env.local`**](file:///d:/AI/promptpolish/.env.local) and provide a valid API key:
+   ```bash
+   GOOGLE_GENERATIVE_AI_API_KEY=AIzaSy...
+   ```
+2. Run the smoke test using `tsx`:
+   ```bash
+   npx tsx scripts/smoke-test-gemini.ts
+   ```
+3. The script will execute the cases, validate schemas, calculate real-time costs, and report final metrics.
+
 *   **Missing API Key Handling**: If the `GOOGLE_GENERATIVE_AI_API_KEY` is not set locally (e.g. in development), the live smoke test script (`scripts/smoke-test-gemini.ts`) exits gracefully with detailed setup documentation and a clear skip status. It **DO NOT** fake success.
-*   **Full Schema Smoke Test Deferral**: The minimal structured output smoke test validates the basic connectivity and JSON serialization. A full, production-like `analysisSchema` and semantic validation smoke test is deferred and required later in **Mission 26A** once the live API keys are fully populated in the environment.
 

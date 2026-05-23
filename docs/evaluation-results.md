@@ -3,13 +3,54 @@
 > [!WARNING]
 > **LIVE AI EVALUATION NOT RUN**: The live evaluation pass against the actual Gemini API (target: `gemini-3.5-flash`) was skipped because the `GOOGLE_GENERATIVE_AI_API_KEY` is not configured in your `.env.local` file.
 >
-> An automated evaluation script has been prepared at [scripts/run-evaluation.ts](file:///d:/AI/promptpolish/scripts/run-evaluation.ts). Follow the setup instructions below to execute the live suite.
+> Both an automated quality evaluation suite and an upgraded structured output smoke test are prepared. Follow the setup instructions below to execute them.
 
 ---
 
-## 1. How to Run Live Evaluation Suite
+## 1. Upgraded Structured Output Smoke Test (2026-05-23)
 
-To perform the live quality evaluation pass, execute the following steps in your terminal:
+### A. Live Smoke Test Skip Status
+* **Status**: Skipped (No live key configured).
+* **Missing API Key Handling**: The upgraded smoke test script ([**`scripts/smoke-test-gemini.ts`**](file:///d:/AI/promptpolish/scripts/smoke-test-gemini.ts)) was executed and verified to handle the missing key gracefully. It exits with a detailed configuration guide and does **not** fake success.
+
+### B. Upgraded Smoke Test Design
+The upgraded script validates Gemini's structured output compatibility against the exact production-grade `analysisResultSchema` (matching `/api/analyze` behavior).
+
+* **Target Model ID**: `gemini-3.5-flash`
+* **Calibration Test Matrix**:
+  1. **Polish (PL) Weak Prompt**: `"Napisz opis produktu"` (Expected low score, missing goals/format).
+  2. **Polish (PL) Strong Prompt**: `"Działaj jako starszy copywriter..."` (Expected high score, clear goals/format).
+  3. **English (EN) Weak Prompt**: `"Write a product description"` (Expected low score, vagueness).
+  4. **English (EN) Strong Prompt**: `"Act as a senior e-commerce copywriter..."` (Expected high score, clear constraints).
+
+* **Telemetry and Metrics Tracked (Active Scenario)**:
+  - **Invalid Output Rate**: Percentage of Zod schema validation failures across all execution attempts.
+  - **Model ID**: `gemini-3.5-flash` (or custom configured `GEMINI_MODEL_ID`).
+  - **Token Usage**: Logs prompt, completion, and cumulative total tokens per case.
+  - **Provider Errors**: Counts network, API quota, or server-side crashes.
+  - **Retry Count**: Built-in 2-retry mechanism with wait intervals on transient errors.
+  - **Invalid Schema Count**: Tracks Zod parsing exceptions.
+  - **Cost Estimation**: Automatically calculates real-time USD cost using standard pricing benchmarks.
+
+### C. Cost Benchmarking & Estimation
+Cost per prompt analysis is estimated using the following pricing standards:
+* **Pricing Standard (Gemini 1.5/3.5 Flash)**:
+  - Input Tokens: **$0.075 / 1,000,000 tokens** ($0.000000075 per token)
+  - Output Tokens: **$0.30 / 1,000,000 tokens** ($0.000000300 per token)
+
+**Cost Formula**:
+$$\text{Analysis Cost} = (\text{Prompt Tokens} \times 0.000000075) + (\text{Completion Tokens} \times 0.000000300)$$
+
+*Typical Single-Turn Analysis Profile*:
+- Input: ~600 tokens ($0.000045)
+- Output: ~900 tokens ($0.000270)
+- **Total estimated cost per analysis**: **~$0.000315 USD**
+
+---
+
+## 2. How to Run Live Quality Checks
+
+To perform the live quality evaluation pass and structured smoke tests:
 
 1. Open your local configurations file:
    [**`.env.local`**](file:///d:/AI/promptpolish/.env.local)
@@ -17,11 +58,14 @@ To perform the live quality evaluation pass, execute the following steps in your
    ```bash
    GOOGLE_GENERATIVE_AI_API_KEY=AIzaSyYourActualKeyHere
    ```
-3. Run the automated evaluation suite using `tsx`:
+3. To run the full 46-item quality evaluation pass (re-writing this results document):
    ```bash
    npx tsx scripts/run-evaluation.ts
    ```
-4. The script will automatically connect to the Gemini API, evaluate all 46 calibration prompts, calculate scoring deviations, detect leaks, audit uncertainty warnings, and overwrite this file (`docs/evaluation-results.md`) with live telemetry.
+4. To run the 4-case production schema structured output smoke test:
+   ```bash
+   npx tsx scripts/smoke-test-gemini.ts
+   ```
 
 ---
 
