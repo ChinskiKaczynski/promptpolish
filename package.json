@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/google": "latest",
@@ -33,6 +34,7 @@
     "postcss": "latest",
     "tailwindcss": "^3.4.17",
     "typescript": "latest",
-    "vitest": "latest"
+    "vitest": "latest",
+    "@playwright/test": "^1.51.1"
   }
 }

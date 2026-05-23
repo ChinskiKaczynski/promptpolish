@@ -56,29 +56,33 @@ export function AnalyzeForm() {
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isSubmitting && !errorMessage) {
-      interval = setInterval(() => {
-        setCurrentStepIndex((prevIndex) => {
-          // If server ID is ready, fast-track progress to the last step instantly
-          if (createdId && prevIndex < loadingSteps.length - 1) {
-            return loadingSteps.length - 1
-          }
+      // If server ID is ready and we are at the final step, complete instantly
+      if (createdId && currentStepIndex >= loadingSteps.length - 1) {
+        const timer = setTimeout(() => {
+          setIsSubmitting(false)
+          router.push(`/result/${createdId}`)
+        }, 0)
+        return () => clearTimeout(timer)
+      }
 
-          if (prevIndex < loadingSteps.length - 1) {
-            return prevIndex + 1
+      interval = setInterval(() => {
+        if (currentStepIndex < loadingSteps.length - 1) {
+          if (createdId) {
+            setCurrentStepIndex(loadingSteps.length - 1)
           } else {
-            // Once stages complete, redirect immediately if server resolved the database ID
-            if (createdId) {
-              clearInterval(interval)
-              setIsSubmitting(false)
-              router.push(`/result/${createdId}`)
-            }
-            return prevIndex
+            setCurrentStepIndex((prev) => prev + 1)
           }
-        })
+        } else {
+          if (createdId) {
+            clearInterval(interval)
+            setIsSubmitting(false)
+            router.push(`/result/${createdId}`)
+          }
+        }
       }, 750)
     }
     return () => clearInterval(interval)
-  }, [isSubmitting, createdId, errorMessage, router, loadingSteps.length])
+  }, [isSubmitting, createdId, currentStepIndex, errorMessage, router, loadingSteps.length])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
