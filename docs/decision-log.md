@@ -58,3 +58,12 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Sources & Docs**: `docs/retention-policy.md` and standard Vercel Cron practices.
 *   **Revisit When**: Scalability demands or additional shared link features require dedicated pagination/archival states.
 
+### 6. Paid SaaS Readiness Assessment & Go/No-Go Decision (2026-05-23)
+*   **Decision**: **NO-GO for Paid SaaS Roadmap execution at the current time; recommend launching the Anonymous MVP ("continue MVP") first.**
+*   **Reason**: The remote hosted Supabase tables are not migrated, no live Gemini API keys or cookie secrets are configured in production environment variables, and we have zero actual user telemetry. Initiating user authentication or billing code at this stage directly violates the core roadmap rule: *"do not add auth, billing, pricing, or Stripe before MVP value validation."*
+*   **Alternatives Considered**: Proceeding directly with Stage 1 (Supabase Auth & User profiles) in parallel with launching the MVP.
+*   **Risk & Mitigation**: Delayed monetization. **Mitigation**: Launching the free anonymous MVP requires negligible operational costs (~$0.000315/run), builds an initial organic user base, and provides the essential metrics (e.g. >30% copy rate and repeat usage) to define high-converting premium pricing tiers.
+*   **Sources & Docs**: `docs/paid-readiness-report.md` and `paid-saas-roadmap_v1.1.md`.
+*   **Revisit When**: Upon completing 50–100 real anonymous analyses and verifying a positive copy rate (>30%) and repeat usage signals.
+
+
