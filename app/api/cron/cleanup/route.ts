@@ -33,13 +33,14 @@ async function handleCleanup(request: Request) {
       success: true,
       ...result
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Retention Cron Error]: Cleanup execution failed:', error)
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred during database cleanup.'
     return NextResponse.json(
       {
         success: false,
         error: 'internal_error',
-        message: error.message || 'An unexpected error occurred during database cleanup.'
+        message
       },
       { status: 500 }
     )

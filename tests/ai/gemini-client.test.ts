@@ -62,7 +62,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
       const invalidMock = {
         ...mockAnalysisResult,
         overall_summary: '' // invalid under Zod/Semantic schema
-      } as any
+      } as unknown as Parameters<typeof analyzePrompt>[1]['mockResponse']
 
       await expect(
         analyzePrompt(params, { mockResponse: invalidMock })

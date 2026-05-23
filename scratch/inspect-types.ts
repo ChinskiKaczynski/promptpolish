@@ -1,6 +1,6 @@
 import { generateText } from 'ai'
 type Usage = Awaited<ReturnType<typeof generateText>>['usage'];
-const u: Usage = {
+const u = {
   abc: 123
-} as any
+} as unknown as Usage
 console.log(u)

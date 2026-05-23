@@ -19,7 +19,7 @@ export type SharedPromptAnalysis = Pick<
  * Fetches a model profile matching the slug.
  */
 export async function getModelProfileBySlug(slug: string): Promise<ModelProfileRow | null> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   const { data, error } = await supabase
     .from('model_profiles')
     .select('*')
@@ -39,7 +39,7 @@ export async function getModelProfileBySlug(slug: string): Promise<ModelProfileR
 export async function createPromptAnalysis(
   analysis: Database['public']['Tables']['prompt_analyses']['Insert']
 ): Promise<PromptAnalysisRow | null> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   const { data, error } = await supabase
     .from('prompt_analyses')
     .insert(analysis)
@@ -62,7 +62,7 @@ export async function getPromptAnalysisForOwner(
   ownerAnonymousId: string,
   userId?: string
 ): Promise<PromptAnalysisRow | null> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   let query = supabase
     .from('prompt_analyses')
     .select('*')
@@ -92,7 +92,7 @@ export async function linkAnonymousAnalyses(
   ownerAnonymousId: string,
   userId: string
 ): Promise<boolean> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   const { error } = await supabase
     .from('prompt_analyses')
     .update({ user_id: userId })
@@ -121,7 +121,7 @@ export async function getPromptAnalysesForUser(
     isFavorite?: boolean
   }
 ): Promise<PromptAnalysisRow[]> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   let query = supabase
     .from('prompt_analyses')
     .select('*')
@@ -150,14 +150,14 @@ export async function getPromptAnalysesForUser(
     console.error('Error fetching prompt analyses for user:', error)
     return []
   }
-  return data || []
+  return data ?? []
 }
 
 /**
  * Retrieves the user profile from the database matching the userId.
  */
 export async function getUserProfile(userId: string): Promise<Database['public']['Tables']['user_profiles']['Row'] | null> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
@@ -177,7 +177,7 @@ export async function getUserProfile(userId: string): Promise<Database['public']
 export async function createUserProfile(
   profile: Database['public']['Tables']['user_profiles']['Insert']
 ): Promise<Database['public']['Tables']['user_profiles']['Row'] | null> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   const { data, error } = await supabase
     .from('user_profiles')
     .upsert(profile)
@@ -199,7 +199,7 @@ export async function createUserProfile(
 export async function getSharedPromptAnalysis(
   shareToken: string
 ): Promise<SharedPromptAnalysis | null> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   const { data, error } = await supabase
     .from('prompt_analyses')
     .select('input_prompt, working_language, selected_profile_slug, overall_score, score_level, analysis_json, improved_prompt, created_at, is_share_enabled')
@@ -216,6 +216,7 @@ export async function getSharedPromptAnalysis(
   if (!data) return null
 
   // Destructure and omit is_share_enabled to ensure safe scrubbed output
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { is_share_enabled, ...safeData } = data
   return safeData
 }
@@ -226,7 +227,7 @@ export async function getSharedPromptAnalysis(
 export async function createUsageEvent(
   event: Database['public']['Tables']['usage_events']['Insert']
 ): Promise<UsageEventRow | null> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   const { data, error } = await supabase
     .from('usage_events')
     .insert(event)
@@ -246,7 +247,7 @@ export async function createUsageEvent(
 export async function createFeedbackEvent(
   event: Database['public']['Tables']['feedback_events']['Insert']
 ): Promise<FeedbackEventRow | null> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   const { data, error } = await supabase
     .from('feedback_events')
     .insert(event)
@@ -283,7 +284,7 @@ export async function createShareLink(
   ownerAnonymousId: string
 ): Promise<string | null> {
   const shareToken = createShareToken()
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
 
   const { data, error } = await supabase
     .from('prompt_analyses')
@@ -301,7 +302,7 @@ export async function createShareLink(
     return null
   }
 
-  return data?.share_token || null
+  return data?.share_token ?? null
 }
 
 /**
@@ -316,7 +317,7 @@ export async function disableShareLink(
   analysisId: string,
   ownerAnonymousId: string
 ): Promise<boolean> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
 
   const { data, error } = await supabase
     .from('prompt_analyses')
@@ -343,20 +344,10 @@ export async function disableShareLink(
  * in the current UTC calendar day.
  */
 export async function getUsageCountToday(ownerAnonymousId: string): Promise<number> {
-  const supabase = getSupabaseServerClient() as unknown as {
-    from: (table: string) => {
-      select: (columns: string, options?: { count: 'exact' | 'planned' | 'estimated'; head: boolean }) => {
-        eq: (col: string, val: string) => {
-          eq: (col: string, val: string) => {
-            gte: (col: string, val: string) => Promise<{ count: number | null; error: { message: string } | null }>
-          }
-        }
-      }
-    }
-  }
+  const supabase = getSupabaseServerClient()
   const startOfDay = new Date()
   startOfDay.setUTCHours(0, 0, 0, 0)
-  
+
   const { count, error } = await supabase
     .from('usage_events')
     .select('*', { count: 'exact', head: true })
@@ -380,7 +371,7 @@ export async function softDeleteAnalysis(
   ownerAnonymousId: string,
   userId?: string
 ): Promise<boolean> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   let query = supabase
     .from('prompt_analyses')
     .update({ deleted_at: new Date().toISOString() })
@@ -411,7 +402,7 @@ export async function toggleFavoriteAnalysis(
   userId: string | undefined,
   isFavorite: boolean
 ): Promise<boolean> {
-  const supabase = getSupabaseServerClient() as any
+  const supabase = getSupabaseServerClient()
   let query = supabase
     .from('prompt_analyses')
     .update({ is_favorite: isFavorite })
@@ -431,4 +422,3 @@ export async function toggleFavoriteAnalysis(
   }
   return true
 }
-

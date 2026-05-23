@@ -28,7 +28,7 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        const { data, error } = await supabaseClient.auth.signUp({
+        const { error } = await supabaseClient.auth.signUp({
           email,
           password,
           options: {
@@ -42,7 +42,7 @@ export default function LoginPage() {
           'Rejestracja przebiegła pomyślnie! Sprawdź swoją skrzynkę e-mail, aby potwierdzić konto.'
         )
       } else {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
+        const { error } = await supabaseClient.auth.signInWithPassword({
           email,
           password
         })
@@ -50,9 +50,10 @@ export default function LoginPage() {
         router.push('/account')
         router.refresh()
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Auth error:', err)
-      setErrorMsg(err.message || 'Wystąpił nieoczekiwany błąd logowania.')
+      const message = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd logowania.'
+      setErrorMsg(message)
     } finally {
       setLoading(false)
     }

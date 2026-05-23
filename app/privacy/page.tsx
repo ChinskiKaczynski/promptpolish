@@ -111,7 +111,7 @@ export default function PrivacyPage() {
             <section className="space-y-3">
               <h2 className="text-lg font-bold text-slate-900">4. Sesja Anonimowa i Pliki Cookie</h2>
               <p>
-                W celach autoryzacyjnych system generuje bezpieczny identyfikator połączenia zapisywany w pliku cookie o nazwie <code>owner_anonymous_id</code> (posiadający atrybuty <code>httpOnly</code>, <code>secure</code> oraz <code>sameSite='strict'</code>).
+                W celach autoryzacyjnych system generuje bezpieczny identyfikator połączenia zapisywany w pliku cookie o nazwie <code>owner_anonymous_id</code> (posiadający atrybuty <code>httpOnly</code>, <code>secure</code> oraz <code>sameSite=&apos;strict&apos;</code>).
               </p>
               <p>
                 Identyfikator ten jest powiązany z wygenerowanymi przez Ciebie raportami przez okres <strong>30 dni</strong>. 

@@ -21,7 +21,8 @@ describe('Supabase Authentication & History Linking Integration', () => {
   const mockSingle = vi.fn()
   const mockMaybeSingle = vi.fn()
   const mockSelect = vi.fn()
-  const mockInsert = vi.fn()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _mockInsert = vi.fn()
   const mockUpdate = vi.fn()
   const mockEq = vi.fn()
   const mockOr = vi.fn()
@@ -43,19 +44,19 @@ describe('Supabase Authentication & History Linking Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    const builder: any = {}
-    builder.select = mockSelect.mockReturnValue(builder)
-    builder.update = mockUpdate.mockReturnValue(builder)
-    builder.eq = mockEq.mockReturnValue(builder)
-    builder.or = mockOr.mockReturnValue(builder)
-    builder.is = mockIs.mockReturnValue(builder)
-    builder.order = mockOrder.mockReturnValue(builder)
-    builder.upsert = vi.fn(() => builder)
-    builder.single = mockSingle
-    builder.maybeSingle = mockMaybeSingle
+    const builder: Record<string, unknown> = {}
+    builder['select'] = mockSelect.mockReturnValue(builder)
+    builder['update'] = mockUpdate.mockReturnValue(builder)
+    builder['eq'] = mockEq.mockReturnValue(builder)
+    builder['or'] = mockOr.mockReturnValue(builder)
+    builder['is'] = mockIs.mockReturnValue(builder)
+    builder['order'] = mockOrder.mockReturnValue(builder)
+    builder['upsert'] = vi.fn(() => builder)
+    builder['single'] = mockSingle
+    builder['maybeSingle'] = mockMaybeSingle
 
     mockSupabaseClient.from.mockReturnValue(builder)
-    vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as any)
+    vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
   })
 
   describe('getPromptAnalysisForOwner with Dual Ownership', () => {

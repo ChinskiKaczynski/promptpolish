@@ -5,7 +5,6 @@ vi.mock('server-only', () => ({}))
 
 import { runRetentionCleanup } from '@/lib/privacy/retention'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
-import { serverEnv } from '@/lib/env/server'
 
 // 2. Mock getSupabaseAdminClient
 vi.mock('@/lib/supabase/admin', () => ({
@@ -35,7 +34,7 @@ describe('Data Retention & Deletion Lifecycle Engine', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(getSupabaseAdminClient).mockReturnValue(mockSupabaseClient as any)
+    vi.mocked(getSupabaseAdminClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseAdminClient>)
 
     // Reset standard builder chain functions
     mockFrom.mockReturnValue({
@@ -55,7 +54,7 @@ describe('Data Retention & Deletion Lifecycle Engine', () => {
       mockEq.mockReturnValue(mockChain)
       
       // Setup mock return counts for each table
-      mockLt.mockImplementation(async (col, val) => {
+      mockLt.mockImplementation(async () => {
         // Find which table is being queried by checking the last from() call
         const lastTable = mockFrom.mock.calls[mockFrom.mock.calls.length - 1]?.[0]
         if (lastTable === 'prompt_analyses') {
@@ -119,7 +118,7 @@ describe('Data Retention & Deletion Lifecycle Engine', () => {
       mockEq.mockReturnValue(mockChain)
 
       // Setup simulated select('id') deletes resolving to deleted arrays
-      mockLt.mockImplementation((col, val) => {
+      mockLt.mockImplementation(() => {
         const lastTable = mockFrom.mock.calls[mockFrom.mock.calls.length - 1]?.[0]
         let data: Array<{ id: string }> = []
         if (lastTable === 'prompt_analyses') {
@@ -162,7 +161,7 @@ describe('Data Retention & Deletion Lifecycle Engine', () => {
       mockDelete.mockReturnValue(mockChain)
       mockEq.mockReturnValue(mockChain)
       
-      mockLt.mockImplementation((col, val) => {
+      mockLt.mockImplementation(() => {
         return {
           select: vi.fn().mockResolvedValue({
             data: null,

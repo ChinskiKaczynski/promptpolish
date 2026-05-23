@@ -54,7 +54,7 @@ export default function TermsPage() {
             <section className="space-y-3">
               <h2 className="text-lg font-bold text-slate-900">2. Wyłączenie Odpowiedzialności i Brak Gwarancji</h2>
               <p>
-                Narzędzie oraz wygenerowane analizy, punktacje i ulepszone wersje promptów są dostarczane w stanie, w jakim się znajdują (<strong>"as-is"</strong>), bez jakichkolwiek gwarancji – wyraźnych lub dorozumianych.
+                Narzędzie oraz wygenerowane analizy, punktacje i ulepszone wersje promptów są dostarczane w stanie, w jakim się znajdują (<strong>&quot;as-is&quot;</strong>), bez jakichkolwiek gwarancji – wyraźnych lub dorozumianych.
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-xs">
                 <li>System nie gwarantuje, że poprawione prompty przyniosą określony rezultat biznesowy, sprzedażowy lub techniczny.</li>

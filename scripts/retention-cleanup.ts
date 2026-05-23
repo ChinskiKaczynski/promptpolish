@@ -23,8 +23,9 @@ async function main() {
     } else {
       console.log('[Retention CLI]: Database cleanup completed successfully.')
     }
-  } catch (error: any) {
-    console.error('[Retention CLI Error]: Cleanup failed with an error:', error.message || error)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('[Retention CLI Error]: Cleanup failed with an error:', message)
     process.exit(1)
   }
 }

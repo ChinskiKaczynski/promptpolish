@@ -159,10 +159,10 @@ async function runSmokeTest() {
         }
 
         if (usage) {
-          const usageAny = usage as any
-          const pTokens = typeof usageAny.promptTokens === 'number' ? usageAny.promptTokens : 0
-          const cTokens = typeof usageAny.completionTokens === 'number' ? usageAny.completionTokens : 0
-          const tTokens = typeof usageAny.totalTokens === 'number' ? usageAny.totalTokens : 0
+          const usageRecord = usage as Record<string, unknown>
+          const pTokens = typeof usageRecord.promptTokens === 'number' ? usageRecord.promptTokens : 0
+          const cTokens = typeof usageRecord.completionTokens === 'number' ? usageRecord.completionTokens : 0
+          const tTokens = typeof usageRecord.totalTokens === 'number' ? usageRecord.totalTokens : 0
 
           telemetry.tokenUsage.promptTokens += pTokens
           telemetry.tokenUsage.completionTokens += cTokens

@@ -38,6 +38,7 @@ import { getSupabaseServerClient } from '@/lib/supabase/server'
 
 // Simulates the full PromptAnalysisRow — used to test that forbidden fields
 // DO NOT leak even if somehow returned (defence-in-depth injection test)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FULL_DB_ROW = {
   // --- FORBIDDEN fields (should never appear in public payload) ---
   id: 'internal-private-uuid-1234',
@@ -100,6 +101,7 @@ const ALLOWED_FIELDS = [
   'created_at'
 ] as const
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FORBIDDEN_FIELDS = [
   'id',
   'owner_anonymous_id',
@@ -133,7 +135,7 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    const builder: any = {
+    const builder: Record<string, unknown> = {
       eq: mockEq,
       is: mockIs,
       maybeSingle: mockMaybeSingle
@@ -142,7 +144,7 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
     mockEq.mockReturnValue(builder)
     mockIs.mockReturnValue(builder)
 
-    vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as any)
+    vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
   })
 
   it('returns all allowed public fields when share is enabled', async () => {
@@ -255,7 +257,7 @@ describe('disableShareLink — Ownership Verification', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    const builder: any = {
+    const builder: Record<string, unknown> = {
       eq: mockEq,
       select: mockSelect,
       maybeSingle: mockMaybeSingle
@@ -264,7 +266,7 @@ describe('disableShareLink — Ownership Verification', () => {
     mockEq.mockReturnValue(builder)
     mockSelect.mockReturnValue(builder)
 
-    vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as any)
+    vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
   })
 
   it('returns true when the owned row is successfully updated', async () => {

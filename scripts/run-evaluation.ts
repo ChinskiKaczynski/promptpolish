@@ -42,6 +42,7 @@ const fixtureSchema = z.object({
   notes_for_manual_review: z.string()
 })
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Fixture = z.infer<typeof fixtureSchema>
 
 interface FailedDetail {

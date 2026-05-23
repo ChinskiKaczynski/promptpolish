@@ -1,3 +1,14 @@
+import type { AnalysisResult } from '@/lib/ai/schemas'
+import type { SensitiveDataFinding } from '@/lib/privacy/sensitive-data-detector'
+
+export type { AnalysisResult, SensitiveDataFinding }
+
+// ─── Application-Level Row Interfaces ───────────────────────────────────────
+// These are strongly typed interfaces used in queries.ts return types.
+// They are NOT used directly as Database generic Row types, because TypeScript
+// requires Row types to satisfy Record<string, unknown> (index signature),
+// which named interfaces don't structurally satisfy for `extends` checks.
+
 export interface ModelProfileRow {
   id: string
   slug: string
@@ -12,9 +23,9 @@ export interface ModelProfileRow {
   source_checked_at: string | null
   last_verified_at: string | null
   stale_after_days: number
-  capabilities_json: Record<string, any>
-  prompting_recommendations_json: Record<string, any>
-  known_limitations_json: Record<string, any>
+  capabilities_json: Record<string, unknown>
+  prompting_recommendations_json: Record<string, unknown>
+  known_limitations_json: Record<string, unknown>
   source_notes: string | null
   profile_version: string
   created_at: string
@@ -33,10 +44,10 @@ export interface PromptAnalysisRow {
   expected_output_format: string | null
   constraints: string | null
   sensitive_data_risk_level: 'none' | 'low' | 'medium' | 'high'
-  sensitive_data_findings_json: any
+  sensitive_data_findings_json: SensitiveDataFinding[]
   overall_score: number
   score_level: 'weak' | 'needs_work' | 'decent' | 'strong' | 'excellent'
-  analysis_json: any
+  analysis_json: AnalysisResult
   improved_prompt: string
   model_id_used: string
   provider_used: string
@@ -58,7 +69,7 @@ export interface UsageEventRow {
   owner_anonymous_id: string
   user_id: string | null
   event_type: string
-  metadata_json: Record<string, any>
+  metadata_json: Record<string, unknown>
   ip_hash: string | null
   user_agent_hash: string | null
   created_at: string
@@ -81,11 +92,17 @@ export interface UserProfileRow {
   updated_at: string
 }
 
+// ─── Supabase Database Generic Type ─────────────────────────────────────────
+// Row types use Record<string, unknown> to satisfy GenericTable's structural
+// constraint required by SupabaseClient<Database> type inference.
+// Insert types are explicit objects — used for call-site type safety.
+// Returned data is cast to the strongly-typed application interfaces above.
+
 export interface Database {
   public: {
     Tables: {
       user_profiles: {
-        Row: UserProfileRow
+        Row: Record<string, unknown>
         Insert: {
           user_id: string
           email: string
@@ -105,7 +122,7 @@ export interface Database {
         Relationships: []
       }
       model_profiles: {
-        Row: ModelProfileRow
+        Row: Record<string, unknown>
         Insert: {
           id?: string
           slug: string
@@ -120,9 +137,9 @@ export interface Database {
           source_checked_at?: string | null
           last_verified_at?: string | null
           stale_after_days?: number
-          capabilities_json?: Record<string, any>
-          prompting_recommendations_json?: Record<string, any>
-          known_limitations_json?: Record<string, any>
+          capabilities_json?: unknown
+          prompting_recommendations_json?: unknown
+          known_limitations_json?: unknown
           source_notes?: string | null
           profile_version?: string
           created_at?: string
@@ -142,9 +159,9 @@ export interface Database {
           source_checked_at?: string | null
           last_verified_at?: string | null
           stale_after_days?: number
-          capabilities_json?: Record<string, any>
-          prompting_recommendations_json?: Record<string, any>
-          known_limitations_json?: Record<string, any>
+          capabilities_json?: unknown
+          prompting_recommendations_json?: unknown
+          known_limitations_json?: unknown
           source_notes?: string | null
           profile_version?: string
           created_at?: string
@@ -153,7 +170,7 @@ export interface Database {
         Relationships: []
       }
       prompt_analyses: {
-        Row: PromptAnalysisRow
+        Row: Record<string, unknown>
         Insert: {
           id?: string
           owner_anonymous_id: string
@@ -166,10 +183,10 @@ export interface Database {
           expected_output_format?: string | null
           constraints?: string | null
           sensitive_data_risk_level?: 'none' | 'low' | 'medium' | 'high'
-          sensitive_data_findings_json?: any
+          sensitive_data_findings_json?: unknown
           overall_score: number
           score_level: 'weak' | 'needs_work' | 'decent' | 'strong' | 'excellent'
-          analysis_json: any
+          analysis_json: unknown
           improved_prompt: string
           model_id_used: string
           provider_used: string
@@ -197,10 +214,10 @@ export interface Database {
           expected_output_format?: string | null
           constraints?: string | null
           sensitive_data_risk_level?: 'none' | 'low' | 'medium' | 'high'
-          sensitive_data_findings_json?: any
+          sensitive_data_findings_json?: unknown
           overall_score?: number
           score_level?: 'weak' | 'needs_work' | 'decent' | 'strong' | 'excellent'
-          analysis_json?: any
+          analysis_json?: unknown
           improved_prompt?: string
           model_id_used?: string
           provider_used?: string
@@ -219,13 +236,13 @@ export interface Database {
         Relationships: []
       }
       usage_events: {
-        Row: UsageEventRow
+        Row: Record<string, unknown>
         Insert: {
           id?: string
           owner_anonymous_id: string
           user_id?: string | null
           event_type: string
-          metadata_json?: Record<string, any>
+          metadata_json?: unknown
           ip_hash?: string | null
           user_agent_hash?: string | null
           created_at?: string
@@ -235,7 +252,7 @@ export interface Database {
           owner_anonymous_id?: string
           user_id?: string | null
           event_type?: string
-          metadata_json?: Record<string, any>
+          metadata_json?: unknown
           ip_hash?: string | null
           user_agent_hash?: string | null
           created_at?: string
@@ -243,7 +260,7 @@ export interface Database {
         Relationships: []
       }
       feedback_events: {
-        Row: FeedbackEventRow
+        Row: Record<string, unknown>
         Insert: {
           id?: string
           analysis_id: string
@@ -261,17 +278,15 @@ export interface Database {
         Relationships: []
       }
     }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }
+
+// ─── Convenience Insert Type Aliases ────────────────────────────────────────
+export type PromptAnalysisInsert = Database['public']['Tables']['prompt_analyses']['Insert']
+export type UsageEventInsert = Database['public']['Tables']['usage_events']['Insert']
+export type FeedbackEventInsert = Database['public']['Tables']['feedback_events']['Insert']
+export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert']

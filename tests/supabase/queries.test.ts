@@ -49,7 +49,15 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
     vi.clearAllMocks()
 
     // Setup standard builder pattern chain
-    const builder: any = {
+    const builder: Record<string, unknown> & {
+      eq: typeof mockEq
+      is: typeof mockIs
+      or: typeof mockOr
+      order: typeof mockOrder
+      maybeSingle: typeof mockMaybeSingle
+      single: typeof mockSingle
+      select: ReturnType<typeof vi.fn>
+    } = {
       eq: mockEq,
       is: mockIs,
       or: mockOr,
@@ -71,7 +79,7 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
     mockOrder.mockReturnValue(builder)
 
     // Mock getSupabaseServerClient to return our builder mock client
-    vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as any)
+    vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
   })
 
   describe('getModelProfileBySlug', () => {
@@ -122,7 +130,7 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
         error: null
       })
 
-      const result = await createPromptAnalysis(mockInput as any)
+      const result = await createPromptAnalysis(mockInput as unknown as Parameters<typeof createPromptAnalysis>[0])
       expect(result).toEqual({ id: 'analysis-uuid', ...mockInput })
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('prompt_analyses')
       expect(mockInsert).toHaveBeenCalledWith(mockInput)
@@ -206,7 +214,7 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
       }
 
       mockSingle.mockResolvedValue({ data: { id: 'event-uuid', ...mockEvent }, error: null })
-      const result = await createUsageEvent(mockEvent as any)
+      const result = await createUsageEvent(mockEvent as unknown as Parameters<typeof createUsageEvent>[0])
       expect(result).toEqual({ id: 'event-uuid', ...mockEvent })
     })
 
@@ -234,7 +242,7 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
       }
 
       mockSingle.mockResolvedValue({ data: { id: 'feedback-uuid', ...mockFeedback }, error: null })
-      const result = await createFeedbackEvent(mockFeedback as any)
+      const result = await createFeedbackEvent(mockFeedback as unknown as Parameters<typeof createFeedbackEvent>[0])
       expect(result).toEqual({ id: 'feedback-uuid', ...mockFeedback })
     })
   })
