@@ -102,15 +102,8 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       return
     }
 
-    const mdContent = `# Raport Audytu Promptu\n\n## Ogólna Ocena: ${result.overallScore} / 100 (${scoreMeta.label})\n\n### Poprawiony Prompt:\n\`\`\`\n${result.improved_prompt}\n\`\`\`\n\n### Wyjaśnienia:\n${result.change_explanations.map(e => `- ${e}`).join('\n')}`
-    const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `prompt-audit-${result.id || 'export'}.md`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    if (!result.id) return
+    window.location.href = `/api/export/markdown?id=${result.id}`
   }
 
   const handleExportPdf = () => {
@@ -119,7 +112,9 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       setIsUpgradeModalOpen(true)
       return
     }
-    window.print()
+
+    if (!result.id) return
+    window.location.href = `/api/export/pdf?id=${result.id}`
   }
 
   const handleUseBatchAudit = () => {

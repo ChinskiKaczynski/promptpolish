@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
 import { PLAN_LIMITS } from '@/lib/plans/config'
+import { WaitlistForm } from '@/components/pricing/waitlist-form'
 
 export default async function PricingPage() {
   const user = await getAuthUser()
@@ -23,9 +24,9 @@ export default async function PricingPage() {
   const proLimits = PLAN_LIMITS.pro
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-905 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))] text-slate-100 antialiased font-sans pb-16">
+    <div className="flex min-h-screen flex-col bg-slate-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.12),rgba(255,255,255,0))] text-slate-100 antialiased font-sans pb-16">
       {/* Navigation Header */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20">
@@ -59,7 +60,9 @@ export default async function PricingPage() {
       <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-12">
         {/* Title */}
         <div className="text-center max-w-2xl mx-auto space-y-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-indigo-400">Plany i Cennik</p>
+          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+            Plany i Cennik — Faza Beta
+          </div>
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
             Wybierz plan dopasowany do swoich potrzeb
           </h1>
@@ -71,25 +74,25 @@ export default async function PricingPage() {
         {/* Plan Grid */}
         <div className="mt-16 grid gap-8 md:grid-cols-2 max-w-4xl mx-auto items-stretch">
           {/* Free Plan */}
-          <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-8 flex flex-col justify-between hover:border-slate-700 transition duration-300 relative group">
+          <div className="rounded-3xl border border-slate-900 bg-slate-900/20 p-8 flex flex-col justify-between hover:border-slate-800 transition duration-300 relative group">
             <div>
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-bold text-white">{freeLimits.name}</h3>
                   <p className="mt-2 text-xs text-slate-400">Dla hobbystów i osób testujących narzędzie.</p>
                 </div>
-                {profile?.plan_slug === 'free' && (
-                  <span className="rounded-full bg-slate-800 border border-slate-700 px-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                {(!profile || profile.plan_slug === 'free') && (
+                  <span className="rounded-full bg-slate-900 border border-slate-800 px-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-wider">
                     Twój aktualny plan
                   </span>
                 )}
               </div>
               <div className="mt-6 flex items-baseline">
                 <span className="text-4xl font-extrabold text-white">0 PLN</span>
-                <span className="ml-1 text-sm text-slate-400">/ na zawsze</span>
+                <span className="ml-1 text-sm text-slate-500">/ na zawsze</span>
               </div>
 
-              <div className="mt-8 border-t border-slate-800/80 pt-6 space-y-4">
+              <div className="mt-8 border-t border-slate-900 pt-6 space-y-4">
                 <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Co zawiera plan Free:</p>
                 <ul className="space-y-3.5 text-sm text-slate-300">
                   <li className="flex items-center gap-2.5">
@@ -104,11 +107,11 @@ export default async function PricingPage() {
                     <span className="text-emerald-500 text-base">✓</span>
                     <span>Pełna historia analiz (wymaga logowania)</span>
                   </li>
-                  <li className="flex items-center gap-2.5 text-slate-500">
+                  <li className="flex items-center gap-2.5 text-slate-600">
                     <span>✗</span>
                     <span>Eksport raportów do PDF / Markdown</span>
                   </li>
-                  <li className="flex items-center gap-2.5 text-slate-500">
+                  <li className="flex items-center gap-2.5 text-slate-600">
                     <span>✗</span>
                     <span>Zbiorczy audyt (Batch Audit) wielu promptów</span>
                   </li>
@@ -119,7 +122,7 @@ export default async function PricingPage() {
             <div className="mt-8 pt-4">
               <Link
                 href="/analyze"
-                className="block text-center w-full rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-semibold py-3 text-xs active:scale-[0.98] transition-all cursor-pointer"
+                className="block text-center w-full rounded-2xl bg-slate-900 hover:bg-slate-850 text-white font-semibold py-3.5 text-xs active:scale-[0.98] transition-all border border-slate-800 cursor-pointer"
               >
                 Rozpocznij za darmo
               </Link>
@@ -127,7 +130,7 @@ export default async function PricingPage() {
           </div>
 
           {/* Pro Plan */}
-          <div className="rounded-3xl border-2 border-indigo-500/80 bg-slate-900/60 p-8 flex flex-col justify-between hover:shadow-2xl hover:shadow-indigo-500/5 transition duration-300 relative group">
+          <div className="rounded-3xl border-2 border-indigo-500/50 bg-slate-900/40 p-8 flex flex-col justify-between hover:shadow-2xl hover:shadow-indigo-500/5 transition duration-300 relative group">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-1 text-[10px] font-black text-white uppercase tracking-widest shadow-md">
               Najpopularniejszy
             </div>
@@ -144,12 +147,14 @@ export default async function PricingPage() {
                   </span>
                 )}
               </div>
-              <div className="mt-6 flex items-baseline">
-                <span className="text-4xl font-black bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">39 PLN</span>
-                <span className="ml-1 text-sm text-slate-400">/ miesiąc</span>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="text-3xl font-black bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">Cena TBD</span>
+                <span className="rounded-full bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                  Lista oczekujących
+                </span>
               </div>
 
-              <div className="mt-8 border-t border-indigo-950 pt-6 space-y-4">
+              <div className="mt-8 border-t border-indigo-950/80 pt-6 space-y-4">
                 <p className="text-xs font-bold uppercase tracking-widest text-indigo-400">Wszystkie zalety Pro:</p>
                 <ul className="space-y-3.5 text-sm text-slate-200">
                   <li className="flex items-center gap-2.5">
@@ -176,49 +181,69 @@ export default async function PricingPage() {
               </div>
             </div>
 
-            <div className="mt-8 pt-4">
-              {profile?.plan_slug === 'pro' ? (
-                <div className="text-center text-xs font-semibold text-indigo-400 py-3">
-                  W pełni aktywowane! Korzystasz z wersji Pro.
-                </div>
-              ) : user ? (
-                <form action="/api/entitlements/simulate-pro" method="POST">
-                  <button
-                    type="submit"
-                    className="w-full text-center rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3.5 text-xs active:scale-[0.98] shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all cursor-pointer"
+            <div className="mt-8 pt-4 space-y-4">
+              {/* Waitlist Signup Block for Users */}
+              <div className="rounded-2xl bg-slate-950/50 border border-slate-900 p-4 space-y-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center">
+                  Zapisz się do zamkniętej Bety
+                </p>
+                <WaitlistForm initialEmail={user?.email || ''} lang="pl" />
+              </div>
+
+              {/* Developer Simulation Gate */}
+              <div className="border-t border-slate-900 pt-3">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 text-center mb-2">
+                  Tryb Deweloperski / Testy Integracyjne
+                </p>
+                {profile?.plan_slug === 'pro' ? (
+                  <div className="text-center text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 py-2 rounded-xl">
+                    Symulacja Pro Aktywna!
+                  </div>
+                ) : user ? (
+                  <form action="/api/entitlements/simulate-pro" method="POST">
+                    <button
+                      type="submit"
+                      className="w-full text-center rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white font-semibold py-2 text-xs border border-slate-800 transition active:scale-[0.98] cursor-pointer"
+                    >
+                      Aktywuj Symulację Pro (Wersja Demo)
+                    </button>
+                  </form>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="block text-center w-full rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white font-semibold py-2 text-xs border border-slate-800 transition text-center cursor-pointer"
                   >
-                    Przetestuj Pro Tier (Symulacja bez opłaty)
-                  </button>
-                </form>
-              ) : (
-                <Link
-                  href="/login"
-                  className="block text-center w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-3.5 text-xs active:scale-[0.98] shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all cursor-pointer"
-                >
-                  Zaloguj się, aby odblokować Pro
-                </Link>
-              )}
+                    Zaloguj się, aby symulować Pro
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* FAQs */}
-        <div className="mt-20 border-t border-slate-800 pt-16 max-w-3xl mx-auto space-y-8">
+        <div className="mt-20 border-t border-slate-900 pt-16 max-w-3xl mx-auto space-y-8">
           <h3 className="text-xl font-bold text-center text-white">Najczęściej zadawane pytania</h3>
           <div className="grid gap-6">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/20 p-5 space-y-2">
+            <div className="rounded-2xl border border-slate-900 bg-slate-900/10 p-5 space-y-2">
               <h4 className="text-sm font-bold text-white">Czy mogę korzystać z narzędzia za darmo?</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Tak! Zarejestrowani użytkownicy otrzymują 20 bezpłatnych analiz miesięcznie, a użytkownicy anonimowi mają dzienny limit chroniący infrastrukturę.
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/20 p-5 space-y-2">
-              <h4 className="text-sm font-bold text-white">Czym jest „Symulacja Pro Tier”?</h4>
+            <div className="rounded-2xl border border-slate-900 bg-slate-900/10 p-5 space-y-2">
+              <h4 className="text-sm font-bold text-white">Kiedy płatności będą w pełni aktywne?</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Ponieważ system płatności Stripe nie został jeszcze zintegrowany, w celach demonstracyjnych i ewaluacyjnych umożliwiamy natychmiastowe darmowe przypisanie rangi Pro do Twojego konta deweloperskiego za pomocą jednego kliknięcia!
+                Obecnie PromptPolish jest w fazie zamkniętych testów beta. Pracujemy nad integracją Stripe, ale na ten moment wszystkie funkcje premium można testować bezpłatnie po zalogowaniu i włączeniu symulacji Pro.
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/20 p-5 space-y-2">
+            <div className="rounded-2xl border border-slate-900 bg-slate-900/10 p-5 space-y-2">
+              <h4 className="text-sm font-bold text-white">Jak mogę przetestować funkcje Pro?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Jeśli chcesz wypróbować możliwości wersji Pro (np. eksport PDF, Markdown lub wyższe limity długości promptu), zaloguj się i użyj przycisku „Aktywuj Symulację Pro” w sekcji deweloperskiej powyżej.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-900 bg-slate-900/10 p-5 space-y-2">
               <h4 className="text-sm font-bold text-white">Czy moje dane są bezpieczne?</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
                 Zdecydowanie. Nasz wbudowany bezpieczny skaner danych preflight natychmiast blokuje i uniemożliwia zapisywanie promptów zawierających wrażliwe dane lub sekrety (jak klucze API).
@@ -229,7 +254,7 @@ export default async function PricingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-850 bg-slate-950 py-8 px-6 text-center text-xs text-slate-500 mt-auto">
+      <footer className="border-t border-slate-900 bg-slate-950 py-8 px-6 text-center text-xs text-slate-600 mt-auto">
         © {new Date().getFullYear()} PromptPolish. Wszystkie prawa zastrzeżone.
       </footer>
     </div>

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 // Mock server-only sentinel
 vi.mock('server-only', () => ({}))
@@ -12,7 +12,6 @@ vi.mock('@/lib/supabase/queries', () => ({
 }))
 
 import { PLAN_LIMITS, canAnalyzePrompt, canExportMarkdown, canExportPdf, canUseBatchAudit } from '@/lib/plans/config'
-import { getUserProfile, getUsageCountTodayForUser, getUsageCountThisMonthForUser, createUsageEvent } from '@/lib/supabase/queries'
 
 describe('Plan Entitlements Logic', () => {
   it('has correct static limits configured', () => {

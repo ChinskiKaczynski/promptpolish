@@ -16,6 +16,7 @@
     "@supabase/supabase-js": "latest",
     "ai": "latest",
     "clsx": "latest",
+    "jspdf": "^4.2.1",
     "nanoid": "latest",
     "next": "latest",
     "react": "latest",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "latest",
+    "@playwright/test": "^1.51.1",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
@@ -34,7 +36,6 @@
     "postcss": "latest",
     "tailwindcss": "^3.4.17",
     "typescript": "latest",
-    "vitest": "latest",
-    "@playwright/test": "^1.51.1"
+    "vitest": "latest"
   }
 }

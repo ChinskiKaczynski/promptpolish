@@ -20,7 +20,7 @@ import { checkProductionEnv } from '@/lib/env/server'
  * - owner_anonymous_id is resolved from the signed server-side cookie.
  */
 
-const ALLOWED_EVENT_TYPES = ['copy_improved_prompt'] as const
+const ALLOWED_EVENT_TYPES = ['copy_improved_prompt', 'export_markdown', 'export_pdf'] as const
 
 const eventSchema = z.object({
   event_type: z.enum(ALLOWED_EVENT_TYPES, {

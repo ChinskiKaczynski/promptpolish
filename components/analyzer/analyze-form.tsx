@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { detectSensitiveData } from '@/lib/privacy/sensitive-data-detector'
 
 const MIN_PROMPT_CHARS = 20
@@ -41,6 +42,7 @@ export function AnalyzeForm() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [createdId, setCreatedId] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isMonthlyLimitReached, setIsMonthlyLimitReached] = useState(false)
 
   // Real-time Sensitive Data Scanner
   const detection = useMemo(() => detectSensitiveData(inputPrompt), [inputPrompt])
@@ -90,6 +92,7 @@ export function AnalyzeForm() {
     if (isTooShort || isTooLong || isBlocked) return
     
     setErrorMessage(null)
+    setIsMonthlyLimitReached(false)
     setCreatedId(null)
     setCurrentStepIndex(0)
     setIsSubmitting(true)
@@ -112,6 +115,12 @@ export function AnalyzeForm() {
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}))
         const errorSlug = errData.error || 'internal_error'
+        
+        if (errorSlug === 'monthly_limit_reached') {
+          setIsMonthlyLimitReached(true)
+          setIsSubmitting(false)
+          return
+        }
         
         let msg = ''
         if (workingLanguage === 'pl') {
@@ -228,6 +237,55 @@ export function AnalyzeForm() {
       {/* Main Analyzer Form */}
       <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 shadow-sm">
         
+        {/* Monthly Limit Reached Inline Upgrade CTA Card */}
+        {isMonthlyLimitReached && (
+          <div className="relative rounded-2xl border-2 border-indigo-500 bg-gradient-to-br from-slate-900 to-indigo-950/90 p-6 text-white shadow-lg shadow-indigo-500/10 animate-in fade-in slide-in-from-top-4 duration-300">
+            {/* Dismiss Button */}
+            <button
+              type="button"
+              onClick={() => setIsMonthlyLimitReached(false)}
+              className="absolute right-4 top-4 text-slate-400 hover:text-white transition p-1 cursor-pointer"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="flex gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 text-white">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div className="space-y-1.5 pr-6">
+                <h4 className="text-sm font-extrabold tracking-tight">
+                  {workingLanguage === 'pl' ? 'Osiągnięto miesięczny limit analiz' : 'Monthly Analysis Limit Reached'}
+                </h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {workingLanguage === 'pl'
+                    ? 'Wykorzystałeś darmowy limit analiz (20/miesiąc) na planie Free. Uaktualnij do wersji Pro, aby natychmiast otrzymać do 500 analiz miesięcznie, a także zaawansowane eksporty PDF/Markdown, wyższy limit znaków (do 24 000) i zbiorczy audyt!'
+                    : 'You have used your free analysis limit (20/month) on the Free plan. Upgrade to the Pro tier to instantly receive 500 analyses per month, premium PDF/Markdown exports, higher character limits (up to 24k), and batch audit capabilities!'}
+                </p>
+                <div className="pt-2 flex flex-wrap items-center gap-2">
+                  <Link
+                    href="/pricing"
+                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer"
+                  >
+                    {workingLanguage === 'pl' ? 'Zobacz cennik i ulepsz plan' : 'View Pricing & Upgrade'}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setIsMonthlyLimitReached(false)}
+                    className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition active:scale-95 cursor-pointer"
+                  >
+                    {workingLanguage === 'pl' ? 'Wróć do audytu' : 'Dismiss'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Upper Dashboard: Safety Warnings & Daily Quotas */}
         <div className="grid gap-4 md:grid-cols-2">
           {/* Privacy Disclaimer Card */}
