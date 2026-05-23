@@ -1,0 +1,76 @@
+import { mvpModelProfiles } from './model-profiles'
+import { analysisSystemInstruction, constructUserAnalysisPrompt } from './prompts'
+import { executeGeminiAnalysis, type GeminiClientOptions } from './gemini-client'
+import { validateAnalysisResult } from './semantic-validation'
+import { calculateScore, type CalculatedScore } from '@/lib/scoring/calculate-score'
+import { type AnalysisResult } from './schemas'
+
+export interface AnalyzePromptParams {
+  inputPrompt: string
+  workingLanguage: 'pl' | 'en'
+  selectedProfileSlug: 'general-llm' | 'google-gemini-3-5-flash'
+  taskGoal?: string | null
+  taskType?: string | null
+  expectedOutputFormat?: string | null
+  constraints?: string | null
+}
+
+export type AnalysisServiceResult = {
+  analysis: AnalysisResult
+  scores: CalculatedScore
+}
+
+/**
+ * High-level orchestration service that:
+ * 1. Resolves the model profile.
+ * 2. Builds dynamic system instructions and prompts.
+ * 3. Triggers structured LLM evaluation (or returns test mocks).
+ * 4. Runs full semantic integrity checks.
+ * 5. Computes overall score metrics and confidence levels using standard scoring.
+ */
+export async function analyzePrompt(
+  params: AnalyzePromptParams,
+  options?: GeminiClientOptions
+): Promise<AnalysisServiceResult> {
+  const {
+    inputPrompt,
+    workingLanguage,
+    selectedProfileSlug,
+    taskGoal,
+    taskType,
+    expectedOutputFormat,
+    constraints
+  } = params
+
+  // 1. Resolve model profile
+  const modelProfile = mvpModelProfiles.find((p) => p.slug === selectedProfileSlug)
+  if (!modelProfile) {
+    throw new Error(`Invalid model profile slug: ${selectedProfileSlug}`)
+  }
+
+  // 2. Build system and user prompt
+  const systemInstruction = analysisSystemInstruction
+  const userPrompt = constructUserAnalysisPrompt({
+    inputPrompt,
+    workingLanguage,
+    modelProfile,
+    taskGoal,
+    taskType,
+    expectedOutputFormat,
+    constraints
+  })
+
+  // 3. Execute low-level AI structured generation
+  const rawResult = await executeGeminiAnalysis(systemInstruction, userPrompt, options)
+
+  // 4. Perform strict semantic validation (Zod & custom constraints)
+  const validatedResult = validateAnalysisResult(rawResult)
+
+  // 5. Compute mathematical score breakdown
+  const scores = calculateScore(validatedResult.criteria_scores)
+
+  return {
+    analysis: validatedResult,
+    scores
+  }
+}
