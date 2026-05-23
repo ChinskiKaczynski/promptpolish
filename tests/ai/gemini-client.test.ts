@@ -5,6 +5,7 @@ import { normalizeProviderError, ProviderError } from '@/lib/ai/provider-errors'
 import { mockAnalysisResult } from '@/lib/ai/mock-analysis'
 import { APICallError, NoObjectGeneratedError } from 'ai'
 import { SemanticValidationError } from '@/lib/ai/semantic-validation'
+import type { AnalysisResult } from '@/lib/ai/schemas'
 
 describe('Gemini Analysis Client & Error Normalization', () => {
   describe('executeGeminiAnalysis Mocking & Output', () => {
@@ -59,10 +60,10 @@ describe('Gemini Analysis Client & Error Normalization', () => {
       }
 
       // Create an invalid mock response missing overall_summary
-      const invalidMock = {
+      const invalidMock: AnalysisResult = {
         ...mockAnalysisResult,
         overall_summary: '' // invalid under Zod/Semantic schema
-      } as unknown as Parameters<typeof analyzePrompt>[1]['mockResponse']
+      }
 
       await expect(
         analyzePrompt(params, { mockResponse: invalidMock })
@@ -74,10 +75,10 @@ describe('Gemini Analysis Client & Error Normalization', () => {
     it('maps HTTP 429 rate limit to standardized high volume user message', () => {
       const apiError = new APICallError({
         statusCode: 429,
-        statusText: 'Too Many Requests',
         cause: new Error('Rate limit exceeded'),
         url: 'https://api.google.com/generateContent',
-        message: 'Rate limit hit'
+        message: 'Rate limit hit',
+        requestBodyValues: {}
       })
 
       const normalized = normalizeProviderError(apiError)
@@ -90,10 +91,10 @@ describe('Gemini Analysis Client & Error Normalization', () => {
     it('maps HTTP 503 transient failure to standardized high volume user message', () => {
       const apiError = new APICallError({
         statusCode: 503,
-        statusText: 'Service Unavailable',
         cause: new Error('Overloaded'),
         url: 'https://api.google.com/generateContent',
-        message: 'Server overloaded'
+        message: 'Server overloaded',
+        requestBodyValues: {}
       })
 
       const normalized = normalizeProviderError(apiError)
@@ -106,10 +107,10 @@ describe('Gemini Analysis Client & Error Normalization', () => {
     it('maps non-transient HTTP 400 bad request to generic error message', () => {
       const apiError = new APICallError({
         statusCode: 400,
-        statusText: 'Bad Request',
         cause: new Error('Invalid parameter'),
         url: 'https://api.google.com/generateContent',
-        message: 'Invalid request parameter'
+        message: 'Invalid request parameter',
+        requestBodyValues: {}
       })
 
       const normalized = normalizeProviderError(apiError)
@@ -122,7 +123,23 @@ describe('Gemini Analysis Client & Error Normalization', () => {
     it('maps NoObjectGeneratedError to generic error message', () => {
       const noObjError = new NoObjectGeneratedError({
         cause: new Error('Zod validation failed'),
-        text: '{"some": "malformed json"'
+        text: '{"some": "malformed json"',
+        response: { id: 'test-id', modelId: 'test-model', timestamp: new Date() },
+        usage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          inputTokenDetails: {
+            noCacheTokens: 0,
+            cacheReadTokens: 0,
+            cacheWriteTokens: 0
+          },
+          outputTokenDetails: {
+            textTokens: 0,
+            reasoningTokens: 0
+          }
+        },
+        finishReason: 'error'
       })
 
       const normalized = normalizeProviderError(noObjError)
@@ -135,6 +152,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
       const networkError = new Error('fetch failed due to DNS timeout or network connectivity issue')
       const normalized = normalizeProviderError(networkError)
 
+      expect(networkError).toBeDefined() // to avoid unused variable warning if any
       expect(normalized.userMessage).toContain('handling high volume')
     })
   })

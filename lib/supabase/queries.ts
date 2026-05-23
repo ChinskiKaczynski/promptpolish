@@ -1,7 +1,7 @@
 import 'server-only'
 import { getSupabaseServerClient } from './server'
 import { createShareToken } from '../result-access/share-token'
-import type { Database, ModelProfileRow, PromptAnalysisRow, UsageEventRow, FeedbackEventRow } from './types'
+import type { Database, ModelProfileRow, PromptAnalysisRow, UsageEventRow, FeedbackEventRow, UserProfileRow } from './types'
 
 export type SharedPromptAnalysis = Pick<
   PromptAnalysisRow,
@@ -30,7 +30,7 @@ export async function getModelProfileBySlug(slug: string): Promise<ModelProfileR
     console.error('Error fetching model profile by slug:', error)
     return null
   }
-  return data
+  return data ? (data as unknown as ModelProfileRow) : null
 }
 
 /**
@@ -50,7 +50,7 @@ export async function createPromptAnalysis(
     console.error('Error creating prompt analysis:', error)
     return null
   }
-  return data
+  return data ? (data as unknown as PromptAnalysisRow) : null
 }
 
 /**
@@ -81,7 +81,7 @@ export async function getPromptAnalysisForOwner(
     console.error('Error fetching prompt analysis for owner:', error)
     return null
   }
-  return data
+  return data ? (data as unknown as PromptAnalysisRow) : null
 }
 
 /**
@@ -150,13 +150,13 @@ export async function getPromptAnalysesForUser(
     console.error('Error fetching prompt analyses for user:', error)
     return []
   }
-  return data ?? []
+  return (data ?? []) as unknown as PromptAnalysisRow[]
 }
 
 /**
  * Retrieves the user profile from the database matching the userId.
  */
-export async function getUserProfile(userId: string): Promise<Database['public']['Tables']['user_profiles']['Row'] | null> {
+export async function getUserProfile(userId: string): Promise<UserProfileRow | null> {
   const supabase = getSupabaseServerClient()
   const { data, error } = await supabase
     .from('user_profiles')
@@ -168,7 +168,7 @@ export async function getUserProfile(userId: string): Promise<Database['public']
     console.error('Error fetching user profile:', error)
     return null
   }
-  return data
+  return data ? (data as unknown as UserProfileRow) : null
 }
 
 /**
@@ -176,7 +176,7 @@ export async function getUserProfile(userId: string): Promise<Database['public']
  */
 export async function createUserProfile(
   profile: Database['public']['Tables']['user_profiles']['Insert']
-): Promise<Database['public']['Tables']['user_profiles']['Row'] | null> {
+): Promise<UserProfileRow | null> {
   const supabase = getSupabaseServerClient()
   const { data, error } = await supabase
     .from('user_profiles')
@@ -188,9 +188,8 @@ export async function createUserProfile(
     console.error('Error creating user profile:', error)
     return null
   }
-  return data
+  return data ? (data as unknown as UserProfileRow) : null
 }
-
 
 /**
  * Retrieves a prompt analysis by share token where public sharing is enabled.
@@ -215,10 +214,18 @@ export async function getSharedPromptAnalysis(
 
   if (!data) return null
 
-  // Destructure and omit is_share_enabled to ensure safe scrubbed output
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { is_share_enabled, ...safeData } = data
-  return safeData
+  // Build scrubbed object manually from generic row to avoid destructuring unconstrained Record<string, unknown>
+  const row = data as unknown as PromptAnalysisRow
+  return {
+    input_prompt: row.input_prompt,
+    working_language: row.working_language,
+    selected_profile_slug: row.selected_profile_slug,
+    overall_score: row.overall_score,
+    score_level: row.score_level,
+    analysis_json: row.analysis_json,
+    improved_prompt: row.improved_prompt,
+    created_at: row.created_at
+  }
 }
 
 /**
@@ -238,7 +245,7 @@ export async function createUsageEvent(
     console.error('Error creating usage event:', error)
     return null
   }
-  return data
+  return data ? (data as unknown as UsageEventRow) : null
 }
 
 /**
@@ -258,7 +265,7 @@ export async function createFeedbackEvent(
     console.error('Error creating feedback event:', error)
     return null
   }
-  return data
+  return data ? (data as unknown as FeedbackEventRow) : null
 }
 
 /**
@@ -302,7 +309,8 @@ export async function createShareLink(
     return null
   }
 
-  return data?.share_token ?? null
+  const typedData = data as unknown as { share_token: string | null } | null
+  return typedData?.share_token ?? null
 }
 
 /**
@@ -335,8 +343,9 @@ export async function disableShareLink(
     return false
   }
 
-  // data is null when the WHERE clause matched 0 rows (non-owner or wrong id)
-  return data !== null
+  const typedData = data as unknown as { id: string } | null
+  // typedData is null when the WHERE clause matched 0 rows (non-owner or wrong id)
+  return typedData !== null
 }
 
 /**
@@ -385,7 +394,9 @@ export async function softDeleteAnalysis(
 
   const { data, error } = await query.select('id').maybeSingle()
 
-  if (error || !data) {
+  const typedData = data as unknown as { id: string } | null
+
+  if (error || !typedData) {
     console.error('Error soft deleting analysis:', error)
     return false
   }
@@ -416,7 +427,9 @@ export async function toggleFavoriteAnalysis(
 
   const { data, error } = await query.select('id').maybeSingle()
 
-  if (error || !data) {
+  const typedData = data as unknown as { id: string } | null
+
+  if (error || !typedData) {
     console.error('Error toggling favorite analysis:', error)
     return false
   }
