@@ -83,3 +83,16 @@ Before any changes are committed to the AI provider integration, the developer o
 
 *   **Safe UI Mapping**: If the Gemini API experiences throttling (HTTP 429), quota issues, or transient downtime, the catch block must map this into a standardized, generic user-facing message: *"Our prompt analysis engine is currently handling high volume. Please wait a few moments and try again."*
 *   **Internal Logging**: The raw stack trace and specific API error payload (including any raw error details or structural payloads) are logged internally for developer diagnostics only and never exposed to the browser.
+
+---
+
+## 6. Endpoint Selection and Smoke Testing Decisions (2026-05-23)
+
+### Endpoint Decision
+*   **Standard Endpoint Chosen**: We explicitly use the standard Google Generative AI `:generateContent` and `:streamGenerateContent` endpoints via the `google('model-id')` model instance creator.
+*   **Interactions API Avoided**: We explicitly **DO NOT** use the Gemini Interactions API (`google.interactions(...)` endpoint). The Interactions API targets a separate stateful `POST /v1beta/interactions` endpoint that maintains server-side state, utilizes different event SSE vocabularies, and is intended for agent presets or multi-turn conversational agents. Our anonymous single-turn prompt analysis requires simple, stateless, fast execution, which is perfectly served by standard `generateContent`.
+
+### Integration Testing & Smoke Test Deferrals
+*   **Missing API Key Handling**: If the `GOOGLE_GENERATIVE_AI_API_KEY` is not set locally (e.g. in development), the live smoke test script (`scripts/smoke-test-gemini.ts`) exits gracefully with detailed setup documentation and a clear skip status. It **DO NOT** fake success.
+*   **Full Schema Smoke Test Deferral**: The minimal structured output smoke test validates the basic connectivity and JSON serialization. A full, production-like `analysisSchema` and semantic validation smoke test is deferred and required later in **Mission 26A** once the live API keys are fully populated in the environment.
+

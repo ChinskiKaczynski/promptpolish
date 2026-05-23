@@ -41,3 +41,12 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Risk & Mitigation**: Potential conflicts with custom rules or plugin extensions. **Mitigation**: Verified via clean local `pnpm lint` and `pnpm build` completions. Added explicit React version `19.0.0` settings to bypass legacy `context.getFilename()` checks within the nested plugins.
 *   **Sources & Docs**: ESLint 10 deprecation guides and Next.js flat configuration codemods.
 *   **Revisit When**: Next.js releases full official built-in Next 16 ESLint 10 flat presets.
+
+### 4. Gemini API Integration & Structured Output (2026-05-23)
+*   **Decision**: Standardize on Vercel AI SDK 6+ integration using `generateText` or `streamText` with `output: Output.object({ schema })` using the standard `:generateContent` endpoint via `google('model-id')`. Avoid using the stateful Gemini Interactions API (`google.interactions('model-id')`).
+*   **Reason**: Allows high-performance, stateless prompt evaluations. Using standard generateContent flows avoids the extra complexity and state overhead associated with the Interactions endpoint, which is optimized for multi-turn conversations and agent presets.
+*   **Alternatives Considered**: `google.interactions(...)` (Interactions API), raw REST requests using native fetch.
+*   **Risk & Mitigation**: Breaking changes in schema options. **Mitigation**: Checked documentation via Context7 and locked imports to Vercel AI SDK. Added a `smoke-test-gemini.ts` manual verification script to check integration before production rollout. A full production-like `analysisSchema` smoke test is required later in Mission 26A.
+*   **Sources & Docs**: Context7 library docs for `/vercel/ai` and `/websites/ai-sdk_dev`.
+*   **Revisit When**: Model architecture shifts or multi-turn agent integrations are required.
+
