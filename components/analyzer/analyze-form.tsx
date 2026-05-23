@@ -28,9 +28,11 @@ export function AnalyzeForm() {
   const [expectedOutputFormat, setExpectedOutputFormat] = useState('')
   const [constraints, setConstraints] = useState('')
 
-  // Simulated Audit Loading States
+  // Real Audit Loading States & Session Ownership Mappings
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [createdId, setCreatedId] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   // Real-time Sensitive Data Scanner
   const detection = useMemo(() => detectSensitiveData(inputPrompt), [inputPrompt])
@@ -40,31 +42,69 @@ export function AnalyzeForm() {
   const isApproachingLimit = inputPrompt.length >= WARN_PROMPT_CHARS && inputPrompt.length <= MAX_PROMPT_CHARS
   const isBlocked = detection.riskLevel === 'high'
 
-  // Animate mock audit loading checkpoints
+  // Animate mock audit loading checkpoints and redirect dynamically
   useEffect(() => {
     let interval: NodeJS.Timeout
-    if (isSubmitting) {
+    if (isSubmitting && !errorMessage) {
       interval = setInterval(() => {
         setCurrentStepIndex((prevIndex) => {
           if (prevIndex < loadingSteps.length - 1) {
             return prevIndex + 1
           } else {
-            clearInterval(interval)
-            setIsSubmitting(false)
-            router.push('/result/mock')
+            // Once mock stages complete, redirect immediately if server resolved the database ID
+            if (createdId) {
+              clearInterval(interval)
+              setIsSubmitting(false)
+              router.push(`/result/${createdId}`)
+            }
             return prevIndex
           }
         })
       }, 750)
     }
     return () => clearInterval(interval)
-  }, [isSubmitting, router])
+  }, [isSubmitting, createdId, errorMessage, router])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isTooShort || isTooLong || isBlocked) return
+    
+    setErrorMessage(null)
+    setCreatedId(null)
     setCurrentStepIndex(0)
     setIsSubmitting(true)
+
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          input_prompt: inputPrompt,
+          working_language: workingLanguage,
+          selected_profile_slug: profileSlug,
+          task_goal: taskGoal || undefined,
+          task_type: taskType || undefined,
+          expected_output_format: expectedOutputFormat || undefined,
+          constraints: constraints || undefined
+        })
+      })
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.message || errData.error || 'Wystąpił błąd serwera podczas analizy.')
+      }
+
+      const data = await response.json()
+      if (!data.id) {
+        throw new Error('Serwer nie zwrócił poprawnego identyfikatora wyniku.')
+      }
+
+      setCreatedId(data.id)
+    } catch (err: any) {
+      console.error(err)
+      setErrorMessage(err.message || 'Wystąpił nieznany błąd podczas łączenia z serwerem.')
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -302,6 +342,13 @@ export function AnalyzeForm() {
           </label>
         </div>
 
+        {/* Error Messages */}
+        {errorMessage && (
+          <p className="text-center text-xs font-semibold text-red-600 animate-pulse">
+            ⚠️ {errorMessage}
+          </p>
+        )}
+
         {/* Submission Button */}
         <div className="pt-4">
           <button
@@ -312,7 +359,7 @@ export function AnalyzeForm() {
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 00-2-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            Przeprowadź audyt promptu (Mock)
+            Przeprowadź audyt promptu
           </button>
         </div>
 
