@@ -213,3 +213,27 @@ export async function disableShareLink(
 
   return true
 }
+
+/**
+ * Counts successful prompt analysis executions for a given owner anonymous ID
+ * in the current UTC calendar day.
+ */
+export async function getUsageCountToday(ownerAnonymousId: string): Promise<number> {
+  const supabase = getSupabaseServerClient() as any
+  const startOfDay = new Date()
+  startOfDay.setUTCHours(0, 0, 0, 0)
+  
+  const { count, error } = await supabase
+    .from('usage_events')
+    .select('*', { count: 'exact', head: true })
+    .eq('owner_anonymous_id', ownerAnonymousId)
+    .eq('event_type', 'analyze')
+    .gte('created_at', startOfDay.toISOString())
+
+  if (error) {
+    console.error('Error counting usage events:', error)
+    return 0
+  }
+  return count ?? 0
+}
+
