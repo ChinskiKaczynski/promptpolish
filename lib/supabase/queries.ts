@@ -4,6 +4,31 @@ import { getSupabaseAdminClient } from './admin'
 import { createShareToken } from '../result-access/share-token'
 import type { Database, ModelProfileRow, PromptAnalysisRow, UsageEventRow, FeedbackEventRow, UserProfileRow } from './types'
 
+function serializeDbError(error: unknown) {
+  if (!error) return null
+
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause,
+    }
+  }
+
+  if (typeof error === 'object') {
+    return {
+      ...error,
+      ownProperties: Object.getOwnPropertyNames(error),
+      json: JSON.stringify(error),
+    }
+  }
+
+  return {
+    value: String(error),
+  }
+}
+
 export type SharedPromptAnalysis = Pick<
   PromptAnalysisRow,
   | 'input_prompt'
@@ -243,7 +268,7 @@ export async function createUsageEvent(
     .single()
 
   if (error) {
-    console.error('Error creating usage event:', error)
+    console.error('Error creating usage event:', serializeDbError(error))
     return null
   }
   return data ? (data as unknown as UsageEventRow) : null
@@ -360,9 +385,10 @@ export async function getUsageCountToday(ownerAnonymousId: string): Promise<numb
 
   const { count, error } = await supabase
     .from('usage_events')
-    .select('*', { count: 'exact', head: true })
+    .select('id', { count: 'exact' })
+    .limit(1)
     .eq('owner_anonymous_id', ownerAnonymousId)
-    .eq('event_type', 'analyze')
+    .eq('event_type', 'analysis_completed')
     .gte('created_at', startOfDay.toISOString())
 
   if (error) {
@@ -385,8 +411,8 @@ export async function getUsageCountTodayForUser(
 
   let query = supabase
     .from('usage_events')
-    .select('*', { count: 'exact', head: true })
-    .eq('event_type', 'analyze')
+    .select('id', { count: 'exact' })
+    .eq('event_type', 'analysis_completed')
     .gte('created_at', startOfDay.toISOString())
 
   if (userId) {
@@ -398,12 +424,7 @@ export async function getUsageCountTodayForUser(
   const { count, error } = await query
 
   if (error) {
-    console.error('Error counting usage events today for user:', {
-      code: error?.code,
-      message: error?.message,
-      details: error?.details,
-      hint: error?.hint,
-    })
+    console.error('Error counting usage events today for user:', serializeDbError(error))
     return 0
   }
   return count ?? 0
@@ -423,8 +444,9 @@ export async function getUsageCountThisMonthForUser(
 
   let query = supabase
     .from('usage_events')
-    .select('*', { count: 'exact', head: true })
-    .eq('event_type', 'analyze')
+    .select('id', { count: 'exact' })
+    .limit(1)
+    .eq('event_type', 'analysis_completed')
     .gte('created_at', startOfMonth.toISOString())
 
   if (userId) {
@@ -436,7 +458,7 @@ export async function getUsageCountThisMonthForUser(
   const { count, error } = await query
 
   if (error) {
-    console.error('Error counting usage events this month for user:', error)
+    console.error('Error counting usage events this month for user:', serializeDbError(error))
     return 0
   }
   return count ?? 0
@@ -507,3 +529,4 @@ export async function toggleFavoriteAnalysis(
   }
   return true
 }
+
