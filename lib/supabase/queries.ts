@@ -530,4 +530,3 @@ export async function toggleFavoriteAnalysis(
   return true
 }
 
-
