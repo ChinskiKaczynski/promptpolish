@@ -1,7 +1,15 @@
 import { mvpModelProfiles } from './model-profiles'
-import { analysisSystemInstruction, constructUserAnalysisPrompt } from './prompts'
+import {
+  analysisSystemInstruction,
+  constructRepairPrompt,
+  constructUserAnalysisPrompt
+} from './prompts'
 import { executeOpenRouterAnalysis, type OpenRouterClientOptions } from './openrouter-client'
-import { validateAnalysisResult } from './semantic-validation'
+import {
+  formatValidationErrors,
+  SemanticValidationError,
+  validateAnalysisResult
+} from './semantic-validation'
 import { calculateScore, type CalculatedScore } from '@/lib/scoring/calculate-score'
 import { type AnalysisResult } from './schemas'
 
@@ -26,13 +34,70 @@ export type AnalysisServiceResult = {
   }
 }
 
+type OpenRouterAnalysisResponse = Awaited<ReturnType<typeof executeOpenRouterAnalysis>>
+
+function mergeUsage(
+  firstUsage: OpenRouterAnalysisResponse['usage'],
+  secondUsage: OpenRouterAnalysisResponse['usage']
+): OpenRouterAnalysisResponse['usage'] {
+  if (!firstUsage) return secondUsage
+  if (!secondUsage) return firstUsage
+
+  return {
+    promptTokens: firstUsage.promptTokens + secondUsage.promptTokens,
+    completionTokens: firstUsage.completionTokens + secondUsage.completionTokens,
+    totalTokens: firstUsage.totalTokens + secondUsage.totalTokens
+  }
+}
+
+async function executeAndValidateWithSingleRepairRetry(
+  systemInstruction: string,
+  userPrompt: string,
+  workingLanguage: 'pl' | 'en',
+  options?: OpenRouterClientOptions
+): Promise<{
+  result: AnalysisResult
+  usage?: AnalysisServiceResult['usage']
+}> {
+  const initialResponse = await executeOpenRouterAnalysis(systemInstruction, userPrompt, options)
+
+  try {
+    return {
+      result: validateAnalysisResult(initialResponse.output),
+      usage: initialResponse.usage
+    }
+  } catch (error) {
+    if (!(error instanceof SemanticValidationError)) {
+      throw error
+    }
+
+    const repairPrompt = constructRepairPrompt({
+      previousOutput: initialResponse.output,
+      validationErrors: formatValidationErrors(error.errors),
+      workingLanguage
+    })
+
+    const repairedResponse = await executeOpenRouterAnalysis(
+      systemInstruction,
+      repairPrompt,
+      options
+    )
+
+    return {
+      result: validateAnalysisResult(repairedResponse.output),
+      usage: mergeUsage(initialResponse.usage, repairedResponse.usage)
+    }
+  }
+}
+
 /**
  * High-level orchestration service that:
  * 1. Resolves the model profile.
  * 2. Builds dynamic system instructions and prompts.
- * 3. Triggers structured LLM evaluation (or returns test mocks).
+ * 3. Triggers structured LLM evaluation.
  * 4. Runs full semantic integrity checks.
- * 5. Computes overall score metrics and confidence levels using standard scoring.
+ * 5. Performs one repair retry when semantic validation fails.
+ * 6. Computes overall score metrics and confidence levels using standard scoring.
  */
 export async function analyzePrompt(
   params: AnalyzePromptParams,
@@ -49,13 +114,11 @@ export async function analyzePrompt(
     constraints
   } = params
 
-  // 1. Resolve model profile
   const modelProfile = mvpModelProfiles.find((p) => p.slug === selectedProfileSlug)
   if (!modelProfile) {
     throw new Error(`Invalid model profile slug: ${selectedProfileSlug}`)
   }
 
-  // 2. Build system and user prompt
   const systemInstruction = analysisSystemInstruction
   const userPrompt = constructUserAnalysisPrompt({
     inputPrompt,
@@ -68,18 +131,18 @@ export async function analyzePrompt(
     constraints
   })
 
-  // 3. Execute low-level AI structured generation
-  const response = await executeOpenRouterAnalysis(systemInstruction, userPrompt, options)
+  const { result: validatedResult, usage } = await executeAndValidateWithSingleRepairRetry(
+    systemInstruction,
+    userPrompt,
+    workingLanguage,
+    options
+  )
 
-  // 4. Perform strict semantic validation (Zod & custom constraints)
-  const validatedResult = validateAnalysisResult(response.output)
-
-  // 5. Compute mathematical score breakdown
   const scores = calculateScore(validatedResult.criteria_scores)
 
   return {
     analysis: validatedResult,
     scores,
-    usage: response.usage
+    usage
   }
 }

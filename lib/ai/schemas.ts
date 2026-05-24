@@ -24,4 +24,5 @@ export const analysisResultSchema = z.object({
   safety_notes: z.array(z.string()).max(8)
 })
 
+export type AnalysisCriterion = z.infer<typeof analysisCriterionSchema>
 export type AnalysisResult = z.infer<typeof analysisResultSchema>

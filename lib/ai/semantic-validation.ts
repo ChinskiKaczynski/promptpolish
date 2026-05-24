@@ -20,12 +20,21 @@ export class SemanticValidationError extends Error {
   }
 }
 
+export function formatValidationErrors(errors: ValidationErrorDetail[]): string {
+  return errors.map((error) => `[${error.path}]: ${error.message}`).join('\n')
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
 /**
  * Validates raw AI output or mock data against the production structured schema.
- * Enforces both the static Zod constraints and the dynamic semantic rules:
+ * Enforces:
  * 1. Basic type/structural validation via Zod analysisResultSchema.
- * 2. Complete coverage of all 10 scoring criteria with no duplicates or omissions.
- * 3. A non-empty, non-whitespace-only improved prompt.
+ * 2. Complete coverage of all scoring criteria.
+ * 3. No duplicate, missing, unexpected, or out-of-order criteria.
+ * 4. A non-empty, non-whitespace-only improved prompt.
  *
  * @param data The input object to validate.
  * @returns The parsed and fully typed AnalysisResult.
@@ -34,7 +43,6 @@ export class SemanticValidationError extends Error {
 export function validateAnalysisResult(data: unknown): AnalysisResult {
   const errors: ValidationErrorDetail[] = []
 
-  // 1. Zod Basic Schema Validation
   const result = analysisResultSchema.safeParse(data)
   if (!result.success) {
     const zodErrors = result.error.issues.map((err) => ({
@@ -44,11 +52,14 @@ export function validateAnalysisResult(data: unknown): AnalysisResult {
     errors.push(...zodErrors)
   }
 
-  // If Zod fails, we still do some analysis to report maximum context to the developer
   const parsedData = result.success ? result.data : (data as Partial<AnalysisResult> | null)
 
-  if (parsedData && typeof parsedData === 'object') {
-    // 2. Semantic check: Non-empty improved_prompt
+  if (!isRecord(parsedData)) {
+    errors.push({
+      path: 'root',
+      message: 'Input data is not a valid object.'
+    })
+  } else {
     if (
       typeof parsedData.improved_prompt !== 'string' ||
       parsedData.improved_prompt.trim().length === 0
@@ -59,27 +70,73 @@ export function validateAnalysisResult(data: unknown): AnalysisResult {
       })
     }
 
-    // 3. Semantic check: Complete and unique criteria_scores
     const criteriaScores = parsedData.criteria_scores
-    if (Array.isArray(criteriaScores)) {
+
+    if (!Array.isArray(criteriaScores)) {
+      errors.push({
+        path: 'criteria_scores',
+        message: 'Criteria scores must be an array.'
+      })
+    } else {
+      const expectedCriteria = [...scoringCriteria]
+      const expectedCriteriaSet = new Set<string>(expectedCriteria)
       const seenCriteria = new Set<string>()
+
+      if (criteriaScores.length !== expectedCriteria.length) {
+        errors.push({
+          path: 'criteria_scores',
+          message: `Expected exactly ${expectedCriteria.length} criteria scores, received ${criteriaScores.length}.`
+        })
+      }
 
       for (let i = 0; i < criteriaScores.length; i++) {
         const item = criteriaScores[i]
-        if (item && typeof item === 'object' && 'criterion' in item) {
-          const criterion = item.criterion as string
-          if (seenCriteria.has(criterion)) {
-            errors.push({
-              path: `criteria_scores.${i}.criterion`,
-              message: `Duplicate scoring criterion: ${criterion}`
-            })
-          }
-          seenCriteria.add(criterion)
+
+        if (!isRecord(item)) {
+          errors.push({
+            path: `criteria_scores.${i}`,
+            message: 'Criteria score item must be an object.'
+          })
+          continue
+        }
+
+        const criterion = item.criterion
+
+        if (typeof criterion !== 'string') {
+          errors.push({
+            path: `criteria_scores.${i}.criterion`,
+            message: 'Criterion must be a string.'
+          })
+          continue
+        }
+
+        if (!expectedCriteriaSet.has(criterion)) {
+          errors.push({
+            path: `criteria_scores.${i}.criterion`,
+            message: `Unexpected scoring criterion: ${criterion}`
+          })
+          continue
+        }
+
+        if (seenCriteria.has(criterion)) {
+          errors.push({
+            path: `criteria_scores.${i}.criterion`,
+            message: `Duplicate scoring criterion: ${criterion}`
+          })
+        }
+
+        seenCriteria.add(criterion)
+
+        const expectedAtIndex = expectedCriteria[i]
+        if (expectedAtIndex && criterion !== expectedAtIndex) {
+          errors.push({
+            path: `criteria_scores.${i}.criterion`,
+            message: `Scoring criterion order mismatch. Expected ${expectedAtIndex}, received ${criterion}.`
+          })
         }
       }
 
-      // Check for missing criteria from the global list
-      for (const criterion of scoringCriteria) {
+      for (const criterion of expectedCriteria) {
         if (!seenCriteria.has(criterion)) {
           errors.push({
             path: 'criteria_scores',
@@ -87,24 +144,17 @@ export function validateAnalysisResult(data: unknown): AnalysisResult {
           })
         }
       }
-    } else {
-      // criteria_scores is missing or not an array (this is already covered by Zod, but added for completeness)
-      errors.push({
-        path: 'criteria_scores',
-        message: 'Criteria scores must be an array.'
-      })
     }
-  } else {
-    errors.push({
-      path: 'root',
-      message: 'Input data is not a valid object.'
-    })
   }
 
   if (errors.length > 0) {
     throw new SemanticValidationError(errors)
   }
 
-  // TypeScript assertion: safeParse succeeded and semantic checks passed
-  return result.data!
+  if (!result.success) {
+    throw new SemanticValidationError(errors)
+  }
+
+  return result.data
 }
+

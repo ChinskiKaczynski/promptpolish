@@ -1,4 +1,28 @@
 import { type ModelProfile } from './model-profiles'
+import { scoringCriteria } from '@/lib/scoring/scoring-config'
+
+const requiredCriteriaList = scoringCriteria
+  .map((criterion, index) => `${index + 1}. ${criterion}`)
+  .join('\n')
+
+export const requiredCriteriaInstruction = `
+CRITICAL SCORING CRITERIA CONTRACT:
+The criteria_scores array must contain exactly ${scoringCriteria.length} items.
+It must contain each criterion exactly once and in this exact order:
+
+${requiredCriteriaList}
+
+Do not rename criteria.
+Do not translate criteria.
+Do not duplicate criteria.
+Do not omit criteria.
+Do not add extra criteria.
+Each criterion must include:
+- criterion
+- raw_score_0_10
+- rationale
+- improvement_suggestion
+`
 
 export const analysisSystemInstruction = `
 You are a PromptPolish engine, an advanced prompt analysis and polishing assistant.
@@ -11,8 +35,11 @@ Core Operation Rules:
 5. Use ONLY the model profile details provided in the prompt to evaluate model compatibility.
 6. Absolutely DO NOT invent or assume any unverified model capabilities, pricing structures, context windows, token limits, benchmark scores, or provider recommendations.
 7. If model profile data is missing or marked unverified/stale, treat it as unknown/unverified. Do not suggest or assert specifications.
-8. Under no circumstances should you repeat full secret values (such as passwords, API keys, tokens, or private database keys) if the input contains sensitive data. Redact them or speak about them generally without copying the sensitive value itself.
-9. To combat hallucination, always include anti-hallucination guardrails and instructions in the generated improved prompt, instructing the model to reject ungrounded assumptions or state when information is unavailable.
+8. Under no circumstances should you repeat full secret values such as passwords, API keys, tokens, or private database keys if the input contains sensitive data. Redact them or speak about them generally without copying the sensitive value itself.
+9. To combat hallucination, always include anti-hallucination guardrails and instructions in the generated improved prompt, instructing the target model to reject ungrounded assumptions or state when information is unavailable.
+10. Score each criterion independently. Do not reuse the same rationale or criterion name across multiple criteria.
+
+${requiredCriteriaInstruction}
 `
 
 export interface ConstructPromptParams {
@@ -78,10 +105,55 @@ ${profileSection}
 ${contextSection || '(None specified)'}
 
 Instructions for evaluation:
-- Complete coverage of all 10 required scoring criteria in the JSON schema.
+- Complete coverage of all ${scoringCriteria.length} required scoring criteria.
+- The criteria_scores array must follow this exact contract:
+${requiredCriteriaList}
 - For "model_profile_fit", evaluate compatibility strictly against the [MODEL PROFILE DATA] provided above. Do not reference external benchmarks or claim knowledge of pricing or context windows not listed in the profile.
-- Redact/Avoid echoing any sensitive credentials or secrets found in the input prompt.
+- Redact or avoid echoing any sensitive credentials or secrets found in the input prompt.
 - Retain the original intent and core objectives of the input prompt.
-- Make the improved prompt highly professional, beautifully structured (using markdown headers, checklists, and instruction blocks), and optimized for the target model profile without being overly verbose.
+- Make the improved prompt highly professional, clearly structured, and optimized for the target model profile without being overly verbose.
+- Do not include Markdown code fences around the JSON output.
+`
+}
+
+export interface ConstructRepairPromptParams {
+  previousOutput: unknown
+  validationErrors: string
+  workingLanguage: 'pl' | 'en'
+}
+
+/**
+ * Constructs a compact repair prompt for a single retry when the first model output
+ * passes JSON generation but fails semantic validation.
+ */
+export function constructRepairPrompt(params: ConstructRepairPromptParams): string {
+  const { previousOutput, validationErrors, workingLanguage } = params
+  const languageInstruction = workingLanguage === 'pl'
+    ? 'Keep all user-facing text fields in Polish.'
+    : 'Keep all user-facing text fields in English.'
+
+  return `
+Your previous structured output failed semantic validation.
+
+[VALIDATION ERRORS]
+${validationErrors}
+
+[REQUIRED FIX]
+Return a corrected object that follows the same JSON schema and fixes every validation error.
+${languageInstruction}
+
+${requiredCriteriaInstruction}
+
+Rules:
+- Return corrected structured output only.
+- Do not explain the correction outside the structured output.
+- Preserve the user's original intent from the previous analysis.
+- Do not change criterion names.
+- Do not duplicate criteria.
+- Do not omit criteria.
+- Do not add extra criteria.
+
+[PREVIOUS OUTPUT TO REPAIR]
+${JSON.stringify(previousOutput, null, 2)}
 `
 }
