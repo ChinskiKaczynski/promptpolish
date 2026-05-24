@@ -362,7 +362,7 @@ export async function getUsageCountToday(ownerAnonymousId: string): Promise<numb
     .from('usage_events')
     .select('*', { count: 'exact', head: true })
     .eq('owner_anonymous_id', ownerAnonymousId)
-    .eq('event_type', 'analysis_completed')
+    .eq('event_type', 'analyze')
     .gte('created_at', startOfDay.toISOString())
 
   if (error) {
@@ -386,7 +386,7 @@ export async function getUsageCountTodayForUser(
   let query = supabase
     .from('usage_events')
     .select('*', { count: 'exact', head: true })
-    .eq('event_type', 'analysis_completed')
+    .eq('event_type', 'analyze')
     .gte('created_at', startOfDay.toISOString())
 
   if (userId) {
@@ -398,7 +398,12 @@ export async function getUsageCountTodayForUser(
   const { count, error } = await query
 
   if (error) {
-    console.error('Error counting usage events today for user:', error)
+    console.error('Error counting usage events today for user:', {
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint,
+    })
     return 0
   }
   return count ?? 0
@@ -419,7 +424,7 @@ export async function getUsageCountThisMonthForUser(
   let query = supabase
     .from('usage_events')
     .select('*', { count: 'exact', head: true })
-    .eq('event_type', 'analysis_completed')
+    .eq('event_type', 'analyze')
     .gte('created_at', startOfMonth.toISOString())
 
   if (userId) {
