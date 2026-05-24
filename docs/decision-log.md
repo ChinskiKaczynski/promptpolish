@@ -28,11 +28,11 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Revisit When**: Upon completing validation of initial MVP metrics (e.g., target copy rate and repeat user checks).
 
 ### 2. Tech Stack and Provider Choices (2026-05-23)
-*   **Decision**: Adopt Next.js App Router, TypeScript, Tailwind CSS, Supabase, and Vercel AI SDK with `@ai-sdk/google` (targeting Gemini 1.5/2.0 API models).
+*   **Decision**: Adopt Next.js App Router, TypeScript, Tailwind CSS, Supabase, and Vercel AI SDK with OpenRouter (using `@openrouter/ai-sdk-provider` targeting the DeepSeek v4 Flash model).
 *   **Reason**: Next.js App Router provides optimal server-side preflights and cookie-based ownership. Vercel AI SDK provides high-quality structured JSON output APIs (`Output.object`) that integrate smoothly with Zod schemas.
-*   **Alternatives Considered**: Raw REST calls to the Gemini API, or langchain/llamaindex abstractions.
-*   **Risk & Mitigation**: Breaking changes in fast-moving AI SDK and Gemini APIs. **Mitigation**: Lock dependency versions in `package.json` and enforce **Context7** document checks before provider integration.
-*   **Revisit When**: AI SDK v5+ or Gemini major model version updates.
+*   **Alternatives Considered**: Raw REST calls to the Gemini API, langchain/llamaindex abstractions, or direct provider integrations.
+*   **Risk & Mitigation**: Breaking changes in fast-moving AI SDK and provider APIs. **Mitigation**: Lock dependency versions in `package.json` and enforce **Context7** document checks before provider integration.
+*   **Revisit When**: AI SDK major version updates or provider transitions.
 
 ### 3. ESLint 10 Native Flat Config Migration (2026-05-23)
 *   **Decision**: Migrate `eslint.config.mjs` away from legacy `@eslint/eslintrc` `FlatCompat` to direct native flat config imports from `eslint-config-next`.
@@ -42,13 +42,13 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Sources & Docs**: ESLint 10 deprecation guides and Next.js flat configuration codemods.
 *   **Revisit When**: Next.js releases full official built-in Next 16 ESLint 10 flat presets.
 
-### 4. Gemini API Integration & Structured Output (2026-05-23)
-*   **Decision**: Standardize on Vercel AI SDK 6+ integration using `generateText` or `streamText` with `output: Output.object({ schema })` using the standard `:generateContent` endpoint via `google('model-id')`. Avoid using the stateful Gemini Interactions API (`google.interactions('model-id')`).
-*   **Reason**: Allows high-performance, stateless prompt evaluations. Using standard generateContent flows avoids the extra complexity and state overhead associated with the Interactions endpoint, which is optimized for multi-turn conversations and agent presets.
-*   **Alternatives Considered**: `google.interactions(...)` (Interactions API), raw REST requests using native fetch.
-*   **Risk & Mitigation**: Breaking changes in schema options. **Mitigation**: Checked documentation via Context7 and locked imports to Vercel AI SDK. Added a `smoke-test-gemini.ts` manual verification script to check integration before production rollout. A full production-like `analysisSchema` smoke test is required later in Mission 26A.
-*   **Sources & Docs**: Context7 library docs for `/vercel/ai` and `/websites/ai-sdk_dev`.
-*   **Revisit When**: Model architecture shifts or multi-turn agent integrations are required.
+### 4. OpenRouter API Integration & Structured Output (2026-05-24)
+*   **Decision**: Standardize on Vercel AI SDK 6+ integration using `generateText` or `streamText` with `output: Output.object({ schema })` using `@openrouter/ai-sdk-provider` and target model `deepseek/deepseek-v4-flash`.
+*   **Reason**: Allows high-performance, stateless prompt evaluations with consistent JSON outputs.
+*   **Alternatives Considered**: Direct Google Gemini API integrations or LangChain wrappers.
+*   **Risk & Mitigation**: Breaking changes in schema options or model ID structures. **Mitigation**: Checked documentation via Context7 and locked imports to Vercel AI SDK. Added a dynamic evaluation pipeline verification suite (`scripts/run-evaluation.ts`) to check integration before production rollout.
+*   **Sources & Docs**: Context7 library docs for `/vercel/ai` and `@openrouter/ai-sdk-provider`.
+*   **Revisit When**: Model architecture shifts or provider API transitions.
 
 ### 5. Data Retention Cleanup Engine & Active Shared Links Exemption (2026-05-23)
 *   **Decision**: Implement a database deletion utility running through `getSupabaseAdminClient` (to bypass RLS limitations), triggered manually via CLI (`scripts/retention-cleanup.ts`) or automatically via a cron REST endpoint (`/api/cron/cleanup`), applying distinct expiration thresholds. Explicitly exempt records with `is_share_enabled = true` from the 30-day purge.
@@ -73,6 +73,14 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Risk & Mitigation**: Webhook timeouts (mitigated by quick DB writes and immediate 200 OK responses within 3 seconds), Vercel serverless request constraints (mitigated by parsing the raw body via `req.text()` for signature checks), and legal/VAT compliance (mitigated by proposing Stripe Tax and deferring production rollout until formal legal/tax reviews are complete).
 *   **Sources & Docs**: `docs/billing-decision.md`, Context7 documentation for `/websites/stripe`, `/supabase/supabase`, `/websites/vercel`.
 *   **Revisit When**: Upon successful integration of Supabase Auth (Stage 1 of SaaS Roadmap) and acquisition of stable premium waitlist telemetry.
+
+### 8. Migration to OpenRouter and DeepSeek v4 Flash (2026-05-24)
+*   **Decision**: Migrated the production AI model engine from Google Gemini to OpenRouter utilizing the Vercel AI SDK and the target model `deepseek/deepseek-v4-flash`.
+*   **Reason**: DeepSeek v4 Flash provides exceptional cost-to-performance efficiency and outstanding capabilities in understanding PL/EN prompt calibrations while maintaining low response latency.
+*   **Alternatives Considered**: Direct Google Gemini API integration (decommissioned due to target model preferences).
+*   **Risk & Mitigation**: Remote provider latency or key rotation requirements. **Mitigation**: Standardized key rotation processes documented in SOP-01, and dynamic model profile resolution through database configs.
+*   **Sources & Docs**: `@openrouter/ai-sdk-provider` documentation and `docs/openrouter-integration-decision.md`.
+
 
 
 

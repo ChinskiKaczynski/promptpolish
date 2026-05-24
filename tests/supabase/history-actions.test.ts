@@ -109,13 +109,13 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
 
       await getPromptAnalysesForUser('user-789', 'owner-123', {
         lang: 'pl',
-        profile: 'google-gemini-3-5-flash'
+        profile: 'openrouter-deepseek-v4-flash'
       })
 
       expect(mockIs).toHaveBeenCalledWith('deleted_at', null)
       expect(mockOr).toHaveBeenCalledWith('user_id.eq.user-789,owner_anonymous_id.eq.owner-123')
       expect(mockEq).toHaveBeenCalledWith('working_language', 'pl')
-      expect(mockEq).toHaveBeenCalledWith('selected_profile_slug', 'google-gemini-3-5-flash')
+      expect(mockEq).toHaveBeenCalledWith('selected_profile_slug', 'openrouter-deepseek-v4-flash')
     })
 
     it('applies favorite and search phrase queries', async () => {

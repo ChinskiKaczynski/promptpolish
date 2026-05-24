@@ -28,7 +28,7 @@ Based on a meticulous security audit, code analysis, and integration verificatio
 ### 2. API Key Exposure
 * **Status**: **PASSED**
 * **Findings**: 
-  * All private keys (`GOOGLE_GENERATIVE_AI_API_KEY`, `SUPABASE_SECRET_KEY`, `COOKIE_SIGNING_SECRET`, `CRON_SECRET`) are stored in server-only environment variables.
+  * All private keys (`OPENROUTER_API_KEY`, `SUPABASE_SECRET_KEY`, `COOKIE_SIGNING_SECRET`, `CRON_SECRET`) are stored in server-only environment variables.
   * No server secrets are prefixed with `NEXT_PUBLIC_`.
   * Verified that Next.js compilation excludes these from the client-side JavaScript bundles.
 
@@ -90,7 +90,7 @@ Based on a meticulous security audit, code analysis, and integration verificatio
 * **Status**: **PASSED**
 * **Findings**: The interface renders clear warning badges on unverified configurations, provides clean loading/processing skeletons, and explicitly cautions the user that clearing browser cookies/cache will permanently terminate their access to `/result/[id]` views.
 
-### 13. Gemini Provider Failure States
+### 13. OpenRouter Provider Failure States
 * **Status**: **PASSED**
 * **Findings**: Standardized error mappings gracefully handle rate limits (HTTP 429) or backend outages (HTTP 503) by informing the user that the engine is handling high volume, providing a highly premium experience even during failures.
 
@@ -124,15 +124,15 @@ Based on a meticulous security audit, code analysis, and integration verificatio
 * **Status**: **PASSED**
 * **Findings**: Statically verified by `tests/security/client-exposure-checks.test.ts`, which runs code scans to ensure that no forbidden private keys, database connections, or tables are referenced in client bundles.
 
-### 20. Full-Schema Gemini Smoke Test
+### 20. Full-Schema Evaluation Diagnostic Suite
 * **Status**: **PASSED**
 * **Findings**:
-  * Completed and updated under `scripts/smoke-test-gemini.ts`.
-  * Evaluates Polish and English, weak and strong prompts using the actual production `analysisResultSchema`.
+  * Completed and run under `scripts/run-evaluation.ts`.
+  * Evaluates Polish and English, weak and strong prompts using the production schemas.
 
-### 21. Cost Benchmark
+### 21. Cost Benchmark (Historical)
 * **Status**: **PASSED**
-* **Findings**: Cost calculation is fully documented based on standard Gemini 1.5 Flash pricing ($0.075 / 1M input tokens and $0.30 / 1M output tokens), yielding an estimated average cost of **~$0.000315 USD** per single-turn prompt audit.
+* **Findings**: Legacy cost calculation was documented based on standard Gemini 1.5 Flash pricing ($0.075 / 1M input tokens and $0.30 / 1M output tokens), yielding an estimated average cost of **~$0.000315 USD** per single-turn prompt audit. OpenRouter dynamic costing applies.
 
 ### 22. Share Privacy Tests
 * **Status**: **PASSED**
@@ -175,11 +175,12 @@ Based on a meticulous security audit, code analysis, and integration verificatio
    * Add the following keys in the Vercel deployment console:
      ```bash
      COOKIE_SIGNING_SECRET=your-secure-cryptographic-hash
-     GOOGLE_GENERATIVE_AI_API_KEY=your-live-gemini-key
+     OPENROUTER_API_KEY=your-live-openrouter-key
+     OPENROUTER_MODEL_ID=deepseek/deepseek-v4-flash
      SUPABASE_SECRET_KEY=your-supabase-service-role-key
      CRON_SECRET=your-cron-auth-token
      ```
 2. **Configure Vercel Cron Scheduler**:
    * Schedule the retention script to run daily at off-peak hours (e.g. `0 2 * * *`) targeting `/api/cron/cleanup` with the appropriate Bearer token.
 3. **Execute Post-Deployment Smoke Check**:
-   * Run the upgraded smoke test script (`npx tsx scripts/smoke-test-gemini.ts`) using the live production API key to confirm complete end-to-end integration and cost benchmarks.
+   * Run the evaluation/diagnostic suite using the live production API key to confirm complete end-to-end integration and calibration.

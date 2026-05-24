@@ -11,9 +11,9 @@ The MVP supports exactly two model profiles. They are defined by product-level *
 1.  **`general-llm`**
     *   *Purpose*: A balanced general-purpose assessment model.
     *   *Default Target*: Resolves to the current industry-standard general analysis model in the database config.
-2.  **`google-gemini-3-5-flash`**
-    *   *Purpose*: Specifically calibrated for prompt testing under Google's Gemini-family models.
-    *   *Default Target*: Resolves to the verified active Gemini API model ID.
+2.  **`openrouter-deepseek-v4-flash`**
+    *   *Purpose*: Specifically calibrated for prompt testing under DeepSeek-family models via OpenRouter.
+    *   *Default Target*: Resolves to the verified active OpenRouter model ID.
 
 ---
 
@@ -23,8 +23,8 @@ Every model profile stored in the database or loaded from static configurations 
 
 ```typescript
 interface ModelProfile {
-  slug: string;                        // Product slug (e.g. 'google-gemini-3-5-flash')
-  model_id: string;                    // Provider model name (e.g. 'gemini-1.5-flash-8b')
+  slug: string;                        // Product slug (e.g. 'openrouter-deepseek-v4-flash')
+  model_id: string;                    // Provider model name (e.g. 'deepseek/deepseek-v4-flash')
   verification_status: 'verified' | 'unverified' | 'stale';
   confidence_level: 'high' | 'medium' | 'low';
   source_url: string;                  // Direct documentation reference link

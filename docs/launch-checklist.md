@@ -15,7 +15,7 @@ This checklist establishes the final quality gates required before the PromptPol
 ## 2. Functional & Pipeline Calibration
 *   - [ ] **Form Submission**: Paste form properly binds input prompt, target language, and target model profile.
 *   - [ ] **Zod Schema Sanitization**: Input validation strictly enforces the 4,000-character prompt ceiling.
-*   - [ ] **AI SDK Structured Engine**: Prompts successfully invoke `@ai-sdk/google` using `Output.object` with full Zod types.
+*   - [ ] **AI SDK Structured Engine**: Prompts successfully invoke `@openrouter/ai-sdk-provider` using `Output.object` with full Zod types.
 *   - [ ] **Backend Weighted Formula**: The final audit score is calculated mathematically by the server, not solely relying on LLM estimations.
 *   - [ ] **Private Results (/result/[id])**: Page successfully displays criteria tables, weaknesses, explanations, and copy-ready cards.
 *   - [ ] **Opt-In Shared Results (/share/[token])**: Sharing is off by default. Generating a link activates opt-in, rendering the result accessible via high-entropy token. Disabling sharing instantly revokes public access (returns 404).
@@ -25,18 +25,18 @@ This checklist establishes the final quality gates required before the PromptPol
 ## 3. Performance & Compilation Gates
 *   - [ ] **Turbopack Build Pass**: Production compilation (`pnpm build`) completes successfully in under 10 seconds.
 *   - [ ] **Zero Linter Warnings**: Linter (`pnpm lint`) passes with `--max-warnings=0`.
-*   - [ ] **Fast Response Latency**: Gemini API audits complete and load the result screen in under 2.5 seconds.
+*   - [ ] **Fast Response Latency**: OpenRouter AI audits complete and load the result screen in under 2.5 seconds.
 *   - [ ] **Optimized Static Bundles**: Landing, privacy, and terms pages are fully pre-rendered statically.
 
 ---
 
 ## 4. Security & Safety Gates
-*   - [ ] **Zero API Keys in Client Bundles**: Checked compile output to confirm `GOOGLE_GENERATIVE_AI_API_KEY` and `SUPABASE_SECRET_KEY` are not in bundles.
+*   - [ ] **Zero API Keys in Client Bundles**: Checked compile output to confirm `OPENROUTER_API_KEY` and `SUPABASE_SECRET_KEY` are not in bundles.
 *   - [ ] **No NEXT_PUBLIC Secrets**: Enforced that no administrative credentials contain the `NEXT_PUBLIC_` prefix.
 *   - [ ] **Sensitive Data Block**: Mock credentials (API keys, Pem blocks, passwords) are caught at backend preflights. The prompt is dropped from memory, never saved to disk, and the pipeline halts with a 400.
 *   - [ ] **Cookie Access Validation**: `/result/[id]` correctly verifies that the user's `owner_anonymous_id` cookie matches the DB record, returning `403 Forbidden` for non-owners.
 *   - [ ] **Hashed IP Rate Limiting**: daily quota limit (5 analyses per day) successfully limits IP hashes and cookie tokens. IP addresses are salted and hashed on ingestion.
-*   - [ ] **Error Normalization**: API errors (from Supabase or Gemini) are caught, logged internally, and served as user-friendly messages.
+*   - [ ] **Error Normalization**: API errors (from Supabase or OpenRouter) are caught, logged internally, and served as user-friendly messages.
 
 ---
 

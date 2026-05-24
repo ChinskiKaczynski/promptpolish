@@ -17,7 +17,7 @@ While the PromptPolish codebase is exceptionally secure and fully meets all prod
 > **Core Roadmap Principle**: *Do not add auth, billing, pricing, or Stripe before validating the core MVP value with real users.*
 
 ### Summary of Recommended Strategy
-We recommend the **"continue MVP"** pathway. The application is a beautifully designed, highly secure, and well-calibrated utility. However, the database tables are not yet initialized on the hosted production Supabase, no live API keys are active in the production environment, and we have zero actual user value signals. The immediate focus must be launching the anonymous tool, enabling live Gemini execution, and gathering the initial cohort of telemetry to prove repeat usage and commercial demand.
+We recommend the **"continue MVP"** pathway. The application is a beautifully designed, highly secure, and well-calibrated utility. However, the database tables are not yet initialized on the hosted production Supabase, no live API keys are active in the production environment, and we have zero actual user value signals. The immediate focus must be launching the anonymous tool, enabling live OpenRouter execution, and gathering the initial cohort of telemetry to prove repeat usage and commercial demand.
 
 ---
 
@@ -37,13 +37,13 @@ To transition to a paid SaaS model, we require concrete data points showing that
 | **Returning Users** | **UNKNOWN (0)** | 5–10 multi-session users | Cookie-linked repeat visits within a 14-day window. |
 | **Share Usage (`share_link_created`)** | **UNKNOWN (0)** | > 10% of analyses | Percentage of users opting-in to create public shared URLs. |
 | **Limit Reached Events** | **UNKNOWN (0)** | Tracked for limit resizing | Users hitting the daily limit of 3 analyses per IP/session. |
-| **Estimated Analysis Cost** | **UNKNOWN** *(Calculated)* | Safe margins (< $0.001/audit) | Estimated at **~$0.000315 USD** per single-turn run. |
+| **Estimated Analysis Cost** | **UNKNOWN** *(Calculated)* | Safe margins (< $0.001/audit) | Estimated at **~$0.000315 USD** per single-turn run (historical Gemini benchmark, see below). |
 | **Token Usage (Prompt/Completion)** | **UNKNOWN (0)** | Clean, bounded outputs | Standard model input: ~600 tokens; output: ~900 tokens. |
 | **Provider Errors** | **UNKNOWN (0)** | < 1% error rate | Tracks API timeouts, quota exhaustion, or server issues. |
 | **Retry Count** | **UNKNOWN (0)** | For diagnostics only | Captures transient API failures recovered by backoff logic. |
-| **Invalid Schema Count** | **UNKNOWN (0)** | **0%** (Strict Zod schema) | Tracks how often Gemini fails structured Zod validation. |
+| **Invalid Schema Count** | **UNKNOWN (0)** | **0%** (Strict Zod schema) | Tracks how often the model provider fails structured Zod validation. |
 
-### Average Cost & Token Benchmarks
+### Historical Cost & Token Benchmarks (Gemini 1.5 Flash)
 Using the live token cost formula for **Gemini 1.5 Flash** (or `gemini-3.5-flash`):
 $$\text{Cost per Analysis} = (\text{Input Tokens} \times \$0.000000075) + (\text{Completion Tokens} \times \$0.000000300)$$
 *   **Typical Single-Turn Input**: ~600 tokens ($0.000045)
@@ -62,7 +62,7 @@ Before transitioning, the MVP must pass rigorous technical checklist gates. We h
 | **2. Data Retention Cleanup** | **COMPLETE** | Fully implemented in `lib/privacy/retention.ts` with distinct retention periods (30 days for analyses, 90 days for events, 180 days for feedback). Explicitly exempts active shared records (`is_share_enabled = true`) to prevent broken public links. Tested via `scripts/retention-cleanup.ts` with dry-run capabilities. Verified by [**`tests/privacy/retention.test.ts`**](file:///d:/AI/promptpolish/tests/privacy/retention.test.ts). |
 | **3. Bundle Leak Test** | **COMPLETE** | Enforced by a static check suite inside [**`tests/security/client-exposure-checks.test.ts`**](file:///d:/AI/promptpolish/tests/security/client-exposure-checks.test.ts). The check recursively scans all components and client pages to guarantee zero references to administrative secret keys, server-only database connection libraries, or the private `prompt_analyses` schema. |
 | **4. Share Privacy Tests** | **COMPLETE** | Fully implemented and verified in [**`tests/supabase/share-privacy.test.ts`**](file:///d:/AI/promptpolish/tests/supabase/share-privacy.test.ts). The data access layer enforces a strict column-whitelist on public queries, completely redacting the creator's IP hash, internal UUIDs, cookie keys, and optional custom metadata before outputting the payload. |
-| **5. Full-Schema Gemini Smoke Test** | **COMPLETE** | Structured in [**`scripts/smoke-test-gemini.ts`**](file:///d:/AI/promptpolish/scripts/smoke-test-gemini.ts). It validates 4 calibration prompt scenarios (Polish and English weak/strong inputs) using the live production `analysisResultSchema`. Handles unconfigured API keys gracefully by exiting with detailed documentation instead of falsifying success. |
+| **5. Full-Schema Evaluation Diagnostic Suite** | **COMPLETE** | Structured in [**`scripts/run-evaluation.ts`**](file:///d:/AI/promptpolish/scripts/run-evaluation.ts). It validates 46 calibration scenarios (Polish and English inputs) using the live production schemas. |
 
 ---
 
@@ -92,7 +92,7 @@ Before we begin writing code for billing, pricing tables, or Stripe webhooks, we
 ```mermaid
 graph TD
     A[Unapplied DB Migrations] -->|Blocker 1| E[Production Launch]
-    B[No Server Env Keys GOOGLE_GEMINI/COOKIE_SECRET] -->|Blocker 2| E
+    B[No Server Env Keys OPENROUTER/COOKIE_SECRET] -->|Blocker 2| E
     C[Lack of Auth Layer] -->|Blocker 3| F[Stripe Integration]
     D[GDPR/Legal Warning Draft Banners] -->|Blocker 4| F
     E --> G[Value Validation & Telemetry]
@@ -105,7 +105,7 @@ graph TD
 *   **Mitigation:** Run the initial migration (`db/migrations/0001_init.sql`) and seed files against the remote Supabase database.
 
 ### 2. Unconfigured Production Credentials (Technical Blocker)
-*   **Risk:** Production environment variables for `GOOGLE_GENERATIVE_AI_API_KEY`, `SUPABASE_SECRET_KEY`, and `COOKIE_SIGNING_SECRET` are currently unmapped or blank.
+*   **Risk:** Production environment variables for `OPENROUTER_API_KEY`, `SUPABASE_SECRET_KEY`, and `COOKIE_SIGNING_SECRET` are currently unmapped or blank.
 *   **Impact:** The system will fail safe by refusing to process audits and rejecting user result reads.
 *   **Mitigation:** Generate cryptographically secure keys and map them directly inside the Vercel deployment dashboard before going live.
 
@@ -139,7 +139,7 @@ Based on these findings, we recommend the **"continue MVP"** pathway, keeping th
 
 ### Action Checklist
 - [ ] **Apply Migrations**: Connect to the remote hosted Supabase and run `db/migrations/0001_init.sql` and `db/seed/model_profiles.sql` to initialize the tables.
-- [ ] **Deploy Env Variables**: Add secure credentials for the Gemini API, admin Supabase, cron secrets, and cookie signing in Vercel.
+- [ ] **Deploy Env Variables**: Add secure credentials for the OpenRouter API, admin Supabase, cron secrets, and cookie signing in Vercel.
 - [ ] **Launch Free MVP**: Turn off mock result mode (`NEXT_PUBLIC_ENABLE_MOCK_RESULT=false`) and deploy the app to public beta testers.
 - [ ] **Gather Telemetry**: Monitor the Supabase SQL editor using our dashboard queries to track form completion, copy rate (>30%), and repeat visits.
 - [ ] **Auth & Account Transition (Stage 1 & 2)**: Once demand is proven, integrate Supabase Auth so users can sign up to preserve their prompt history.

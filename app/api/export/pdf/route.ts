@@ -131,8 +131,8 @@ export async function GET(request: Request) {
 
     addText(`Data utworzenia: ${formattedDate}`, 9)
     addText(`Jezyk roboczy: ${record.working_language.toUpperCase()}`, 9)
-    const modelProfileLabel = record.selected_profile_slug === 'google-gemini-3-5-flash'
-      ? (record.working_language === 'pl' ? 'Model Google' : 'Google model')
+    const modelProfileLabel = record.selected_profile_slug === 'openrouter-deepseek-v4-flash'
+      ? (record.working_language === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model')
       : (record.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')
 
     addText(`Wybrany profil modelu: ${modelProfileLabel}`, 9)

@@ -53,7 +53,7 @@ describe('POST /api/analyze API Route Handler', () => {
 
     vi.mocked(getModelProfileBySlug).mockResolvedValue({
       id: 'profile-uuid',
-      slug: 'google-gemini-3-5-flash',
+      slug: 'openrouter-deepseek-v4-flash',
       display_name: 'Gemini 3.5 Flash',
       provider: 'google',
       model_family: 'gemini',
@@ -83,7 +83,7 @@ describe('POST /api/analyze API Route Handler', () => {
   const validPayload = {
     input_prompt: 'To jest w pełni poprawny prompt o minimalnej długości dwudziestu znaków potrzebny do pomyślnego przejścia walidacji.',
     working_language: 'pl' as const,
-    selected_profile_slug: 'google-gemini-3-5-flash' as const
+    selected_profile_slug: 'openrouter-deepseek-v4-flash' as const
   }
 
   describe('Request Schema & Validation Checks', () => {

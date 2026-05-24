@@ -8,7 +8,7 @@ import { type AnalysisResult } from './schemas'
 export interface AnalyzePromptParams {
   inputPrompt: string
   workingLanguage: 'pl' | 'en'
-  selectedProfileSlug?: 'general-llm' | 'google-gemini-3-5-flash'
+  selectedProfileSlug?: 'general-llm' | 'openrouter-deepseek-v4-flash'
   auditMode?: string | null
   taskGoal?: string | null
   taskType?: string | null

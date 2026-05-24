@@ -1,5 +1,5 @@
 export type ModelProfile = {
-  slug: 'general-llm' | 'google-gemini-3-5-flash'
+  slug: 'general-llm' | 'openrouter-deepseek-v4-flash'
   displayName: string
   provider: string
   verificationStatus: 'verified' | 'unverified' | 'stale'
@@ -19,9 +19,9 @@ export const mvpModelProfiles: ModelProfile[] = [
     profileVersion: '1.0.0'
   },
   {
-    slug: 'google-gemini-3-5-flash',
-    displayName: 'Gemini 3.5 Flash profile',
-    provider: 'google',
+    slug: 'openrouter-deepseek-v4-flash',
+    displayName: 'DeepSeek v4 Flash Profile',
+    provider: 'openrouter',
     verificationStatus: 'unverified',
     confidenceLevel: 'low',
     profileVersion: '1.0.0'

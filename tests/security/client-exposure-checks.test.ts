@@ -46,6 +46,7 @@ describe('Static Security & Secret Exposure Checks', () => {
   it('ensures zero client-side files contain references to server-side secrets', () => {
     const forbiddenSecrets = [
       'GOOGLE_GENERATIVE_AI_API_KEY',
+      'OPENROUTER_API_KEY',
       'SUPABASE_SECRET_KEY',
       'CRON_SECRET',
       'serverEnv'

@@ -38,7 +38,7 @@ Here is the evaluation of the 18 specific review categories requested for the v1
 
 ### 1. MVP Core Flow
 *   **Implementation Status:** **100% COMPLETE & VERIFIED**
-*   **Review Findings:** Users can input prompts in Polish or English, select a model profile (`general-llm` or `google-gemini-3-5-flash`), and receive a structured analysis. The flow is fast, intuitive, and works flawlessly without requiring sign-ups. 
+*   **Review Findings:** Users can input prompts in Polish or English, select a model profile (`general-llm` or `openrouter-deepseek-v4-flash`), and receive a structured analysis. The flow is fast, intuitive, and works flawlessly without requiring sign-ups. 
 *   **Verdict:** **GO**
 
 ### 2. Authentication

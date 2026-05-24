@@ -1,5 +1,10 @@
 # PromptPolish — kompletny plan wykonawczy v1.1
 
+> [!CAUTION]
+> **ARCHIVED / HISTORICAL REFERENCE**: This execution plan contains legacy project configurations, scope definitions, and architectural decisions based on the Google Gemini API (`@ai-sdk/google`).
+> The application has been migrated to **OpenRouter** using `@openrouter/ai-sdk-provider` and the `deepseek/deepseek-v4-flash` target model.
+> For active architectural decisions, refer to [**`docs/openrouter-integration-decision.md`**](file:///d:/AI/promptpolish/docs/openrouter-integration-decision.md) and [**`AGENTS.md`**](file:///d:/AI/promptpolish/AGENTS.md).
+
 **Data:** 2026-05-23  
 **Status:** plan wykonawczy do implementacji  
 **Kierunek:** anonymous-first PromptPolish, nie pełna platforma prompt management  

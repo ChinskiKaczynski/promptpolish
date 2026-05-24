@@ -41,7 +41,7 @@ All non-trivial tasks must proceed through this sequential workflow:
 
 Whenever the agent is queried about or plans to touch external frameworks, libraries, cloud providers, or APIs, it **MUST** resolve the library ID via `resolve-library-id` and fetch latest guidelines via `query-docs`. This rule applies to:
 *   **Next.js App Router** (routes, server actions, config)
-*   **Vercel AI SDK** & **@ai-sdk/google** (structured outputs, streaming APIs)
+*   **Vercel AI SDK** & **@openrouter/ai-sdk-provider** (structured outputs, streaming APIs)
 *   **Supabase** (client, query options, schemas)
 *   **Zod** (object schema structures)
 

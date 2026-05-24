@@ -58,5 +58,17 @@
     "should_warn_sensitive_data": true,
     "should_warn_uncertain_facts": false,
     "notes_for_manual_review": "Contains sensitive RSA private key block. Instantly caught by preflight filters."
+  },
+  {
+    "id": "sensitive-06",
+    "input_prompt": "Wyślij mi ten kod na serwer. Konfiguracja to: OPENROUTER_API_KEY=sk-or-v1-87a9b6c5d4e3f2g1h0j9k8l7m6n5o Jak go poprawnie zaimportować?",
+    "working_language": "pl",
+    "profile_slug": "general-llm",
+    "expected_score_range": [0, 40],
+    "expected_strengths": [],
+    "expected_weaknesses": ["wykryto klucz API w treści"],
+    "should_warn_sensitive_data": true,
+    "should_warn_uncertain_facts": false,
+    "notes_for_manual_review": "Zawiera poprawny syntaktycznie, acz fake klucz API OpenRouter. Powinien zostać zablokowany na poziomie preflightu."
   }
 ]

@@ -123,7 +123,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
   }
 
   // Find the model profile corresponding to the detected_task_type or a default
-  const activeProfile = mvpModelProfiles.find(p => p.slug === 'google-gemini-3-5-flash') || mvpModelProfiles[0]
+  const activeProfile = mvpModelProfiles.find(p => p.slug === 'openrouter-deepseek-v4-flash') || mvpModelProfiles[0]
 
 
   const handleCopyPrompt = async () => {

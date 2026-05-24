@@ -73,8 +73,8 @@ export async function GET(request: Request) {
       day: 'numeric'
     })
 
-    const modelProfileLabel = record.selected_profile_slug === 'google-gemini-3-5-flash'
-      ? (record.working_language === 'pl' ? 'Model Google' : 'Google model')
+    const modelProfileLabel = record.selected_profile_slug === 'openrouter-deepseek-v4-flash'
+      ? (record.working_language === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model')
       : (record.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')
 
     let md = `# Raport Audytu Promptu — PromptPolish\n\n`

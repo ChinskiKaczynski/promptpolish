@@ -1,20 +1,20 @@
 # AI Quality Evaluation Pass Results — PromptPolish
 
 > [!WARNING]
-> **LIVE AI EVALUATION NOT RUN**: The live evaluation pass against the actual Gemini API (target: `gemini-3.5-flash`) was skipped because the `GOOGLE_GENERATIVE_AI_API_KEY` is not configured in your `.env.local` file.
+> **LIVE AI EVALUATION NOT RUN**: The live evaluation pass against OpenRouter (target: `deepseek/deepseek-v4-flash`) was skipped because the `OPENROUTER_API_KEY` is not configured in your `.env.local` file.
 >
-> Both an automated quality evaluation suite and an upgraded structured output smoke test are prepared. Follow the setup instructions below to execute them.
+> An automated quality evaluation suite is prepared. Follow the setup instructions below to execute it.
 
 ---
 
-## 1. Upgraded Structured Output Smoke Test (2026-05-23)
+## 1. Historical Gemini structured output smoke test (Gemini 1.5 Flash)
 
 ### A. Live Smoke Test Skip Status
 * **Status**: Skipped (No live key configured).
-* **Missing API Key Handling**: The upgraded smoke test script ([**`scripts/smoke-test-gemini.ts`**](file:///d:/AI/promptpolish/scripts/smoke-test-gemini.ts)) was executed and verified to handle the missing key gracefully. It exits with a detailed configuration guide and does **not** fake success.
+* **Missing API Key Handling**: The legacy smoke test script ([**`scripts/smoke-test-gemini.ts`**](file:///d:/AI/promptpolish/scripts/smoke-test-gemini.ts)) was executed and verified to handle the missing key gracefully. It exits with a detailed configuration guide and does **not** fake success.
 
-### B. Upgraded Smoke Test Design
-The upgraded script validates Gemini's structured output compatibility against the exact production-grade `analysisResultSchema` (matching `/api/analyze` behavior).
+### B. Legacy Smoke Test Design (Historical)
+The legacy script validates Gemini's structured output compatibility against the exact production-grade `analysisResultSchema` (matching `/api/analyze` behavior).
 
 * **Target Model ID**: `gemini-3.5-flash`
 * **Calibration Test Matrix**:
@@ -32,7 +32,7 @@ The upgraded script validates Gemini's structured output compatibility against t
   - **Invalid Schema Count**: Tracks Zod parsing exceptions.
   - **Cost Estimation**: Automatically calculates real-time USD cost using standard pricing benchmarks.
 
-### C. Cost Benchmarking & Estimation
+### C. Cost Benchmarking & Estimation (Historical Gemini 1.5 Flash)
 Cost per prompt analysis is estimated using the following pricing standards:
 * **Pricing Standard (Gemini 1.5/3.5 Flash)**:
   - Input Tokens: **$0.075 / 1,000,000 tokens** ($0.000000075 per token)
@@ -50,21 +50,17 @@ $$\text{Analysis Cost} = (\text{Prompt Tokens} \times 0.000000075) + (\text{Comp
 
 ## 2. How to Run Live Quality Checks
 
-To perform the live quality evaluation pass and structured smoke tests:
+To perform the live quality evaluation pass:
 
 1. Open your local configurations file:
    [**`.env.local`**](file:///d:/AI/promptpolish/.env.local)
-2. Provide your valid Google Gemini API Key:
+2. Provide your valid OpenRouter API Key:
    ```bash
-   GOOGLE_GENERATIVE_AI_API_KEY=AIzaSyYourActualKeyHere
+   OPENROUTER_API_KEY=your_key_here
    ```
-3. To run the full 46-item quality evaluation pass (re-writing this results document):
+3. To run the full 46-item quality evaluation pass:
    ```bash
    npx tsx scripts/run-evaluation.ts
-   ```
-4. To run the 4-case production schema structured output smoke test:
-   ```bash
-   npx tsx scripts/smoke-test-gemini.ts
    ```
 
 ---
@@ -75,7 +71,7 @@ We performed a rigorous static code review of the core system prompt templates (
 
 ### A. Polished Prompt Length Control
 * **System Prompt Guardrail**: Rule 4 states: *"Do not make the improved prompt unnecessarily long. Keep it concise, functional, and efficient."*
-* **Evaluation**: Very strong. This prevents Gemini from bloating simple inputs into massive, context-heavy essays, keeping prompt costs low and preventing latency spikes.
+* **Evaluation**: Very strong. This prevents the model from bloating simple inputs into massive, context-heavy essays, keeping prompt costs low and preventing latency spikes.
 * **Potential Risk**: LLM compliance with length bounds relies on self-attention; very weak prompts can sometimes trigger overly verbose boilerplate guides.
 
 ### B. Prevention of Invented Capabilities (Model Fit Notes)
@@ -84,12 +80,12 @@ We performed a rigorous static code review of the core system prompt templates (
   2. *"Absolutely DO NOT invent or assume any unverified model capabilities, pricing structures, context windows, token limits, benchmark scores, or provider recommendations."*
   3. *"If model profile data is missing or marked unverified/stale, treat it as unknown/unverified. Do not suggest or assert specifications."*
 * **User Prompt Guardrail**: *"For 'model_profile_fit', evaluate compatibility strictly against the [MODEL PROFILE DATA] provided above. Do not reference external benchmarks or claim knowledge of pricing or context windows not listed in the profile."*
-* **Evaluation**: Excellent. This prevents Gemini from fabricating benchmark scores or quoting outdated pricing structures.
+* **Evaluation**: Excellent. This prevents the model from fabricating benchmark scores or quoting outdated pricing structures.
 
 ### C. Uncertainty Warnings Generation
 * **System Prompt Guardrail**: Rule 9 commands: *"To combat hallucination, always include anti-hallucination guardrails and instructions in the generated improved prompt, instructing the model to reject ungrounded assumptions or state when information is unavailable."*
 * **Evaluation**: Decent. The schema strictly enforces `uncertainty_warnings` as a typed array of strings. 
-* **Potential Risk**: While the system instructions command anti-hallucination guardrails inside the *improved prompt*, they do not explicitly tell Gemini when to populate the *outer structured JSON parameter* `uncertainty_warnings`. Under live conditions, Gemini might leave this array empty even for uncertain facts unless instructed directly.
+* **Potential Risk**: While the system instructions command anti-hallucination guardrails inside the *improved prompt*, they do not explicitly tell the model when to populate the *outer structured JSON parameter* `uncertainty_warnings`. Under live conditions, the model might leave this array empty even for uncertain facts unless instructed directly.
 
 ### D. Safety Notes & Secrets Leak Prevention
 * **System Prompt Guardrail**: Rule 8 commands: *"Under no circumstances should you repeat full secret values (such as passwords, API keys, tokens, or private database keys) if the input contains sensitive data. Redact them or speak about them generally without copying the sensitive value itself."*
@@ -130,4 +126,4 @@ Based on the static analysis audit, we recommend applying the following isolated
 
 ### 💡 Recommendation 3: Add Preflight API Key Masking
 * **Problem**: If high-risk credentials are block-disabled, the user gets blocked. If we only show warning, secrets might go to the provider.
-* **Suggested Action**: Continue relying on the robust server-side preflight block (`SENSITIVE_DATA_BLOCK_HIGH_RISK=true`) which completely prevents any secret-bearing prompts from making API calls to Gemini.
+* **Suggested Action**: Continue relying on the robust server-side preflight block (`SENSITIVE_DATA_BLOCK_HIGH_RISK=true`) which completely prevents any secret-bearing prompts from making API calls to OpenRouter.

@@ -28,7 +28,7 @@ import type { SharedPromptAnalysis } from '@/lib/supabase/queries'
 const SCRUBBED_RECORD: SharedPromptAnalysis = {
   input_prompt: 'Summarize this contract',
   working_language: 'en',
-  selected_profile_slug: 'google-gemini-3-5-flash',
+  selected_profile_slug: 'openrouter-deepseek-v4-flash',
   overall_score: 78,
   score_level: 'decent',
   analysis_json: {

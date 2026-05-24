@@ -121,7 +121,7 @@ export function HistoryFilters({
           >
             <option value="all">Wszystkie profile</option>
             <option value="general-llm">Uniwersalny model AI</option>
-            <option value="google-gemini-3-5-flash">Model Google</option>
+            <option value="openrouter-deepseek-v4-flash">Zaawansowany model AI</option>
           </select>
         </div>
       </div>

@@ -33,7 +33,7 @@ const mockAnalysisRecord: PromptAnalysisRow = {
   user_id: null,
   input_prompt: 'Prosty prompt testowy',
   working_language: 'pl',
-  selected_profile_slug: 'google-gemini-3-5-flash',
+  selected_profile_slug: 'openrouter-deepseek-v4-flash',
   audit_mode: null,
   task_goal: 'Test',
   task_type: 'simple',

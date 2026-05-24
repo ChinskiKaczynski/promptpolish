@@ -1,0 +1,150 @@
+
+.antigravity\rules\mvp-scope.md:31:*   **No Simultaneous Multi-Model Runs**: Users can select either `general-llm` or `google-gemini-3-5-flash`, but the MVP does not support side-by-side prompt execution or arena testing.
+.antigravity\rules\project-rules.md:19:    *   **Vercel AI SDK** & **@ai-sdk/google** (structured output, generation parameters)
+app\account\page.tsx:265:                        Profil: {analysis.selected_profile_slug === 'google-gemini-3-5-flash'
+app\api\analyze\route.ts:26:  selected_profile_slug: z.enum(['general-llm', 'google-gemini-3-5-flash']),
+app\api\export\markdown\route.ts:76:    const modelProfileLabel = record.selected_profile_slug === 'google-gemini-3-5-flash'
+app\api\export\pdf\route.ts:134:    const modelProfileLabel = record.selected_profile_slug === 'google-gemini-3-5-flash'
+app\history\page.tsx:207:                          {analysis.selected_profile_slug === 'google-gemini-3-5-flash'
+components\analyzer\analyze-form.tsx:550:              <option value="google-gemini-3-5-flash">
+components\history\history-filters.tsx:124:            <option value="google-gemini-3-5-flash">Model Google</option>
+components\result\result-view.tsx:126:  const activeProfile = mvpModelProfiles.find(p => p.slug === 'google-gemini-3-5-flash') || mvpModelProfiles[0]
+docs\antigravity-workflow.md:44:*   **Vercel AI SDK** & **@ai-sdk/google** (structured outputs, streaming APIs)
+docs\architecture.md:87:*   `profile_slug`: `string` (`"general-llm"` or `"google-gemini-3-5-flash"`)
+docs\architecture.md:108:*   `slug`: `string` (Primary Key, e.g., `"google-gemini-3-5-flash"`)
+docs\decision-log.md:31:*   **Decision**: Adopt Next.js App Router, TypeScript, Tailwind CSS, Supabase, and Vercel AI SDK with `@ai-sdk/google` (targeting Gemini 1.5/2.0 API models).
+docs\evaluation-fixtures.md:32:  profile_slug: z.enum(['general-llm', 'google-gemini-3-5-flash']),
+docs\evaluation-results.md:4:> **LIVE AI EVALUATION NOT RUN**: The live evaluation pass against the actual Gemini API (target: `gemini-3.5-flash`) was skipped because the `GOOGLE_GENERATIVE_AI_API_KEY` is not configured in your `.env.local` file.
+docs\evaluation-results.md:19:* **Target Model ID**: `gemini-3.5-flash`
+docs\evaluation-results.md:28:  - **Model ID**: `gemini-3.5-flash` (or custom configured `GEMINI_MODEL_ID`).
+docs\evaluation-results.md:59:   GOOGLE_GENERATIVE_AI_API_KEY=AIzaSyYourActualKeyHere
+docs\gemini-integration-decision.md:9:*   **Official SDK**: We use the official Vercel AI SDK (`ai` package) with the `@ai-sdk/google` provider.
+docs\gemini-integration-decision.md:22:import { google } from '@ai-sdk/google';
+docs\gemini-integration-decision.md:69:> *   **Check SDK Compatibility**: Confirm that the installed `@ai-sdk/google` package version matches the schema configuration.
+docs\gemini-integration-decision.md:76:*   **API Key Storage**: The Google Generative AI key must be declared strictly under the server-only variable: `GEMINI_API_KEY` (or `GOOGLE_GENERATIVE_AI_API_KEY`).
+docs\gemini-integration-decision.md:104:    - Model ID used (`process.env.GEMINI_MODEL_ID` or `gemini-3.5-flash`)
+docs\gemini-integration-decision.md:113:For **Gemini 1.5 Flash** (or `gemini-3.5-flash`), the pricing is:
+docs\gemini-integration-decision.md:126:   GOOGLE_GENERATIVE_AI_API_KEY=AIzaSy...
+docs\gemini-integration-decision.md:134:*   **Missing API Key Handling**: If the `GOOGLE_GENERATIVE_AI_API_KEY` is not set locally (e.g. in development), the live smoke test script (`scripts/smoke-test-gemini.ts`) exits gracefully with detailed setup documentation and a clear skip status. It **DO NOT** fake success.
+docs\launch-checklist.md:18:*   - [ ] **AI SDK Structured Engine**: Prompts successfully invoke `@ai-sdk/google` using `Output.object` with full Zod types.
+docs\launch-checklist.md:34:*   - [ ] **Zero API Keys in Client Bundles**: Checked compile output to confirm `GOOGLE_GENERATIVE_AI_API_KEY` and `SUPABASE_SECRET_KEY` are not in bundles.
+docs\model-profile-policy.md:14:2.  **`google-gemini-3-5-flash`**
+docs\model-profile-policy.md:26:  slug: string;                        // Product slug (e.g. 'google-gemini-3-5-flash')
+docs\mvp-launch-readiness-review.md:31:  * All private keys (`GOOGLE_GENERATIVE_AI_API_KEY`, `SUPABASE_SECRET_KEY`, `COOKIE_SIGNING_SECRET`, `CRON_SECRET`) are stored in server-only environment variables.
+docs\mvp-launch-readiness-review.md:178:     GOOGLE_GENERATIVE_AI_API_KEY=your-live-gemini-key
+docs\operations-runbook.md:52:### SOP-01: Rotating Gemini AI Keys (`GOOGLE_GENERATIVE_AI_API_KEY`)
+docs\operations-runbook.md:55:3.  Update `GOOGLE_GENERATIVE_AI_API_KEY` with the new value. Save changes for `production`, `preview`, and `development`.
+docs\paid-readiness-report.md:47:Using the live token cost formula for **Gemini 1.5 Flash** (or `gemini-3.5-flash`):
+docs\paid-readiness-report.md:108:*   **Risk:** Production environment variables for `GOOGLE_GENERATIVE_AI_API_KEY`, `SUPABASE_SECRET_KEY`, and `COOKIE_SIGNING_SECRET` are currently unmapped or blank.
+docs\product-mvp.md:35:*   **Model Profile Selector**: Supporting only `general-llm` and `google-gemini-3-5-flash`.
+docs\source-plan-v1.1.md:78:Vercel AI SDK + @ai-sdk/google jako preferowana warstwa integracji
+docs\source-plan-v1.1.md:105:Next.js API route → AI SDK @ai-sdk/google → Gemini generateContent-compatible flow → structured output
+docs\source-plan-v1.1.md:126:google-gemini-3-5-flash
+docs\source-plan-v1.1.md:132:GEMINI_MODEL_ID=gemini-3.5-flash
+docs\source-plan-v1.1.md:135:[Wniosek] `google-gemini-3-5-flash` jest slugiem produktowym profilu, a realny `model_id` musi pochodzić z env albo tabeli `model_profiles`, nie z hardcoded claimów w UI.
+docs\source-plan-v1.1.md:140:google-gemini-family
+docs\source-plan-v1.1.md:563:- Vercel AI SDK with @ai-sdk/google
+docs\source-plan-v1.1.md:568:- google-gemini-3-5-flash
+docs\source-plan-v1.1.md:575:- Prefer generateContent-compatible flow through @ai-sdk/google.
+docs\source-plan-v1.1.md:770:Use @ai-sdk/google through generateText with Output.object.
+docs\source-plan-v1.1.md:923:selected_profile_slug: general-llm / google-gemini-3-5-flash
+docs\source-plan-v1.1.md:1106:google-gemini-3-5-flash
+docs\source-plan-v1.1.md:1112:google-gemini-family
+docs\source-plan-v1.1.md:1173:GOOGLE_GENERATIVE_AI_API_KEY=
+docs\source-plan-v1.1.md:1174:GEMINI_MODEL_ID=gemini-3.5-flash
+docs\source-plan-v1.1.md:1196:- GOOGLE_GENERATIVE_AI_API_KEY tylko server-side.
+docs\source-plan-v1.1.md:1261:- GOOGLE_GENERATIVE_AI_API_KEY=...
+docs\source-plan-v1.1.md:1309:Vercel AI SDK + @ai-sdk/google + Zod
+docs\source-plan-v1.1.md:1478:selected_profile_slug: 'general-llm' | 'google-gemini-3-5-flash'
+docs\source-plan-v1.1.md:1847:- GOOGLE_GENERATIVE_AI_API_KEY nie występuje w client bundle,
+docs\source-plan-v1.1.md:1917:- Default profiles: general-llm and google-gemini-3-5-flash only.
+docs\source-plan-v1.1.md:2097:- Seed only general-llm and google-gemini-3-5-flash.
+docs\source-plan-v1.1.md:2185:- Use @ai-sdk/google and the current AI SDK structured output pattern.
+docs\source-plan-v1.1.md:2190:- Use GOOGLE_GENERATIVE_AI_API_KEY.
+docs\source-plan-v1.1.md:2667:https://ai.google.dev/gemini-api/docs/whats-new-gemini-3.5
+docs\v1-product-freeze-review.md:41:*   **Review Findings:** Users can input prompts in Polish or English, select a model profile (`general-llm` or `google-gemini-3-5-flash`), and receive a structured analysis. The flow is fast, intuitive, and works flawlessly without requiring sign-ups. 
+docs\vercel-preview-checklist.md:15:| **`GOOGLE_GENERATIVE_AI_API_KEY`** | Server | `string` | Live Google Gemini API Key. |
+docs\vercel-preview-checklist.md:16:| **`GEMINI_MODEL_ID`** | Server | `string` | Target model slug. Defaults to `gemini-3.5-flash`. |
+docs\vercel-preview-checklist.md:43:   * Copy the seed contents, paste into the editor, and click **Run** to register the initial MVP model profiles (`general-llm`, `google-gemini-3-5-flash`).
+lib\ai\analyze-prompt.ts:11:  selectedProfileSlug?: 'general-llm' | 'google-gemini-3-5-flash'
+lib\ai\model-profiles.ts:2:  slug: 'general-llm' | 'google-gemini-3-5-flash'
+lib\ai\model-profiles.ts:22:    slug: 'google-gemini-3-5-flash',
+lib\privacy\sensitive-data-rules.ts:23:    pattern: /\b(?:OPENAI_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)\s*=\s*[^\s]+/i,
+scripts\run-evaluation.ts:36:  profile_slug: z.enum(['general-llm', 'google-gemini-3-5-flash']),
+scripts\run-evaluation.ts:75:  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+scripts\run-evaluation.ts:76:  const modelId = process.env.GEMINI_MODEL_ID || 'gemini-3.5-flash'
+scripts\run-evaluation.ts:91:    console.warn('\n[STATUS] GOOGLE_GENERATIVE_AI_API_KEY is not defined in .env.local.')
+scripts\run-evaluation.ts:288:> **LIVE AI EVALUATION NOT RUN**: The live evaluation pass against the actual Gemini API (target: \`${modelId}\`) was skipped because the \`GOOGLE_GENERATIVE_AI_API_KEY\` is not configured in your \`.env.local\` file.
+scripts\run-evaluation.ts:302:   GOOGLE_GENERATIVE_AI_API_KEY=AIzaSyYourActualKeyHere
+tests\ai\fixtures-validation.test.ts:11:  profile_slug: z.enum(['general-llm', 'google-gemini-3-5-flash']),
+tests\ai-fixtures\sensitive-data.json:4:    "input_prompt": "Wyślij mi ten kod na serwer. Konfiguracja to: GOOGLE_GENERATIVE_AI_API_KEY=g15f_87a9b6c5d4e3f2g1h0j9k8l7m6n5o Jak go poprawnie zaimportować?",
+tests\ai-fixtures\strong-en.json:18:    "profile_slug": "google-gemini-3-5-flash",
+tests\ai-fixtures\strong-en.json:66:    "profile_slug": "google-gemini-3-5-flash",
+tests\ai-fixtures\strong-en.json:78:    "profile_slug": "google-gemini-3-5-flash",
+tests\ai-fixtures\strong-pl.json:18:    "profile_slug": "google-gemini-3-5-flash",
+tests\ai-fixtures\strong-pl.json:66:    "profile_slug": "google-gemini-3-5-flash",
+tests\ai-fixtures\strong-pl.json:78:    "profile_slug": "google-gemini-3-5-flash",
+tests\ai-fixtures\uncertain-facts.json:30:    "profile_slug": "google-gemini-3-5-flash",
+tests\ai-fixtures\weak-en.json:42:    "profile_slug": "google-gemini-3-5-flash",
+tests\ai-fixtures\weak-pl.json:42:    "profile_slug": "google-gemini-3-5-flash",
+tests\api\analyze.test.ts:56:      slug: 'google-gemini-3-5-flash',
+tests\api\analyze.test.ts:86:    selected_profile_slug: 'google-gemini-3-5-flash' as const
+tests\export\export.test.ts:36:  selected_profile_slug: 'google-gemini-3-5-flash',
+tests\pages\share-page.test.ts:31:  selected_profile_slug: 'google-gemini-3-5-flash',
+tests\privacy\sensitive-data-detector.test.ts:6:  it('detects GOOGLE_GENERATIVE_AI_API_KEY without leaking full value', () => {
+tests\privacy\sensitive-data-detector.test.ts:8:    const payload = `GOOGLE_GENERATIVE_AI_API_KEY=${rawSecret}`
+tests\privacy\sensitive-data-detector.test.ts:20:    expect(finding.redactedValue).toContain('GOOGLE_GENERATIVE_AI_API_KEY=')
+tests\privacy\sensitive-data-detector.test.ts:91:      Ustaw GOOGLE_GENERATIVE_AI_API_KEY=your_key_here
+tests\privacy\sensitive-data-detector.test.ts:102:    const payload = 'GOOGLE_GENERATIVE_AI_API_KEY=g15f_87a9b6c5d4e3f2g1h0j9k8l7m6n5o'
+tests\security\client-exposure-checks.test.ts:48:      'GOOGLE_GENERATIVE_AI_API_KEY',
+tests\supabase\history-actions.test.ts:112:        profile: 'google-gemini-3-5-flash'
+tests\supabase\history-actions.test.ts:118:      expect(mockEq).toHaveBeenCalledWith('selected_profile_slug', 'google-gemini-3-5-flash')
+tests\supabase\share-privacy.test.ts:64:  selected_profile_slug: 'google-gemini-3-5-flash',
+tests\supabase\share-privacy.test.ts:84:  selected_profile_slug: 'google-gemini-3-5-flash',
+tests\supabase\share-privacy.test.ts:211:      selected_profile_slug: 'google-gemini-3-5-flash',
+AGENTS.md:15:*   **AI Integration**: Gemini API via Vercel AI SDK using `@ai-sdk/google`
+AGENTS.md:24:2.  **`google-gemini-3-5-flash`** (Product Slug representing Google Gemini 3.5 Flash)
+AGENTS.md:47:import { google } from '@ai-sdk/google';
+AGENTS.md:71:*   **Two Model Profiles**: `general-llm` and `google-gemini-3-5-flash`.
+AGENTS.md:99:    *   **Never** expose `GOOGLE_GENERATIVE_AI_API_KEY` or `SUPABASE_SECRET_KEY` client-side.
+CORRECTIONS_APPLIED_SUMMARY.md:170:- verify GOOGLE_GENERATIVE_AI_API_KEY, SUPABASE_SECRET_KEY, Stripe future secrets are server-only.
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:224:- Default profiles: general-llm and google-gemini-3-5-flash only.
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:382:- selected_profile_slug: general-llm | google-gemini-3-5-flash
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:632:- GOOGLE_GENERATIVE_AI_API_KEY=...
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:744:  - google-gemini-3-5-flash
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:965:- Confirm whether using generateContent-compatible flow through @ai-sdk/google is still correct.
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:968:- Run a minimal structured output smoke test if GOOGLE_GENERATIVE_AI_API_KEY is available.
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:1018:- Use @ai-sdk/google and the current AI SDK structured output pattern confirmed in docs.
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:1023:- Use GOOGLE_GENERATIVE_AI_API_KEY.
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:1076:- selected_profile_slug: general-llm | google-gemini-3-5-flash
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:1523:- GOOGLE_GENERATIVE_AI_API_KEY must be server-only.
+GEMINI_MISSIONS_FROM_ZERO_TO_V1_v1.1.md:1569:- verify GOOGLE_GENERATIVE_AI_API_KEY, SUPABASE_SECRET_KEY and future Stripe secrets are server-only.
+MVP_CLOSURE_FIX_MISSIONS_FOR_ANTIGRAVITY.md:636:- GOOGLE_GENERATIVE_AI_API_KEY
+MVP_CLOSURE_FIX_MISSIONS_FOR_ANTIGRAVITY.md:637:- GEMINI_MODEL_ID
+prompt_audit_mvp_plan_v1.2.md:97:Vercel AI SDK + @ai-sdk/google jako preferowana warstwa integracji
+prompt_audit_mvp_plan_v1.2.md:124:Next.js API route → AI SDK @ai-sdk/google → Gemini generateContent-compatible flow → structured output
+prompt_audit_mvp_plan_v1.2.md:147:google-gemini-3-5-flash
+prompt_audit_mvp_plan_v1.2.md:153:GEMINI_MODEL_ID=gemini-3.5-flash
+prompt_audit_mvp_plan_v1.2.md:156:[Wniosek] `google-gemini-3-5-flash` jest slugiem produktowym profilu, a realny `model_id` musi pochodzić z env albo tabeli `model_profiles`, nie z hardcoded claimów w UI.
+prompt_audit_mvp_plan_v1.2.md:161:google-gemini-family
+prompt_audit_mvp_plan_v1.2.md:628:- Vercel AI SDK with @ai-sdk/google
+prompt_audit_mvp_plan_v1.2.md:633:- google-gemini-3-5-flash
+prompt_audit_mvp_plan_v1.2.md:640:- Prefer generateContent-compatible flow through @ai-sdk/google.
+prompt_audit_mvp_plan_v1.2.md:835:Use @ai-sdk/google through generateText with Output.object.
+prompt_audit_mvp_plan_v1.2.md:1003:selected_profile_slug: general-llm / google-gemini-3-5-flash
+prompt_audit_mvp_plan_v1.2.md:1192:google-gemini-3-5-flash
+prompt_audit_mvp_plan_v1.2.md:1198:google-gemini-family
+prompt_audit_mvp_plan_v1.2.md:1259:GOOGLE_GENERATIVE_AI_API_KEY=
+prompt_audit_mvp_plan_v1.2.md:1260:GEMINI_MODEL_ID=gemini-3.5-flash
+prompt_audit_mvp_plan_v1.2.md:1291:- GOOGLE_GENERATIVE_AI_API_KEY tylko server-side.
+prompt_audit_mvp_plan_v1.2.md:1356:- GOOGLE_GENERATIVE_AI_API_KEY=...
+prompt_audit_mvp_plan_v1.2.md:1404:Vercel AI SDK + @ai-sdk/google + Zod
+prompt_audit_mvp_plan_v1.2.md:1573:selected_profile_slug: 'general-llm' | 'google-gemini-3-5-flash'
+prompt_audit_mvp_plan_v1.2.md:1974:- GOOGLE_GENERATIVE_AI_API_KEY nie występuje w client bundle,
+prompt_audit_mvp_plan_v1.2.md:2045:- Default profiles: general-llm and google-gemini-3-5-flash only.
+prompt_audit_mvp_plan_v1.2.md:2156:- verify GOOGLE_GENERATIVE_AI_API_KEY, SUPABASE_SECRET_KEY and future Stripe secrets are server-only.
+prompt_audit_mvp_plan_v1.2.md:2245:- Seed only general-llm and google-gemini-3-5-flash.
+prompt_audit_mvp_plan_v1.2.md:2333:- Use @ai-sdk/google and the current AI SDK structured output pattern.
+prompt_audit_mvp_plan_v1.2.md:2338:- Use GOOGLE_GENERATIVE_AI_API_KEY.
+prompt_audit_mvp_plan_v1.2.md:2899:https://ai.google.dev/gemini-api/docs/whats-new-gemini-3.5
+

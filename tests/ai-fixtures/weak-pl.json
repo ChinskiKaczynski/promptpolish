@@ -39,7 +39,7 @@
     "id": "weak-pl-04",
     "input_prompt": "Napisz kod w Pythonie do sortowania listy.",
     "working_language": "pl",
-    "profile_slug": "google-gemini-3-5-flash",
+    "profile_slug": "openrouter-deepseek-v4-flash",
     "expected_score_range": [15, 38],
     "expected_strengths": [],
     "expected_weaknesses": ["brak podania algorytmu", "brak przykładowych danych", "brak wymagań wydajnościowych"],

@@ -1,5 +1,10 @@
 # Gemini API Integration Decision — PromptPolish
 
+> [!CAUTION]
+> **ARCHIVED / OUTDATED**: This document describes the legacy Gemini API integration pattern using `@ai-sdk/google`.
+> The runtime AI engine has been migrated to **OpenRouter** using `@openrouter/ai-sdk-provider` and the `deepseek/deepseek-v4-flash` target model.
+> For the active AI integration blueprint, refer to [**`docs/openrouter-integration-decision.md`**](file:///d:/AI/promptpolish/docs/openrouter-integration-decision.md).
+
 This document establishes the technical blueprint, library selections, model endpoints, and safety guardrails for the Gemini API integration inside PromptPolish.
 
 ---

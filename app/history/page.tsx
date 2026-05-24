@@ -204,8 +204,8 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                           {analysis.working_language === 'pl' ? 'Polski (PL)' : 'Angielski (EN)'}
                         </span>
                         <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase text-indigo-700">
-                          {analysis.selected_profile_slug === 'google-gemini-3-5-flash'
-                            ? (analysis.working_language === 'pl' ? 'Model Google' : 'Google model')
+                          {analysis.selected_profile_slug === 'openrouter-deepseek-v4-flash'
+                            ? (analysis.working_language === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model')
                             : (analysis.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')}
                         </span>
                         <span className="text-xs font-semibold text-slate-400">{date}</span>

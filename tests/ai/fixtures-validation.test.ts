@@ -8,7 +8,7 @@ const fixtureSchema = z.object({
   id: z.string().min(1),
   input_prompt: z.string().min(1),
   working_language: z.enum(['pl', 'en']),
-  profile_slug: z.enum(['general-llm', 'google-gemini-3-5-flash']),
+  profile_slug: z.enum(['general-llm', 'openrouter-deepseek-v4-flash']),
   expected_score_range: z.array(z.number().int().min(0).max(100)).length(2),
   expected_strengths: z.array(z.string()),
   expected_weaknesses: z.array(z.string()),

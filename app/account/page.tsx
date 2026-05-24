@@ -262,8 +262,8 @@ export default async function AccountPage() {
                         {analysis.input_prompt}
                       </p>
                       <p className="mt-1 text-xs text-slate-400 truncate max-w-lg">
-                        Profil: {analysis.selected_profile_slug === 'google-gemini-3-5-flash'
-                          ? (analysis.working_language === 'pl' ? 'Model Google' : 'Google model')
+                        Profil: {analysis.selected_profile_slug === 'openrouter-deepseek-v4-flash'
+                          ? (analysis.working_language === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model')
                           : (analysis.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')}
                       </p>
                     </div>

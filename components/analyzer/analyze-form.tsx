@@ -547,8 +547,8 @@ export function AnalyzeForm() {
               <option value="general-llm">
                 {workingLanguage === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model'}
               </option>
-              <option value="google-gemini-3-5-flash">
-                {workingLanguage === 'pl' ? 'Model Google' : 'Google model'}
+              <option value="openrouter-deepseek-v4-flash">
+                {workingLanguage === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model'}
               </option>
             </select>
           </label>

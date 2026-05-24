@@ -33,7 +33,7 @@ const fixtureSchema = z.object({
   id: z.string(),
   input_prompt: z.string(),
   working_language: z.enum(['pl', 'en']),
-  profile_slug: z.enum(['general-llm', 'google-gemini-3-5-flash']),
+  profile_slug: z.enum(['general-llm', 'openrouter-deepseek-v4-flash']),
   expected_score_range: z.array(z.number()),
   expected_strengths: z.array(z.string()),
   expected_weaknesses: z.array(z.string()),
@@ -72,8 +72,8 @@ interface EvaluationResultItem {
 }
 
 async function runEvaluation() {
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
-  const modelId = process.env.GEMINI_MODEL_ID || 'gemini-3.5-flash'
+  const apiKey = process.env.OPENROUTER_API_KEY
+  const modelId = process.env.OPENROUTER_MODEL_ID || 'deepseek/deepseek-v4-flash'
   const docsDir = path.join(process.cwd(), 'docs')
   const reportPath = path.join(docsDir, 'evaluation-results.md')
 
@@ -88,8 +88,8 @@ async function runEvaluation() {
 
   // 1. If key is missing, write rich static evaluation results and manual instructions
   if (!apiKey || apiKey.trim() === '') {
-    console.warn('\n[STATUS] GOOGLE_GENERATIVE_AI_API_KEY is not defined in .env.local.')
-    console.log('Live Gemini evaluation cannot be run automatically.')
+    console.warn('\n[STATUS] OPENROUTER_API_KEY is not defined in .env.local.')
+    console.log('Live OpenRouter evaluation cannot be run automatically.')
     console.log('Generating the comprehensive static evaluation report in "docs/evaluation-results.md"...\n')
 
     const staticReport = generateStaticReport(modelId)
@@ -101,7 +101,7 @@ async function runEvaluation() {
   }
 
   // 2. If key is present, execute actual live evaluation pass over all fixtures
-  console.log('Live Gemini key detected! Running automated evaluation pass across all calibration fixtures...\n')
+  console.log('Live OpenRouter key detected! Running automated evaluation pass across all calibration fixtures...\n')
 
   const fixtureFiles = [
     { name: 'weak-pl.json', title: 'Weak Polish Prompts' },
@@ -285,7 +285,7 @@ function generateStaticReport(modelId: string): string {
   return `# AI Quality Evaluation Pass Results — PromptPolish
 
 > [!WARNING]
-> **LIVE AI EVALUATION NOT RUN**: The live evaluation pass against the actual Gemini API (target: \`${modelId}\`) was skipped because the \`GOOGLE_GENERATIVE_AI_API_KEY\` is not configured in your \`.env.local\` file.
+> **LIVE AI EVALUATION NOT RUN**: The live evaluation pass against the actual OpenRouter API (target: \`${modelId}\`) was skipped because the \`OPENROUTER_API_KEY\` is not configured in your \`.env.local\` file.
 >
 > An automated evaluation script has been prepared at [scripts/run-evaluation.ts](file:///d:/AI/promptpolish/scripts/run-evaluation.ts). Follow the setup instructions below to execute the live suite.
 
@@ -297,15 +297,15 @@ To perform the live quality evaluation pass, execute the following steps in your
 
 1. Open your local configurations file:
    [**\`.env.local\`**](file:///d:/AI/promptpolish/.env.local)
-2. Provide your valid Google Gemini API Key:
+2. Provide your valid OpenRouter API Key:
    \`\`\`bash
-   GOOGLE_GENERATIVE_AI_API_KEY=AIzaSyYourActualKeyHere
+   OPENROUTER_API_KEY=sk-or-v1-YourActualKeyHere
    \`\`\`
 3. Run the automated evaluation suite using \`tsx\`:
    \`\`\`bash
    npx tsx scripts/run-evaluation.ts
    \`\`\`
-4. The script will automatically connect to the Gemini API, evaluate all 46 calibration prompts, calculate scoring deviations, detect leaks, audit uncertainty warnings, and overwrite this file (\`docs/evaluation-results.md\`) with live telemetry.
+4. The script will automatically connect to the OpenRouter API, evaluate all 46 calibration prompts, calculate scoring deviations, detect leaks, audit uncertainty warnings, and overwrite this file (\`docs/evaluation-results.md\`) with live telemetry.
 
 ---
 
@@ -315,7 +315,7 @@ We performed a rigorous static code review of the core system prompt templates (
 
 ### A. Polished Prompt Length Control
 * **System Prompt Guardrail**: Rule 4 states: *"Do not make the improved prompt unnecessarily long. Keep it concise, functional, and efficient."*
-* **Evaluation**: Very strong. This prevents Gemini from bloating simple inputs into massive, context-heavy essays, keeping prompt costs low and preventing latency spikes.
+* **Evaluation**: Very strong. This prevents the model from bloating simple inputs into massive, context-heavy essays, keeping prompt costs low and preventing latency spikes.
 * **Potential Risk**: LLM compliance with length bounds relies on self-attention; very weak prompts can sometimes trigger overly verbose boilerplate guides.
 
 ### B. Prevention of Invented Capabilities (Model Fit Notes)
@@ -324,12 +324,12 @@ We performed a rigorous static code review of the core system prompt templates (
   2. *"Absolutely DO NOT invent or assume any unverified model capabilities, pricing structures, context windows, token limits, benchmark scores, or provider recommendations."*
   3. *"If model profile data is missing or marked unverified/stale, treat it as unknown/unverified. Do not suggest or assert specifications."*
 * **User Prompt Guardrail**: *"For 'model_profile_fit', evaluate compatibility strictly against the [MODEL PROFILE DATA] provided above. Do not reference external benchmarks or claim knowledge of pricing or context windows not listed in the profile."*
-* **Evaluation**: Excellent. This prevents Gemini from fabricating benchmark scores or quoting outdated pricing structures.
+* **Evaluation**: Excellent. This prevents the model from fabricating benchmark scores or quoting outdated pricing structures.
 
 ### C. Uncertainty Warnings Generation
 * **System Prompt Guardrail**: Rule 9 commands: *"To combat hallucination, always include anti-hallucination guardrails and instructions in the generated improved prompt, instructing the model to reject ungrounded assumptions or state when information is unavailable."*
 * **Evaluation**: Decent. The schema strictly enforces \`uncertainty_warnings\` as a typed array of strings. 
-* **Potential Risk**: While the system instructions command anti-hallucination guardrails inside the *improved prompt*, they do not explicitly tell Gemini when to populate the *outer structured JSON parameter* \`uncertainty_warnings\`. Under live conditions, Gemini might leave this array empty even for uncertain facts unless instructed directly.
+* **Potential Risk**: While the system instructions command anti-hallucination guardrails inside the *improved prompt*, they do not explicitly tell the model when to populate the *outer structured JSON parameter* \`uncertainty_warnings\`. Under live conditions, it might leave this array empty even for uncertain facts unless instructed directly.
 
 ### D. Safety Notes & Secrets Leak Prevention
 * **System Prompt Guardrail**: Rule 8 commands: *"Under no circumstances should you repeat full secret values (such as passwords, API keys, tokens, or private database keys) if the input contains sensitive data. Redact them or speak about them generally without copying the sensitive value itself."*
@@ -370,7 +370,7 @@ Based on the static analysis audit, we recommend applying the following isolated
 
 ### 💡 Recommendation 3: Add Preflight API Key Masking
 * **Problem**: If high-risk credentials are block-disabled, the user gets blocked. If we only show warning, secrets might go to the provider.
-* **Suggested Action**: Continue relying on the robust server-side preflight block (\`SENSITIVE_DATA_BLOCK_HIGH_RISK=true\`) which completely prevents any secret-bearing prompts from making API calls to Gemini.
+* **Suggested Action**: Continue relying on the robust server-side preflight block (\`SENSITIVE_DATA_BLOCK_HIGH_RISK=true\`) which completely prevents any secret-bearing prompts from making API calls to OpenRouter.
 `
 }
 

@@ -23,7 +23,7 @@ import { PLAN_LIMITS, canAnalyzePrompt } from '@/lib/plans/config'
 const analyzeRequestSchema = z.object({
   input_prompt: z.string(),
   working_language: z.enum(['pl', 'en']),
-  selected_profile_slug: z.enum(['general-llm', 'google-gemini-3-5-flash']),
+  selected_profile_slug: z.enum(['general-llm', 'openrouter-deepseek-v4-flash']),
   audit_mode: z.enum(['universal', 'seo_content', 'coding', 'data_analysis', 'research', 'marketing_sales', 'agent_workflow']).default('universal'),
   task_goal: z.string().max(2000).optional().nullable(),
   task_type: z.string().max(200).optional().nullable(),

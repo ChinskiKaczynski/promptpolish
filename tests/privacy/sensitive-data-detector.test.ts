@@ -22,6 +22,25 @@ describe('detectSensitiveData - Security Preflights', () => {
     expect(finding.redactedValue).toContain('g15f…6n5o')
   })
 
+  it('detects OPENROUTER_API_KEY without leaking full value', () => {
+    const rawSecret = 'or-v1-87a9b6c5d4e3f2g1h0j9k8l7m6n5o'
+    const payload = `OPENROUTER_API_KEY=${rawSecret}`
+    const result = detectSensitiveData(payload)
+    
+    expect(result.riskLevel).toBe('high')
+    expect(result.findings.length).toBe(1)
+    
+    const finding = result.findings[0]!
+    expect(finding.type).toBe('env_secret_key')
+    expect(finding.riskLevel).toBe('high')
+    expect(finding.message).toContain('zmiennej środowiskowej')
+    
+    // Redaction preview check
+    expect(finding.redactedValue).toContain('OPENROUTER_API_KEY=')
+    expect(finding.redactedValue).not.toContain(rawSecret)
+    expect(finding.redactedValue).toContain('or-v…6n5o')
+  })
+
   it('detects SUPABASE_SECRET_KEY', () => {
     const rawSecret = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.supersecretvaluehere.abcdefg'
     const payload = `SUPABASE_SECRET_KEY=${rawSecret}`

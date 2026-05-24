@@ -17,12 +17,12 @@ When debugging anomalies, query logs using these specific prefixes:
 
 | Log Signature Prefix | Severity | Purpose / Description |
 | :--- | :---: | :--- |
-| `[PROVIDER_ERROR]` | **CRITICAL** | Broadcasts Gemini API integration failures. Includes error names, safe scrubbed messages, status codes, and anonymized profile slugs. |
+| `[PROVIDER_ERROR]` | **CRITICAL** | Broadcasts OpenRouter API integration failures. Includes error names, safe scrubbed messages, status codes, and anonymized profile slugs. |
 | `[STRIPE_WEBHOOK_FAILURE]` | **HIGH** | Highlights signature mismatches or database persistence issues during Stripe webhook processing. |
-| `[Sensitive Data Blocked]` | **WARN** | Recorded when the sensitive data scan intercepts and blocks a high-risk user input (secrets, credentials) before sending it to Gemini. |
+| `[Sensitive Data Blocked]` | **WARN** | Recorded when the sensitive data scan intercepts and blocks a high-risk user input (secrets, credentials) before sending it to OpenRouter. |
 
 ### B. Sample Queries for Cloud Logs
-*   **Filter Gemini Provider Quota / Rate Limits (HTTP 429 / 503)**:
+*   **Filter OpenRouter Provider Quota / Rate Limits (HTTP 429 / 503)**:
     ```sql
     filter @message like /PROVIDER_ERROR/ and (@message like /status=429/ or @message like /status=503/)
     ```
@@ -49,16 +49,13 @@ graph TD
     D --> E[Revoke Stale/Compromised Credentials]
 ```
 
-### SOP-01: Rotating Gemini AI Keys (`GOOGLE_GENERATIVE_AI_API_KEY`)
-1.  Navigate to the Google AI Studio console and provision a new API key.
+### SOP-01: Rotating OpenRouter AI Keys (`OPENROUTER_API_KEY`)
+1.  Navigate to the OpenRouter dashboard and provision a new API key.
 2.  Open the Vercel Team Dashboard, locate the PromptPolish project settings, and navigate to **Environment Variables**.
-3.  Update `GOOGLE_GENERATIVE_AI_API_KEY` with the new value. Save changes for `production`, `preview`, and `development`.
-4.  Run a local or staging smoke-test using:
-    ```bash
-    npx tsx scripts/smoke-test-gemini.ts
-    ```
+3.  Update `OPENROUTER_API_KEY` with the new value. Save changes for `production`, `preview`, and `development`.
+4.  Run the validation checks via `run-evaluation.ts` or make an API request to verify key configuration.
 5.  Trigger a new Vercel deployment to propagate the updated environment variables.
-6.  Once the build is verified active, deactivate the old key inside the Google AI Studio console.
+6.  Once the build is verified active, deactivate the old key inside the OpenRouter dashboard.
 
 ### SOP-02: Rotating Stripe Webhook Secrets (`STRIPE_WEBHOOK_SECRET`)
 1.  Log in to the Stripe Developer Dashboard, navigate to **Webhooks**, and select the production endpoint.

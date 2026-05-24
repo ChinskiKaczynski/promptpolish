@@ -61,7 +61,7 @@ const FULL_DB_ROW = {
   // --- ALLOWED fields (safe to expose publicly) ---
   input_prompt: 'Summarize this contract',
   working_language: 'en',
-  selected_profile_slug: 'google-gemini-3-5-flash',
+  selected_profile_slug: 'openrouter-deepseek-v4-flash',
   overall_score: 78,
   score_level: 'decent',
   analysis_json: { overall_summary: 'Decent prompt', criteria_scores: [] },
@@ -81,7 +81,7 @@ const FULL_DB_ROW = {
 const DB_RETURNED_ROW = {
   input_prompt: 'Summarize this contract',
   working_language: 'en',
-  selected_profile_slug: 'google-gemini-3-5-flash',
+  selected_profile_slug: 'openrouter-deepseek-v4-flash',
   overall_score: 78,
   score_level: 'decent',
   analysis_json: { overall_summary: 'Decent prompt', criteria_scores: [] },
@@ -208,7 +208,7 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
     expect(result).toEqual({
       input_prompt: 'Summarize this contract',
       working_language: 'en',
-      selected_profile_slug: 'google-gemini-3-5-flash',
+      selected_profile_slug: 'openrouter-deepseek-v4-flash',
       overall_score: 78,
       score_level: 'decent',
       analysis_json: { overall_summary: 'Decent prompt', criteria_scores: [] },

@@ -12,8 +12,8 @@ Deploy these variables in your **Vercel Preview Environment** settings. Do **NOT
 | :--- | :---: | :---: | :--- |
 | **`APP_URL`** | All | `string (URL)` | Root URL of the deployment. Defaults to `http://localhost:3000`. |
 | **`COOKIE_SIGNING_SECRET`** | Server | `string` | Cryptographic secret for signing session cookies. Crucial to prevent session hijacking. |
-| **`GOOGLE_GENERATIVE_AI_API_KEY`** | Server | `string` | Live Google Gemini API Key. |
-| **`GEMINI_MODEL_ID`** | Server | `string` | Target model slug. Defaults to `gemini-3.5-flash`. |
+| **`OPENROUTER_API_KEY`** | Server | `string` | Live OpenRouter API Key. |
+| **`OPENROUTER_MODEL_ID`** | Server | `string` | Target model ID. Defaults to `deepseek/deepseek-v4-flash`. |
 | **`SUPABASE_SECRET_KEY`** | Server | `string` | Secret Service Role API key for Supabase admin queries. |
 | **`NEXT_PUBLIC_SUPABASE_URL`** | Client/Server | `string (URL)` | Supabase Project API URL. |
 | **`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`** | Client/Server | `string` | Supabase Anon Publishable Key. |
@@ -40,7 +40,7 @@ Follow these steps to initialize your preview database environment:
 3. **Execute Configuration Data (Seeding)**:
    * Open a new SQL Editor tab.
    * Open the seeding file: [**`db/seed/model_profiles.sql`**](file:///d:/AI/promptpolish/db/seed/model_profiles.sql).
-   * Copy the seed contents, paste into the editor, and click **Run** to register the initial MVP model profiles (`general-llm`, `google-gemini-3-5-flash`).
+   * Copy the seed contents, paste into the editor, and click **Run** to register the initial MVP model profiles (`general-llm`, `openrouter-deepseek-v4-flash`).
 
 ---
 
@@ -122,6 +122,6 @@ Since preview environments use stateless or dev databases, database issues can b
 
 During preview execution and launch, monitor these known external risks:
 
-1. **LLM Provider Availability & Rate Changes**: Gemini API endpoints may change structure or pricing. Standardize error normalization handles 429/503 boundaries safely, but API version shifts must be audited regularly.
+1. **LLM Provider Availability & Rate Changes**: OpenRouter API endpoints may change structure or pricing. Standardize error normalization handles 429/503 boundaries safely, but API version shifts must be audited regularly.
 2. **Session Losses on Cookie Clearing**: Clearing cookies deletes the cryptographic `owner_anonymous_id` signature, permanently locking the user out of their `/result/[id]` views. The UI displays prominent warning notices, but this remains a fundamental constraint of the anonymous-first architecture.
 3. **Database Cold Starts (Free Tier)**: If Supabase free tier instances are idle, queries will experience minor initial latency spikes while the database container warms up. This is a non-blocking performance characteristic of dev environments.
