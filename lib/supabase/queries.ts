@@ -1,5 +1,6 @@
 import 'server-only'
 import { getSupabaseServerClient } from './server'
+import { getSupabaseAdminClient } from './admin'
 import { createShareToken } from '../result-access/share-token'
 import type { Database, ModelProfileRow, PromptAnalysisRow, UsageEventRow, FeedbackEventRow, UserProfileRow } from './types'
 
@@ -234,7 +235,7 @@ export async function getSharedPromptAnalysis(
 export async function createUsageEvent(
   event: Database['public']['Tables']['usage_events']['Insert']
 ): Promise<UsageEventRow | null> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('usage_events')
     .insert(event)
@@ -353,7 +354,7 @@ export async function disableShareLink(
  * in the current UTC calendar day.
  */
 export async function getUsageCountToday(ownerAnonymousId: string): Promise<number> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const startOfDay = new Date()
   startOfDay.setUTCHours(0, 0, 0, 0)
 
@@ -378,7 +379,7 @@ export async function getUsageCountTodayForUser(
   ownerAnonymousId: string,
   userId?: string | null
 ): Promise<number> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const startOfDay = new Date()
   startOfDay.setUTCHours(0, 0, 0, 0)
 
@@ -410,7 +411,7 @@ export async function getUsageCountThisMonthForUser(
   ownerAnonymousId: string,
   userId?: string | null
 ): Promise<number> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const startOfMonth = new Date()
   startOfMonth.setUTCDate(1)
   startOfMonth.setUTCHours(0, 0, 0, 0)
