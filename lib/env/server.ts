@@ -48,16 +48,6 @@ export function checkProductionEnv() {
     if (!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
       missing.push('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
     }
-    if (!process.env.STRIPE_SECRET_KEY) {
-      missing.push('STRIPE_SECRET_KEY')
-    }
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
-      missing.push('STRIPE_WEBHOOK_SECRET')
-    }
-    if (!process.env.STRIPE_PRICE_ID_PRO) {
-      missing.push('STRIPE_PRICE_ID_PRO')
-    }
-
     if (missing.length > 0) {
       return {
         valid: false,
