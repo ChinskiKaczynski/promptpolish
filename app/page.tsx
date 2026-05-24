@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { getAuthUser } from '@/lib/identity/auth'
 
 const benefits = [
   {
@@ -81,8 +80,6 @@ const steps = [
 ]
 
 export default async function HomePage() {
-  const user = await getAuthUser()
-
   return (
     <div className="flex min-h-screen flex-col bg-slate-50/30 font-sans text-slate-900 selection:bg-indigo-100 antialiased">
       {/* Navigation */}
@@ -100,11 +97,7 @@ export default async function HomePage() {
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Anonymous-first MVP</span>
             <Link className="hover:text-indigo-600 transition" href="/privacy">Prywatność</Link>
             <Link className="hover:text-indigo-600 transition" href="/terms">Regulamin</Link>
-            {user ? (
-              <Link className="rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 hover:bg-indigo-100 px-4 py-1.5 text-xs font-bold transition" href="/account">Mój Profil</Link>
-            ) : (
-              <Link className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-1.5 text-xs font-bold text-slate-700 transition" href="/login">Zaloguj się</Link>
-            )}
+            <Link className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-1.5 text-xs font-bold text-slate-700 transition" href="/login">Zaloguj się</Link>
           </div>
         </div>
       </nav>

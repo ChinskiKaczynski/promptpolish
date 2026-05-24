@@ -6,6 +6,8 @@ import { HistoryFilters } from '@/components/history/history-filters'
 import { HistoryClientActions } from '@/components/history/history-client-actions'
 import { SignOutButton } from '@/components/auth/sign-out-button'
 
+export const dynamic = 'force-dynamic'
+
 interface HistoryPageProps {
   searchParams: Promise<{
     search?: string

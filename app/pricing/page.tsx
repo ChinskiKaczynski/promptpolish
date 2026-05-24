@@ -4,6 +4,8 @@ import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
 import { PLAN_LIMITS } from '@/lib/plans/config'
 import { CheckoutButton } from '@/components/pricing/checkout-button'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PricingPage() {
   const user = await getAuthUser()
   let profile = null

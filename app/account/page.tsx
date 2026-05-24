@@ -7,6 +7,8 @@ import { getSubscriptionByUserId } from '@/lib/supabase/billing'
 import { SignOutButton } from '@/components/auth/sign-out-button'
 import { PortalButton } from '@/components/billing/portal-button'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AccountPage() {
   // 1. Resolve secure server-side authenticated user session
   const user = await getAuthUser()
