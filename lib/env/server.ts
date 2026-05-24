@@ -3,8 +3,11 @@ import { z } from 'zod'
 
 export const serverEnvSchema = z.object({
   APP_URL: z.string().url().default('http://localhost:3000'),
-  GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
-  GEMINI_MODEL_ID: z.string().default('gemini-3.5-flash'),
+  OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_MODEL_ID: z.string().default('deepseek/deepseek-v4-flash'),
+  OPENROUTER_SITE_URL: z.string().optional(),
+  OPENROUTER_APP_NAME: z.string().optional(),
+  AI_MOCK_MODE: z.coerce.boolean().default(false),
   SUPABASE_SECRET_KEY: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
@@ -33,8 +36,8 @@ export const serverEnv = serverEnvSchema.parse(process.env)
 export function checkProductionEnv() {
   if (process.env.NODE_ENV === 'production') {
     const missing: string[] = []
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      missing.push('GOOGLE_GENERATIVE_AI_API_KEY')
+    if (!process.env.OPENROUTER_API_KEY) {
+      missing.push('OPENROUTER_API_KEY')
     }
     if (!process.env.SUPABASE_SECRET_KEY) {
       missing.push('SUPABASE_SECRET_KEY')

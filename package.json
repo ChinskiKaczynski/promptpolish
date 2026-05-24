@@ -12,7 +12,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@ai-sdk/google": "latest",
+    "@openrouter/ai-sdk-provider": "latest",
     "@supabase/supabase-js": "latest",
     "ai": "latest",
     "clsx": "latest",

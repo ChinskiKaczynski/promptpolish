@@ -262,7 +262,9 @@ export default async function AccountPage() {
                         {analysis.input_prompt}
                       </p>
                       <p className="mt-1 text-xs text-slate-400 truncate max-w-lg">
-                        Profil: {analysis.selected_profile_slug}
+                        Profil: {analysis.selected_profile_slug === 'google-gemini-3-5-flash'
+                          ? (analysis.working_language === 'pl' ? 'Model Google' : 'Google model')
+                          : (analysis.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')}
                       </p>
                     </div>
                     <div className="flex items-center gap-4 shrink-0">

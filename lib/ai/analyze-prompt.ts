@@ -1,6 +1,6 @@
 import { mvpModelProfiles } from './model-profiles'
 import { analysisSystemInstruction, constructUserAnalysisPrompt } from './prompts'
-import { executeGeminiAnalysis, type GeminiClientOptions } from './gemini-client'
+import { executeOpenRouterAnalysis, type OpenRouterClientOptions } from './openrouter-client'
 import { validateAnalysisResult } from './semantic-validation'
 import { calculateScore, type CalculatedScore } from '@/lib/scoring/calculate-score'
 import { type AnalysisResult } from './schemas'
@@ -8,7 +8,8 @@ import { type AnalysisResult } from './schemas'
 export interface AnalyzePromptParams {
   inputPrompt: string
   workingLanguage: 'pl' | 'en'
-  selectedProfileSlug: 'general-llm' | 'google-gemini-3-5-flash'
+  selectedProfileSlug?: 'general-llm' | 'google-gemini-3-5-flash'
+  auditMode?: string | null
   taskGoal?: string | null
   taskType?: string | null
   expectedOutputFormat?: string | null
@@ -35,12 +36,13 @@ export type AnalysisServiceResult = {
  */
 export async function analyzePrompt(
   params: AnalyzePromptParams,
-  options?: GeminiClientOptions
+  options?: OpenRouterClientOptions
 ): Promise<AnalysisServiceResult> {
   const {
     inputPrompt,
     workingLanguage,
-    selectedProfileSlug,
+    selectedProfileSlug = 'general-llm',
+    auditMode,
     taskGoal,
     taskType,
     expectedOutputFormat,
@@ -59,6 +61,7 @@ export async function analyzePrompt(
     inputPrompt,
     workingLanguage,
     modelProfile,
+    auditMode,
     taskGoal,
     taskType,
     expectedOutputFormat,
@@ -66,7 +69,7 @@ export async function analyzePrompt(
   })
 
   // 3. Execute low-level AI structured generation
-  const response = await executeGeminiAnalysis(systemInstruction, userPrompt, options)
+  const response = await executeOpenRouterAnalysis(systemInstruction, userPrompt, options)
 
   // 4. Perform strict semantic validation (Zod & custom constraints)
   const validatedResult = validateAnalysisResult(response.output)

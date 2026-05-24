@@ -78,11 +78,13 @@ describe('Stripe Billing Foundation API Suite', () => {
     vi.clearAllMocks()
     process.env = { ...originalEnv }
     // Map standard test environment variables
-    process.env.APP_URL = 'http://localhost:3000'
-    process.env.STRIPE_SECRET_KEY = 'sk_test_mock_stripe_key'
-    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_mock_webhook_key'
-    process.env.STRIPE_PRICE_ID_PRO = 'price_1234_pro'
-    process.env.NODE_ENV = 'development'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const env = process.env as any
+    env.APP_URL = 'http://localhost:3000'
+    env.STRIPE_SECRET_KEY = 'sk_test_mock_stripe_key'
+    env.STRIPE_WEBHOOK_SECRET = 'whsec_mock_webhook_key'
+    env.STRIPE_PRICE_ID_PRO = 'price_1234_pro'
+    env.NODE_ENV = 'development'
   })
 
   afterEach(() => {
@@ -91,8 +93,10 @@ describe('Stripe Billing Foundation API Suite', () => {
 
   describe('Production Environment Safeguards', () => {
     it('requires Stripe environment variables in production mode', () => {
-      process.env.NODE_ENV = 'production'
-      delete process.env.STRIPE_SECRET_KEY
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const env = process.env as any
+      env.NODE_ENV = 'production'
+      delete env.STRIPE_SECRET_KEY
       
       const result = checkProductionEnv()
       expect(result.valid).toBe(false)

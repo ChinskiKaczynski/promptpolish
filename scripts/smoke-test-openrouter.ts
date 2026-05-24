@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { generateText, Output } from 'ai'
 import { analysisResultSchema } from '../lib/ai/schemas'
 import { mvpModelProfiles } from '../lib/ai/model-profiles'
@@ -31,8 +31,8 @@ function loadEnvLocal() {
 
 loadEnvLocal()
 
-const GEMINI_FLASH_INPUT_COST_PER_1M = 0.075 // $0.075 per 1M tokens
-const GEMINI_FLASH_OUTPUT_COST_PER_1M = 0.30 // $0.30 per 1M tokens
+const DEEPSEEK_FLASH_INPUT_COST_PER_1M = 0.075 // $0.075 per 1M tokens
+const DEEPSEEK_FLASH_OUTPUT_COST_PER_1M = 0.30 // $0.30 per 1M tokens
 
 interface Telemetry {
   totalCalls: number
@@ -48,20 +48,22 @@ interface Telemetry {
 }
 
 async function runSmokeTest() {
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
-  const modelId = process.env.GEMINI_MODEL_ID || 'gemini-3.5-flash'
+  const apiKey = process.env.OPENROUTER_API_KEY
+  const modelId = process.env.OPENROUTER_MODEL_ID || 'deepseek/deepseek-v4-flash'
+  const siteUrl = process.env.OPENROUTER_SITE_URL
+  const appName = process.env.OPENROUTER_APP_NAME
 
   console.log('==================================================')
-  console.log('   Gemini Production Schema Structured Smoke Test ')
+  console.log(' OpenRouter Production Schema Structured Smoke Test ')
   console.log('==================================================')
   console.log(`Target Model ID: ${modelId}`)
 
   if (!apiKey || apiKey.trim() === '') {
-    console.warn('\n[STATUS] GOOGLE_GENERATIVE_AI_API_KEY is not defined or is empty in .env.local.')
-    console.log('Live smoke test skipped. To run this test against the live Gemini API, follow these steps:')
+    console.warn('\n[STATUS] OPENROUTER_API_KEY is not defined or is empty in .env.local.')
+    console.log('Live smoke test skipped. To run this test against the live OpenRouter API, follow these steps:')
     console.log('1. Open your ".env.local" file.')
-    console.log('2. Provide a valid Gemini key: GOOGLE_GENERATIVE_AI_API_KEY=AIzaSy...')
-    console.log('3. Run this script: npx tsx scripts/smoke-test-gemini.ts')
+    console.log('2. Provide a valid OpenRouter key: OPENROUTER_API_KEY=sk-or-v1-...')
+    console.log('3. Run this script: npx tsx scripts/smoke-test-openrouter.ts')
     console.log('\nExiting gracefully. Live integration remains pending configuration (DO NOT FAKE SUCCESS).')
     process.exit(0)
   }
@@ -74,24 +76,28 @@ async function runSmokeTest() {
       prompt: 'Napisz opis produktu',
       lang: 'pl' as const,
       profile: 'general-llm' as const,
+      auditMode: 'universal'
     },
     {
       name: 'Polish (PL) Strong Prompt',
       prompt: 'Działaj jako starszy copywriter e-commerce. Stwórz zwięzły opis produktu dla lampki biurkowej klasy premium dla pracowników zdalnych. Format wyjściowy: nagłówek, 3 punkty, krótkie wezwanie do działania. Unikaj niepotwierdzonych twierdzeń.',
       lang: 'pl' as const,
-      profile: 'google-gemini-3-5-flash' as const,
+      profile: 'general-llm' as const,
+      auditMode: 'seo_content'
     },
     {
       name: 'English (EN) Weak Prompt',
       prompt: 'Write a product description',
       lang: 'en' as const,
       profile: 'general-llm' as const,
+      auditMode: 'universal'
     },
     {
       name: 'English (EN) Strong Prompt',
       prompt: 'Act as a senior e-commerce copywriter. Create a concise product description for a premium desk lamp for remote workers. Output: headline, 3 bullets, short CTA. Avoid unsupported claims.',
       lang: 'en' as const,
-      profile: 'google-gemini-3-5-flash' as const,
+      profile: 'general-llm' as const,
+      auditMode: 'seo_content'
     }
   ]
 
@@ -108,7 +114,13 @@ async function runSmokeTest() {
     costEstimation: 0
   }
 
-  const googleInstance = createGoogleGenerativeAI({ apiKey })
+  const openrouterInstance = createOpenRouter({
+    apiKey,
+    headers: {
+      ...(siteUrl ? { 'HTTP-Referer': siteUrl } : {}),
+      ...(appName ? { 'X-Title': appName } : {}),
+    }
+  })
 
   for (const tc of testCases) {
     console.log(`\n--- Running Case: ${tc.name} ---`)
@@ -122,7 +134,8 @@ async function runSmokeTest() {
     const userPrompt = constructUserAnalysisPrompt({
       inputPrompt: tc.prompt,
       workingLanguage: tc.lang,
-      modelProfile
+      modelProfile,
+      auditMode: tc.auditMode
     })
 
     const maxRetries = 2
@@ -136,7 +149,7 @@ async function runSmokeTest() {
       try {
         console.log(`Execution attempt ${attempt}/${maxRetries + 1}...`)
         const { output, usage } = await generateText({
-          model: googleInstance(modelId),
+          model: openrouterInstance.chat(modelId),
           system: systemInstruction,
           prompt: userPrompt,
           temperature: 0.1,
@@ -145,8 +158,6 @@ async function runSmokeTest() {
           })
         })
 
-        // Zod validation is handled implicitly by AI SDK output: Output.object,
-        // but we double-check just to record precise invalid schema count.
         const parsed = analysisResultSchema.safeParse(output)
         if (!parsed.success) {
           telemetry.invalidSchemaCount++
@@ -169,8 +180,8 @@ async function runSmokeTest() {
           telemetry.tokenUsage.totalTokens += tTokens
 
           const caseCost = 
-            (pTokens * GEMINI_FLASH_INPUT_COST_PER_1M + 
-             cTokens * GEMINI_FLASH_OUTPUT_COST_PER_1M) / 1000000
+            (pTokens * DEEPSEEK_FLASH_INPUT_COST_PER_1M + 
+             cTokens * DEEPSEEK_FLASH_OUTPUT_COST_PER_1M) / 1000000
           telemetry.costEstimation += caseCost
 
           console.log(`- Token Usage: Prompt=${pTokens}, Completion=${cTokens}, Total=${tTokens}`)

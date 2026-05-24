@@ -73,10 +73,14 @@ export async function GET(request: Request) {
       day: 'numeric'
     })
 
+    const modelProfileLabel = record.selected_profile_slug === 'google-gemini-3-5-flash'
+      ? (record.working_language === 'pl' ? 'Model Google' : 'Google model')
+      : (record.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')
+
     let md = `# Raport Audytu Promptu — PromptPolish\n\n`
     md += `**Data utworzenia:** ${formattedDate}\n`
     md += `**Język roboczy:** ${record.working_language.toUpperCase()}\n`
-    md += `**Wybrany profil modelu:** ${record.selected_profile_slug}\n\n`
+    md += `**Wybrany profil modelu:** ${modelProfileLabel}\n\n`
     md += `## 1. Ogólna Ocena: ${record.overall_score} / 100 (${scoreLabel})\n\n`
     md += `### Podsumowanie audytu\n${analysis.overall_summary}\n\n`
     md += `## 2. Największe słabości (Top weaknesses)\n`

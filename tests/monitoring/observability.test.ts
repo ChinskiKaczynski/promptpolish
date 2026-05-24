@@ -6,6 +6,7 @@ import {
 } from '@/lib/monitoring/observability'
 
 describe('Operational Observability Telemetry Tests', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let consoleErrorSpy: any
 
   beforeEach(() => {

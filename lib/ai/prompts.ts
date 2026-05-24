@@ -19,6 +19,7 @@ export interface ConstructPromptParams {
   inputPrompt: string
   workingLanguage: 'pl' | 'en'
   modelProfile: ModelProfile
+  auditMode?: string | null
   taskGoal?: string | null
   taskType?: string | null
   expectedOutputFormat?: string | null
@@ -26,14 +27,15 @@ export interface ConstructPromptParams {
 }
 
 /**
- * Constructs the rich, context-aware prompt instructions for the Gemini API call.
- * Integrates optional user constraints, goals, output formats, and the exact model profile.
+ * Constructs the rich, context-aware prompt instructions for the OpenRouter API call.
+ * Integrates optional user constraints, goals, audit mode, and the exact model profile.
  */
 export function constructUserAnalysisPrompt(params: ConstructPromptParams): string {
   const {
     inputPrompt,
     workingLanguage,
     modelProfile,
+    auditMode,
     taskGoal,
     taskType,
     expectedOutputFormat,
@@ -54,6 +56,7 @@ export function constructUserAnalysisPrompt(params: ConstructPromptParams): stri
 `
 
   let contextSection = ''
+  if (auditMode) contextSection += `- Audit Mode / Task Context: ${auditMode}\n`
   if (taskGoal) contextSection += `- User Specified Task Goal: ${taskGoal}\n`
   if (taskType) contextSection += `- User Specified Task Type: ${taskType}\n`
   if (expectedOutputFormat) contextSection += `- User Specified Expected Output Format: ${expectedOutputFormat}\n`

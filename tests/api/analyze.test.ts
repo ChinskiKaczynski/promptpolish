@@ -300,16 +300,74 @@ describe('POST /api/analyze API Route Handler', () => {
         expect.objectContaining({
           inputPrompt: validPayload.input_prompt,
           workingLanguage: validPayload.working_language,
-          selectedProfileSlug: validPayload.selected_profile_slug
+          selectedProfileSlug: validPayload.selected_profile_slug,
+          auditMode: 'universal' // Defaults to universal
         }),
         expect.objectContaining({ mockMode: true })
       )
 
-      expect(createPromptAnalysis).toHaveBeenCalled()
+      expect(createPromptAnalysis).toHaveBeenCalledWith(
+        expect.objectContaining({
+          owner_anonymous_id: 'mocked-owner-id',
+          input_prompt: validPayload.input_prompt,
+          working_language: validPayload.working_language,
+          selected_profile_slug: validPayload.selected_profile_slug,
+          audit_mode: 'universal'
+        })
+      )
+
       expect(createUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           owner_anonymous_id: 'mocked-owner-id',
           event_type: 'analyze'
+        })
+      )
+    })
+
+    it('propagates custom audit_mode successfully to analyzePrompt and database', async () => {
+      const mockResult = {
+        analysis: {
+          overall_summary: 'Prompt jest poprawny.',
+          detected_task_type: 'General',
+          criteria_scores: [
+            { criterion: 'goal_clarity', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'None' }
+          ],
+          top_weaknesses: [],
+          improvement_plan: [],
+          improved_prompt: 'Improved polished prompt',
+          change_explanations: ['Explanations']
+        },
+        scores: {
+          overallScore: 85,
+          scoreLevel: 'strong'
+        }
+      }
+
+      vi.mocked(analyzePrompt).mockResolvedValue(mockResult as unknown as AnalysisServiceResult)
+      vi.mocked(createPromptAnalysis).mockResolvedValue({
+        id: 'new-analysis-uuid',
+        overall_score: 85,
+        score_level: 'strong'
+      } as unknown as PromptAnalysisRow)
+
+      const payloadWithAuditMode = {
+        ...validPayload,
+        audit_mode: 'coding' as const
+      }
+
+      const response = await POST(makeRequest(payloadWithAuditMode))
+      expect(response.status).toBe(200)
+
+      expect(analyzePrompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          auditMode: 'coding'
+        }),
+        expect.any(Object)
+      )
+
+      expect(createPromptAnalysis).toHaveBeenCalledWith(
+        expect.objectContaining({
+          audit_mode: 'coding'
         })
       )
     })

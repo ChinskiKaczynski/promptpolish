@@ -27,11 +27,8 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
   const mockOrder = vi.fn()
 
   const mockSupabaseClient = {
-    from: vi.fn(() => ({
-      select: mockSelect,
-      update: mockUpdate
-    }))
-  }
+    from: vi.fn()
+  } as unknown as ReturnType<typeof getSupabaseServerClient>
 
   beforeEach(() => {
     vi.clearAllMocks()

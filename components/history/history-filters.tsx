@@ -120,8 +120,8 @@ export function HistoryFilters({
             className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
           >
             <option value="all">Wszystkie profile</option>
-            <option value="general-llm">General LLM</option>
-            <option value="google-gemini-3-5-flash">Gemini 3.5 Flash</option>
+            <option value="general-llm">Uniwersalny model AI</option>
+            <option value="google-gemini-3-5-flash">Model Google</option>
           </select>
         </div>
       </div>

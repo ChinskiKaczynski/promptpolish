@@ -39,6 +39,7 @@ export interface PromptAnalysisRow {
   input_prompt: string
   working_language: 'pl' | 'en'
   selected_profile_slug: string
+  audit_mode: string | null
   task_goal: string | null
   task_type: string | null
   expected_output_format: string | null
@@ -200,6 +201,7 @@ export interface Database {
           input_prompt: string
           working_language: 'pl' | 'en'
           selected_profile_slug: string
+          audit_mode?: string | null
           task_goal?: string | null
           task_type?: string | null
           expected_output_format?: string | null
@@ -231,6 +233,7 @@ export interface Database {
           input_prompt?: string
           working_language?: 'pl' | 'en'
           selected_profile_slug?: string
+          audit_mode?: string | null
           task_goal?: string | null
           task_type?: string | null
           expected_output_format?: string | null

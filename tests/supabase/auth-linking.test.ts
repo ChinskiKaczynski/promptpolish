@@ -30,16 +30,8 @@ describe('Supabase Authentication & History Linking Integration', () => {
   const mockOrder = vi.fn()
 
   const mockSupabaseClient = {
-    from: vi.fn(() => ({
-      select: mockSelect,
-      update: mockUpdate,
-      upsert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: mockSingle
-        }))
-      }))
-    }))
-  }
+    from: vi.fn()
+  } as unknown as ReturnType<typeof getSupabaseServerClient>
 
   beforeEach(() => {
     vi.clearAllMocks()

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { executeGeminiAnalysis } from '@/lib/ai/gemini-client'
+import { executeOpenRouterAnalysis } from '@/lib/ai/openrouter-client'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { normalizeProviderError, ProviderError } from '@/lib/ai/provider-errors'
 import { mockAnalysisResult } from '@/lib/ai/mock-analysis'
@@ -7,10 +7,10 @@ import { APICallError, NoObjectGeneratedError } from 'ai'
 import { SemanticValidationError } from '@/lib/ai/semantic-validation'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 
-describe('Gemini Analysis Client & Error Normalization', () => {
-  describe('executeGeminiAnalysis Mocking & Output', () => {
+describe('OpenRouter Analysis Client & Error Normalization', () => {
+  describe('executeOpenRouterAnalysis Mocking & Output', () => {
     it('successfully resolves a mocked analysis result when mockMode is enabled', async () => {
-      const result = await executeGeminiAnalysis(
+      const result = await executeOpenRouterAnalysis(
         'system instruction',
         'polished prompt',
         { mockMode: true }
@@ -25,7 +25,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
         ...mockAnalysisResult,
         overall_summary: 'Custom test summary'
       }
-      const result = await executeGeminiAnalysis(
+      const result = await executeOpenRouterAnalysis(
         'system instruction',
         'polished prompt',
         { mockResponse: customMock }
@@ -39,7 +39,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
       const params = {
         inputPrompt: 'To jest testowy prompt o długości przynajmniej dwudziestu znaków.',
         workingLanguage: 'pl' as const,
-        selectedProfileSlug: 'google-gemini-3-5-flash' as const,
+        selectedProfileSlug: 'general-llm' as const, // Default profile slug
         taskGoal: 'Test goal',
         taskType: 'Translation'
       }
@@ -56,7 +56,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
       const params = {
         inputPrompt: 'To jest testowy prompt o długości przynajmniej dwudziestu znaków.',
         workingLanguage: 'pl' as const,
-        selectedProfileSlug: 'google-gemini-3-5-flash' as const
+        selectedProfileSlug: 'general-llm' as const
       }
 
       // Create an invalid mock response missing overall_summary
@@ -76,7 +76,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
       const apiError = new APICallError({
         statusCode: 429,
         cause: new Error('Rate limit exceeded'),
-        url: 'https://api.google.com/generateContent',
+        url: 'https://openrouter.ai/api/v1/chat/completions',
         message: 'Rate limit hit',
         requestBodyValues: {}
       })
@@ -92,7 +92,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
       const apiError = new APICallError({
         statusCode: 503,
         cause: new Error('Overloaded'),
-        url: 'https://api.google.com/generateContent',
+        url: 'https://openrouter.ai/api/v1/chat/completions',
         message: 'Server overloaded',
         requestBodyValues: {}
       })
@@ -108,7 +108,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
       const apiError = new APICallError({
         statusCode: 400,
         cause: new Error('Invalid parameter'),
-        url: 'https://api.google.com/generateContent',
+        url: 'https://openrouter.ai/api/v1/chat/completions',
         message: 'Invalid request parameter',
         requestBodyValues: {}
       })
@@ -152,7 +152,7 @@ describe('Gemini Analysis Client & Error Normalization', () => {
       const networkError = new Error('fetch failed due to DNS timeout or network connectivity issue')
       const normalized = normalizeProviderError(networkError)
 
-      expect(networkError).toBeDefined() // to avoid unused variable warning if any
+      expect(networkError).toBeDefined()
       expect(normalized.userMessage).toContain('handling high volume')
     })
   })

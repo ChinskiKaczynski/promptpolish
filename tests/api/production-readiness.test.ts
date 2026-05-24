@@ -19,9 +19,11 @@ describe('Production Readiness Env Safeguards', () => {
   })
 
   it('allows empty keys in non-production environments', () => {
-    process.env.NODE_ENV = 'development'
-    delete process.env.GOOGLE_GENERATIVE_AI_API_KEY
-    delete process.env.SUPABASE_SECRET_KEY
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const env = process.env as any
+    env.NODE_ENV = 'development'
+    delete env.OPENROUTER_API_KEY
+    delete env.SUPABASE_SECRET_KEY
     
     const result = checkProductionEnv()
     expect(result.valid).toBe(true)
@@ -29,29 +31,33 @@ describe('Production Readiness Env Safeguards', () => {
   })
 
   it('fails validation in production if critical keys are missing', () => {
-    process.env.NODE_ENV = 'production'
-    delete process.env.GOOGLE_GENERATIVE_AI_API_KEY
-    delete process.env.SUPABASE_SECRET_KEY
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL
-    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const env = process.env as any
+    env.NODE_ENV = 'production'
+    delete env.OPENROUTER_API_KEY
+    delete env.SUPABASE_SECRET_KEY
+    delete env.NEXT_PUBLIC_SUPABASE_URL
+    delete env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
     const result = checkProductionEnv()
     expect(result.valid).toBe(false)
-    expect(result.missing).toContain('GOOGLE_GENERATIVE_AI_API_KEY')
+    expect(result.missing).toContain('OPENROUTER_API_KEY')
     expect(result.missing).toContain('SUPABASE_SECRET_KEY')
     expect(result.missing).toContain('NEXT_PUBLIC_SUPABASE_URL')
     expect(result.missing).toContain('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
   })
 
   it('passes validation in production when all critical keys are present', () => {
-    process.env.NODE_ENV = 'production'
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-key'
-    process.env.SUPABASE_SECRET_KEY = 'test-secret'
-    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co'
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-pub-key'
-    process.env.STRIPE_SECRET_KEY = 'sk_test_key'
-    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_key'
-    process.env.STRIPE_PRICE_ID_PRO = 'price_pro'
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const env = process.env as any
+    env.NODE_ENV = 'production'
+    env.OPENROUTER_API_KEY = 'test-key'
+    env.SUPABASE_SECRET_KEY = 'test-secret'
+    env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co'
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-pub-key'
+    env.STRIPE_SECRET_KEY = 'sk_test_key'
+    env.STRIPE_WEBHOOK_SECRET = 'whsec_key'
+    env.STRIPE_PRICE_ID_PRO = 'price_pro'
 
     const result = checkProductionEnv()
     expect(result.valid).toBe(true)
@@ -64,7 +70,7 @@ describe('Production Readiness Env Safeguards', () => {
     expect(clientEnv).toHaveProperty('NEXT_PUBLIC_ENABLE_MOCK_RESULT')
     
     // Server secrets should never be exposed
-    expect(clientEnv).not.toHaveProperty('GOOGLE_GENERATIVE_AI_API_KEY')
+    expect(clientEnv).not.toHaveProperty('OPENROUTER_API_KEY')
     expect(clientEnv).not.toHaveProperty('SUPABASE_SECRET_KEY')
   })
 })

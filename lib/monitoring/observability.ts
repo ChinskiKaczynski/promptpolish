@@ -20,7 +20,7 @@ export function scrubSensitiveData(text: string): string {
   return scrubbed
 }
 
-export function recordProviderError(error: unknown, context?: Record<string, any>): void {
+export function recordProviderError(error: unknown, context?: Record<string, unknown>): void {
   const timestamp = new Date().toISOString()
   let errorMessage = 'Unknown AI Provider error occurred'
   let errorName = 'UnknownError'
@@ -44,7 +44,7 @@ export function recordProviderError(error: unknown, context?: Record<string, any
   const cleanMessage = scrubSensitiveData(errorMessage)
   const cleanStack = scrubSensitiveData(errorStack)
 
-  const logContext: Record<string, any> = {}
+  const logContext: Record<string, unknown> = {}
   if (context) {
     for (const [key, value] of Object.entries(context)) {
       // Skip high-risk fields that could contain raw prompt contents

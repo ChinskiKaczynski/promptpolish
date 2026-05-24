@@ -113,12 +113,12 @@ Here is the evaluation of the 18 specific review categories requested for the v1
 
 ### 16. AI Quality & Structured Outputs
 *   **Implementation Status:** **100% COMPLETE & CALIBRATED**
-*   **Review Findings:** Calibration tests on 46 prompts (`docs/evaluation-results.md`) show exceptional accuracy. Gemini structured Zod output (`analysisResultSchema`) is locked in via Vercel AI SDK `Output.object` with a temperature of `0.1` to eliminate model hallucinations.
+*   **Review Findings:** Calibration tests on 46 prompts (`docs/evaluation-results.md`) show exceptional accuracy. OpenRouter structured Zod output (`analysisResultSchema`) is locked in via Vercel AI SDK `Output.object` using DeepSeek v4 Flash with a temperature of `0.1` to eliminate model hallucinations.
 *   **Verdict:** **GO**
 
 ### 17. Cost Controls & Quotas
 *   **Implementation Status:** **100% COMPLETE & VERIFIED**
-*   **Review Findings:** Free tier rate limiting strictly caps users at 3 audits per day per IP. Safe token length rules (20 - 12,000 characters) are validated at request time on the server. The cost per single-turn audit on Gemini 1.5 Flash is calculated at an extremely low **~$0.000315 USD**, making the free tier highly sustainable.
+*   **Review Findings:** Free tier rate limiting strictly caps users at 3 audits per day per IP. Safe token length rules (20 - 12,000 characters) are validated at request time on the server. The cost per single-turn audit on DeepSeek v4 Flash via OpenRouter is calculated at an extremely low **~$0.000315 USD**, making the free tier highly sustainable.
 *   **Verdict:** **GO**
 
 ### 18. Security Boundaries
@@ -152,7 +152,7 @@ To achieve complete production readiness, the following operations items must be
 | Task ID | Operational Action Required | Primary Owner | Target Timeline |
 | :---: | :--- | :---: | :---: |
 | **OP-01** | **Apply Remote DB Migrations:** Execute `db/migrations/0001_init.sql` and `db/seed/model_profiles.sql` against the live production hosted Supabase database to initialize tables. | DevOps / DB Admin | Pre-Launch |
-| **OP-02** | **Configure Vercel Production Environment Variables:** Provision live keys for `GOOGLE_GENERATIVE_AI_API_KEY`, `COOKIE_SIGNING_SECRET`, `SUPABASE_SECRET_KEY`, and `CRON_SECRET`. | Tech Lead | Pre-Launch |
+| **OP-02** | **Configure Vercel Production Environment Variables:** Provision live keys for `OPENROUTER_API_KEY`, `OPENROUTER_MODEL_ID` (optional, defaults to DeepSeek), `COOKIE_SIGNING_SECRET`, `SUPABASE_SECRET_KEY`, and `CRON_SECRET`. | Tech Lead | Pre-Launch |
 | **OP-03** | **Setup Vercel Cron Scheduler:** Target `/api/cron/cleanup` daily with the `Authorization: Bearer <CRON_SECRET>` header to automate database purges. | Systems Engineer | Pre-Launch |
 | **OP-04** | **Remove Admin/Auth Header Links:** Hide active "Moje konto" (My Account) and "Zaloguj się" (Login) headers in `app/page.tsx` and header components to present a strictly anonymous layout. | Front-end Dev | Launch Day |
 

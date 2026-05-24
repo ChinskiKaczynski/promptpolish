@@ -24,6 +24,7 @@ const analyzeRequestSchema = z.object({
   input_prompt: z.string(),
   working_language: z.enum(['pl', 'en']),
   selected_profile_slug: z.enum(['general-llm', 'google-gemini-3-5-flash']),
+  audit_mode: z.enum(['universal', 'seo_content', 'coding', 'data_analysis', 'research', 'marketing_sales', 'agent_workflow']).default('universal'),
   task_goal: z.string().max(2000).optional().nullable(),
   task_type: z.string().max(200).optional().nullable(),
   expected_output_format: z.string().max(1000).optional().nullable(),
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       input_prompt,
       working_language,
       selected_profile_slug,
+      audit_mode,
       task_goal,
       task_type,
       expected_output_format,
@@ -215,14 +217,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // 8-12. Build prompt, call Gemini, validate response, and calculate weighted score
-    const isMockMode = process.env.GEMINI_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test'
+    // 8-12. Build prompt, call OpenRouter, validate response, and calculate weighted score
+    const isMockMode = process.env.AI_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test'
     
     const analysisResult = await analyzePrompt(
       {
         inputPrompt: input_prompt,
         workingLanguage: working_language,
         selectedProfileSlug: selected_profile_slug,
+        auditMode: audit_mode,
         taskGoal: task_goal || null,
         taskType: task_type || null,
         expectedOutputFormat: expected_output_format || null,
@@ -240,6 +243,7 @@ export async function POST(request: Request) {
       input_prompt,
       working_language,
       selected_profile_slug,
+      audit_mode,
       task_goal: task_goal || null,
       task_type: task_type || null,
       expected_output_format: expected_output_format || null,
@@ -250,8 +254,8 @@ export async function POST(request: Request) {
       score_level: analysisResult.scores.scoreLevel as 'weak' | 'needs_work' | 'decent' | 'strong' | 'excellent',
       analysis_json: analysisResult.analysis,
       improved_prompt: analysisResult.analysis.improved_prompt,
-      model_id_used: process.env.GEMINI_MODEL_ID || 'gemini-3.5-flash',
-      provider_used: dbProfile.provider,
+      model_id_used: process.env.OPENROUTER_MODEL_ID || 'deepseek/deepseek-v4-flash',
+      provider_used: 'openrouter',
       analysis_schema_version: process.env.ANALYSIS_SCHEMA_VERSION || '1.0.0',
       scoring_version: process.env.SCORING_VERSION || '1.0.0',
       model_profile_version: dbProfile.profile_version || '1.0.0',

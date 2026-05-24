@@ -12,7 +12,7 @@ const WARN_PROMPT_CHARS = 11000
 const loadingStepsPl = [
   'Uruchamianie preflighta bezpieczeństwa...',
   'Sprawdzanie limitów użytkowania...',
-  'Inicjowanie modelu Gemini 3.5 Flash...',
+  'Inicjowanie modelu analizującego...',
   'Audytowanie struktury promptu (rola, kontekst, ograniczenia)...',
   'Generowanie ulepszonego promptu i wyjaśnień...'
 ]
@@ -20,7 +20,7 @@ const loadingStepsPl = [
 const loadingStepsEn = [
   'Launching safety preflight check...',
   'Checking usage quotas and limits...',
-  'Initializing Gemini 3.5 Flash engine...',
+  'Initializing analyzing engine...',
   'Auditing prompt structures (role, context, constraints)...',
   'Generating improved prompt and explanations...'
 ]
@@ -30,6 +30,7 @@ export function AnalyzeForm() {
   const [inputPrompt, setInputPrompt] = useState('')
   const [workingLanguage, setWorkingLanguage] = useState<'pl' | 'en'>('pl')
   const [profileSlug, setProfileSlug] = useState('general-llm')
+  const [auditMode, setAuditMode] = useState('universal')
   
   // Optional Prompt Calibration Fields
   const [taskGoal, setTaskGoal] = useState('')
@@ -105,6 +106,7 @@ export function AnalyzeForm() {
           input_prompt: inputPrompt,
           working_language: workingLanguage,
           selected_profile_slug: profileSlug,
+          audit_mode: auditMode,
           task_goal: taskGoal || undefined,
           task_type: taskType || undefined,
           expected_output_format: expectedOutputFormat || undefined,
@@ -334,14 +336,26 @@ export function AnalyzeForm() {
           </label>
 
           <label className="space-y-2 text-sm font-semibold text-slate-800">
-            {workingLanguage === 'pl' ? 'Profil kalibracyjny modelu' : 'Model calibration profile'}
+            <span className="block">
+              {workingLanguage === 'pl' ? 'Tryb audytu' : 'Audit mode'}
+            </span>
+            <span className="block text-xs font-normal text-slate-500 leading-normal">
+              {workingLanguage === 'pl'
+                ? 'Wybierz, do jakiego rodzaju zadania ma zostać oceniony prompt.'
+                : 'Choose the type of task the prompt should be evaluated for.'}
+            </span>
             <select 
               className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 px-4 py-3 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-100" 
-              value={profileSlug} 
-              onChange={(e) => setProfileSlug(e.target.value)}
+              value={auditMode} 
+              onChange={(e) => setAuditMode(e.target.value)}
             >
-              <option value="general-llm">Balanced General LLM</option>
-              <option value="google-gemini-3-5-flash">Google Gemini 3.5 Flash</option>
+              <option value="universal">{workingLanguage === 'pl' ? 'Uniwersalny' : 'Universal'}</option>
+              <option value="seo_content">{workingLanguage === 'pl' ? 'SEO / content' : 'SEO / content'}</option>
+              <option value="coding">{workingLanguage === 'pl' ? 'Kodowanie' : 'Coding'}</option>
+              <option value="data_analysis">{workingLanguage === 'pl' ? 'Analiza danych' : 'Data analysis'}</option>
+              <option value="research">{workingLanguage === 'pl' ? 'Research' : 'Research'}</option>
+              <option value="marketing_sales">{workingLanguage === 'pl' ? 'Marketing / sprzedaż' : 'Marketing / sales'}</option>
+              <option value="agent_workflow">{workingLanguage === 'pl' ? 'Agent / workflow' : 'Agent / workflow'}</option>
             </select>
           </label>
         </div>
@@ -500,6 +514,43 @@ export function AnalyzeForm() {
               value={constraints} 
               onChange={(e) => setConstraints(e.target.value)} 
             />
+          </label>
+        </div>
+
+        {/* Advanced Settings */}
+        <div className="relative py-2">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-white px-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+              {workingLanguage === 'pl' ? 'Ustawienia zaawansowane' : 'Advanced settings'}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <label className="space-y-2 text-sm font-semibold text-slate-800 block">
+            <span className="block">
+              {workingLanguage === 'pl' ? 'Docelowy model AI' : 'Target AI model'}
+            </span>
+            <span className="block text-xs font-normal text-slate-500 leading-relaxed">
+              {workingLanguage === 'pl'
+                ? 'Opcjonalnie wybierz typ modelu, pod który chcesz dostosować prompt. To ustawienie wpływa na sugestie optymalizacji, ale nie zmienia silnika analizującego prompt.'
+                : 'Optionally select the model type you want to tailor the prompt for. This affects optimization recommendations but does not change the core engine performing the audit.'}
+            </span>
+            <select
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 px-4 py-3 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-100 block"
+              value={profileSlug}
+              onChange={(e) => setProfileSlug(e.target.value)}
+            >
+              <option value="general-llm">
+                {workingLanguage === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model'}
+              </option>
+              <option value="google-gemini-3-5-flash">
+                {workingLanguage === 'pl' ? 'Model Google' : 'Google model'}
+              </option>
+            </select>
           </label>
         </div>
 

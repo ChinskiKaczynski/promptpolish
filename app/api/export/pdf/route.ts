@@ -131,7 +131,11 @@ export async function GET(request: Request) {
 
     addText(`Data utworzenia: ${formattedDate}`, 9)
     addText(`Jezyk roboczy: ${record.working_language.toUpperCase()}`, 9)
-    addText(`Wybrany profil modelu: ${record.selected_profile_slug}`, 9)
+    const modelProfileLabel = record.selected_profile_slug === 'google-gemini-3-5-flash'
+      ? (record.working_language === 'pl' ? 'Model Google' : 'Google model')
+      : (record.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')
+
+    addText(`Wybrany profil modelu: ${modelProfileLabel}`, 9)
     addSpacing(4)
 
     // Section 1: Score

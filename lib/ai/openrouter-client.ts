@@ -1,15 +1,15 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { generateText, Output } from 'ai'
 import { analysisResultSchema, type AnalysisResult } from './schemas'
 import { normalizeProviderError, ProviderError } from './provider-errors'
 
-export interface GeminiClientOptions {
+export interface OpenRouterClientOptions {
   mockMode?: boolean
   mockResponse?: AnalysisResult
   temperature?: number
 }
 
-export interface GeminiAnalysisResponse {
+export interface OpenRouterAnalysisResponse {
   output: AnalysisResult
   usage?: {
     promptTokens: number
@@ -19,15 +19,15 @@ export interface GeminiAnalysisResponse {
 }
 
 /**
- * Low-level Gemini client that wraps Vercel AI SDK generateText with
+ * Low-level OpenRouter client that wraps Vercel AI SDK generateText with
  * strictly typed Output.object JSON structured validation.
  * Supports mocked responses directly for testing and local environments.
  */
-export async function executeGeminiAnalysis(
+export async function executeOpenRouterAnalysis(
   systemInstruction: string,
   userPrompt: string,
-  options: GeminiClientOptions = {}
-): Promise<GeminiAnalysisResponse> {
+  options: OpenRouterClientOptions = {}
+): Promise<OpenRouterAnalysisResponse> {
   const { mockMode = false, mockResponse, temperature = 0.1 } = options
 
   // 1. Check and return Mock response if mock mode is active
@@ -50,25 +50,31 @@ export async function executeGeminiAnalysis(
   }
 
   // 2. Validate API Key for live calls
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey || apiKey.trim() === '') {
     throw new ProviderError(
-      'Missing Google Generative AI API Key',
+      'Missing OpenRouter API Key',
       'The prompt analysis engine is not configured with an API key. Please check your system environment.',
-      new Error('GOOGLE_GENERATIVE_AI_API_KEY is not defined in environment variables.')
+      new Error('OPENROUTER_API_KEY is not defined in environment variables.')
     )
   }
 
-  // 3. Resolve model ID from environment variables
-  const modelId = process.env.GEMINI_MODEL_ID || 'gemini-3.5-flash'
+  // 3. Resolve model ID and additional metadata headers from environment variables
+  const modelId = process.env.OPENROUTER_MODEL_ID || 'deepseek/deepseek-v4-flash'
+  const siteUrl = process.env.OPENROUTER_SITE_URL
+  const appName = process.env.OPENROUTER_APP_NAME
 
   try {
-    const google = createGoogleGenerativeAI({
-      apiKey
+    const openrouter = createOpenRouter({
+      apiKey,
+      headers: {
+        ...(siteUrl ? { 'HTTP-Referer': siteUrl } : {}),
+        ...(appName ? { 'X-Title': appName } : {}),
+      },
     })
 
     const { output, usage } = await generateText({
-      model: google(modelId),
+      model: openrouter.chat(modelId),
       system: systemInstruction,
       prompt: userPrompt,
       temperature,
@@ -77,13 +83,13 @@ export async function executeGeminiAnalysis(
       })
     })
 
-    const rawUsage = usage as any
+    const rawUsage = usage as { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined
     return {
       output,
-      usage: usage ? {
-        promptTokens: rawUsage.promptTokens,
-        completionTokens: rawUsage.completionTokens,
-        totalTokens: rawUsage.totalTokens ?? (rawUsage.promptTokens + rawUsage.completionTokens)
+      usage: rawUsage ? {
+        promptTokens: rawUsage.promptTokens ?? 0,
+        completionTokens: rawUsage.completionTokens ?? 0,
+        totalTokens: rawUsage.totalTokens ?? ((rawUsage.promptTokens ?? 0) + (rawUsage.completionTokens ?? 0))
       } : undefined
     }
   } catch (error) {
