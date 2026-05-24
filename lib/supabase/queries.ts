@@ -88,7 +88,7 @@ export async function getPromptAnalysisForOwner(
   ownerAnonymousId: string,
   userId?: string
 ): Promise<PromptAnalysisRow | null> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   let query = supabase
     .from('prompt_analyses')
     .select('*')
@@ -118,7 +118,7 @@ export async function linkAnonymousAnalyses(
   ownerAnonymousId: string,
   userId: string
 ): Promise<boolean> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { error } = await supabase
     .from('prompt_analyses')
     .update({ user_id: userId })
@@ -147,7 +147,7 @@ export async function getPromptAnalysesForUser(
     isFavorite?: boolean
   }
 ): Promise<PromptAnalysisRow[]> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   let query = supabase
     .from('prompt_analyses')
     .select('*')
@@ -224,7 +224,7 @@ export async function createUserProfile(
 export async function getSharedPromptAnalysis(
   shareToken: string
 ): Promise<SharedPromptAnalysis | null> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('prompt_analyses')
     .select('input_prompt, working_language, selected_profile_slug, overall_score, score_level, analysis_json, improved_prompt, created_at, is_share_enabled')
@@ -351,7 +351,7 @@ export async function disableShareLink(
   analysisId: string,
   ownerAnonymousId: string
 ): Promise<boolean> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
 
   const { data, error } = await supabase
     .from('prompt_analyses')
@@ -474,7 +474,7 @@ export async function softDeleteAnalysis(
   ownerAnonymousId: string,
   userId?: string
 ): Promise<boolean> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   let query = supabase
     .from('prompt_analyses')
     .update({ deleted_at: new Date().toISOString() })
@@ -507,7 +507,7 @@ export async function toggleFavoriteAnalysis(
   userId: string | undefined,
   isFavorite: boolean
 ): Promise<boolean> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   let query = supabase
     .from('prompt_analyses')
     .update({ is_favorite: isFavorite })
@@ -529,4 +529,5 @@ export async function toggleFavoriteAnalysis(
   }
   return true
 }
+
 
