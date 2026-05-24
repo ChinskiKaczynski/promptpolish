@@ -15,11 +15,13 @@ import {
   disableShareLink
 } from '@/lib/supabase/queries'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
+import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 
 // Mock getSupabaseServerClient
 vi.mock('@/lib/supabase/server', () => ({
   getSupabaseServerClient: vi.fn()
 }))
+vi.mock('@/lib/supabase/admin', () => ({ getSupabaseAdminClient: vi.fn() }))
 
 // Mock share token creator
 vi.mock('@/lib/result-access/share-token', () => ({
@@ -48,7 +50,9 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    // Setup standard builder pattern chain
+    
+    ;(getSupabaseAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabaseClient)
+// Setup standard builder pattern chain
     const builder: Record<string, unknown> & {
       eq: typeof mockEq
       is: typeof mockIs
@@ -282,3 +286,8 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
     })
   })
 })
+
+
+
+
+
