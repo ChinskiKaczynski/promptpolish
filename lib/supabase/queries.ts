@@ -65,7 +65,7 @@ export async function getModelProfileBySlug(slug: string): Promise<ModelProfileR
 export async function createPromptAnalysis(
   analysis: Database['public']['Tables']['prompt_analyses']['Insert']
 ): Promise<PromptAnalysisRow | null> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('prompt_analyses')
     .insert(analysis)
@@ -529,4 +529,5 @@ export async function toggleFavoriteAnalysis(
   }
   return true
 }
+
 
