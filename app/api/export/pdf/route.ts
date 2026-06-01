@@ -3,7 +3,6 @@ import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
 import { canExportPdf, getPlanSlugForUser } from '@/lib/plans/config'
-import type { PlanSlug } from '@/lib/plans/config'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 import { jsPDF } from 'jspdf'
 

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import type { AnalysisResult } from '@/lib/ai/schemas'
-import { mvpModelProfiles } from '@/lib/ai/model-profiles'
 import { UpgradeModal } from './upgrade-modal'
 
 
@@ -116,15 +115,6 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
     if (!result.id) return
     window.location.href = `/api/export/pdf?id=${result.id}`
   }
-
-  const handleUseBatchAudit = () => {
-    setSelectedFeature('Audyt Zbiorczy (Batch Audit)')
-    setIsUpgradeModalOpen(true)
-  }
-
-  // Find the model profile corresponding to the detected_task_type or a default
-  const activeProfile = mvpModelProfiles.find(p => p.slug === 'openrouter-deepseek-v4-flash') || mvpModelProfiles[0]
-
 
   const handleCopyPrompt = async () => {
     try {

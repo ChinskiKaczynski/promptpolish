@@ -7,7 +7,6 @@ import {
   createPromptAnalysis,
   createUsageEvent,
   getModelProfileBySlug,
-  getUserProfile,
   getUsageCountTodayForUser,
   getUsageCountThisMonthForUser
 } from '@/lib/supabase/queries'

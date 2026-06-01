@@ -15,8 +15,6 @@ import { getAuthUser } from '@/lib/identity/auth'
 import { setUserPlanSlug } from '@/lib/supabase/queries'
 import type { User } from '@supabase/supabase-js'
 
-const makeRequest = () => new Request('http://localhost/api/entitlements/simulate-pro', { method: 'POST' })
-
 describe('POST /api/entitlements/simulate-pro', () => {
   const originalEnv = process.env.NODE_ENV
   const originalAdminEmails = process.env.ADMIN_EMAILS

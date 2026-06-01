@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
-import { getUserProfile, ensureUserProfile } from '@/lib/supabase/queries'
+import { ensureUserProfile } from '@/lib/supabase/queries'
 import { PLAN_LIMITS } from '@/lib/plans/config'
 import { CheckoutButton } from '@/components/pricing/checkout-button'
 import { SimulateProButton } from '@/components/pricing/simulate-pro-button'

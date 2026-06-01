@@ -26,7 +26,7 @@ export async function getAuthUser(): Promise<User | null> {
   } catch (err) {
     if (err instanceof Error) {
       // Rethrow Next.js internal dynamic server usage errors to allow correct dynamic pre-render bailout
-      if (err.name === 'DynamicServerError' || (err as any).digest === 'DYNAMIC_SERVER_USAGE') {
+      if (err.name === 'DynamicServerError' || (typeof err === 'object' && err !== null && 'digest' in err && (err as { digest: unknown }).digest === 'DYNAMIC_SERVER_USAGE')) {
         throw err
       }
       // Silence Next.js cookie errors thrown in test environments outside of request contexts
