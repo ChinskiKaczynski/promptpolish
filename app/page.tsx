@@ -35,12 +35,12 @@ const benefits = [
 
 const targetUsers = [
   {
-    role: 'Konsultanci & Trenerzy AI',
+    role: 'Konsultanci i trenerzy AI',
     benefit: 'Szybkie audytowanie promptów dostarczanych przez klientów i dostarczanie powtarzalnych raportów z konkretną punktacją zamiast subiektywnych opinii.',
     bg: 'bg-indigo-50/50 hover:bg-indigo-50 border-indigo-100'
   },
   {
-    role: 'Marketerzy & Copywriterzy',
+    role: 'Marketerzy i copywriterzy',
     benefit: 'Optymalizacja promptów generujących teksty sprzedażowe, newslettery i kreacje w celu uzyskania spójnego tonu i uniknięcia halucynacji AI.',
     bg: 'bg-violet-50/50 hover:bg-violet-50 border-violet-100'
   },
