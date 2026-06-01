@@ -109,7 +109,7 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(data.error).toBe('invalid_input')
     })
 
-    it('returns 400 Bad Request when input prompt is below MIN_PROMPT_CHARS (20)', async () => {
+    it('returns 400 Bad Request when input prompt is below MIN_PROMPT_CHARS (20) and logs analysis_failed', async () => {
       const payload = {
         ...validPayload,
         input_prompt: 'Too short'
@@ -120,9 +120,18 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(response.status).toBe(400)
       expect(data.error).toBe('invalid_input')
       expect(data.message).toContain('za krótki')
+
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: 'analysis_failed',
+          metadata_json: expect.objectContaining({
+            error_code: 'PROMPT_TOO_SHORT'
+          })
+        })
+      )
     })
 
-    it('returns 413 Payload Too Large when input prompt exceeds MAX_PROMPT_CHARS (12000)', async () => {
+    it('returns 413 Payload Too Large when input prompt exceeds MAX_PROMPT_CHARS (12000) and logs analysis_failed', async () => {
       const longPrompt = 'a'.repeat(serverEnv.MAX_PROMPT_CHARS + 1)
       const payload = {
         ...validPayload,
@@ -134,6 +143,15 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(response.status).toBe(413)
       expect(data.error).toBe('prompt_too_long')
       expect(data.message).toContain('Przekroczono maksymalną długość')
+
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: 'analysis_failed',
+          metadata_json: expect.objectContaining({
+            error_code: 'PROMPT_TOO_LONG'
+          })
+        })
+      )
     })
   })
 
@@ -216,7 +234,7 @@ describe('POST /api/analyze API Route Handler', () => {
 
 
   describe('Model Profile Availability', () => {
-    it('returns 404 Not Found when selected model profile slug is missing from database', async () => {
+    it('returns 404 Not Found when selected model profile slug is missing from database and logs analysis_failed', async () => {
       vi.mocked(getModelProfileBySlug).mockResolvedValue(null)
 
       const response = await POST(makeRequest(validPayload))
@@ -226,6 +244,15 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(data.error).toBe('model_profile_unavailable')
       expect(data.message).toContain('Wybrany profil modelu')
       expect(analyzePrompt).not.toHaveBeenCalled()
+
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: 'analysis_failed',
+          metadata_json: expect.objectContaining({
+            error_code: 'MODEL_PROFILE_UNAVAILABLE'
+          })
+        })
+      )
     })
   })
 
@@ -394,6 +421,46 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(createPromptAnalysis).toHaveBeenCalledWith(
         expect.objectContaining({
           audit_mode: 'coding'
+        })
+      )
+    })
+  })
+
+  describe('Database Save Failure Path', () => {
+    it('returns 500 when saving prompt analysis fails and logs analysis_failed', async () => {
+      const mockResult = {
+        analysis: {
+          overall_summary: 'Prompt jest poprawny.',
+          detected_task_type: 'General',
+          criteria_scores: [
+            { criterion: 'goal_clarity', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'None' }
+          ],
+          top_weaknesses: [],
+          improvement_plan: [],
+          improved_prompt: 'Improved polished prompt',
+          change_explanations: ['Explanations']
+        },
+        scores: {
+          overallScore: 85,
+          scoreLevel: 'strong'
+        }
+      }
+
+      vi.mocked(analyzePrompt).mockResolvedValue(mockResult as unknown as AnalysisServiceResult)
+      vi.mocked(createPromptAnalysis).mockResolvedValue(null) // Mock DB save failure
+
+      const response = await POST(makeRequest(validPayload))
+      const data = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(data.error).toBe('database_error')
+
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: 'analysis_failed',
+          metadata_json: expect.objectContaining({
+            error_code: 'DATABASE_ERROR'
+          })
         })
       )
     })

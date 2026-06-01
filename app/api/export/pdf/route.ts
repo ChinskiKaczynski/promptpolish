@@ -223,7 +223,10 @@ export async function GET(request: Request) {
       owner_anonymous_id: ownerAnonymousId || '',
       user_id: user?.id || null,
       event_type: 'export_pdf',
-      metadata_json: { analysis_id: id }
+      metadata_json: {
+        analysis_id: id,
+        export_type: 'pdf'
+      }
     })
 
     return new NextResponse(pdfBuffer, {

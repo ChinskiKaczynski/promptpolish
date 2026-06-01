@@ -34,9 +34,17 @@ const ALLOWED_EVENT_TYPES = [
   'limit_reached',
   'export_markdown',
   'export_pdf',
+  'analysis_started',
   'analysis_completed',
+  'analysis_failed',
   'copy_improved_prompt',
-  'feedback_submitted'
+  'feedback_submitted',
+  'share_link_created',
+  'share_link_disabled',
+  'sensitive_data_warning_shown',
+  'sensitive_data_blocked',
+  'provider_error',
+  'invalid_structured_output'
 ] as const
 
 const eventSchema = z.object({

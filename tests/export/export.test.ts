@@ -136,7 +136,7 @@ describe('Export API Routes', () => {
       expect(createUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           event_type: 'export_markdown',
-          metadata_json: { analysis_id: ANALYSIS_ID }
+          metadata_json: { analysis_id: ANALYSIS_ID, export_type: 'markdown' }
         })
       )
     })
@@ -187,7 +187,7 @@ describe('Export API Routes', () => {
       expect(createUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           event_type: 'export_pdf',
-          metadata_json: { analysis_id: ANALYSIS_ID }
+          metadata_json: { analysis_id: ANALYSIS_ID, export_type: 'pdf' }
         })
       )
     })

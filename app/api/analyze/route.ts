@@ -140,13 +140,7 @@ export async function POST(request: Request) {
         metadata_json: {
           profile_slug: selected_profile_slug,
           working_language: working_language,
-          risk_level: 'high',
-          findings: detection.findings.map(f => ({
-            type: f.type,
-            riskLevel: f.riskLevel,
-            message: f.message,
-            redactedValue: f.redactedValue
-          }))
+          risk_level: 'high'
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
@@ -181,6 +175,19 @@ export async function POST(request: Request) {
 
     // 5. Validate prompt min/max character lengths
     if (input_prompt.length < serverEnv.MIN_PROMPT_CHARS) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'PROMPT_TOO_SHORT'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
       return NextResponse.json(
         {
           error: 'invalid_input',
@@ -191,6 +198,19 @@ export async function POST(request: Request) {
     }
 
     if (input_prompt.length > serverEnv.MAX_PROMPT_CHARS) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'PROMPT_TOO_LONG'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
       return NextResponse.json(
         {
           error: 'prompt_too_long',
@@ -267,6 +287,19 @@ export async function POST(request: Request) {
     // 7. Load selected model profile from database
     const dbProfile = await getModelProfileBySlug(selected_profile_slug)
     if (!dbProfile) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'MODEL_PROFILE_UNAVAILABLE'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
       return NextResponse.json(
         {
           error: 'model_profile_unavailable',
@@ -322,6 +355,19 @@ export async function POST(request: Request) {
     })
 
     if (!createdRecord) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'DATABASE_ERROR'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
       return NextResponse.json(
         {
           error: 'database_error',
