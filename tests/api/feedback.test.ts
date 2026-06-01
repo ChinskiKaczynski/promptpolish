@@ -6,6 +6,10 @@ vi.mock('@/lib/identity/anonymous', () => ({
   getOwnerIdFromCookies: vi.fn()
 }))
 
+vi.mock('@/lib/identity/auth', () => ({
+  getAuthUser: vi.fn()
+}))
+
 vi.mock('@/lib/supabase/queries', () => ({
   getPromptAnalysisForOwner: vi.fn(),
   createFeedbackEvent: vi.fn(),
@@ -14,8 +18,10 @@ vi.mock('@/lib/supabase/queries', () => ({
 
 import { POST } from '@/app/api/feedback/route'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
+import { getAuthUser } from '@/lib/identity/auth'
 import { getPromptAnalysisForOwner, createFeedbackEvent } from '@/lib/supabase/queries'
 import type { PromptAnalysisRow, FeedbackEventRow } from '@/lib/supabase/types'
+import type { User } from '@supabase/supabase-js'
 
 const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
 const OWNER_ID = 'owner-anon-uuid'
@@ -36,6 +42,7 @@ describe('POST /api/feedback', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(getOwnerIdFromCookies).mockResolvedValue(OWNER_ID)
+    vi.mocked(getAuthUser).mockResolvedValue(null)
     vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(mockRecord)
     vi.mocked(createFeedbackEvent).mockResolvedValue(mockFeedback)
   })
@@ -75,8 +82,9 @@ describe('POST /api/feedback', () => {
   })
 
   describe('Authentication & Ownership', () => {
-    it('returns 401 when no anonymous session cookie is present', async () => {
+    it('returns 401 when neither user session nor anonymous cookie is present', async () => {
       vi.mocked(getOwnerIdFromCookies).mockResolvedValue(null)
+      vi.mocked(getAuthUser).mockResolvedValue(null)
 
       const response = await POST(makeRequest(validPayload))
       const data = await response.json()
@@ -87,7 +95,52 @@ describe('POST /api/feedback', () => {
       expect(createFeedbackEvent).not.toHaveBeenCalled()
     })
 
-    it('returns 403 when caller does not own the analysis', async () => {
+    it('allows anonymous owner to submit feedback', async () => {
+      vi.mocked(getOwnerIdFromCookies).mockResolvedValue(OWNER_ID)
+      vi.mocked(getAuthUser).mockResolvedValue(null)
+      vi.mocked(getPromptAnalysisForOwner).mockResolvedValue({
+        id: ANALYSIS_ID,
+        owner_anonymous_id: OWNER_ID,
+        user_id: null
+      } as PromptAnalysisRow)
+
+      const response = await POST(makeRequest(validPayload))
+      expect(response.status).toBe(200)
+      expect(getPromptAnalysisForOwner).toHaveBeenCalledWith(ANALYSIS_ID, OWNER_ID, undefined)
+    })
+
+    it('allows logged-in owner to submit feedback for historical linked report', async () => {
+      vi.mocked(getOwnerIdFromCookies).mockResolvedValue(OWNER_ID)
+      vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-789', email: 'test@user.com' } as User)
+      vi.mocked(getPromptAnalysisForOwner).mockResolvedValue({
+        id: ANALYSIS_ID,
+        owner_anonymous_id: OWNER_ID,
+        user_id: 'user-789'
+      } as PromptAnalysisRow)
+
+      const response = await POST(makeRequest(validPayload))
+      expect(response.status).toBe(200)
+      expect(getPromptAnalysisForOwner).toHaveBeenCalledWith(ANALYSIS_ID, OWNER_ID, 'user-789')
+    })
+
+    it('returns 403 when logged-in user tries to submit feedback for another user\'s report', async () => {
+      vi.mocked(getOwnerIdFromCookies).mockResolvedValue(OWNER_ID)
+      vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-789', email: 'test@user.com' } as User)
+      // Mock getPromptAnalysisForOwner returning null because user-789 doesn't own it
+      vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(null)
+
+      const response = await POST(makeRequest(validPayload))
+      const data = await response.json()
+
+      expect(response.status).toBe(403)
+      expect(data.error).toBe('forbidden')
+      expect(createFeedbackEvent).not.toHaveBeenCalled()
+    })
+
+    it('returns 403 when anonymous cookie tries to submit feedback for a report that has already been linked to a user', async () => {
+      vi.mocked(getOwnerIdFromCookies).mockResolvedValue('owner-anon-uuid')
+      vi.mocked(getAuthUser).mockResolvedValue(null)
+      // Mock getPromptAnalysisForOwner returning null because user_id is set but userId is undefined
       vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(null)
 
       const response = await POST(makeRequest(validPayload))
@@ -107,7 +160,7 @@ describe('POST /api/feedback', () => {
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
 
-      expect(getPromptAnalysisForOwner).toHaveBeenCalledWith(ANALYSIS_ID, OWNER_ID)
+      expect(getPromptAnalysisForOwner).toHaveBeenCalledWith(ANALYSIS_ID, OWNER_ID, undefined)
       expect(createFeedbackEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           analysis_id: ANALYSIS_ID,

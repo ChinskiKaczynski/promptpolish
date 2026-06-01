@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
+import { getAuthUser } from '@/lib/identity/auth'
 import {
   getPromptAnalysisForOwner,
   createFeedbackEvent,
   createUsageEvent
 } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
+
+export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/feedback
@@ -60,20 +63,27 @@ export async function POST(request: Request) {
 
     const { analysis_id, rating, comment } = parsed.data
 
-    // 2. Resolve owner identity from signed cookie (never trust client-supplied id)
+    // 2. Resolve secure auth session and signed anonymous cookie
+    const user = await getAuthUser()
     const ownerAnonymousId = await getOwnerIdFromCookies()
-    if (!ownerAnonymousId) {
+
+    if (!user && !ownerAnonymousId) {
       return NextResponse.json(
         {
           error: 'unauthorized',
-          message: 'Anonymous session required to submit feedback.'
+          message: 'Authentication or anonymous session required to submit feedback.'
         },
         { status: 401 }
       )
     }
 
     // 3. Verify ownership — non-owners and share viewers cannot submit feedback
-    const ownedRecord = await getPromptAnalysisForOwner(analysis_id, ownerAnonymousId)
+    const ownedRecord = await getPromptAnalysisForOwner(
+      analysis_id,
+      ownerAnonymousId || '',
+      user?.id
+    )
+
     if (!ownedRecord) {
       return NextResponse.json(
         {
@@ -103,7 +113,7 @@ export async function POST(request: Request) {
 
     // Telemetry: record feedback_submitted event
     await createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId,
+      owner_anonymous_id: ownerAnonymousId || '',
       user_id: ownedRecord.user_id,
       event_type: 'feedback_submitted',
       metadata_json: {
