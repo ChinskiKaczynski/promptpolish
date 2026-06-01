@@ -11,6 +11,7 @@ import {
   getUsageCountThisMonthForUser
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
+import { SemanticValidationError } from '@/lib/ai/semantic-validation'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import { recordProviderError } from '@/lib/monitoring/observability'
 import { serverEnv, checkProductionEnv } from '@/lib/env/server'
@@ -34,6 +35,10 @@ const analyzeRequestSchema = z.object({
 export async function POST(request: Request) {
   let selectedProfileSlug: string | undefined
   let workingLanguage: 'pl' | 'en' | undefined
+  let ownerAnonymousId = ''
+  let userId: string | null = null
+  let ipHash: string | null = null
+  let userAgentHash: string | null = null
 
   try {
     // 0. Ensure production environment is correctly configured
@@ -78,9 +83,10 @@ export async function POST(request: Request) {
     workingLanguage = working_language
 
     // 2. Resolve owner_anonymous_id and authenticated user server-side (do not trust request body)
-    const { id: ownerAnonymousId } = await resolveOrCreateOwnerId()
+    const resolvedOwner = await resolveOrCreateOwnerId()
+    ownerAnonymousId = resolvedOwner.id
     const user = await getAuthUser()
-    const userId = user?.id || null
+    userId = user?.id || null
 
     // 2a. Hash IP and User-Agent server-side for abuse telemetry.
     //     Raw values are never stored — only SHA-256 hashes salted with APP_URL.
@@ -89,11 +95,40 @@ export async function POST(request: Request) {
       ?? request.headers.get('x-real-ip')
       ?? null
     const rawUa = request.headers.get('user-agent') ?? null
-    const ipHash = rawIp ? hashValue(rawIp) : null
-    const userAgentHash = rawUa ? hashValue(rawUa) : null
+    ipHash = rawIp ? hashValue(rawIp) : null
+    userAgentHash = rawUa ? hashValue(rawUa) : null
+
+    // Log analysis_started immediately after validation and owner resolution
+    await createUsageEvent({
+      owner_anonymous_id: ownerAnonymousId,
+      user_id: userId,
+      event_type: 'analysis_started',
+      metadata_json: {
+        profile_slug: selected_profile_slug,
+        working_language: working_language
+      },
+      ip_hash: ipHash,
+      user_agent_hash: userAgentHash
+    })
 
     // 3. Run sensitive-data detection server-side
     const detection = detectSensitiveData(input_prompt)
+
+    // Log sensitive data warning shown if alert is low or medium risk
+    if (detection.riskLevel === 'low' || detection.riskLevel === 'medium') {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'sensitive_data_warning_shown',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          risk_level: detection.riskLevel
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+    }
 
     // 4. If high-risk secret is detected, block and do not save raw prompt
     if (detection.riskLevel === 'high' && serverEnv.SENSITIVE_DATA_BLOCK_HIGH_RISK) {
@@ -103,14 +138,29 @@ export async function POST(request: Request) {
         user_id: userId,
         event_type: 'sensitive_data_blocked',
         metadata_json: {
-          selected_profile_slug,
-          working_language,
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          risk_level: 'high',
           findings: detection.findings.map(f => ({
             type: f.type,
             riskLevel: f.riskLevel,
             message: f.message,
             redactedValue: f.redactedValue
           }))
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
+      // Record a companion analysis_failed event for correct funnel calculation
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'SENSITIVE_DATA_BLOCKED'
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
@@ -160,16 +210,31 @@ export async function POST(request: Request) {
     const limitCheck = canAnalyzePrompt(planSlug, monthlyCount, dailyCount)
 
     if (!limitCheck.allowed) {
+      const errCode = limitCheck.reason === 'daily_abuse_limit_reached' ? 'DAILY_LIMIT_REACHED' : 'MONTHLY_LIMIT_REACHED'
+      
       await createUsageEvent({
         owner_anonymous_id: ownerAnonymousId,
         user_id: userId,
         event_type: 'limit_reached',
         metadata_json: {
-          plan: planSlug,
-          dailyCount,
-          monthlyCount,
-          reason: limitCheck.reason,
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: errCode,
           limit: limitCheck.limit
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
+      // Companion analysis_failed event for correct funnel telemetry
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: errCode
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
@@ -266,7 +331,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // 14. Save analysis_completed usage_event record
+    // 14. Save analysis_completed usage_event record only after successful saved database result
     const promptTokens = analysisResult.usage?.promptTokens || 0
     const completionTokens = analysisResult.usage?.completionTokens || 0
     const totalTokens = analysisResult.usage?.totalTokens || 0
@@ -278,8 +343,8 @@ export async function POST(request: Request) {
       event_type: 'analysis_completed',
       metadata_json: {
         analysis_id: createdRecord.id,
-        selected_profile_slug,
-        working_language,
+        profile_slug: selected_profile_slug,
+        working_language: working_language,
         token_usage: analysisResult.usage ? {
           prompt_tokens: promptTokens,
           completion_tokens: completionTokens,
@@ -310,10 +375,76 @@ export async function POST(request: Request) {
       working_language: workingLanguage
     })
 
-    // Graceful error boundaries and standardized provider error recovery
+    // 1. Semantic Validation Failures (Invalid Structured Output)
+    if (error instanceof SemanticValidationError) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'invalid_structured_output',
+        metadata_json: {
+          profile_slug: selectedProfileSlug,
+          working_language: workingLanguage,
+          error_code: 'INVALID_STRUCTURED_OUTPUT'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selectedProfileSlug,
+          working_language: workingLanguage,
+          error_code: 'INVALID_STRUCTURED_OUTPUT'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
+      console.error('[POST /api/analyze SemanticValidationError]:', error)
+      return NextResponse.json(
+        {
+          error: 'invalid_structured_output',
+          message: 'Odpowiedź AI nie spełnia reguł strukturalnych. Spróbuj ponownie.'
+        },
+        { status: 502 }
+      )
+    }
+
+    // 2. Provider Rate Limits or Failures
     if (error instanceof ProviderError) {
       const isTransient = error.statusCode === 429 || error.statusCode === 503
       const status = isTransient ? 503 : 502
+      const errCode = isTransient ? 'PROVIDER_RATE_LIMIT' : 'PROVIDER_ERROR'
+
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'provider_error',
+        metadata_json: {
+          profile_slug: selectedProfileSlug,
+          working_language: workingLanguage,
+          error_code: errCode
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selectedProfileSlug,
+          working_language: workingLanguage,
+          error_code: errCode
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
       return NextResponse.json(
         {
           error: isTransient ? 'provider_unavailable' : 'provider_error',
@@ -323,6 +454,20 @@ export async function POST(request: Request) {
         { status }
       )
     }
+
+    // 3. Catch-all Internal System Failures
+    await createUsageEvent({
+      owner_anonymous_id: ownerAnonymousId,
+      user_id: userId,
+      event_type: 'analysis_failed',
+      metadata_json: {
+        profile_slug: selectedProfileSlug,
+        working_language: workingLanguage,
+        error_code: 'INTERNAL_ERROR'
+      },
+      ip_hash: ipHash,
+      user_agent_hash: userAgentHash
+    })
 
     console.error('[POST /api/analyze Error]:', error)
     return NextResponse.json(

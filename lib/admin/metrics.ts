@@ -199,7 +199,7 @@ export async function fetchAggregatedMetrics(
     owner_anonymous_id?: string | null
     user_id?: string | null
     created_at?: string | Date | null
-    metadata_json?: any
+    metadata_json?: unknown
   }[]
   const feedback = (feedbackEvents ?? []) as {
     rating?: string | null
@@ -208,7 +208,7 @@ export async function fetchAggregatedMetrics(
   const analyses = (promptAnalyses ?? []) as {
     is_share_enabled?: boolean | null
     sensitive_data_risk_level?: string | null
-    sensitive_data_findings_json?: any
+    sensitive_data_findings_json?: unknown
     overall_score?: number | null
     working_language?: string | null
     selected_profile_slug?: string | null

@@ -157,6 +157,29 @@ Computed status signals:
 
 ---
 
+## Final Event Contract
+
+All telemetry events conform strictly to the following contract. **No raw prompt text, user IDs, owner IDs, emails, share tokens, or secret credentials are ever written in any event metadata.**
+
+| Event Name | Trigger Location | Trigger Condition | Minimal Compliant Metadata |
+|---|---|---|---|
+| `analysis_started` | `/api/analyze` | Immediately after parsing and resolving owner identity | `profile_slug`, `working_language` |
+| `analysis_completed` | `/api/analyze` | Successfully saved the prompt audit record in DB | `profile_slug`, `working_language`, `analysis_id`, `token_usage`, `cost_estimate` |
+| `analysis_failed` | `/api/analyze` | Any error (limits, validation blocker, AI semantic failures, or generic provider exceptions) | `profile_slug`, `working_language`, `error_code` |
+| `limit_reached` | `/api/analyze` | When daily rate limits or monthly quotas are violated | `profile_slug`, `working_language`, `error_code`, `limit` |
+| `sensitive_data_warning_shown` | `/api/analyze` | Scented when a low or medium risk preflight warning is detected | `profile_slug`, `working_language`, `risk_level` |
+| `sensitive_data_blocked` | `/api/analyze` | When high-risk data preflight block occurs (skips AI execution) | `profile_slug`, `working_language`, `risk_level: 'high'`, `findings` (redacted values only) |
+| `provider_error` | `/api/analyze` | Inside POST catch block when catching transient/non-transient `ProviderError` | `profile_slug`, `working_language`, `error_code` |
+| `invalid_structured_output` | `/api/analyze` | Caught a `SemanticValidationError` (AI response validation fails schema rules) | `profile_slug`, `working_language`, `error_code` |
+| `copy_improved_prompt` / `copy` | `/api/events` | User clicks copy polished prompt inside UI | `analysis_id` |
+| `feedback_submitted` | `/api/feedback` | User votes up/down on audit report | `analysis_id`, `rating`, `feedback_id` |
+| `share_link_created` | `/api/share` | Enable public link | `analysis_id` |
+| `share_link_disabled` | `/api/share/disable` | Disable public link | `analysis_id` |
+| `export_markdown` | `/api/export/markdown` | Download audit as Markdown | `analysis_id` |
+| `export_pdf` | `/api/export/pdf` | Download audit as PDF | `analysis_id` |
+
+---
+
 ## Files
 
 | File | Purpose |

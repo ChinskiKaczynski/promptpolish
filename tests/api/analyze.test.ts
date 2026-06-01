@@ -153,11 +153,30 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(data.findings).toBeDefined()
       expect(data.findings.length).toBeGreaterThan(0)
 
+      // Verification: Check usage_event was stored with 'analysis_started' type
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          owner_anonymous_id: 'mocked-owner-id',
+          event_type: 'analysis_started'
+        })
+      )
+
       // Verification: Check usage_event was stored with 'sensitive_data_blocked' type
       expect(createUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           owner_anonymous_id: 'mocked-owner-id',
           event_type: 'sensitive_data_blocked'
+        })
+      )
+
+      // Verification: Check usage_event was stored with 'analysis_failed' type
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          owner_anonymous_id: 'mocked-owner-id',
+          event_type: 'analysis_failed',
+          metadata_json: expect.objectContaining({
+            error_code: 'SENSITIVE_DATA_BLOCKED'
+          })
         })
       )
 
@@ -313,6 +332,13 @@ describe('POST /api/analyze API Route Handler', () => {
           working_language: validPayload.working_language,
           selected_profile_slug: validPayload.selected_profile_slug,
           audit_mode: 'universal'
+        })
+      )
+
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          owner_anonymous_id: 'mocked-owner-id',
+          event_type: 'analysis_started'
         })
       )
 
