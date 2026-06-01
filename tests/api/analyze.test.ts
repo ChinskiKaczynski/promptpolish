@@ -319,7 +319,7 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(createUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           owner_anonymous_id: 'mocked-owner-id',
-          event_type: 'analyze'
+          event_type: 'analysis_completed'
         })
       )
     })

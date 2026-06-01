@@ -4,7 +4,7 @@ const benefits = [
   {
     title: 'Precyzyjny Wynik 0–100',
     description: 'Koniec z zgadywaniem. Otrzymasz obiektywną ocenę promptu na podstawie 4 inżynieryjnych kryteriów: jasności roli, głębokości kontekstu, definicji ograniczeń oraz formatu wyjściowego.',
-    badge: 'Score & Metrics',
+    badge: 'WYNIK I METRYKI',
     icon: (
       <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
@@ -14,7 +14,7 @@ const benefits = [
   {
     title: 'Głęboka Diagnoza Słabości',
     description: 'System automatycznie wskaże 3 najważniejsze luki w Twojej instrukcji, wyjaśni dlaczego mogą one wprowadzać model w błąd i zaproponuje natychmiastowe kroki naprawcze.',
-    badge: 'Diagnosis & Critique',
+    badge: 'DIAGNOZA I KRYTYKA',
     icon: (
       <svg className="h-6 w-6 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -24,7 +24,7 @@ const benefits = [
   {
     title: 'Ulepszona Wersja Promptu',
     description: 'Otrzymasz zrestrukturyzowany, profesjonalnie zredagowany prompt gotowy do skopiowania jednym kliknięciem. Zachowujemy Twoją intencję, drastycznie podnosząc precyzję modelu.',
-    badge: 'Copy-Ready Refinement',
+    badge: 'GOTOWA WERSJA PROMPTU',
     icon: (
       <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -94,7 +94,7 @@ export default async function HomePage() {
             </span>
           </div>
           <div className="flex items-center gap-6 text-sm font-medium text-slate-600">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Anonymous-first MVP</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Działa bez konta</span>
             <Link className="hover:text-indigo-600 transition" href="/privacy">Prywatność</Link>
             <Link className="hover:text-indigo-600 transition" href="/terms">Regulamin</Link>
             <Link className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-1.5 text-xs font-bold text-slate-700 transition" href="/login">Zaloguj się</Link>
@@ -115,12 +115,12 @@ export default async function HomePage() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
                   </span>
-                  Wolny, darmowy audyt bez rejestracji
+                  Darmowy audyt promptu bez rejestracji
                 </div>
                 <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl leading-[1.1]">
-                  Sprawdź, dlaczego Twój prompt{' '}
+                  Zobacz, co osłabia Twój prompt —{' '}
                   <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-blue-600 bg-clip-text text-transparent">
-                    działa słabo.
+                    i jak go poprawić.
                   </span>
                 </h1>
                 <p className="mt-6 text-lg leading-relaxed text-slate-600">
@@ -148,7 +148,7 @@ export default async function HomePage() {
                     <span className="h-3 w-3 rounded-full bg-yellow-400" />
                     <span className="h-3 w-3 rounded-full bg-green-400" />
                   </div>
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">Mockup Audit</span>
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">PRZYKŁADOWY AUDYT</span>
                 </div>
                 <div className="mt-6">
                   <div className="flex items-center justify-between">
@@ -191,7 +191,7 @@ export default async function HomePage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-amber-950">Gwarancja Bezpieczeństwa & Preflight Ochronny</h3>
+                  <h3 className="text-base font-bold text-amber-950">Ochrona danych wrażliwych przed analizą</h3>
                   <p className="mt-2 text-sm leading-relaxed text-amber-900/90">
                     PromptPolish stawia prywatność na pierwszym miejscu. Narzędzie działa w 100% anonimowo. Przed przesłaniem promptu do analizy, system uruchamia automatyczny filtr w poszukiwaniu kluczy API, tokenów autoryzacyjnych lub poufnych danych finansowych.
                   </p>

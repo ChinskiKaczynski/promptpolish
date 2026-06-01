@@ -10,10 +10,14 @@ import {
   getPromptAnalysesForUser
 } from '@/lib/supabase/queries'
 import { getSupabaseServerClient } from '@/lib/supabase/server'
+import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 
-// Mock getSupabaseServerClient
+// Mock getSupabaseServerClient and getSupabaseAdminClient
 vi.mock('@/lib/supabase/server', () => ({
   getSupabaseServerClient: vi.fn()
+}))
+vi.mock('@/lib/supabase/admin', () => ({
+  getSupabaseAdminClient: vi.fn()
 }))
 
 describe('Supabase Prompt History Actions & Filters Integration', () => {
@@ -45,6 +49,7 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
 
     mockSupabaseClient.from.mockReturnValue(builder)
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
+    vi.mocked(getSupabaseAdminClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseAdminClient>)
   })
 
   describe('toggleFavoriteAnalysis mutation', () => {

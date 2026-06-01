@@ -183,7 +183,7 @@ export async function getPromptAnalysesForUser(
  * Retrieves the user profile from the database matching the userId.
  */
 export async function getUserProfile(userId: string): Promise<UserProfileRow | null> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
@@ -203,7 +203,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileRow | n
 export async function createUserProfile(
   profile: Database['public']['Tables']['user_profiles']['Insert']
 ): Promise<UserProfileRow | null> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('user_profiles')
     .upsert(profile)
@@ -280,7 +280,7 @@ export async function createUsageEvent(
 export async function createFeedbackEvent(
   event: Database['public']['Tables']['feedback_events']['Insert']
 ): Promise<FeedbackEventRow | null> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('feedback_events')
     .insert(event)
@@ -317,7 +317,7 @@ export async function createShareLink(
   ownerAnonymousId: string
 ): Promise<string | null> {
   const shareToken = createShareToken()
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
 
   const { data, error } = await supabase
     .from('prompt_analyses')

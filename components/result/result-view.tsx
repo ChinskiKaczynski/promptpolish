@@ -64,14 +64,14 @@ const scoreLevelTranslations: Record<string, { label: string; desc: string; bg: 
 }
 
 // Translations for Criterion Names
-const criterionTranslations: Record<string, string> = {
+export const criterionTranslations: Record<string, string> = {
   goal_clarity: 'Jasność celu',
   context_completeness: 'Kompletność kontekstu',
   structure: 'Struktura promptu',
   constraints: 'Definicje ograniczeń',
   output_format: 'Format wyniku',
-  model_profile_fit: 'Dopasowanie do modelu',
-  resistance_to_misinterpretation: 'Odporność na błędy',
+  model_profile_fit: 'Dopasowanie do profilu audytu',
+  resistance_to_misinterpretation: 'Odporność na błędy interpretacji',
   cost_efficiency: 'Efektywność kosztowa',
   safety: 'Filtry bezpieczeństwa',
   testability: 'Testowalność i ocena'
@@ -286,7 +286,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
               {isPublicMode ? 'Publiczny raport' : 'Prywatny audyt'}
             </span>
             {!isPublicMode && result.id && (
-              <span className="text-xs text-slate-400">ID: {result.id.slice(0, 8)}</span>
+              <span className="text-[10px] text-slate-300 font-mono tracking-wider">ID: {result.id.slice(0, 8)}</span>
             )}
           </div>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Raport Audytu Promptu</h1>
@@ -311,36 +311,6 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                 <span>Skopiuj ulepszony prompt</span>
               </>
             )}
-          </button>
-
-          <button
-            onClick={handleExportMarkdown}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-5 py-3 text-sm font-semibold transition active:scale-[0.98] cursor-pointer"
-          >
-            <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            <span>Pobierz MD {planSlug !== 'pro' && <span className="ml-1 text-[9px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 rounded px-1 py-0.5 uppercase tracking-wider">Pro</span>}</span>
-          </button>
-
-          <button
-            onClick={handleExportPdf}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-5 py-3 text-sm font-semibold transition active:scale-[0.98] cursor-pointer"
-          >
-            <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            <span>Drukuj PDF {planSlug !== 'pro' && <span className="ml-1 text-[9px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 rounded px-1 py-0.5 uppercase tracking-wider">Pro</span>}</span>
-          </button>
-
-          <button
-            onClick={handleUseBatchAudit}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 px-5 py-3 text-sm font-semibold transition active:scale-[0.98] cursor-pointer"
-          >
-            <svg className="h-4 w-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            <span>Batch Audit <span className="ml-1 text-[9px] font-black text-indigo-600 bg-indigo-50 border border-indigo-100 rounded px-1 py-0.5 uppercase tracking-wider">Pro</span></span>
           </button>
         </div>
       </div>
@@ -397,38 +367,31 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           </div>
         </div>
 
-        {/* Dynamic Model Profile & Unverified Data Warning Area */}
-        <div className="flex flex-col justify-between rounded-3xl border border-amber-200 bg-amber-50/20 p-6 sm:p-8 shadow-sm">
+        {/* Dynamic Model Profile Info Area */}
+        <div className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
           <div>
             <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500"></span>
-              </span>
-              <h3 className="text-sm font-bold text-amber-800 uppercase tracking-wider">Ostrzeżenie o profilu modelu</h3>
-            </div>
-            
-            <div className="mt-3 flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <div>
-                <h4 className="text-sm font-bold text-amber-950">Dane niezweryfikowane / Stale Data</h4>
-                <p className="mt-1 text-xs leading-relaxed text-amber-900/80">
-                  Użyto profilu: <strong className="text-slate-800 font-semibold">{activeProfile.displayName}</strong> ({activeProfile.slug}). Wartości benchmarków, context window oraz ceny tokenów dla tego profilu są oznaczone jako <strong>{activeProfile.verificationStatus}</strong> (zaufanie: {activeProfile.confidenceLevel}).
-                </p>
-                <p className="mt-2 text-xs font-medium text-amber-800">
-                  Zalecamy samodzielne zweryfikowanie instrukcji przed wdrożeniem produkcyjnym.
-                </p>
-              </div>
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Profil audytu: Uniwersalny</h3>
+            </div>
+            
+            <div className="mt-4">
+              <p className="text-xs leading-relaxed text-slate-600">
+                Analiza opiera się na ogólnych zasadach jakości promptów. Nie zakładamy konkretnych limitów, cen ani prywatnych właściwości modelu.
+              </p>
+              <p className="mt-3 text-xs leading-relaxed text-amber-700 bg-amber-50/50 border border-amber-100 rounded-xl p-3 font-medium">
+                Ten profil audytu ma charakter ogólny. Przed zastosowaniem promptu w krytycznym procesie zweryfikuj wynik samodzielnie.
+              </p>
             </div>
           </div>
 
-          <div className="mt-6 border-t border-amber-100 pt-4 flex flex-wrap gap-y-2 justify-between text-xs text-amber-700">
-            <span>Profil wersja: <strong>{activeProfile.profileVersion}</strong></span>
-            <span>Ostatnia synchronizacja: <strong>Brak danych (stale)</strong></span>
+          <div className="mt-6 border-t border-slate-100 pt-4 flex flex-wrap gap-y-2 justify-between text-xs text-slate-500">
+            <span>Typ audytu: <strong>Standard</strong></span>
+            <span>Tryb: <strong>Automatyczny</strong></span>
           </div>
         </div>
       </div>
@@ -460,7 +423,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold tracking-tight text-slate-900">Największe słabości (Top weaknesses)</h3>
+              <h3 className="text-lg font-bold tracking-tight text-slate-900">Największe słabości</h3>
             </div>
             
             <div className="mt-4 grid gap-3">
@@ -483,7 +446,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold tracking-tight text-slate-900">Plan naprawy (Improvement plan)</h3>
+              <h3 className="text-lg font-bold tracking-tight text-slate-900">Plan naprawy</h3>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -605,7 +568,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
               <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
             </div>
             <span className="text-xs font-semibold uppercase tracking-widest text-slate-400 border-l border-slate-800 pl-3">
-              Poprawiony Prompt (Optimized Prompt)
+              POPRAWIONY PROMPT
             </span>
           </div>
 
@@ -632,15 +595,17 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Editor Code Area */}
-        <div className="flex overflow-x-auto p-6 font-mono text-sm leading-relaxed text-indigo-200 selection:bg-indigo-500/30">
-          <div className="select-none pr-5 text-right text-slate-600 shrink-0 border-r border-slate-800/40">
-            {promptLines.map((_, i) => (
-              <div key={i} className="h-6">{i + 1}</div>
-            ))}
-          </div>
-          <pre className="pl-5 whitespace-pre font-mono h-full flex-1">
+        <div className="p-6 font-mono text-sm leading-relaxed text-indigo-200 selection:bg-indigo-500/30">
+          <pre className="whitespace-pre-wrap break-words font-mono w-full">
             {promptLines.map((line, i) => (
-              <div key={i} className="h-6 hover:bg-white/5 transition-colors duration-150 rounded px-1 -mx-1">{line || ' '}</div>
+              <div key={i} className="flex items-start hover:bg-white/5 transition-colors duration-150 rounded py-0.5 px-1">
+                <span className="select-none w-8 text-right text-slate-600 shrink-0 pr-3 border-r border-slate-800/40 font-mono">
+                  {i + 1}
+                </span>
+                <code className="pl-4 whitespace-pre-wrap break-words font-mono flex-1 block">
+                  {line || ' '}
+                </code>
+              </div>
             ))}
           </pre>
         </div>
@@ -668,7 +633,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">Zgodność z Modelami</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">ZGODNOŚĆ Z PROFILEM AUDYTU</h4>
           </div>
           <ul className="list-disc pl-4 space-y-1.5 text-xs text-slate-600 leading-relaxed">
             {result.model_fit_notes.map((note, i) => <li key={i}>{note}</li>)}
@@ -681,7 +646,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">Ostrzeżenia (Uncertainty)</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">OSTRZEŻENIA</h4>
           </div>
           <ul className="list-disc pl-4 space-y-1.5 text-xs text-slate-600 leading-relaxed">
             {result.uncertainty_warnings.map((note, i) => <li key={i}>{note}</li>)}
@@ -694,7 +659,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">Bezpieczeństwo (Safety)</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">BEZPIECZEŃSTWO</h4>
           </div>
           <ul className="list-disc pl-4 space-y-1.5 text-xs text-slate-600 leading-relaxed">
             {result.safety_notes.map((note, i) => <li key={i}>{note}</li>)}
@@ -797,7 +762,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
               <div>
                 <h3 className="text-base font-bold text-slate-900">Udostępnij raport</h3>
                 <p className="mt-1 text-xs text-slate-500">
-                  Stwórz publiczny link. Domyślnie wyłączone (prywatny).
+                  Stwórz publiczny link. Domyślnie wyłączone (prywatny). Każdy z linkiem zobaczy treść promptu i raport.
                 </p>
               </div>
               

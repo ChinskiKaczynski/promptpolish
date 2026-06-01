@@ -2,12 +2,16 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
+import { getSharedPromptAnalysis, disableShareLink } from '@/lib/supabase/queries'
+import { getSupabaseServerClient } from '@/lib/supabase/server'
+import { getSupabaseAdminClient } from '@/lib/supabase/admin'
+
 vi.mock('@/lib/supabase/server', () => ({
   getSupabaseServerClient: vi.fn()
 }))
-
-import { getSharedPromptAnalysis, disableShareLink } from '@/lib/supabase/queries'
-import { getSupabaseServerClient } from '@/lib/supabase/server'
+vi.mock('@/lib/supabase/admin', () => ({
+  getSupabaseAdminClient: vi.fn()
+}))
 
 /**
  * Privacy snapshot tests for the public share data access layer.
@@ -145,6 +149,7 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
     mockIs.mockReturnValue(builder)
 
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
+    vi.mocked(getSupabaseAdminClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseAdminClient>)
   })
 
   it('returns all allowed public fields when share is enabled', async () => {
@@ -267,6 +272,7 @@ describe('disableShareLink — Ownership Verification', () => {
     mockSelect.mockReturnValue(builder)
 
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
+    vi.mocked(getSupabaseAdminClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseAdminClient>)
   })
 
   it('returns true when the owned row is successfully updated', async () => {

@@ -38,6 +38,8 @@ Core Operation Rules:
 8. Under no circumstances should you repeat full secret values such as passwords, API keys, tokens, or private database keys if the input contains sensitive data. Redact them or speak about them generally without copying the sensitive value itself.
 9. To combat hallucination, always include anti-hallucination guardrails and instructions in the generated improved prompt, instructing the target model to reject ungrounded assumptions or state when information is unavailable.
 10. Score each criterion independently. Do not reuse the same rationale or criterion name across multiple criteria.
+11. LANGUAGE CONTRACT: All user-facing text fields (overall_summary, detected_task_type, rationale, improvement_suggestion, top_weaknesses, improvement_plan, improved_prompt, change_explanations, model_fit_notes, uncertainty_warnings, safety_notes) must be written entirely in the selected working language (Polish or English). Do not mix languages.
+12. CRITERION KEYS LANGUAGE CONTRACT: Under no circumstances should the machine-readable criterion keys in the criteria_scores array (e.g. goal_clarity, context_completeness, structure, constraints, output_format, model_profile_fit, resistance_to_misinterpretation, cost_efficiency, safety, testability) be translated. They must remain exactly in English.
 
 ${requiredCriteriaInstruction}
 `
@@ -149,6 +151,7 @@ Rules:
 - Do not explain the correction outside the structured output.
 - Preserve the user's original intent from the previous analysis.
 - Do not change criterion names.
+- Do not translate the English criterion keys under any circumstances.
 - Do not duplicate criteria.
 - Do not omit criteria.
 - Do not add extra criteria.

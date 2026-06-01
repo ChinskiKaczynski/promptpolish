@@ -8,7 +8,7 @@ import type { StripeCustomerRow, SubscriptionRow } from './types'
  * Fetches the Stripe customer mapping for a user.
  */
 export async function getStripeCustomer(userId: string): Promise<StripeCustomerRow | null> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('stripe_customers')
     .select('*')
@@ -67,7 +67,7 @@ export async function getUserIdByStripeCustomerId(stripeCustomerId: string): Pro
  * Fetches the subscription row for a user.
  */
 export async function getSubscriptionByUserId(userId: string): Promise<SubscriptionRow | null> {
-  const supabase = getSupabaseServerClient()
+  const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')

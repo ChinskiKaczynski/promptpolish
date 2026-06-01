@@ -2,6 +2,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { generateText, Output } from 'ai'
 import { analysisResultSchema, type AnalysisResult } from './schemas'
 import { normalizeProviderError, ProviderError } from './provider-errors'
+import { getOwnerConfiguredModelId } from './model-catalog'
 
 export interface OpenRouterClientOptions {
   mockMode?: boolean
@@ -60,7 +61,7 @@ export async function executeOpenRouterAnalysis(
   }
 
   // 3. Resolve model ID and additional metadata headers from environment variables
-  const modelId = process.env.OPENROUTER_MODEL_ID || 'deepseek/deepseek-v4-flash'
+  const modelId = getOwnerConfiguredModelId()
   const siteUrl = process.env.OPENROUTER_SITE_URL
   const appName = process.env.OPENROUTER_APP_NAME
 

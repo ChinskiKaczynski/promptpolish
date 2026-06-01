@@ -17,6 +17,7 @@ import { recordProviderError } from '@/lib/monitoring/observability'
 import { serverEnv, checkProductionEnv } from '@/lib/env/server'
 import { hashValue } from '@/lib/rate-limit/hash-ip'
 import { PLAN_LIMITS, canAnalyzePrompt } from '@/lib/plans/config'
+import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
 
 
 // Input validation schema using Zod
@@ -254,7 +255,7 @@ export async function POST(request: Request) {
       score_level: analysisResult.scores.scoreLevel as 'weak' | 'needs_work' | 'decent' | 'strong' | 'excellent',
       analysis_json: analysisResult.analysis,
       improved_prompt: analysisResult.analysis.improved_prompt,
-      model_id_used: process.env.OPENROUTER_MODEL_ID || 'deepseek/deepseek-v4-flash',
+      model_id_used: getOwnerConfiguredModelId(),
       provider_used: 'openrouter',
       analysis_schema_version: process.env.ANALYSIS_SCHEMA_VERSION || '1.0.0',
       scoring_version: process.env.SCORING_VERSION || '1.0.0',
@@ -272,32 +273,12 @@ export async function POST(request: Request) {
       )
     }
 
-    // 14. Save successful usage_event record
+    // 14. Save analysis_completed usage_event record
     const promptTokens = analysisResult.usage?.promptTokens || 0
     const completionTokens = analysisResult.usage?.completionTokens || 0
     const totalTokens = analysisResult.usage?.totalTokens || 0
     const calculatedCost = (promptTokens * 0.075 + completionTokens * 0.30) / 1000000
 
-    await createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId,
-      user_id: userId,
-      event_type: 'analyze',
-      metadata_json: {
-        analysis_id: createdRecord.id,
-        selected_profile_slug,
-        working_language,
-        token_usage: analysisResult.usage ? {
-          prompt_tokens: promptTokens,
-          completion_tokens: completionTokens,
-          total_tokens: totalTokens
-        } : null,
-        cost_estimate: analysisResult.usage ? calculatedCost : null
-      },
-      ip_hash: ipHash,
-      user_agent_hash: userAgentHash
-    })
-
-    // 14a. Save analysis_completed usage_event record
     await createUsageEvent({
       owner_anonymous_id: ownerAnonymousId,
       user_id: userId,
