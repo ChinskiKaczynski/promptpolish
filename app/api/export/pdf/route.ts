@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
-import { getPromptAnalysisForOwner, getUserProfile, createUsageEvent } from '@/lib/supabase/queries'
-import { canExportPdf } from '@/lib/plans/config'
+import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
+import { canExportPdf, getPlanSlugForUser } from '@/lib/plans/config'
 import type { PlanSlug } from '@/lib/plans/config'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 import { jsPDF } from 'jspdf'
+
+export const dynamic = 'force-dynamic'
 
 function removePolishAccents(text: string): string {
   const map: Record<string, string> = {
@@ -37,13 +39,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Strict entitlement check
-    let planSlug: PlanSlug = 'free'
-    if (user) {
-      const profile = await getUserProfile(user.id)
-      if (profile?.plan_slug === 'pro') {
-        planSlug = 'pro'
-      }
-    }
+    const planSlug = await getPlanSlugForUser(user?.id || null)
 
     if (!canExportPdf(planSlug)) {
       return new NextResponse('Pro plan required for PDF export', { status: 403 })

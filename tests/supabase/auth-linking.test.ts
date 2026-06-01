@@ -57,28 +57,47 @@ describe('Supabase Authentication & History Linking Integration', () => {
   })
 
   describe('getPromptAnalysisForOwner with Dual Ownership', () => {
-    it('queries by owner_anonymous_id only if userId is not provided', async () => {
+    it('returns the analysis when owner anonymous ID matches and user_id is null', async () => {
       mockMaybeSingle.mockResolvedValue({
-        data: { id: 'analysis-123', owner_anonymous_id: 'owner-123' },
+        data: { id: 'analysis-123', owner_anonymous_id: 'owner-123', user_id: null },
         error: null
       })
 
       const result = await getPromptAnalysisForOwner('analysis-123', 'owner-123')
       expect(result).toBeDefined()
+      expect(result?.id).toBe('analysis-123')
       expect(mockEq).toHaveBeenCalledWith('id', 'analysis-123')
-      expect(mockEq).toHaveBeenCalledWith('owner_anonymous_id', 'owner-123')
     })
 
-    it('queries with OR criteria if userId is provided', async () => {
+    it('returns null when owner anonymous ID does not match and user_id is null', async () => {
+      mockMaybeSingle.mockResolvedValue({
+        data: { id: 'analysis-123', owner_anonymous_id: 'other-owner', user_id: null },
+        error: null
+      })
+
+      const result = await getPromptAnalysisForOwner('analysis-123', 'owner-123')
+      expect(result).toBeNull()
+    })
+
+    it('returns the analysis when logged-in user_id matches, ignoring anonymous ID', async () => {
       mockMaybeSingle.mockResolvedValue({
         data: { id: 'analysis-123', owner_anonymous_id: 'owner-123', user_id: 'user-789' },
         error: null
       })
 
-      const result = await getPromptAnalysisForOwner('analysis-123', 'owner-123', 'user-789')
+      const result = await getPromptAnalysisForOwner('analysis-123', 'different-owner', 'user-789')
       expect(result).toBeDefined()
-      expect(mockEq).toHaveBeenCalledWith('id', 'analysis-123')
-      expect(mockOr).toHaveBeenCalledWith('owner_anonymous_id.eq.owner-123,user_id.eq.user-789')
+      expect(result?.user_id).toBe('user-789')
+    })
+
+    it('returns null when logged-in user_id does not match, even if anonymous ID matches', async () => {
+      mockMaybeSingle.mockResolvedValue({
+        data: { id: 'analysis-123', owner_anonymous_id: 'owner-123', user_id: 'user-789' },
+        error: null
+      })
+
+      const result = await getPromptAnalysisForOwner('analysis-123', 'owner-123', 'different-user')
+      expect(result).toBeNull()
     })
   })
 
@@ -94,15 +113,17 @@ describe('Supabase Authentication & History Linking Integration', () => {
   })
 
   describe('getPromptAnalysesForUser history combined fetch', () => {
-    it('queries combined history sorted by creation date', async () => {
+    it('queries combined history sorted by creation date and filters out other users\' private data', async () => {
       const mockRows = [
         { id: '1', user_id: 'user-789', owner_anonymous_id: 'owner-123' },
-        { id: '2', user_id: null, owner_anonymous_id: 'owner-123' }
+        { id: '2', user_id: null, owner_anonymous_id: 'owner-123' },
+        { id: '3', user_id: 'other-user', owner_anonymous_id: 'owner-123' }
       ]
       mockOrder.mockResolvedValue({ data: mockRows, error: null })
 
       const result = await getPromptAnalysesForUser('user-789', 'owner-123')
       expect(result).toHaveLength(2)
+      expect(result.map(r => r.id)).toEqual(['1', '2'])
       expect(mockOr).toHaveBeenCalledWith('user_id.eq.user-789,owner_anonymous_id.eq.owner-123')
       expect(mockOrder).toHaveBeenCalledWith('created_at', { ascending: false })
     })

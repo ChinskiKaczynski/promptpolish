@@ -1,6 +1,7 @@
 import 'server-only'
+import { getUserProfile } from '../supabase/queries'
 
-export type PlanSlug = 'free' | 'pro'
+export type PlanSlug = 'anonymous' | 'free' | 'pro'
 
 export interface PlanConfig {
   slug: PlanSlug
@@ -14,6 +15,16 @@ export interface PlanConfig {
 }
 
 export const PLAN_LIMITS: Record<PlanSlug, PlanConfig> = {
+  anonymous: {
+    slug: 'anonymous',
+    name: 'Anonymous',
+    monthlyAnalyses: 10,
+    dailyAbuseLimit: Number(process.env.ANONYMOUS_DAILY_LIMIT || 3),
+    maxPromptChars: 12000,
+    exportMarkdown: false,
+    exportPdf: false,
+    batchAudit: false,
+  },
   free: {
     slug: 'free',
     name: 'Free',
@@ -90,4 +101,13 @@ export function canExportPdf(planSlug: PlanSlug): boolean {
  */
 export function canUseBatchAudit(planSlug: PlanSlug): boolean {
   return PLAN_LIMITS[planSlug].batchAudit
+}
+
+/**
+ * Resolves the plan slug for a user dynamically.
+ */
+export async function getPlanSlugForUser(userId: string | null): Promise<PlanSlug> {
+  if (!userId) return 'anonymous'
+  const profile = await getUserProfile(userId)
+  return profile?.plan_slug === 'pro' ? 'pro' : 'free'
 }

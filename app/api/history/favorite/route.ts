@@ -3,6 +3,8 @@ import { getAuthUser } from '@/lib/identity/auth'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { toggleFavoriteAnalysis } from '@/lib/supabase/queries'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()

@@ -4,6 +4,8 @@ import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { createUserProfile, linkAnonymousAnalyses } from '@/lib/supabase/queries'
 
+export const dynamic = 'force-dynamic'
+
 const AUTH_COOKIE_NAME = 'sb-session'
 
 export async function POST(request: Request) {

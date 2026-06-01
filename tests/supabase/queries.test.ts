@@ -142,10 +142,11 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
   })
 
   describe('getPromptAnalysisForOwner', () => {
-    it('returns private prompt analysis when matching both ID and owner anonymous ID', async () => {
+    it('returns private prompt analysis when owner anonymous ID matches and user_id is null', async () => {
       const mockRecord = {
         id: 'analysis-uuid',
         owner_anonymous_id: 'owner-123',
+        user_id: null,
         input_prompt: 'Secret prompt'
       }
 
@@ -157,7 +158,23 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
       const result = await getPromptAnalysisForOwner('analysis-uuid', 'owner-123')
       expect(result).toEqual(mockRecord)
       expect(mockEq).toHaveBeenCalledWith('id', 'analysis-uuid')
-      expect(mockEq).toHaveBeenCalledWith('owner_anonymous_id', 'owner-123')
+    })
+
+    it('returns null when owner anonymous ID does not match and user_id is null', async () => {
+      const mockRecord = {
+        id: 'analysis-uuid',
+        owner_anonymous_id: 'other-owner',
+        user_id: null,
+        input_prompt: 'Secret prompt'
+      }
+
+      mockMaybeSingle.mockResolvedValue({
+        data: mockRecord,
+        error: null
+      })
+
+      const result = await getPromptAnalysisForOwner('analysis-uuid', 'owner-123')
+      expect(result).toBeNull()
     })
   })
 

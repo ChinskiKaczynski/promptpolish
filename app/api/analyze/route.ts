@@ -16,7 +16,7 @@ import { ProviderError } from '@/lib/ai/provider-errors'
 import { recordProviderError } from '@/lib/monitoring/observability'
 import { serverEnv, checkProductionEnv } from '@/lib/env/server'
 import { hashValue } from '@/lib/rate-limit/hash-ip'
-import { PLAN_LIMITS, canAnalyzePrompt } from '@/lib/plans/config'
+import { PLAN_LIMITS, canAnalyzePrompt, getPlanSlugForUser } from '@/lib/plans/config'
 import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
 
 
@@ -152,13 +152,7 @@ export async function POST(request: Request) {
     }
 
     // 6. Check plan-based daily abuse and monthly usage limits.
-    let planSlug: 'free' | 'pro' = 'free'
-    if (userId) {
-      const profile = await getUserProfile(userId)
-      if (profile?.plan_slug === 'pro') {
-        planSlug = 'pro'
-      }
-    }
+    const planSlug = await getPlanSlugForUser(userId)
 
     const dailyCount = await getUsageCountTodayForUser(ownerAnonymousId, userId)
     const monthlyCount = await getUsageCountThisMonthForUser(ownerAnonymousId, userId)

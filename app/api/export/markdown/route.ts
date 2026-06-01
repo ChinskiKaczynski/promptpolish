@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
-import { getPromptAnalysisForOwner, getUserProfile, createUsageEvent } from '@/lib/supabase/queries'
-import { canExportMarkdown } from '@/lib/plans/config'
+import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
+import { canExportMarkdown, getPlanSlugForUser } from '@/lib/plans/config'
 import type { PlanSlug } from '@/lib/plans/config'
 import type { AnalysisResult } from '@/lib/ai/schemas'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
@@ -28,13 +30,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Strict entitlement check
-    let planSlug: PlanSlug = 'free'
-    if (user) {
-      const profile = await getUserProfile(user.id)
-      if (profile?.plan_slug === 'pro') {
-        planSlug = 'pro'
-      }
-    }
+    const planSlug = await getPlanSlugForUser(user?.id || null)
 
     if (!canExportMarkdown(planSlug)) {
       return new NextResponse('Pro plan required for Markdown export', { status: 403 })

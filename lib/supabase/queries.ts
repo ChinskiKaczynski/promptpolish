@@ -89,25 +89,34 @@ export async function getPromptAnalysisForOwner(
   userId?: string
 ): Promise<PromptAnalysisRow | null> {
   const supabase = getSupabaseAdminClient()
-  let query = supabase
+  const { data, error } = await supabase
     .from('prompt_analyses')
     .select('*')
     .eq('id', id)
     .is('deleted_at', null)
+    .maybeSingle()
 
-  if (userId) {
-    query = query.or(`owner_anonymous_id.eq.${ownerAnonymousId},user_id.eq.${userId}`)
-  } else {
-    query = query.eq('owner_anonymous_id', ownerAnonymousId)
-  }
-
-  const { data, error } = await query.maybeSingle()
-
-  if (error) {
-    console.error('Error fetching prompt analysis for owner:', error)
+  if (error || !data) {
+    if (error) {
+      console.error('Error fetching prompt analysis for owner:', error)
+    }
     return null
   }
-  return data ? (data as unknown as PromptAnalysisRow) : null
+
+  const analysis = data as unknown as PromptAnalysisRow
+
+  // Ownership verification logic
+  if (analysis.user_id) {
+    if (analysis.user_id !== userId) {
+      return null // Access Denied
+    }
+  } else {
+    if (analysis.owner_anonymous_id !== ownerAnonymousId) {
+      return null // Access Denied
+    }
+  }
+
+  return analysis
 }
 
 /**
@@ -176,7 +185,16 @@ export async function getPromptAnalysesForUser(
     console.error('Error fetching prompt analyses for user:', error)
     return []
   }
-  return (data ?? []) as unknown as PromptAnalysisRow[]
+
+  const rows = (data ?? []) as unknown as PromptAnalysisRow[]
+
+  // Post-filter to prevent cross-user leakage on shared owner_anonymous_id session
+  return rows.filter(row => {
+    if (row.user_id) {
+      return row.user_id === userId
+    }
+    return row.owner_anonymous_id === ownerAnonymousId
+  })
 }
 
 /**
@@ -467,26 +485,23 @@ export async function getUsageCountThisMonthForUser(
 
 /**
  * Soft deletes a prompt analysis by updating deleted_at = now().
- * Enforces ownership check directly in the database.
+ * Enforces ownership check first.
  */
 export async function softDeleteAnalysis(
   id: string,
   ownerAnonymousId: string,
   userId?: string
 ): Promise<boolean> {
+  const record = await getPromptAnalysisForOwner(id, ownerAnonymousId, userId)
+  if (!record) return false
+
   const supabase = getSupabaseAdminClient()
-  let query = supabase
+  const { data, error } = await supabase
     .from('prompt_analyses')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
-
-  if (userId) {
-    query = query.or(`owner_anonymous_id.eq.${ownerAnonymousId},user_id.eq.${userId}`)
-  } else {
-    query = query.eq('owner_anonymous_id', ownerAnonymousId)
-  }
-
-  const { data, error } = await query.select('id').maybeSingle()
+    .select('id')
+    .maybeSingle()
 
   const typedData = data as unknown as { id: string } | null
 
@@ -499,7 +514,7 @@ export async function softDeleteAnalysis(
 
 /**
  * Toggles the favorite flag on a prompt analysis.
- * Enforces ownership check directly in the database.
+ * Enforces ownership check first.
  */
 export async function toggleFavoriteAnalysis(
   id: string,
@@ -507,19 +522,16 @@ export async function toggleFavoriteAnalysis(
   userId: string | undefined,
   isFavorite: boolean
 ): Promise<boolean> {
+  const record = await getPromptAnalysisForOwner(id, ownerAnonymousId, userId)
+  if (!record) return false
+
   const supabase = getSupabaseAdminClient()
-  let query = supabase
+  const { data, error } = await supabase
     .from('prompt_analyses')
     .update({ is_favorite: isFavorite })
     .eq('id', id)
-
-  if (userId) {
-    query = query.or(`owner_anonymous_id.eq.${ownerAnonymousId},user_id.eq.${userId}`)
-  } else {
-    query = query.eq('owner_anonymous_id', ownerAnonymousId)
-  }
-
-  const { data, error } = await query.select('id').maybeSingle()
+    .select('id')
+    .maybeSingle()
 
   const typedData = data as unknown as { id: string } | null
 

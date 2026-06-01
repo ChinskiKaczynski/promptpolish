@@ -54,27 +54,31 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
 
   describe('toggleFavoriteAnalysis mutation', () => {
     it('performs SQL update to set is_favorite status under correct ownership', async () => {
-      mockMaybeSingle.mockResolvedValue({ data: { id: 'analysis-123' }, error: null })
+      mockMaybeSingle
+        .mockResolvedValueOnce({ data: { id: 'analysis-123', owner_anonymous_id: 'owner-123', user_id: 'user-789' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'analysis-123' }, error: null })
 
       const result = await toggleFavoriteAnalysis('analysis-123', 'owner-123', 'user-789', true)
       expect(result).toBe(true)
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('prompt_analyses')
       expect(mockUpdate).toHaveBeenCalledWith({ is_favorite: true })
-      expect(mockEq).toHaveBeenCalledWith('id', 'analysis-123')
-      expect(mockOr).toHaveBeenCalledWith('owner_anonymous_id.eq.owner-123,user_id.eq.user-789')
+      expect(mockEq).toHaveBeenNthCalledWith(1, 'id', 'analysis-123')
+      expect(mockEq).toHaveBeenNthCalledWith(2, 'id', 'analysis-123')
     })
   })
 
   describe('softDeleteAnalysis mutation', () => {
     it('performs SQL update to set deleted_at status under correct ownership', async () => {
-      mockMaybeSingle.mockResolvedValue({ data: { id: 'analysis-123' }, error: null })
+      mockMaybeSingle
+        .mockResolvedValueOnce({ data: { id: 'analysis-123', owner_anonymous_id: 'owner-123', user_id: 'user-789' }, error: null })
+        .mockResolvedValueOnce({ data: { id: 'analysis-123' }, error: null })
 
       const result = await softDeleteAnalysis('analysis-123', 'owner-123', 'user-789')
       expect(result).toBe(true)
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('prompt_analyses')
       expect(mockUpdate).toHaveBeenCalledWith({ deleted_at: expect.any(String) })
-      expect(mockEq).toHaveBeenCalledWith('id', 'analysis-123')
-      expect(mockOr).toHaveBeenCalledWith('owner_anonymous_id.eq.owner-123,user_id.eq.user-789')
+      expect(mockEq).toHaveBeenNthCalledWith(1, 'id', 'analysis-123')
+      expect(mockEq).toHaveBeenNthCalledWith(2, 'id', 'analysis-123')
     })
   })
 

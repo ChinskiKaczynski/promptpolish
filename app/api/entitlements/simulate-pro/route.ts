@@ -2,11 +2,22 @@ import { NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST() {
   try {
     const user = await getAuthUser()
     if (!user) {
       return new NextResponse('Unauthorized', { status: 401 })
+    }
+
+    // Pro simulation security gate
+    const isDev = process.env.NODE_ENV === 'development'
+    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase())
+    const isAdmin = !!(user.email && adminEmails.includes(user.email.toLowerCase()))
+
+    if (!isDev && !isAdmin) {
+      return new NextResponse('Forbidden: Pro simulation is restricted to administrators and local testing.', { status: 403 })
     }
 
     const profile = await getUserProfile(user.id)
