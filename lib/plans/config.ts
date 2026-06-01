@@ -105,9 +105,19 @@ export function canUseBatchAudit(planSlug: PlanSlug): boolean {
 
 /**
  * Resolves the plan slug for a user dynamically.
+ *
+ * Resolution strategy:
+ * - If STRIPE_ENABLED !== 'true': reads user_profiles.plan_slug directly (no subscription query).
+ *   This is the safe path for beta/simulated-pro mode — avoids querying the subscriptions table
+ *   before Stripe is active, preventing PGRST205 errors.
+ * - If STRIPE_ENABLED === 'true': also reads user_profiles.plan_slug. The authoritative plan
+ *   slug is always kept in sync with the subscription by the Stripe webhook handler, so reading
+ *   profile is sufficient and avoids double round-trips for every request.
  */
 export async function getPlanSlugForUser(userId: string | null): Promise<PlanSlug> {
   if (!userId) return 'anonymous'
   const profile = await getUserProfile(userId)
-  return profile?.plan_slug === 'pro' ? 'pro' : 'free'
+  return (profile?.plan_slug === 'pro' || profile?.plan_slug === 'free')
+    ? profile.plan_slug
+    : 'free'
 }

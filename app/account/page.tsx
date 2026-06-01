@@ -31,8 +31,11 @@ export default async function AccountPage() {
   const ownerAnonymousId = await getOwnerIdFromCookies()
   const history = await getPromptAnalysesForUser(user.id, ownerAnonymousId || '')
 
-  // 4. Fetch subscription mapping from the database
-  const subscription = await getSubscriptionByUserId(user.id)
+  // 4. Fetch subscription only when Stripe is active — avoids PGRST205 when billing tables
+  //    are absent and prevents simulated Pro from visually reverting to FREE.
+  const stripeEnabled = process.env.STRIPE_ENABLED === 'true'
+  const subscription = stripeEnabled ? await getSubscriptionByUserId(user.id) : null
+
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50/50 selection:bg-indigo-100 antialiased font-sans">
@@ -97,27 +100,8 @@ export default async function AccountPage() {
             Subskrypcja i Rozliczenia
           </h3>
 
-          {!subscription ? (
-            /* Free Tier Upgrade Prompt */
-            <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-2 w-2 rounded-full bg-slate-300" />
-                  <p className="text-sm font-bold text-slate-800">Korzystasz z bezpłatnego planu Free</p>
-                </div>
-                <p className="text-xs text-slate-500 max-w-xl">
-                  Twój limit to 20 analiz miesięcznie bez możliwości eksportu do PDF/Markdown oraz zbiorczego audytu promptów. Odblokuj pełne możliwości platformy, przechodząc na plan Pro.
-                </p>
-              </div>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer shrink-0"
-              >
-                Ulepsz do Pro
-              </Link>
-            </div>
-          ) : (
-            /* Stripe Subscription Details */
+          {subscription ? (
+            /* Stripe Subscription Details — shown only when STRIPE_ENABLED=true and row exists */
             <div className="mt-6 space-y-6">
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
@@ -199,6 +183,44 @@ export default async function AccountPage() {
                   <PortalButton lang="pl" />
                 </div>
               </div>
+            </div>
+          ) : profile?.plan_slug === 'pro' ? (
+            /* Simulated Pro — plan is pro but Stripe is not yet active (beta / developer mode) */
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+                  <p className="text-sm font-bold text-slate-800">Dostęp Pro aktywny (Faza Beta)</p>
+                </div>
+                <p className="text-xs text-slate-500 max-w-xl">
+                  Korzystasz z dostępu Pro w ramach zamkniętych testów beta. Płatności Stripe zostaną aktywowane wkrótce — do tego czasu wszystkie funkcje Pro są dostępne bez opłat.
+                </p>
+              </div>
+              <div className="rounded-2xl border-2 border-indigo-500/30 bg-indigo-50 px-4 py-2.5 text-center shadow-sm shrink-0">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 block">Status</span>
+                <span className="mt-1 text-xs font-black bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent uppercase tracking-wide block">
+                  Beta Pro
+                </span>
+              </div>
+            </div>
+          ) : (
+            /* Free Tier Upgrade Prompt */
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-2 w-2 rounded-full bg-slate-300" />
+                  <p className="text-sm font-bold text-slate-800">Korzystasz z bezpłatnego planu Free</p>
+                </div>
+                <p className="text-xs text-slate-500 max-w-xl">
+                  Twój limit to 20 analiz miesięcznie bez możliwości eksportu do PDF/Markdown oraz zbiorczego audytu promptów. Odblokuj pełne możliwości platformy, przechodząc na plan Pro.
+                </p>
+              </div>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+              >
+                Ulepsz do Pro
+              </Link>
             </div>
           )}
         </div>
