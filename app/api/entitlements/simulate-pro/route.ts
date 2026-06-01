@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/identity/auth'
-import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
+import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,24 +26,34 @@ export async function POST() {
       }
     }
 
-    const profile = await getUserProfile(user.id)
-    const currentPlan = profile?.plan_slug || 'free'
-    const nextPlan = currentPlan === 'pro' ? 'free' : 'pro'
+    // Always set plan_slug to "pro" — no toggle behaviour.
+    const supabase = getSupabaseAdminClient()
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .upsert(
+        {
+          user_id: user.id,
+          email: user.email ?? '',
+          display_name:
+            (user.user_metadata?.display_name as string | undefined) ??
+            user.email?.split('@')[0] ??
+            null,
+          plan_slug: 'pro',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id' }
+      )
+      .select('user_id,email,plan_slug')
+      .single()
 
-    const updated = await createUserProfile({
-      user_id: user.id,
-      email: user.email || '',
-      display_name: profile?.display_name || user.user_metadata?.display_name || user.email?.split('@')[0] || null,
-      plan_slug: nextPlan
-    })
-
-    if (!updated) {
+    if (error || !data || data.plan_slug !== 'pro') {
+      console.error('simulate-pro: DB upsert failed or plan_slug mismatch', error)
       return NextResponse.json({ error: 'Could not update entitlement' }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, plan: nextPlan }, { status: 200 })
+    return NextResponse.json({ ok: true, plan: 'pro' }, { status: 200 })
   } catch (error) {
-    console.error('Failed to toggle simulated plan:', error)
+    console.error('Failed to simulate pro plan:', error)
     return NextResponse.json({ error: 'Could not update entitlement' }, { status: 500 })
   }
 }
