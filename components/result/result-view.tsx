@@ -286,7 +286,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
               {isPublicMode ? 'Publiczny raport' : 'Prywatny audyt'}
             </span>
           </div>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Raport Audytu Promptu</h1>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Raport audytu promptu</h1>
         </div>
         <div className="flex flex-wrap gap-3">
           <button
@@ -384,11 +384,6 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                 Ten audyt ma charakter ogólny. Przed użyciem promptu w krytycznym procesie zweryfikuj wynik samodzielnie.
               </p>
             </div>
-          </div>
-
-          <div className="mt-6 border-t border-slate-100 pt-4 flex flex-wrap gap-y-2 justify-between text-xs text-slate-500">
-            <span>Typ audytu: <strong>Standard</strong></span>
-            <span>Tryb: <strong>Automatyczny</strong></span>
           </div>
         </div>
       </div>
@@ -585,7 +580,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                <span>Kopiuj kod</span>
+                <span>Kopiuj prompt</span>
               </>
             )}
           </button>

@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 const benefits = [
   {
-    title: 'Precyzyjny Wynik 0–100',
+    title: 'Precyzyjny wynik 0–100',
     description: 'Koniec z zgadywaniem. Otrzymasz obiektywną ocenę promptu na podstawie 4 inżynieryjnych kryteriów: jasności roli, głębokości kontekstu, definicji ograniczeń oraz formatu wyjściowego.',
     badge: 'WYNIK I METRYKI',
     icon: (
@@ -12,7 +12,7 @@ const benefits = [
     )
   },
   {
-    title: 'Głęboka Diagnoza Słabości',
+    title: 'Głęboka diagnoza słabości',
     description: 'System automatycznie wskaże 3 najważniejsze luki w Twojej instrukcji, wyjaśni dlaczego mogą one wprowadzać model w błąd i zaproponuje natychmiastowe kroki naprawcze.',
     badge: 'DIAGNOZA I KRYTYKA',
     icon: (
@@ -22,7 +22,7 @@ const benefits = [
     )
   },
   {
-    title: 'Ulepszona Wersja Promptu',
+    title: 'Ulepszona wersja promptu',
     description: 'Otrzymasz zrestrukturyzowany, profesjonalnie zredagowany prompt gotowy do skopiowania jednym kliknięciem. Zachowujemy Twoją intencję, drastycznie podnosząc precyzję modelu.',
     badge: 'GOTOWA WERSJA PROMPTU',
     icon: (
@@ -107,7 +107,7 @@ export default async function HomePage() {
         {/* Hero Section */}
         <section className="relative overflow-hidden px-6 py-20 lg:py-28">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(45rem_50rem_at_top,theme(colors.indigo.50),white)] opacity-70" />
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-6xl">
             <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/50 px-3.5 py-1 text-xs font-medium text-indigo-700">
@@ -182,7 +182,7 @@ export default async function HomePage() {
 
         {/* Safety Warning Preflight Section */}
         <section className="px-6 py-6">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-6xl">
             <div className="rounded-3xl border border-amber-200 bg-amber-50/30 p-6 sm:p-8 shadow-sm">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
@@ -205,7 +205,7 @@ export default async function HomePage() {
         </section>
 
         {/* Benefits Section */}
-        <section id="features" className="mx-auto max-w-5xl px-6 py-20">
+        <section id="features" className="mx-auto max-w-6xl px-6 py-20">
           <div className="text-center">
             <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600">Możliwości Narzędzia</h2>
             <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
@@ -234,7 +234,7 @@ export default async function HomePage() {
 
         {/* Target Users Section */}
         <section className="bg-slate-100/50 border-y border-slate-200/50 px-6 py-20">
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto max-w-6xl">
             <div className="text-center">
               <h2 className="text-xs font-bold uppercase tracking-widest text-violet-600">Dla Kogo?</h2>
               <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
@@ -257,7 +257,7 @@ export default async function HomePage() {
         </section>
 
         {/* How It Works (Flow Explanation) Section */}
-        <section className="mx-auto max-w-5xl px-6 py-20 lg:py-28">
+        <section className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
           <div className="text-center">
             <h2 className="text-xs font-bold uppercase tracking-widest text-blue-600">Proces</h2>
             <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
