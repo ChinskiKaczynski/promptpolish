@@ -45,12 +45,12 @@ const targetUsers = [
     bg: 'bg-violet-50/50 hover:bg-violet-50 border-violet-100'
   },
   {
-    role: 'Deweloperzy & AI Engineers',
+    role: 'Developerzy i zespoły AI',
     benefit: 'Testowanie i standaryzacja promptów systemowych (system instructions) przed wdrożeniem ich do kodu aplikacji lub chatbotów produkcyjnych.',
     bg: 'bg-blue-50/50 hover:bg-blue-50 border-blue-100'
   },
   {
-    role: 'Zespoły Product & E-commerce',
+    role: 'Zespoły produktu i e-commerce',
     benefit: 'Podnoszenie kompetencji wewnętrznych zespołów poprzez proste, przejrzyste narzędzie do nauki właściwej struktury promptowania.',
     bg: 'bg-slate-50 hover:bg-slate-100 border-slate-200'
   }
@@ -59,22 +59,22 @@ const targetUsers = [
 const steps = [
   {
     num: '01',
-    title: 'Wklejasz Prompt',
+    title: 'Wklejasz prompt',
     desc: 'Wprowadzasz swoją instrukcję, opcjonalnie definiując cel, typ zadania lub oczekiwany format.'
   },
   {
     num: '02',
-    title: 'Lokalny Preflight',
+    title: 'Lokalny skan bezpieczeństwa',
     desc: 'Nasz skaner natychmiast analizuje tekst w poszukiwaniu kluczy API, tokenów lub haseł, chroniąc Twoje dane.'
   },
   {
     num: '03',
-    title: 'Inżynieryjny Audyt',
+    title: 'Audyt jakości promptu',
     desc: 'Model analizuje instrukcję pod kątem 4 fundamentalnych filarów inżynierii promptów.'
   },
   {
     num: '04',
-    title: 'Copy-Ready Output',
+    title: 'Gotowy wynik',
     desc: 'Odbierasz ustrukturyzowany raport, punktację, listę zmian oraz gotowy do wdrożenia, ulepszony prompt.'
   }
 ]
@@ -124,7 +124,7 @@ export default async function HomePage() {
                   </span>
                 </h1>
                 <p className="mt-6 text-lg leading-relaxed text-slate-600">
-                  Wklej swój prompt, wybierz język i profil modelu. Nasz system natychmiast wygeneruje obiektywny audyt 0–100, zdiagnozuje słabe punkty i dostarczy ustrukturyzowaną, gotową do skopiowania wersję instrukcji.
+                  Wklej swój prompt, wybierz język i tryb audytu. System oceni instrukcję, wskaże słabe punkty i wygeneruje poprawioną wersję gotową do skopiowania.
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Link className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all" href="/analyze">
@@ -299,10 +299,10 @@ export default async function HomePage() {
               <span className="text-sm font-bold text-slate-900 tracking-tight">PromptPolish</span>
             </div>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-xs font-semibold text-slate-500">
-              <Link className="hover:text-indigo-600 transition" href="/privacy">Polityka Prywatności</Link>
-              <Link className="hover:text-indigo-600 transition" href="/terms">Regulamin Serwisu</Link>
+              <Link className="hover:text-indigo-600 transition" href="/privacy">Polityka prywatności</Link>
+              <Link className="hover:text-indigo-600 transition" href="/terms">Regulamin</Link>
               <span className="text-slate-300">|</span>
-              <span className="font-normal text-slate-400">© {new Date().getFullYear()} PromptPolish. Wszelkie prawa zastrzeżone.</span>
+              <span className="font-normal text-slate-400">© 2026 PromptPolish. Wszystkie prawa zastrzeżone.</span>
             </div>
           </div>
         </div>
