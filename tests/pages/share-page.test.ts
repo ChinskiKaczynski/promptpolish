@@ -64,9 +64,11 @@ describe('SharedResultPage', () => {
       expect(notFound).not.toHaveBeenCalled()
       expect(getSharedPromptAnalysis).toHaveBeenCalledWith('valid-share-token-abc')
 
-      // Page should wrap in <main> with ResultView
-      expect(jsx.type).toBe('main')
-      const child = jsx.props.children
+      // Page should wrap in div and main with ResultView
+      expect(jsx.type).toBe('div')
+      const mainElement = jsx.props.children[1]
+      expect(mainElement.type).toBe('main')
+      const child = mainElement.props.children
       expect(child.type).toBe(ResultView)
       expect(child.props.mode).toBe('share')
     })
@@ -77,7 +79,7 @@ describe('SharedResultPage', () => {
       const params = Promise.resolve({ token: 'valid-share-token-abc' })
       const jsx = await SharedResultPage({ params })
 
-      const resultProp = jsx.props.children.props.result
+      const resultProp = jsx.props.children[1].props.children.props.result
       expect(resultProp.overallScore).toBe(78)
       expect(resultProp.scoreLevel).toBe('decent')
       expect(resultProp.improved_prompt).toBe('Please summarize the following contract...')
@@ -89,7 +91,7 @@ describe('SharedResultPage', () => {
       const params = Promise.resolve({ token: 'valid-share-token-abc' })
       const jsx = await SharedResultPage({ params })
 
-      const resultProp = jsx.props.children.props.result
+      const resultProp = jsx.props.children[1].props.children.props.result
       expect(resultProp).not.toHaveProperty('id')
       expect(resultProp).not.toHaveProperty('shareToken')
       expect(resultProp).not.toHaveProperty('isShareEnabled')

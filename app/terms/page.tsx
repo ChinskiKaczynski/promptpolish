@@ -1,23 +1,10 @@
-import Link from 'next/link'
+import { AppHeader } from '@/components/layout/app-header'
+import { AppFooter } from '@/components/layout/app-footer'
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-slate-50/50 text-slate-900 font-sans selection:bg-indigo-100 antialiased">
-      {/* Navigation Header */}
-      <nav className="border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600">
-              <span className="font-bold text-white text-xs">P</span>
-            </div>
-            <span className="text-sm font-bold text-slate-900 tracking-tight">PromptPolish</span>
-          </Link>
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">Anonymous-first MVP</span>
-            <Link href="/" className="hover:text-indigo-600 transition">Powrót</Link>
-          </div>
-        </div>
-      </nav>
+      <AppHeader />
 
       {/* Main Content Area */}
       <main className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
@@ -145,21 +132,7 @@ export default function TermsPage() {
         </article>
       </main>
 
-      {/* Navigation Footer */}
-      <footer className="border-t border-slate-200 bg-white py-12 px-6 mt-16">
-        <div className="mx-auto max-w-5xl flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between text-xs text-slate-500 font-semibold">
-          <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-indigo-600">
-              <span className="font-bold text-white text-[10px]">P</span>
-            </div>
-            <span>PromptPolish</span>
-          </div>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-indigo-600 transition">Polityka Prywatności</Link>
-            <span>© {new Date().getFullYear()} PromptPolish. Wersja robocza MVP.</span>
-          </div>
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   )
 }

@@ -4,6 +4,8 @@ import { ensureUserProfile } from '@/lib/supabase/queries'
 import { PLAN_LIMITS } from '@/lib/plans/config'
 import { CheckoutButton } from '@/components/pricing/checkout-button'
 import { SimulateProButton } from '@/components/pricing/simulate-pro-button'
+import { AppHeader } from '@/components/layout/app-header'
+import { AppFooter } from '@/components/layout/app-footer'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,36 +27,7 @@ export default async function PricingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.12),rgba(255,255,255,0))] text-slate-100 antialiased font-sans pb-16">
-      {/* Navigation Header */}
-      <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20">
-              <span className="font-bold text-white text-base">P</span>
-            </div>
-            <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
-              PromptPolish
-            </span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/analyze"
-              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition active:scale-95 cursor-pointer"
-            >
-              Ulepsz prompt
-            </Link>
-            {user ? (
-              <Link href="/account" className="text-sm font-semibold text-slate-300 hover:text-white">
-                Moje konto
-              </Link>
-            ) : (
-              <Link href="/login" className="text-sm font-semibold text-slate-300 hover:text-white">
-                Zaloguj się
-              </Link>
-            )}
-          </div>
-        </div>
-      </header>
+      <AppHeader theme="dark" />
 
       {/* Main Section */}
       <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-12">
@@ -268,10 +241,7 @@ export default async function PricingPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-8 px-6 text-center text-xs text-slate-600 mt-auto">
-        © {new Date().getFullYear()} PromptPolish. Wszystkie prawa zastrzeżone.
-      </footer>
+      <AppFooter theme="dark" />
     </div>
   )
 }

@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { verifyAdminAccess } from '@/lib/admin/auth'
 import { MetricsDashboard } from '@/components/admin/metrics-dashboard'
+import { AppHeader } from '@/components/layout/app-header'
+import { AppFooter } from '@/components/layout/app-footer'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,5 +42,15 @@ export default async function AdminMetricsPage() {
     )
   }
 
-  return <MetricsDashboard />
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      <AppHeader theme="dark" />
+      
+      <main className="flex-1">
+        <MetricsDashboard />
+      </main>
+
+      <AppFooter theme="dark" />
+    </div>
+  )
 }

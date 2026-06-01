@@ -83,19 +83,19 @@ export function MetricsDashboard() {
   const fmt = (n: number, decimals = 0) => n.toFixed(decimals)
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Header */}
-      <div className="border-b border-slate-800 bg-slate-900/60 backdrop-blur-sm sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
+    <div className="bg-slate-950 text-slate-100">
+      {/* Sub-Header */}
+      <div className="border-b border-slate-900 bg-slate-900/10 py-6">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">
-              <span className="text-violet-400">⬛</span> Admin Metrics
+            <h1 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+              <span className="h-2 w-2 rounded bg-indigo-500" /> Panel Metryk Administratora
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5">Private Beta Dashboard — Read Only</p>
+            <p className="text-xs text-slate-500 mt-0.5">Prywatny panel beta — Tylko do odczytu</p>
           </div>
 
           {/* Window Selector */}
-          <div className="flex items-center gap-1 bg-slate-800/80 rounded-xl p-1 border border-slate-700">
+          <div className="flex items-center gap-1 bg-slate-900 rounded-xl p-1 border border-slate-800">
             {WINDOWS.map((w) => (
               <button
                 key={w.key}
@@ -103,8 +103,8 @@ export function MetricsDashboard() {
                 onClick={() => setWindow(w.key)}
                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   window === w.key
-                    ? 'bg-violet-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                 }`}
               >
                 {w.label}

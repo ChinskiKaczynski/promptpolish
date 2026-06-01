@@ -60,8 +60,10 @@ describe('PrivateResultPage Access Control Orchestrator', () => {
     expect(getPromptAnalysisForOwner).toHaveBeenCalledWith('analysis-uuid', 'owner-cookie-uuid')
     
     // Inspect the returned React Element JSX tree directly
-    expect(jsx.type).toBe('main')
-    const child = jsx.props.children
+    expect(jsx.type).toBe('div')
+    const mainElement = jsx.props.children[1]
+    expect(mainElement.type).toBe('main')
+    const child = mainElement.props.children
     expect(child.type).toBe(ResultView)
     expect(child.props.mode).toBe('private')
     expect(child.props.result).toEqual(

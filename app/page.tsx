@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { AppHeader } from '@/components/layout/app-header'
+import { AppFooter } from '@/components/layout/app-footer'
 
 const benefits = [
   {
@@ -82,25 +84,7 @@ const steps = [
 export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50/30 font-sans text-slate-900 selection:bg-indigo-100 antialiased">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-md shadow-indigo-200">
-              <span className="font-bold text-white text-base">P</span>
-            </div>
-            <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-800 bg-clip-text text-transparent">
-              PromptPolish
-            </span>
-          </div>
-          <div className="flex items-center gap-6 text-sm font-medium text-slate-600">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Działa bez konta</span>
-            <Link className="hover:text-indigo-600 transition" href="/privacy">Prywatność</Link>
-            <Link className="hover:text-indigo-600 transition" href="/terms">Regulamin</Link>
-            <Link className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-1.5 text-xs font-bold text-slate-700 transition" href="/login">Zaloguj się</Link>
-          </div>
-        </div>
-      </nav>
+      <AppHeader />
 
       {/* Main Content */}
       <main className="flex-1">
@@ -288,25 +272,7 @@ export default async function HomePage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-12 px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600">
-                <span className="font-bold text-white text-xs">P</span>
-              </div>
-              <span className="text-sm font-bold text-slate-900 tracking-tight">PromptPolish</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-2 text-xs font-semibold text-slate-500">
-              <Link className="hover:text-indigo-600 transition" href="/privacy">Polityka prywatności</Link>
-              <Link className="hover:text-indigo-600 transition" href="/terms">Regulamin</Link>
-              <span className="text-slate-300">|</span>
-              <span className="font-normal text-slate-400">© 2026 PromptPolish. Wszystkie prawa zastrzeżone.</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <AppFooter />
     </div>
   )
 }

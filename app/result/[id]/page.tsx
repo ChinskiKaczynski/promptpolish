@@ -4,6 +4,8 @@ import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { ResultView } from '@/components/result/result-view'
 import type { AnalysisResult } from '@/lib/ai/schemas'
+import { AppHeader } from '@/components/layout/app-header'
+import { AppFooter } from '@/components/layout/app-footer'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -50,9 +52,14 @@ export default async function PrivateResultPage({ params }: PageProps) {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <ResultView result={mappedResult} mode="private" planSlug={planSlug} />
-    </main>
+    <div className="flex min-h-screen flex-col bg-slate-50/30 selection:bg-indigo-100 antialiased font-sans">
+      <AppHeader />
+      
+      <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-10">
+        <ResultView result={mappedResult} mode="private" planSlug={planSlug} />
+      </main>
+
+      <AppFooter />
+    </div>
   )
 }
-
