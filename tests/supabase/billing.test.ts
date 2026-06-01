@@ -55,6 +55,9 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
     mockEq.mockReturnValue(builder)
 
     vi.mocked(getSupabaseAdminClient).mockReturnValue(mockSupabaseAdmin as unknown as ReturnType<typeof getSupabaseAdminClient>)
+
+    // Ensure STRIPE_ENABLED is active for the test suite to execute queries
+    process.env.STRIPE_ENABLED = 'true'
   })
 
   describe('saveSubscription Entitlement Mappings', () => {

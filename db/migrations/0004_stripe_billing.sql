@@ -45,3 +45,14 @@ create policy "block_client_write_stripe_customer" on public.stripe_customers
 
 create policy "block_client_write_subscription" on public.subscriptions
   for all to public using (false) with check (false);
+
+-- Revoke all permissions from anon/authenticated to keep billing tables completely private to backend service_role
+revoke all on table public.stripe_customers from anon, authenticated;
+revoke all on table public.subscriptions from anon, authenticated;
+
+-- Grant exclusive read/write access to service_role (backend client)
+grant select, insert, update, delete on table public.stripe_customers to service_role;
+grant select, insert, update, delete on table public.subscriptions to service_role;
+
+-- Request schema cache reload to make PostgREST immediately recognize tables
+notify pgrst, 'reload schema';

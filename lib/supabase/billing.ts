@@ -3,11 +3,15 @@ import { getSupabaseAdminClient } from './admin'
 import { getSupabaseServerClient } from './server'
 import { getUserProfile, createUserProfile } from './queries'
 import type { StripeCustomerRow, SubscriptionRow } from './types'
+import { serverEnv } from '../env/server'
 
 /**
  * Fetches the Stripe customer mapping for a user.
  */
 export async function getStripeCustomer(userId: string): Promise<StripeCustomerRow | null> {
+  if (process.env.STRIPE_ENABLED !== 'true') {
+    return null
+  }
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('stripe_customers')
@@ -27,6 +31,9 @@ export async function getStripeCustomer(userId: string): Promise<StripeCustomerR
  * Bypasses RLS writes using the admin client.
  */
 export async function saveStripeCustomer(userId: string, stripeCustomerId: string): Promise<StripeCustomerRow | null> {
+  if (process.env.STRIPE_ENABLED !== 'true') {
+    return null
+  }
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('stripe_customers')
@@ -49,6 +56,9 @@ export async function saveStripeCustomer(userId: string, stripeCustomerId: strin
  * Maps a Stripe customer ID back to a Supabase user ID.
  */
 export async function getUserIdByStripeCustomerId(stripeCustomerId: string): Promise<string | null> {
+  if (process.env.STRIPE_ENABLED !== 'true') {
+    return null
+  }
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('stripe_customers')
@@ -67,6 +77,9 @@ export async function getUserIdByStripeCustomerId(stripeCustomerId: string): Pro
  * Fetches the subscription row for a user.
  */
 export async function getSubscriptionByUserId(userId: string): Promise<SubscriptionRow | null> {
+  if (process.env.STRIPE_ENABLED !== 'true') {
+    return null
+  }
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('subscriptions')
@@ -96,6 +109,9 @@ export async function saveSubscription(insertData: {
   current_period_end: string
   cancel_at_period_end?: boolean
 }): Promise<SubscriptionRow | null> {
+  if (process.env.STRIPE_ENABLED !== 'true') {
+    return null
+  }
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('subscriptions')
@@ -133,6 +149,9 @@ export async function saveSubscription(insertData: {
  * Updates a subscription record to 'canceled' and demotes the user to 'free' tier.
  */
 export async function cancelSubscriptionInDatabase(stripeSubscriptionId: string): Promise<boolean> {
+  if (process.env.STRIPE_ENABLED !== 'true') {
+    return false
+  }
   const supabase = getSupabaseAdminClient()
   
   // Locate the user_id associated with this subscription
