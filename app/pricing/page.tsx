@@ -3,6 +3,7 @@ import { getAuthUser } from '@/lib/identity/auth'
 import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
 import { PLAN_LIMITS } from '@/lib/plans/config'
 import { CheckoutButton } from '@/components/pricing/checkout-button'
+import { SimulateProButton } from '@/components/pricing/simulate-pro-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -219,24 +220,8 @@ export default async function PricingPage() {
                 <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 text-center mb-2">
                   Tryb Deweloperski / Testy Integracyjne
                 </p>
-                {profile?.plan_slug === 'pro' ? (
-                  <form action="/api/entitlements/simulate-pro" method="POST">
-                    <button
-                      type="submit"
-                      className="w-full text-center rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white font-semibold py-2 text-xs border border-slate-800 transition active:scale-[0.98] cursor-pointer"
-                    >
-                      Wyłącz Symulację Pro (Wróć do Free)
-                    </button>
-                  </form>
-                ) : user ? (
-                  <form action="/api/entitlements/simulate-pro" method="POST">
-                    <button
-                      type="submit"
-                      className="w-full text-center rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white font-semibold py-2 text-xs border border-slate-800 transition active:scale-[0.98] cursor-pointer"
-                    >
-                      Aktywuj Symulację Pro (Wersja Demo)
-                    </button>
-                  </form>
+                {user ? (
+                  <SimulateProButton isPro={profile?.plan_slug === 'pro'} />
                 ) : (
                   <Link
                     href="/login"
