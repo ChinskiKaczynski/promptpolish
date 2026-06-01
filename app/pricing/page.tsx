@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
-import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
+import { getUserProfile, ensureUserProfile } from '@/lib/supabase/queries'
 import { PLAN_LIMITS } from '@/lib/plans/config'
 import { CheckoutButton } from '@/components/pricing/checkout-button'
 import { SimulateProButton } from '@/components/pricing/simulate-pro-button'
@@ -12,15 +12,11 @@ export default async function PricingPage() {
   let profile = null
 
   if (user) {
-    profile = await getUserProfile(user.id)
-    if (!profile) {
-      profile = await createUserProfile({
-        user_id: user.id,
-        email: user.email || '',
-        display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || null,
-        plan_slug: 'free'
-      })
-    }
+    profile = await ensureUserProfile({
+      user_id: user.id,
+      email: user.email || '',
+      display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || null,
+    })
   }
 
   const freeLimits = PLAN_LIMITS.free

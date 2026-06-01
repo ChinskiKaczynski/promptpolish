@@ -5,7 +5,7 @@ vi.mock('server-only', () => ({}))
 
 import { saveSubscription, cancelSubscriptionInDatabase } from '@/lib/supabase/billing'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
-import { getUserProfile, createUserProfile } from '@/lib/supabase/queries'
+import { getUserProfile, setUserPlanSlug } from '@/lib/supabase/queries'
 
 // Mock admin client
 vi.mock('@/lib/supabase/admin', () => ({
@@ -15,7 +15,7 @@ vi.mock('@/lib/supabase/admin', () => ({
 // Mock query helpers
 vi.mock('@/lib/supabase/queries', () => ({
   getUserProfile: vi.fn(),
-  createUserProfile: vi.fn()
+  setUserPlanSlug: vi.fn()
 }))
 
 describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
@@ -36,6 +36,16 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    // Default implementation for setUserPlanSlug mock to prevent failures in saveSubscription check
+    vi.mocked(setUserPlanSlug).mockImplementation(async (profile) => ({
+      user_id: profile.user_id,
+      email: profile.email,
+      display_name: profile.display_name ?? null,
+      plan_slug: profile.plan_slug,
+      created_at: '',
+      updated_at: '',
+    }))
 
     const builder: Record<string, unknown> & {
       single: typeof mockSingle
@@ -92,7 +102,7 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
       })
 
       // Must sync to 'pro' on user profile
-      expect(createUserProfile).toHaveBeenCalledWith(
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: 'user-uuid-123',
           plan_slug: 'pro'
@@ -108,7 +118,7 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
         status: 'trialing'
       })
 
-      expect(createUserProfile).toHaveBeenCalledWith(
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
         expect.objectContaining({
           plan_slug: 'pro'
         })
@@ -123,7 +133,7 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
         status: 'past_due'
       })
 
-      expect(createUserProfile).toHaveBeenCalledWith(
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
         expect.objectContaining({
           plan_slug: 'pro'
         })
@@ -138,7 +148,7 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
         status: 'unpaid'
       })
 
-      expect(createUserProfile).toHaveBeenCalledWith(
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
         expect.objectContaining({
           plan_slug: 'free'
         })
@@ -153,7 +163,7 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
         status: 'canceled'
       })
 
-      expect(createUserProfile).toHaveBeenCalledWith(
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
         expect.objectContaining({
           plan_slug: 'free'
         })
@@ -168,7 +178,7 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
         status: 'active'
       })
 
-      expect(createUserProfile).toHaveBeenCalledWith(
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
         expect.objectContaining({
           plan_slug: 'free'
         })
@@ -195,7 +205,7 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
           status: 'canceled'
         })
       )
-      expect(createUserProfile).toHaveBeenCalledWith(
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: 'user-uuid-123',
           plan_slug: 'free'
