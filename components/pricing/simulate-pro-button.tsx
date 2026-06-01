@@ -12,7 +12,7 @@ export function SimulateProButton({ isPro }: SimulateProButtonProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleToggle = async () => {
+  const handleActivate = async () => {
     setLoading(true)
     setError(null)
 
@@ -26,10 +26,10 @@ export function SimulateProButton({ isPro }: SimulateProButtonProps) {
         router.refresh()
       } else {
         const data = await response.json().catch(() => ({}))
-        setError(data.error || 'Failed to toggle Pro simulation')
+        setError(data.error || 'Failed to activate Pro simulation')
       }
     } catch (err) {
-      console.error('Error toggling Pro simulation:', err)
+      console.error('Error activating Pro simulation:', err)
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
@@ -39,14 +39,14 @@ export function SimulateProButton({ isPro }: SimulateProButtonProps) {
   return (
     <div className="space-y-1.5 w-full">
       <button
-        onClick={handleToggle}
+        onClick={handleActivate}
         disabled={loading}
         className="w-full text-center rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white font-semibold py-2 text-xs border border-slate-800 transition active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading
           ? 'Przetwarzanie...'
           : isPro
-          ? 'Wyłącz Symulację Pro (Wróć do Free)'
+          ? 'Pro aktywne — odśwież status'
           : 'Aktywuj Symulację Pro (Wersja Demo)'}
       </button>
       {error && (

@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function PricingPage() {
   const user = await getAuthUser()
+  const stripeEnabled = process.env.STRIPE_ENABLED === 'true'
   let profile = null
 
   if (user) {
@@ -193,9 +194,13 @@ export default async function PricingPage() {
                     Przejdź do panelu konta
                   </Link>
                 </div>
-              ) : user ? (
+              ) : user && stripeEnabled ? (
                 <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <CheckoutButton lang="pl" />
+                </div>
+              ) : user ? (
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-center text-xs font-semibold text-amber-300">
+                  Stripe jest wyłączony w becie. Do testów użyj symulacji Pro poniżej.
                 </div>
               ) : (
                 <div className="space-y-3">

@@ -7,6 +7,10 @@ import { createUsageEvent } from '@/lib/supabase/queries'
 
 
 export async function POST(request: Request) {
+  if (process.env.STRIPE_ENABLED !== 'true') {
+    return new NextResponse('Stripe webhook disabled', { status: 200 })
+  }
+
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
   const stripePriceIdPro = process.env.STRIPE_PRICE_ID_PRO

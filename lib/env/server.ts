@@ -23,7 +23,8 @@ export const serverEnvSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_ID_PRO: z.string().optional(),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
-  STRIPE_ENABLED: z.coerce.boolean().default(false)
+  STRIPE_ENABLED: z.coerce.boolean().default(false),
+  ADMIN_EMAILS: z.string().optional()
 })
 
 export const serverEnv = serverEnvSchema.parse(process.env)

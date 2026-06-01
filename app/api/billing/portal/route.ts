@@ -8,6 +8,16 @@ import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 
 export async function POST() {
   try {
+    if (process.env.STRIPE_ENABLED !== 'true') {
+      return NextResponse.json(
+        {
+          error: 'billing_disabled',
+          message: 'Płatności Stripe są wyłączone w trybie beta.'
+        },
+        { status: 403 }
+      )
+    }
+
     // Ensure production environment is correctly configured
     const envCheck = checkProductionEnv()
     if (!envCheck.valid) {
