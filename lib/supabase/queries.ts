@@ -216,7 +216,11 @@ export async function getUserProfile(userId: string): Promise<UserProfileRow | n
 }
 
 /**
- * Creates or updates the user profile when a user logs in or registers.
+ * Legacy helper for direct profile upserts.
+ *
+ * Do not use this for auth/session sync because it may overwrite plan_slug.
+ * Prefer ensureUserProfile() for login/session flows.
+ * Prefer setUserPlanSlug() for entitlement/billing changes.
  */
 export async function createUserProfile(
   profile: Database['public']['Tables']['user_profiles']['Insert']
@@ -224,7 +228,9 @@ export async function createUserProfile(
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('user_profiles')
-    .upsert(profile)
+    .upsert(profile, {
+      onConflict: 'user_id',
+    })
     .select()
     .single()
 
@@ -233,6 +239,127 @@ export async function createUserProfile(
     return null
   }
   return data ? (data as unknown as UserProfileRow) : null
+}
+
+/**
+ * Ensures a user profile exists without changing the user's plan.
+ *
+ * Use this for auth/session sync.
+ * It creates a Free profile only if the profile does not exist yet.
+ * If the profile already exists, it updates safe identity fields only
+ * and preserves the current plan_slug.
+ */
+export async function ensureUserProfile(profile: {
+  user_id: string
+  email: string
+  display_name?: string | null
+}): Promise<UserProfileRow | null> {
+  const supabase = getSupabaseAdminClient()
+  const existing = await getUserProfile(profile.user_id)
+
+  const fallbackDisplayName = profile.email
+    ? profile.email.split('@')[0]
+    : null
+
+  const displayName =
+    profile.display_name ??
+    existing?.display_name ??
+    fallbackDisplayName
+
+  if (existing) {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .update({
+        email: profile.email,
+        display_name: displayName,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', profile.user_id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error ensuring existing user profile:', error)
+      return null
+    }
+
+    return data ? (data as unknown as UserProfileRow) : null
+  }
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .insert({
+      user_id: profile.user_id,
+      email: profile.email,
+      display_name: displayName,
+      plan_slug: 'free',
+      updated_at: new Date().toISOString(),
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating initial user profile:', error)
+    return null
+  }
+
+  return data ? (data as unknown as UserProfileRow) : null
+}
+
+/**
+ * Updates a user's plan explicitly.
+ *
+ * Use this only from trusted server-side entitlement/billing code.
+ * Auth/session sync must never call this.
+ */
+export async function setUserPlanSlug(profile: {
+  user_id: string
+  email: string
+  display_name?: string | null
+  plan_slug: 'free' | 'pro'
+}): Promise<UserProfileRow | null> {
+  const supabase = getSupabaseAdminClient()
+  const existing = await getUserProfile(profile.user_id)
+
+  const fallbackDisplayName = profile.email
+    ? profile.email.split('@')[0]
+    : null
+
+  const displayName =
+    profile.display_name ??
+    existing?.display_name ??
+    fallbackDisplayName
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .upsert(
+      {
+        user_id: profile.user_id,
+        email: profile.email,
+        display_name: displayName,
+        plan_slug: profile.plan_slug,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: 'user_id',
+      },
+    )
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error setting user plan slug:', error)
+    return null
+  }
+
+  const row = data ? (data as unknown as UserProfileRow) : null
+
+  if (!row || row.plan_slug !== profile.plan_slug) {
+    console.error('User plan slug update did not persist expected value.')
+    return null
+  }
+
+  return row
 }
 
 /**

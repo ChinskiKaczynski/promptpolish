@@ -1,18 +1,20 @@
 import 'server-only'
 import { getSupabaseAdminClient } from './admin'
-import { getSupabaseServerClient } from './server'
-import { getUserProfile, createUserProfile } from './queries'
+import { getUserProfile, setUserPlanSlug } from './queries'
 import type { StripeCustomerRow, SubscriptionRow } from './types'
-import { serverEnv } from '../env/server'
 
 /**
  * Fetches the Stripe customer mapping for a user.
  */
-export async function getStripeCustomer(userId: string): Promise<StripeCustomerRow | null> {
+export async function getStripeCustomer(
+  userId: string,
+): Promise<StripeCustomerRow | null> {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return null
   }
+
   const supabase = getSupabaseAdminClient()
+
   const { data, error } = await supabase
     .from('stripe_customers')
     .select('*')
@@ -23,6 +25,7 @@ export async function getStripeCustomer(userId: string): Promise<StripeCustomerR
     console.error('Error fetching Stripe customer:', error)
     return null
   }
+
   return data ? (data as unknown as StripeCustomerRow) : null
 }
 
@@ -30,18 +33,28 @@ export async function getStripeCustomer(userId: string): Promise<StripeCustomerR
  * Saves a Stripe customer mapping for a user.
  * Bypasses RLS writes using the admin client.
  */
-export async function saveStripeCustomer(userId: string, stripeCustomerId: string): Promise<StripeCustomerRow | null> {
+export async function saveStripeCustomer(
+  userId: string,
+  stripeCustomerId: string,
+): Promise<StripeCustomerRow | null> {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return null
   }
+
   const supabase = getSupabaseAdminClient()
+
   const { data, error } = await supabase
     .from('stripe_customers')
-    .upsert({
-      user_id: userId,
-      stripe_customer_id: stripeCustomerId,
-      updated_at: new Date().toISOString()
-    })
+    .upsert(
+      {
+        user_id: userId,
+        stripe_customer_id: stripeCustomerId,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: 'user_id',
+      },
+    )
     .select()
     .single()
 
@@ -49,17 +62,22 @@ export async function saveStripeCustomer(userId: string, stripeCustomerId: strin
     console.error('Error saving Stripe customer mapping:', error)
     return null
   }
+
   return data ? (data as unknown as StripeCustomerRow) : null
 }
 
 /**
  * Maps a Stripe customer ID back to a Supabase user ID.
  */
-export async function getUserIdByStripeCustomerId(stripeCustomerId: string): Promise<string | null> {
+export async function getUserIdByStripeCustomerId(
+  stripeCustomerId: string,
+): Promise<string | null> {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return null
   }
+
   const supabase = getSupabaseAdminClient()
+
   const { data, error } = await supabase
     .from('stripe_customers')
     .select('user_id')
@@ -70,17 +88,22 @@ export async function getUserIdByStripeCustomerId(stripeCustomerId: string): Pro
     console.error('Error matching Stripe customer ID to user ID:', error)
     return null
   }
+
   return data ? (data as { user_id: string }).user_id : null
 }
 
 /**
  * Fetches the subscription row for a user.
  */
-export async function getSubscriptionByUserId(userId: string): Promise<SubscriptionRow | null> {
+export async function getSubscriptionByUserId(
+  userId: string,
+): Promise<SubscriptionRow | null> {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return null
   }
+
   const supabase = getSupabaseAdminClient()
+
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')
@@ -91,12 +114,13 @@ export async function getSubscriptionByUserId(userId: string): Promise<Subscript
     console.error('Error fetching subscription by user ID:', error)
     return null
   }
+
   return data ? (data as unknown as SubscriptionRow) : null
 }
 
 /**
- * Upserts a subscription record and automatically synchronizes the plan_slug
- * in the user's profile. Bypasses client-side RLS write restrictions using the admin client.
+ * Upserts a subscription record and synchronizes the user's plan.
+ * This function should only run when Stripe is enabled.
  */
 export async function saveSubscription(insertData: {
   user_id: string
@@ -112,15 +136,20 @@ export async function saveSubscription(insertData: {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return null
   }
+
   const supabase = getSupabaseAdminClient()
+
   const { data, error } = await supabase
     .from('subscriptions')
-    .upsert({
-      ...insertData,
-      updated_at: new Date().toISOString()
-    }, {
-      onConflict: 'stripe_subscription_id'
-    })
+    .upsert(
+      {
+        ...insertData,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: 'stripe_subscription_id',
+      },
+    )
     .select()
     .single()
 
@@ -129,32 +158,41 @@ export async function saveSubscription(insertData: {
     return null
   }
 
-  // Update user_profiles plan slug immediately
-  // active, trialing, and past_due (grace period) statuses grant Pro entitlements ONLY if the plan_slug is 'pro'
-  const isActive = (insertData.status === 'active' || insertData.status === 'trialing' || insertData.status === 'past_due') && insertData.plan_slug === 'pro'
-  const planSlug = isActive ? 'pro' : 'free'
+  const isActivePro =
+    insertData.plan_slug === 'pro' &&
+    ['active', 'trialing', 'past_due'].includes(insertData.status)
 
+  const resolvedPlanSlug = isActivePro ? 'pro' : 'free'
   const currentProfile = await getUserProfile(insertData.user_id)
-  await createUserProfile({
+
+  const updatedProfile = await setUserPlanSlug({
     user_id: insertData.user_id,
     email: currentProfile?.email || '',
     display_name: currentProfile?.display_name || null,
-    plan_slug: planSlug
+    plan_slug: resolvedPlanSlug,
   })
+
+  if (!updatedProfile || updatedProfile.plan_slug !== resolvedPlanSlug) {
+    console.error('Error syncing user profile plan from subscription.')
+    return null
+  }
 
   return data ? (data as unknown as SubscriptionRow) : null
 }
 
 /**
- * Updates a subscription record to 'canceled' and demotes the user to 'free' tier.
+ * Updates a subscription record to canceled and demotes the user to Free.
+ * This function should only run when Stripe is enabled.
  */
-export async function cancelSubscriptionInDatabase(stripeSubscriptionId: string): Promise<boolean> {
+export async function cancelSubscriptionInDatabase(
+  stripeSubscriptionId: string,
+): Promise<boolean> {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return false
   }
+
   const supabase = getSupabaseAdminClient()
-  
-  // Locate the user_id associated with this subscription
+
   const { data: subData, error: subError } = await supabase
     .from('subscriptions')
     .select('user_id')
@@ -168,12 +206,11 @@ export async function cancelSubscriptionInDatabase(stripeSubscriptionId: string)
 
   const { user_id } = subData as { user_id: string }
 
-  // Update status field to 'canceled' in database
   const { error: updateError } = await supabase
     .from('subscriptions')
     .update({
       status: 'canceled',
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq('stripe_subscription_id', stripeSubscriptionId)
 
@@ -182,14 +219,19 @@ export async function cancelSubscriptionInDatabase(stripeSubscriptionId: string)
     return false
   }
 
-  // Demote user profile back to free plan
   const currentProfile = await getUserProfile(user_id)
-  await createUserProfile({
+
+  const updatedProfile = await setUserPlanSlug({
     user_id,
     email: currentProfile?.email || '',
     display_name: currentProfile?.display_name || null,
-    plan_slug: 'free'
+    plan_slug: 'free',
   })
+
+  if (!updatedProfile || updatedProfile.plan_slug !== 'free') {
+    console.error('Error demoting user profile after subscription cancellation.')
+    return false
+  }
 
   return true
 }
