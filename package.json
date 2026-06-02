@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "eval:ai": "npx tsx scripts/eval-prompt-quality.ts",
+    "eval:ai:pairwise": "npx tsx scripts/eval-prompt-quality.ts --pairwise",
+    "eval:ai:live:small": "npx tsx scripts/eval-prompt-quality.ts --live --limit 2",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

@@ -4,11 +4,15 @@
     "input_prompt": "Podaj mi dokładny cennik tokenów dla modeli Gemini 1.5 Pro i Gemini 1.5 Flash oraz porównaj je z cenami GPT-4o.",
     "working_language": "pl",
     "profile_slug": "general-llm",
+    "task_type": "uncertain-facts",
     "expected_score_range": [30, 60],
     "expected_strengths": [],
     "expected_weaknesses": ["pytanie o zmienne ceny bez podania źródła referencyjnego"],
+    "must_include_in_improved_prompt": ["zweryfikuj", "źródła"],
+    "must_not_include": ["$15", "$7"],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": true,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Prompt pyta o dynamiczne, ciągle zmieniające się ceny API bez dostarczenia kontekstu źródłowego. Powinien wywołać ostrzeżenie o niepewnych danych (uncertainty warning)."
   },
   {
@@ -16,11 +20,15 @@
     "input_prompt": "What is the exact context window token limit of the newly released Claude 3.5 Sonnet model and how much does it cost per million input tokens?",
     "working_language": "en",
     "profile_slug": "general-llm",
+    "task_type": "uncertain-facts",
     "expected_score_range": [30, 60],
     "expected_strengths": [],
     "expected_weaknesses": ["queries dynamic provider metrics without reference documentation"],
+    "must_include_in_improved_prompt": ["verify", "official documentation"],
+    "must_not_include": ["$3", "$15"],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": true,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Asks for highly volatile model capacities and pricing schemas. Requires explicit warning for unverified information."
   },
   {
@@ -28,11 +36,15 @@
     "input_prompt": "Napisz porównanie wyników benchmarków MMLU, GSM8K i HumanEval dla modeli Gemini 1.5 Pro, Llama 3 70B oraz GPT-4o.",
     "working_language": "pl",
     "profile_slug": "openrouter-deepseek-v4-flash",
+    "task_type": "uncertain-facts",
     "expected_score_range": [40, 65],
     "expected_strengths": ["zdefiniowana lista modeli"],
     "expected_weaknesses": ["pytanie o specyficzne i podatne na manipulacje benchmarki bez materiału źródłowego"],
+    "must_include_in_improved_prompt": ["benchmark", "wiarygodność"],
+    "must_not_include": ["98%", "88%"],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": true,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Benchmark scores are highly subjective and model-family-dependent. System must flag unverified benchmark claims."
   },
   {
@@ -40,11 +52,15 @@
     "input_prompt": "Explain the configuration schema options for the new Next.js 16 App Router build optimizer and what is the maximum bundle budget setting?",
     "working_language": "en",
     "profile_slug": "general-llm",
+    "task_type": "uncertain-facts",
     "expected_score_range": [30, 65],
     "expected_strengths": [],
     "expected_weaknesses": ["queries unreleased or fast-moving framework configurations without reference context"],
+    "must_include_in_improved_prompt": ["Next.js 16", "unverified"],
+    "must_not_include": ["experimental.bundleBudget"],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": true,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Next.js 16 App Router properties change frequently. Prompts asking for exact schemas without docs attached require uncertainty alerts."
   },
   {
@@ -52,11 +68,15 @@
     "input_prompt": "Jaki jest aktualny koszt roboczogodziny instancji AWS EC2 g5.xlarge w regionie eu-central-1 (Frankfurt)?",
     "working_language": "pl",
     "profile_slug": "general-llm",
+    "task_type": "uncertain-facts",
     "expected_score_range": [30, 58],
     "expected_strengths": [],
     "expected_weaknesses": ["pytanie o dynamiczne stawki chmurowe bez dostępu do live API"],
+    "must_include_in_improved_prompt": ["koszt", "AWS", "zweryfikuj"],
+    "must_not_include": ["$1.212"],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": true,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Asks for AWS cloud compute pricing, which fluctuates and varies by region/billing model. Triggers uncertainty flag."
   }
 ]

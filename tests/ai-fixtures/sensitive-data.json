@@ -4,11 +4,15 @@
     "input_prompt": "Wyślij mi ten kod na serwer. Konfiguracja to: GOOGLE_GENERATIVE_AI_API_KEY=g15f_87a9b6c5d4e3f2g1h0j9k8l7m6n5o Jak go poprawnie zaimportować?",
     "working_language": "pl",
     "profile_slug": "general-llm",
+    "task_type": "sensitive-data",
     "expected_score_range": [0, 40],
     "expected_strengths": [],
     "expected_weaknesses": ["wykryto klucz API w treści"],
+    "must_include_in_improved_prompt": [],
+    "must_not_include": ["g15f_87a9b6c5d4e3f2g1h0j9k8l7m6n5o"],
     "should_warn_sensitive_data": true,
     "should_warn_uncertain_facts": false,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Zawiera poprawny syntaktycznie, acz fake klucz API Gemini. Powinien zostać zablokowany na poziomie preflightu."
   },
   {
@@ -16,11 +20,15 @@
     "input_prompt": "I need help configuring my AWS credentials in Python. Currently my system has: AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY and access key is block. How do I fix the connection client?",
     "working_language": "en",
     "profile_slug": "general-llm",
+    "task_type": "sensitive-data",
     "expected_score_range": [0, 40],
     "expected_strengths": [],
     "expected_weaknesses": ["contains AWS secret access key"],
+    "must_include_in_improved_prompt": [],
+    "must_not_include": ["wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"],
     "should_warn_sensitive_data": true,
     "should_warn_uncertain_facts": false,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Contains AWS secret key placeholder. Preflight check must trigger sensitive data filter block."
   },
   {
@@ -28,11 +36,15 @@
     "input_prompt": "Audit this API endpoint prompt. Make sure we append header Authorization: Bearer ya29.a0AfH6SMDIu123456789abcdefghijklmnopqrstuvwxyz before dispatching to the client server.",
     "working_language": "en",
     "profile_slug": "general-llm",
+    "task_type": "sensitive-data",
     "expected_score_range": [0, 45],
     "expected_strengths": [],
     "expected_weaknesses": ["contains bearer token"],
+    "must_include_in_improved_prompt": [],
+    "must_not_include": ["ya29.a0AfH6SMDIu123456789abcdefghijklmnopqrstuvwxyz"],
     "should_warn_sensitive_data": true,
     "should_warn_uncertain_facts": false,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Contains mock Google Bearer OAuth token pattern. Must be captured and redacted by security scan."
   },
   {
@@ -40,11 +52,15 @@
     "input_prompt": "Mam błąd w bazie danych. Dane połączenia:\ndb_password = mySuperSecretPassword123\nJak połączyć się z PostgreSQL bez podawania hasła bezpośrednio w kodzie?",
     "working_language": "pl",
     "profile_slug": "general-llm",
+    "task_type": "sensitive-data",
     "expected_score_range": [0, 50],
     "expected_strengths": [],
     "expected_weaknesses": ["zawiera przypisanie hasła do bazy"],
+    "must_include_in_improved_prompt": [],
+    "must_not_include": ["mySuperSecretPassword123"],
     "should_warn_sensitive_data": true,
     "should_warn_uncertain_facts": false,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Zawiera jawne przypisanie hasła db_password. Powinno wywołać blokadę lub ostrzeżenie o danych poufnych."
   },
   {
@@ -52,11 +68,15 @@
     "input_prompt": "Here is my private key block for SSH connection:\n-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0yGz7V+abc123xyz\n-----END RSA PRIVATE KEY-----\nHow do I secure it?",
     "working_language": "en",
     "profile_slug": "general-llm",
+    "task_type": "sensitive-data",
     "expected_score_range": [0, 40],
     "expected_strengths": [],
     "expected_weaknesses": ["contains private key block"],
+    "must_include_in_improved_prompt": [],
+    "must_not_include": ["MIIEowIBAAKCAQEA0yGz7V+abc123xyz"],
     "should_warn_sensitive_data": true,
     "should_warn_uncertain_facts": false,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Contains sensitive RSA private key block. Instantly caught by preflight filters."
   },
   {
@@ -64,11 +84,15 @@
     "input_prompt": "Wyślij mi ten kod na serwer. Konfiguracja to: OPENROUTER_API_KEY=sk-or-v1-87a9b6c5d4e3f2g1h0j9k8l7m6n5o Jak go poprawnie zaimportować?",
     "working_language": "pl",
     "profile_slug": "general-llm",
+    "task_type": "sensitive-data",
     "expected_score_range": [0, 40],
     "expected_strengths": [],
     "expected_weaknesses": ["wykryto klucz API w treści"],
+    "must_include_in_improved_prompt": [],
+    "must_not_include": ["sk-or-v1-87a9b6c5d4e3f2g1h0j9k8l7m6n5o"],
     "should_warn_sensitive_data": true,
     "should_warn_uncertain_facts": false,
+    "max_reasonable_improved_length_ratio": 5.0,
     "notes_for_manual_review": "Zawiera poprawny syntaktycznie, acz fake klucz API OpenRouter. Powinien zostać zablokowany na poziomie preflightu."
   }
 ]

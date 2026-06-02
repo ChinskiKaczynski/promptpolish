@@ -85,6 +85,7 @@ describe('Stripe Billing Foundation API Suite', () => {
     env.STRIPE_WEBHOOK_SECRET = 'whsec_mock_webhook_key'
     env.STRIPE_PRICE_ID_PRO = 'price_1234_pro'
     env.NODE_ENV = 'development'
+    env.STRIPE_ENABLED = 'true'
   })
 
   afterEach(() => {

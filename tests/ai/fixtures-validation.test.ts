@@ -9,11 +9,15 @@ const fixtureSchema = z.object({
   input_prompt: z.string().min(1),
   working_language: z.enum(['pl', 'en']),
   profile_slug: z.enum(['general-llm', 'openrouter-deepseek-v4-flash']),
+  task_type: z.string().min(1),
   expected_score_range: z.array(z.number().int().min(0).max(100)).length(2),
-  expected_strengths: z.array(z.string()),
+  expected_strengths: z.array(z.string()).optional(),
   expected_weaknesses: z.array(z.string()),
+  must_include_in_improved_prompt: z.array(z.string()),
+  must_not_include: z.array(z.string()),
   should_warn_sensitive_data: z.boolean(),
   should_warn_uncertain_facts: z.boolean(),
+  max_reasonable_improved_length_ratio: z.number().positive(),
   notes_for_manual_review: z.string().min(1)
 })
 
@@ -67,10 +71,24 @@ describe('AI Evaluation Fixtures Schema Validation', () => {
   // 4. Strong EN Prompts
   testFileValidity('strong-en.json', 10)
 
-  // 5. Sensitive Data Prompts
-  testFileValidity('sensitive-data.json', 5)
+  // 5. Coding Prompts
+  testFileValidity('coding.json', 5)
 
-  // 6. Hallucination/Uncertain Facts Vectors
+  // 6. Marketing Prompts
+  testFileValidity('marketing.json', 5)
+
+  // 7. Research Prompts
+  testFileValidity('research.json', 5)
+
+  // 8. Data Analysis Prompts
+  testFileValidity('data-analysis.json', 5)
+
+  // 9. Sensitive Data Prompts
+  testFileValidity('sensitive-data.json', 6)
+
+  // 10. Hallucination/Uncertain Facts Vectors
   testFileValidity('uncertain-facts.json', 5)
 
+  // 11. Too Long Output Prompts
+  testFileValidity('too-long-output.json', 5)
 })
