@@ -438,8 +438,7 @@ async function main() {
   const isLive = args.includes('--live') || args.includes('-l')
   const isPairwise = args.includes('--pairwise') || args.includes('-p')
   const includeRawPrompts = args.includes('--include-raw-prompts')
-  console.log(`Include Raw Prompts in Reports: ${includeRawPrompts ? 'ENABLED' : 'DISABLED'}`)
-  
+
   // Parse limit
   let limit: number | undefined
   const limitIdx = args.findIndex(arg => arg === '--limit')
@@ -447,11 +446,34 @@ async function main() {
     limit = parseInt(args[limitIdx + 1], 10)
   }
 
+  // Parse timeout (default 90 s – enough for one structured-output round-trip)
+  const DEFAULT_LIVE_TIMEOUT_MS = 90_000
+  let timeoutMs = DEFAULT_LIVE_TIMEOUT_MS
+  const timeoutIdx = args.findIndex(arg => arg === '--timeout-ms')
+  if (timeoutIdx !== -1 && args[timeoutIdx + 1]) {
+    const parsed = parseInt(args[timeoutIdx + 1], 10)
+    if (!isNaN(parsed) && parsed > 0) timeoutMs = parsed
+  }
+
+  // Parse retries (default 1 – one automatic re-attempt after a transient failure)
+  const DEFAULT_RETRIES = 1
+  let maxRetries = DEFAULT_RETRIES
+  const retriesIdx = args.findIndex(arg => arg === '--retries')
+  if (retriesIdx !== -1 && args[retriesIdx + 1]) {
+    const parsed = parseInt(args[retriesIdx + 1], 10)
+    if (!isNaN(parsed) && parsed >= 0) maxRetries = parsed
+  }
+
   console.log('==================================================')
   console.log('       PromptPolish AI Quality Evaluation         ')
   console.log('==================================================')
   console.log(`Execution Mode: ${isLive ? 'LIVE (OpenRouter API)' : 'MOCKED (Local Simulation)'}`)
   console.log(`Pairwise A/B Mode: ${isPairwise ? 'ENABLED' : 'DISABLED'}`)
+  console.log(`Include Raw Prompts in Reports: ${includeRawPrompts ? 'ENABLED' : 'DISABLED'}`)
+  if (isLive) {
+    console.log(`Live Timeout: ${timeoutMs}ms per attempt`)
+    console.log(`Live Retries: ${maxRetries} (max attempts: ${maxRetries + 1})`)
+  }
   if (limit) console.log(`Evaluation Limit: First ${limit} items per fixture category`)
 
   const apiKey = process.env.OPENROUTER_API_KEY
@@ -460,6 +482,77 @@ async function main() {
   if (isLive && (!apiKey || apiKey.trim() === '')) {
     console.error('[ERROR] LIVE mode requested, but OPENROUTER_API_KEY is not defined in .env.local.')
     process.exit(1)
+  }
+
+  /**
+   * Runs a single fixture through the live `analyzePrompt` pipeline with
+   * per-attempt timeout (AbortController) and configurable retry count.
+   *
+   * Retry conditions:
+   *  - provider_timeout  – request timed out; always retry
+   *  - provider_rate_limited (HTTP 429) – brief back-off then retry
+   *  - provider_network_error – transient; retry
+   *
+   * Non-retryable conditions re-throw immediately so the outer catch can
+   * record them without burning extra API quota:
+   *  - schema_validation_failed, analysis_pipeline_error, evaluator_bug_possible
+   */
+  async function runLiveFixtureAnalysis(fixture: Fixture): ReturnType<typeof analyzePrompt> {
+    let lastError: unknown
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      if (attempt > 0) {
+        const delay = attempt * 2_000 // 2 s, 4 s, …
+        console.log(`    [RETRY ${attempt}/${maxRetries}] Waiting ${delay}ms before next attempt…`)
+        await new Promise(res => setTimeout(res, delay))
+      }
+
+      const attemptController = new AbortController()
+      const attemptTimeout = setTimeout(() => {
+        attemptController.abort(new Error(`PROVIDER_TIMEOUT: Request aborted after ${timeoutMs}ms`))
+      }, timeoutMs)
+
+      try {
+        const result = await analyzePrompt(
+          {
+            inputPrompt: fixture.input_prompt,
+            workingLanguage: fixture.working_language,
+            selectedProfileSlug: fixture.profile_slug,
+            taskType: fixture.task_type
+          },
+          { abortSignal: attemptController.signal }
+        )
+        clearTimeout(attemptTimeout)
+        return result
+      } catch (err) {
+        clearTimeout(attemptTimeout)
+        lastError = err
+
+        const isTimeout = err instanceof Error && (
+          err.name === 'AbortError' ||
+          err.message.startsWith('PROVIDER_TIMEOUT:')
+        )
+        const isRateLimit = err instanceof Error && (
+          err.message.includes('429') ||
+          err.message.toLowerCase().includes('rate limit')
+        )
+        const isNetwork = err instanceof Error && (
+          err.message.toLowerCase().includes('fetch') ||
+          err.message.toLowerCase().includes('network') ||
+          err.message.toLowerCase().includes('econnrefused')
+        )
+        const isTransient = isTimeout || isRateLimit || isNetwork
+
+        if (isTransient && attempt < maxRetries) {
+          const reason = isTimeout ? 'timeout' : isRateLimit ? 'rate-limited' : 'network error'
+          console.warn(`    [WARN] Attempt ${attempt + 1} failed (${reason}) — will retry`)
+          continue
+        }
+        // Non-transient or out of retries: propagate immediately
+        throw err
+      }
+    }
+    // Should never reach here, but TypeScript needs a return
+    throw lastError
   }
 
   const fixtureFiles = [
@@ -498,7 +591,7 @@ async function main() {
     const fixtures = rawFixtures.map(f => {
       let fixture_category = f.fixture_category
       let assertion_strictness = f.assertion_strictness
-      let calibration_notes = f.calibration_notes || ''
+      const calibration_notes = f.calibration_notes || ''
 
       if (!fixture_category) {
         if (filename.includes('sensitive')) {
@@ -541,13 +634,8 @@ async function main() {
         let scoreLevel = 'unknown'
 
         if (isLive) {
-          // Perform live OpenRouter API run
-          const result = await analyzePrompt({
-            inputPrompt: fixture.input_prompt,
-            workingLanguage: fixture.working_language,
-            selectedProfileSlug: fixture.profile_slug,
-            taskType: fixture.task_type
-          })
+          // Perform live OpenRouter API run with timeout + retry
+          const result = await runLiveFixtureAnalysis(fixture)
           analysisResult = result.analysis
           scoreVal = result.scores.overallScore
           scoreLevel = result.scores.scoreLevel
@@ -817,33 +905,47 @@ async function main() {
 
       } catch (err) {
         console.error(`  [CRASH] Failed to analyze fixture ${fixture.id}:`, err)
-        
+
         let crashType = 'evaluator_bug_possible'
         if (err instanceof Error) {
           const name = err.name
-          const msg = err.message.toLowerCase()
-          
+          const msg = err.message // preserve original casing for prefix checks
+          const msgLower = msg.toLowerCase()
+
           if (
-            name === 'ProviderError' || 
-            name === 'APICallError' || 
+            name === 'AbortError' ||
+            msg.startsWith('PROVIDER_TIMEOUT:')
+          ) {
+            // Explicit timeout via AbortController
+            crashType = 'provider_timeout'
+          } else if (
+            msgLower.includes('429') ||
+            msgLower.includes('rate limit') ||
+            msgLower.includes('rate_limit')
+          ) {
+            crashType = 'provider_rate_limited'
+          } else if (
+            msgLower.includes('fetch') ||
+            msgLower.includes('network') ||
+            msgLower.includes('econnrefused')
+          ) {
+            crashType = 'provider_network_error'
+          } else if (
+            name === 'ProviderError' ||
+            name === 'APICallError' ||
             name === 'NoObjectGeneratedError' ||
-            msg.includes('fetch') ||
-            msg.includes('network') ||
-            msg.includes('timeout') ||
-            msg.includes('429') ||
-            msg.includes('econnrefused') ||
-            msg.includes('api') ||
-            msg.includes('openrouter')
+            msgLower.includes('openrouter') ||
+            msgLower.includes('api')
           ) {
             crashType = 'provider_error'
           } else if (
-            name === 'SemanticValidationError' || 
+            name === 'SemanticValidationError' ||
             name === 'ZodError' ||
             err.constructor.name === 'ZodError'
           ) {
             crashType = 'schema_validation_failed'
           } else {
-            // Error occurred during analyzePrompt that isn't a validation or provider error
+            // Error occurred during analyzePrompt pipeline (not a provider/validation issue)
             crashType = 'analysis_pipeline_error'
           }
         }
@@ -964,11 +1066,6 @@ async function main() {
   const uncertaintyPassCount = uncertaintyFixtures.filter(r => r.uncertainty_warning_pass).length
   const uncertainty_warning_pass_rate = uncertaintyFixtures.length > 0 ? (uncertaintyPassCount / uncertaintyFixtures.length) * 100 : 100
 
-  // Calculate production cases verbosity metrics dynamically
-  const productionFixtures = allResults.filter(r => r.fixture.task_type !== 'too-long-output')
-  const productionTotal = productionFixtures.length
-  const productionTooLongCount = productionFixtures.filter(r => !r.length_ratio_pass).length
-  const productionTooLongRate = productionTotal > 0 ? (productionTooLongCount / productionTotal) * 100 : 0
 
   const fixture_pass_rate = (passedFixtures / total) * 100
   const score_range_pass_rate = (scoreRangePass / total) * 100

@@ -8,6 +8,14 @@ export interface OpenRouterClientOptions {
   mockMode?: boolean
   mockResponse?: AnalysisResult
   temperature?: number
+  /** AbortSignal to cancel the in-flight request (e.g. from an external AbortController). */
+  abortSignal?: AbortSignal
+  /**
+   * Hard deadline in milliseconds.  When set (and no external abortSignal is
+   * provided) the client creates its own AbortController and cancels the
+   * request after this many ms.  Defaults to no timeout when omitted.
+   */
+  timeoutMs?: number
 }
 
 export interface OpenRouterAnalysisResponse {
@@ -29,7 +37,7 @@ export async function executeOpenRouterAnalysis(
   userPrompt: string,
   options: OpenRouterClientOptions = {}
 ): Promise<OpenRouterAnalysisResponse> {
-  const { mockMode = false, mockResponse, temperature = 0.1 } = options
+  const { mockMode = false, mockResponse, temperature = 0.1, abortSignal, timeoutMs } = options
 
   // 1. Check and return Mock response if mock mode is active
   if (mockMode || mockResponse) {
@@ -65,6 +73,20 @@ export async function executeOpenRouterAnalysis(
   const siteUrl = process.env.OPENROUTER_SITE_URL
   const appName = process.env.OPENROUTER_APP_NAME
 
+  // Resolve the effective AbortSignal – prefer an externally supplied one,
+  // otherwise create our own when timeoutMs is set.
+  let ownController: AbortController | undefined
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined
+  let effectiveSignal: AbortSignal | undefined = abortSignal
+
+  if (!effectiveSignal && timeoutMs && timeoutMs > 0) {
+    ownController = new AbortController()
+    effectiveSignal = ownController.signal
+    timeoutHandle = setTimeout(() => {
+      ownController!.abort(new Error(`PROVIDER_TIMEOUT: Request aborted after ${timeoutMs}ms`))
+    }, timeoutMs)
+  }
+
   try {
     const openrouter = createOpenRouter({
       apiKey,
@@ -79,6 +101,7 @@ export async function executeOpenRouterAnalysis(
       system: systemInstruction,
       prompt: userPrompt,
       temperature,
+      abortSignal: effectiveSignal,
       output: Output.object({
         schema: analysisResultSchema
       })
@@ -94,7 +117,19 @@ export async function executeOpenRouterAnalysis(
       } : undefined
     }
   } catch (error) {
-    // Standardized provider error normalization
+    // Detect AbortError BEFORE normalizeProviderError so downstream callers
+    // can distinguish provider_timeout from generic provider failures.
+    if (error instanceof Error && (error.name === 'AbortError' || error.message.startsWith('PROVIDER_TIMEOUT:'))) {
+      const ms = timeoutMs ?? 0
+      throw new ProviderError(
+        `PROVIDER_TIMEOUT: Request aborted after ${ms}ms`,
+        'The prompt analysis request timed out. Please try again.',
+        error
+      )
+    }
+    // Standardized provider error normalization for all other failures
     throw normalizeProviderError(error)
+  } finally {
+    if (timeoutHandle !== undefined) clearTimeout(timeoutHandle)
   }
 }
