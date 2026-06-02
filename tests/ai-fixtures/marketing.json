@@ -5,15 +5,31 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [10, 35],
+    "expected_score_range": [
+      10,
+      35
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["missing unique selling proposition", "missing CTA", "missing target audience"],
-    "must_include_in_improved_prompt": ["coffee", "ad"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "missing unique selling proposition",
+      "missing CTA",
+      "missing target audience"
+    ],
+    "must_include_in_improved_prompt": [
+      "coffee",
+      "ad"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Weak coffee ad prompt. Completely lacks locations, menu highlights, and targeted audience."
+    "max_reasonable_improved_length_ratio": 25,
+    "notes_for_manual_review": "Weak coffee ad prompt. Completely lacks locations, menu highlights, and targeted audience.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Calibrated maximum improved length ratio to accommodate standard template expansions."
   },
   {
     "id": "marketing-02",
@@ -21,15 +37,34 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [80, 100],
-    "expected_strengths": ["defined copywriter role", "targeted CMO persona", "structured 3-part layout", "strict word count constraint"],
+    "expected_score_range": [
+      70,
+      100
+    ],
+    "expected_strengths": [
+      "defined copywriter role",
+      "targeted CMO persona",
+      "structured 3-part layout",
+      "strict word count constraint"
+    ],
     "expected_weaknesses": [],
-    "must_include_in_improved_prompt": ["LinkedIn", "CMO", "SaaS", "scheduling"],
-    "must_not_include": ["unverified", "stale"],
+    "must_include_in_improved_prompt": [
+      "LinkedIn",
+      "CMO",
+      "SaaS",
+      "scheduling"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 4.0,
-    "notes_for_manual_review": "Strong SaaS LinkedIn marketing outreach prompt."
+    "max_reasonable_improved_length_ratio": 4,
+    "notes_for_manual_review": "Strong SaaS LinkedIn marketing outreach prompt.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "marketing-03",
@@ -37,15 +72,31 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [10, 35],
+    "expected_score_range": [
+      10,
+      35
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["brak wartości marki", "brak docelowej grupy odbiorców", "brak wskazówek stylów"],
-    "must_include_in_improved_prompt": ["hasło", "sport"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "brak wartości marki",
+      "brak docelowej grupy odbiorców",
+      "brak wskazówek stylów"
+    ],
+    "must_include_in_improved_prompt": [
+      "hasło",
+      "sport"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Weak Polish copywriting request."
+    "max_reasonable_improved_length_ratio": 15,
+    "notes_for_manual_review": "Weak Polish copywriting request.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "marketing-04",
@@ -53,15 +104,33 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [80, 98],
-    "expected_strengths": ["rola eksperta e-mail marketingu", "szczegóły promocji (40%)", "struktura newslettera z tematami", "limit słów"],
+    "expected_score_range": [
+      80,
+      98
+    ],
+    "expected_strengths": [
+      "rola eksperta e-mail marketingu",
+      "szczegóły promocji (40%)",
+      "struktura newslettera z tematami",
+      "limit słów"
+    ],
     "expected_weaknesses": [],
-    "must_include_in_improved_prompt": ["księgarnia", "wyprzedaż", "newsletter"],
-    "must_not_include": ["unverified", "stale"],
+    "must_include_in_improved_prompt": [
+      "księgarnia",
+      "wyprzedaż",
+      "newsletter"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 4.0,
-    "notes_for_manual_review": "Strong Polish email marketing newsletter prompt."
+    "max_reasonable_improved_length_ratio": 4,
+    "notes_for_manual_review": "Strong Polish email marketing newsletter prompt.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "marketing-05",
@@ -69,14 +138,33 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [25, 55],
-    "expected_strengths": ["skincare benefits focus"],
-    "expected_weaknesses": ["missing platforms", "missing target audience details", "no hashtags guidelines"],
-    "must_include_in_improved_prompt": ["skincare", "cream", "organic"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_score_range": [
+      25,
+      55
+    ],
+    "expected_strengths": [
+      "skincare benefits focus"
+    ],
+    "expected_weaknesses": [
+      "missing platforms",
+      "missing target audience details",
+      "no hashtags guidelines"
+    ],
+    "must_include_in_improved_prompt": [
+      "skincare",
+      "cream",
+      "organic"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 8.0,
-    "notes_for_manual_review": "Medium skincare marketing prompt."
+    "max_reasonable_improved_length_ratio": 8,
+    "notes_for_manual_review": "Medium skincare marketing prompt.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   }
 ]

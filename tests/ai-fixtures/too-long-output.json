@@ -5,15 +5,29 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "too-long-output",
-    "expected_score_range": [10, 35],
+    "expected_score_range": [
+      10,
+      35
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["too short", "vague context"],
-    "must_include_in_improved_prompt": ["life"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "too short",
+      "vague context"
+    ],
+    "must_include_in_improved_prompt": [
+      "life"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
     "max_reasonable_improved_length_ratio": 1.5,
-    "notes_for_manual_review": "Short prompt that will expand significantly. With ratio limit at 1.5, it should trigger the too-long verbosity check."
+    "notes_for_manual_review": "Short prompt that will expand significantly. With ratio limit at 1.5, it should trigger the too-long verbosity check.",
+    "fixture_category": "stress_case",
+    "assertion_strictness": "high",
+    "calibration_notes": "Stress test for strict verbosity constraint enforcement."
   },
   {
     "id": "too-long-02",
@@ -21,15 +35,31 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "too-long-output",
-    "expected_score_range": [30, 60],
+    "expected_score_range": [
+      30,
+      60
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["overly broad scope", "no format specifications"],
-    "must_include_in_improved_prompt": ["Mars", "colony", "plan"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "overly broad scope",
+      "no format specifications"
+    ],
+    "must_include_in_improved_prompt": [
+      "Mars",
+      "colony",
+      "plan"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
     "max_reasonable_improved_length_ratio": 1.2,
-    "notes_for_manual_review": "Mars colonization plan. Set with strict 1.2 length ratio to test verbosity checks."
+    "notes_for_manual_review": "Mars colonization plan. Set with strict 1.2 length ratio to test verbosity checks.",
+    "fixture_category": "stress_case",
+    "assertion_strictness": "high",
+    "calibration_notes": "Stress test for strict verbosity constraint enforcement."
   },
   {
     "id": "too-long-03",
@@ -37,15 +67,30 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "too-long-output",
-    "expected_score_range": [10, 30],
+    "expected_score_range": [
+      10,
+      30
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["zbyt ogólny temat", "brak przedziału czasowego"],
-    "must_include_in_improved_prompt": ["historia", "świat"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "zbyt ogólny temat",
+      "brak przedziału czasowego"
+    ],
+    "must_include_in_improved_prompt": [
+      "historia",
+      "świat"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
     "max_reasonable_improved_length_ratio": 1.5,
-    "notes_for_manual_review": "History of the world request. Set with 1.5 ratio to verify PL verbose validation."
+    "notes_for_manual_review": "History of the world request. Set with 1.5 ratio to verify PL verbose validation.",
+    "fixture_category": "stress_case",
+    "assertion_strictness": "high",
+    "calibration_notes": "Stress test for strict verbosity constraint enforcement."
   },
   {
     "id": "too-long-04",
@@ -53,15 +98,31 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "too-long-output",
-    "expected_score_range": [25, 55],
+    "expected_score_range": [
+      25,
+      55
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["unreasonable scale", "lacks classification rules"],
-    "must_include_in_improved_prompt": ["programming", "languages", "detail"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "unreasonable scale",
+      "lacks classification rules"
+    ],
+    "must_include_in_improved_prompt": [
+      "programming",
+      "languages",
+      "detail"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
     "max_reasonable_improved_length_ratio": 1.2,
-    "notes_for_manual_review": "Review of all programming languages. Set with 1.2 ratio limit."
+    "notes_for_manual_review": "Review of all programming languages. Set with 1.2 ratio limit.",
+    "fixture_category": "stress_case",
+    "assertion_strictness": "high",
+    "calibration_notes": "Stress test for strict verbosity constraint enforcement."
   },
   {
     "id": "too-long-05",
@@ -69,14 +130,30 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "too-long-output",
-    "expected_score_range": [20, 50],
+    "expected_score_range": [
+      20,
+      50
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["zbyt duża skala", "brak wskaźników KPI"],
-    "must_include_in_improved_prompt": ["marketing", "kawiarni", "plan"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "zbyt duża skala",
+      "brak wskaźników KPI"
+    ],
+    "must_include_in_improved_prompt": [
+      "marketing",
+      "kawiarni",
+      "plan"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
     "max_reasonable_improved_length_ratio": 1.5,
-    "notes_for_manual_review": "Huge marketing plan request. Set with 1.5 ratio limit."
+    "notes_for_manual_review": "Huge marketing plan request. Set with 1.5 ratio limit.",
+    "fixture_category": "stress_case",
+    "assertion_strictness": "high",
+    "calibration_notes": "Stress test for strict verbosity constraint enforcement."
   }
 ]

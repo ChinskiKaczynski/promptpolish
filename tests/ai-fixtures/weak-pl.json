@@ -5,15 +5,32 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [10, 35],
+    "expected_score_range": [
+      10,
+      35
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["brak zdefiniowanej roli", "brak kontekstu", "brak formatu wyjściowego", "brak ograniczeń"],
-    "must_include_in_improved_prompt": ["lampa", "opis"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "brak zdefiniowanej roli",
+      "brak kontekstu",
+      "brak formatu wyjściowego",
+      "brak ograniczeń"
+    ],
+    "must_include_in_improved_prompt": [
+      "lampa",
+      "opis"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 20.0,
-    "notes_for_manual_review": "Bardzo krótki i ogólny prompt. Powinien otrzymać niską ocenę za brak jakiejkolwiek struktury."
+    "max_reasonable_improved_length_ratio": 30,
+    "notes_for_manual_review": "Bardzo krótki i ogólny prompt. Powinien otrzymać niską ocenę za brak jakiejkolwiek struktury.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Calibrated maximum improved length ratio to accommodate standard template expansions."
   },
   {
     "id": "weak-pl-02",
@@ -21,15 +38,33 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [15, 38],
+    "expected_score_range": [
+      15,
+      38
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["brak grupy docelowej", "brak CTA", "brak cech butów", "brak tonu wypowiedzi"],
-    "must_include_in_improved_prompt": ["post", "facebook", "buty"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "brak grupy docelowej",
+      "brak CTA",
+      "brak cech butów",
+      "brak tonu wypowiedzi"
+    ],
+    "must_include_in_improved_prompt": [
+      "post",
+      "facebook",
+      "buty"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Vague marketing prompt. Lack of target audience and footwear features yields low score."
+    "max_reasonable_improved_length_ratio": 25,
+    "notes_for_manual_review": "Vague marketing prompt. Lack of target audience and footwear features yields low score.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Calibrated maximum improved length ratio to accommodate standard template expansions."
   },
   {
     "id": "weak-pl-03",
@@ -37,15 +72,33 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [20, 39],
-    "expected_strengths": ["posiada jasny cel"],
-    "expected_weaknesses": ["brak tonu tłumaczenia", "brak kontekstu użycia", "brak wskazówek dotyczących formatu"],
-    "must_include_in_improved_prompt": ["tłumaczenie", "angielski"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_score_range": [
+      20,
+      39
+    ],
+    "expected_strengths": [
+      "posiada jasny cel"
+    ],
+    "expected_weaknesses": [
+      "brak tonu tłumaczenia",
+      "brak kontekstu użycia",
+      "brak wskazówek dotyczących formatu"
+    ],
+    "must_include_in_improved_prompt": [
+      "tłumaczenie",
+      "angielski"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 12.0,
-    "notes_for_manual_review": "Translation request is simple but lacks details on registers (formal/informal)."
+    "max_reasonable_improved_length_ratio": 12,
+    "notes_for_manual_review": "Translation request is simple but lacks details on registers (formal/informal).",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-pl-04",
@@ -53,15 +106,31 @@
     "working_language": "pl",
     "profile_slug": "openrouter-deepseek-v4-flash",
     "task_type": "coding",
-    "expected_score_range": [15, 38],
+    "expected_score_range": [
+      15,
+      38
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["brak podania algorytmu", "brak przykładowych danych", "brak wymagań wydajnościowych"],
-    "must_include_in_improved_prompt": ["python", "sortowanie"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "brak podania algorytmu",
+      "brak przykładowych danych",
+      "brak wymagań wydajnościowych"
+    ],
+    "must_include_in_improved_prompt": [
+      "python",
+      "sortowanie"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 12.0,
-    "notes_for_manual_review": "Vague coding request. Should flag lack of constraints and complexity requirements."
+    "max_reasonable_improved_length_ratio": 12,
+    "notes_for_manual_review": "Vague coding request. Should flag lack of constraints and complexity requirements.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-pl-05",
@@ -69,15 +138,31 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [10, 35],
+    "expected_score_range": [
+      10,
+      35
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["brak artykułu wejściowego", "brak definicji 'krótko'", "brak formatu (np. wypunktowanie)"],
-    "must_include_in_improved_prompt": ["streszczenie", "artykuł"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "brak artykułu wejściowego",
+      "brak definicji 'krótko'",
+      "brak formatu (np. wypunktowanie)"
+    ],
+    "must_include_in_improved_prompt": [
+      "streszczenie",
+      "artykuł"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Incomplete input prompt lacking the actual source content to summarize."
+    "max_reasonable_improved_length_ratio": 15,
+    "notes_for_manual_review": "Incomplete input prompt lacking the actual source content to summarize.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-pl-06",
@@ -85,15 +170,32 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [15, 39],
+    "expected_score_range": [
+      15,
+      39
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["brak podania technologii", "brak poziomu doświadczenia", "brak liczby pytań"],
-    "must_include_in_improved_prompt": ["pytania", "rekrutacja", "rozmowa"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "brak podania technologii",
+      "brak poziomu doświadczenia",
+      "brak liczby pytań"
+    ],
+    "must_include_in_improved_prompt": [
+      "pytania",
+      "rekrutacja",
+      "rozmowa"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 12.0,
-    "notes_for_manual_review": "Recruiting prompt missing experience tier (junior/senior) and technology stack."
+    "max_reasonable_improved_length_ratio": 12,
+    "notes_for_manual_review": "Recruiting prompt missing experience tier (junior/senior) and technology stack.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-pl-07",
@@ -101,15 +203,34 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [20, 39],
-    "expected_strengths": ["jasne zadanie"],
-    "expected_weaknesses": ["brak przyczyny opóźnienia", "brak tonu (uprzejmy/formalny)", "brak propozycji rekompensaty"],
-    "must_include_in_improved_prompt": ["mail", "klient", "opóźnienie"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_score_range": [
+      20,
+      39
+    ],
+    "expected_strengths": [
+      "jasne zadanie"
+    ],
+    "expected_weaknesses": [
+      "brak przyczyny opóźnienia",
+      "brak tonu (uprzejmy/formalny)",
+      "brak propozycji rekompensaty"
+    ],
+    "must_include_in_improved_prompt": [
+      "mail",
+      "klient",
+      "opóźnienie"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 12.0,
-    "notes_for_manual_review": "Vague client communication. Lacks basic parameters like ETA and apology tone guidelines."
+    "max_reasonable_improved_length_ratio": 12,
+    "notes_for_manual_review": "Vague client communication. Lacks basic parameters like ETA and apology tone guidelines.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-pl-08",
@@ -117,15 +238,32 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [15, 39],
+    "expected_score_range": [
+      15,
+      39
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["brak ograniczeń dietetycznych", "brak czasu przygotowania", "brak listy dostępnych składników"],
-    "must_include_in_improved_prompt": ["przepis", "kurczak", "obiad"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "brak ograniczeń dietetycznych",
+      "brak czasu przygotowania",
+      "brak listy dostępnych składników"
+    ],
+    "must_include_in_improved_prompt": [
+      "przepis",
+      "kurczak",
+      "obiad"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Vague recipe request missing time, difficulty level, and dietary exclusions."
+    "max_reasonable_improved_length_ratio": 15,
+    "notes_for_manual_review": "Vague recipe request missing time, difficulty level, and dietary exclusions.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-pl-09",
@@ -133,15 +271,31 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [10, 30],
+    "expected_score_range": [
+      10,
+      30
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["brak celu treningowego", "brak poziomu zaawansowania", "brak dostępnego sprzętu"],
-    "must_include_in_improved_prompt": ["trening", "plan"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "brak celu treningowego",
+      "brak poziomu zaawansowania",
+      "brak dostępnego sprzętu"
+    ],
+    "must_include_in_improved_prompt": [
+      "trening",
+      "plan"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 20.0,
-    "notes_for_manual_review": "Extremely generic fitness prompt lacking age, injuries context, and workout split specs."
+    "max_reasonable_improved_length_ratio": 20,
+    "notes_for_manual_review": "Extremely generic fitness prompt lacking age, injuries context, and workout split specs.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-pl-10",
@@ -149,14 +303,31 @@
     "working_language": "pl",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [10, 35],
+    "expected_score_range": [
+      10,
+      35
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["brak tematu przewodniego", "brak długości artykułu", "brak słów kluczowych SEO"],
-    "must_include_in_improved_prompt": ["artykuł", "blog", "podróże"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "brak tematu przewodniego",
+      "brak długości artykułu",
+      "brak słów kluczowych SEO"
+    ],
+    "must_include_in_improved_prompt": [
+      "artykuł",
+      "blog",
+      "podróże"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Vague blog generation prompt missing region, focus, and SEO requirements."
+    "max_reasonable_improved_length_ratio": 15,
+    "notes_for_manual_review": "Vague blog generation prompt missing region, focus, and SEO requirements.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   }
 ]

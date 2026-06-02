@@ -18,7 +18,10 @@ const fixtureSchema = z.object({
   should_warn_sensitive_data: z.boolean(),
   should_warn_uncertain_facts: z.boolean(),
   max_reasonable_improved_length_ratio: z.number().positive(),
-  notes_for_manual_review: z.string().min(1)
+  notes_for_manual_review: z.string().min(1),
+  fixture_category: z.enum(['production_case', 'stress_case', 'regression_case', 'safety_case', 'uncertainty_case', 'calibration_case']).optional(),
+  assertion_strictness: z.enum(['low', 'medium', 'high']).optional(),
+  calibration_notes: z.string().optional()
 })
 
 type Fixture = z.infer<typeof fixtureSchema>

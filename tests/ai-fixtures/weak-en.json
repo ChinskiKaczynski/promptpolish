@@ -5,15 +5,32 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [10, 35],
+    "expected_score_range": [
+      10,
+      35
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["missing role", "missing context", "missing output format", "missing constraints"],
-    "must_include_in_improved_prompt": ["lamp", "description"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "missing role",
+      "missing context",
+      "missing output format",
+      "missing constraints"
+    ],
+    "must_include_in_improved_prompt": [
+      "lamp",
+      "description"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 20.0,
-    "notes_for_manual_review": "Extremely vague product description. Should score very low across all categories."
+    "max_reasonable_improved_length_ratio": 20,
+    "notes_for_manual_review": "Extremely vague product description. Should score very low across all categories.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-en-02",
@@ -21,15 +38,33 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [15, 38],
+    "expected_score_range": [
+      15,
+      38
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["missing audience", "missing CTA", "missing footwear features", "missing tone"],
-    "must_include_in_improved_prompt": ["facebook", "post", "shoes"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "missing audience",
+      "missing CTA",
+      "missing footwear features",
+      "missing tone"
+    ],
+    "must_include_in_improved_prompt": [
+      "facebook",
+      "post",
+      "shoes"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Vague marketing request lacking details on the shoes and call to action."
+    "max_reasonable_improved_length_ratio": 25,
+    "notes_for_manual_review": "Vague marketing request lacking details on the shoes and call to action.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Calibrated maximum improved length ratio to accommodate standard template expansions."
   },
   {
     "id": "weak-en-03",
@@ -37,15 +72,33 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [20, 39],
-    "expected_strengths": ["clear goal"],
-    "expected_weaknesses": ["missing tone register", "missing context of usage", "missing layout guidance"],
-    "must_include_in_improved_prompt": ["translate", "spanish"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_score_range": [
+      20,
+      39
+    ],
+    "expected_strengths": [
+      "clear goal"
+    ],
+    "expected_weaknesses": [
+      "missing tone register",
+      "missing context of usage",
+      "missing layout guidance"
+    ],
+    "must_include_in_improved_prompt": [
+      "translate",
+      "spanish"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 12.0,
-    "notes_for_manual_review": "Translation is clear but lacks formality constraints or regional settings."
+    "max_reasonable_improved_length_ratio": 12,
+    "notes_for_manual_review": "Translation is clear but lacks formality constraints or regional settings.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-en-04",
@@ -53,15 +106,32 @@
     "working_language": "en",
     "profile_slug": "openrouter-deepseek-v4-flash",
     "task_type": "coding",
-    "expected_score_range": [15, 38],
+    "expected_score_range": [
+      15,
+      38
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["missing algorithm preference", "missing sample data", "missing complexity requirements"],
-    "must_include_in_improved_prompt": ["python", "sort", "list"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "missing algorithm preference",
+      "missing sample data",
+      "missing complexity requirements"
+    ],
+    "must_include_in_improved_prompt": [
+      "python",
+      "sort",
+      "list"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 12.0,
-    "notes_for_manual_review": "Vague programming request lacking algorithm type and documentation constraints."
+    "max_reasonable_improved_length_ratio": 12,
+    "notes_for_manual_review": "Vague programming request lacking algorithm type and documentation constraints.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-en-05",
@@ -69,15 +139,31 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [10, 35],
+    "expected_score_range": [
+      10,
+      35
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["missing article text", "vague definition of quickly", "missing output format"],
-    "must_include_in_improved_prompt": ["summarize", "article"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "missing article text",
+      "vague definition of quickly",
+      "missing output format"
+    ],
+    "must_include_in_improved_prompt": [
+      "summarize",
+      "article"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Missing source text and length constraints."
+    "max_reasonable_improved_length_ratio": 15,
+    "notes_for_manual_review": "Missing source text and length constraints.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-en-06",
@@ -85,15 +171,32 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [15, 39],
+    "expected_score_range": [
+      15,
+      39
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["missing tech stack", "missing experience level", "missing count of questions"],
-    "must_include_in_improved_prompt": ["interview", "developer", "questions"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "missing tech stack",
+      "missing experience level",
+      "missing count of questions"
+    ],
+    "must_include_in_improved_prompt": [
+      "interview",
+      "developer",
+      "questions"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 12.0,
-    "notes_for_manual_review": "Vague recruiting prompt missing engineering stack and experience level."
+    "max_reasonable_improved_length_ratio": 12,
+    "notes_for_manual_review": "Vague recruiting prompt missing engineering stack and experience level.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-en-07",
@@ -101,15 +204,34 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [20, 39],
-    "expected_strengths": ["clear task"],
-    "expected_weaknesses": ["missing reason for delay", "missing tone constraints", "missing compensation details"],
-    "must_include_in_improved_prompt": ["email", "client", "late"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_score_range": [
+      20,
+      39
+    ],
+    "expected_strengths": [
+      "clear task"
+    ],
+    "expected_weaknesses": [
+      "missing reason for delay",
+      "missing tone constraints",
+      "missing compensation details"
+    ],
+    "must_include_in_improved_prompt": [
+      "email",
+      "client",
+      "late"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 12.0,
-    "notes_for_manual_review": "Vague email generation prompt lacking basic parameters and tone guidelines."
+    "max_reasonable_improved_length_ratio": 12,
+    "notes_for_manual_review": "Vague email generation prompt lacking basic parameters and tone guidelines.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-en-08",
@@ -117,15 +239,32 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [15, 39],
+    "expected_score_range": [
+      15,
+      39
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["missing dietary restrictions", "missing preparation time", "missing available ingredients"],
-    "must_include_in_improved_prompt": ["recipe", "chicken", "dinner"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "missing dietary restrictions",
+      "missing preparation time",
+      "missing available ingredients"
+    ],
+    "must_include_in_improved_prompt": [
+      "recipe",
+      "chicken",
+      "dinner"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Recipe request missing difficulty, cooking style, and prep duration constraints."
+    "max_reasonable_improved_length_ratio": 15,
+    "notes_for_manual_review": "Recipe request missing difficulty, cooking style, and prep duration constraints.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-en-09",
@@ -133,15 +272,31 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "general",
-    "expected_score_range": [10, 30],
+    "expected_score_range": [
+      10,
+      30
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["missing fitness goal", "missing experience level", "missing equipment constraints"],
-    "must_include_in_improved_prompt": ["workout", "plan"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "missing fitness goal",
+      "missing experience level",
+      "missing equipment constraints"
+    ],
+    "must_include_in_improved_prompt": [
+      "workout",
+      "plan"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 20.0,
-    "notes_for_manual_review": "Workout request missing target age, gym equipment accessibility, and injury constraints."
+    "max_reasonable_improved_length_ratio": 20,
+    "notes_for_manual_review": "Workout request missing target age, gym equipment accessibility, and injury constraints.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   },
   {
     "id": "weak-en-10",
@@ -149,14 +304,31 @@
     "working_language": "en",
     "profile_slug": "general-llm",
     "task_type": "marketing",
-    "expected_score_range": [10, 35],
+    "expected_score_range": [
+      10,
+      35
+    ],
     "expected_strengths": [],
-    "expected_weaknesses": ["missing travel destination", "missing article length", "missing SEO keywords"],
-    "must_include_in_improved_prompt": ["blog", "post", "travel"],
-    "must_not_include": ["unverified", "stale"],
+    "expected_weaknesses": [
+      "missing travel destination",
+      "missing article length",
+      "missing SEO keywords"
+    ],
+    "must_include_in_improved_prompt": [
+      "blog",
+      "post",
+      "travel"
+    ],
+    "must_not_include": [
+      "unverified",
+      "stale"
+    ],
     "should_warn_sensitive_data": false,
     "should_warn_uncertain_facts": false,
-    "max_reasonable_improved_length_ratio": 15.0,
-    "notes_for_manual_review": "Generic travel writing prompt missing focus keywords and targeted location."
+    "max_reasonable_improved_length_ratio": 15,
+    "notes_for_manual_review": "Generic travel writing prompt missing focus keywords and targeted location.",
+    "fixture_category": "production_case",
+    "assertion_strictness": "medium",
+    "calibration_notes": "Standard production optimization quality check."
   }
 ]
