@@ -1,7 +1,7 @@
 {
   "timestamp": "2026-06-02T20:17:58.596Z",
   "execution_mode": "mock",
-  "target_model_id": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+  "target_model_id": "deepseek/deepseek-v4-flash",
   "aggregate_metrics": {
     "total_fixtures": 76,
     "passed_fixtures": 71,
