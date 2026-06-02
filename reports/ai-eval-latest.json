@@ -1,18 +1,18 @@
 {
-  "timestamp": "2026-06-02T20:17:58.596Z",
-  "execution_mode": "mock",
+  "timestamp": "2026-06-02T21:25:06.382Z",
+  "execution_mode": "live",
   "target_model_id": "deepseek/deepseek-v4-flash",
   "aggregate_metrics": {
-    "total_fixtures": 76,
-    "passed_fixtures": 71,
-    "fixture_pass_rate": 93.4,
-    "score_range_pass_rate": 100,
+    "total_fixtures": 22,
+    "passed_fixtures": 1,
+    "fixture_pass_rate": 4.5,
+    "score_range_pass_rate": 63.6,
     "weakness_detection_rate": 100,
-    "required_inclusion_rate": 100,
-    "forbidden_claim_rate": 100,
-    "too_long_rate": 6.6,
+    "required_inclusion_rate": 86.2,
+    "forbidden_claim_rate": 95.2,
+    "too_long_rate": 50,
     "sensitive_data_pass_rate": 100,
-    "uncertainty_warning_pass_rate": 100
+    "uncertainty_warning_pass_rate": 50
   },
   "results": [
     {
@@ -20,862 +20,333 @@
       "task_type": "marketing",
       "working_language": "pl",
       "input_prompt": "Napisz opis produktu dla lampy.",
-      "polished_prompt": "Oto ulepszony prompt:  Napisz opis produktu dla lampy. lampa opis",
-      "actual_score": 20,
+      "polished_prompt": "Napisz profesjonalny opis produktu dla lampy stojącej 'Elegance' w stylu nowoczesnym, wykonanej z czarnego metalu i mosiądzu, przeznaczonej do salonu. Grupa docelowa: osoby w wieku 25–45 lat, ceniące design i jakość. Opis ma być sprzedażowy, o długości 80–120 słów, w formie jednego akapitu. Ton: elegancki, nowoczesny, ale przystępny. Obowiązkowo uwzględnij: materiał, styl, funkcjonalność (regulacja wysokości, ciepłe światło), oraz wezwanie do działania (np. 'Sprawdź już teraz'). Unikaj przesadzonych obietnic i nie dodawaj informacji, które nie zostały podane. Jeśli brakuje Ci jakiegoś szczegółu, napisz, że nie masz danych, zamiast go wymyślać.",
+      "actual_score": 26,
       "expected_score_range": [
         10,
         35
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
+      "weaknesses_pass": false,
+      "inclusions_pass": false,
       "exclusions_pass": true,
-      "length_ratio_pass": true,
+      "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.1,
+      "all_checks_passed": false,
+      "actual_ratio": 21,
       "max_ratio": 20,
       "top_weaknesses": [
-        "brak zdefiniowanej roli",
-        "brak kontekstu",
-        "brak formatu wyjściowego",
-        "brak ograniczeń"
+        "Brak kontekstu i szczegółów produktu",
+        "Nieokreślony format wyjściowy",
+        "Brak ograniczeń i wytycznych dotyczących tonu"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_notes": [
+        "Prompt zawiera instrukcję unikania przesadzonych obietnic, co zwiększa bezpieczeństwo i zgodność z prawem.",
+        "Nie ma ryzyka ujawnienia danych wrażliwych."
+      ],
+      "uncertainty_warnings": [
+        "Niektóre szczegóły produktu (np. dokładne wymiary, cena) nie zostały podane – model powinien je pominąć lub poprosić o uzupełnienie."
+      ],
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "missing_required_inclusions",
+        "length_ratio_exceeded"
+      ],
+      "passed_assertions": [
+        "score_in_range",
+        "forbidden_claims_absent",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 21,
+      "max_allowed_length_ratio": 20,
+      "missing_required_terms": [
+        "lampa"
+      ],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"brak zdefiniowanej roli\",\"brak formatu wyjściowego\"]; Missing required inclusions: [\"lampa\"]; Length ratio 21.00x exceeded max 20x"
     },
     {
       "id": "weak-pl-02",
       "task_type": "marketing",
       "working_language": "pl",
       "input_prompt": "Napisz post na Facebooka o naszych butach.",
-      "polished_prompt": "Oto ulepszony prompt:  Napisz post na Facebooka o naszych butach. post facebook buty",
-      "actual_score": 30,
+      "polished_prompt": "Napisz post na Facebooka promujący nową kolekcję butów marki [nazwa marki]. Grupa docelowa: kobiety w wieku 25–40 lat, aktywne, ceniące wygodę i styl. Kluczowe cechy butów: skóra naturalna, elastyczna podeszwa, ręczne wykonanie, dostępne w trzech kolorach. Ton wypowiedzi: przyjazny, inspirujący, z nutą ekskluzywności. Post ma zawierać: przyciągający nagłówek, krótki opis zalet, wezwanie do działania (np. 'Sprawdź naszą nową kolekcję!') oraz maksymalnie 3 emoji. Długość: 80–120 słów. Nie używaj przesadzonych obietnic ani nie wymyślaj cech, które nie zostały podane. Jeśli brakuje Ci jakichś informacji, zapytaj zamiast zgadywać. Przedstaw gotowy post w formie tekstu gotowego do publikacji.",
+      "actual_score": 20,
       "expected_score_range": [
         15,
         38
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
+      "weaknesses_pass": false,
+      "inclusions_pass": false,
       "exclusions_pass": true,
-      "length_ratio_pass": true,
+      "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2,
+      "all_checks_passed": false,
+      "actual_ratio": 16.55,
       "max_ratio": 15,
       "top_weaknesses": [
-        "brak grupy docelowej",
-        "brak CTA",
-        "brak cech butów",
-        "brak tonu wypowiedzi"
+        "Brak określonego celu i grupy docelowej",
+        "Brak struktury i formatu wyjściowego",
+        "Brak ograniczeń i wytycznych dotyczących tonu i treści"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-pl-03",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Przetłumacz ten tekst na angielski: 'Cześć, jak się masz dzisiaj?'",
-      "polished_prompt": "Oto ulepszony prompt:  Przetłumacz ten tekst na angielski: 'Cześć, jak się masz dzisiaj?' tłumaczenie angielski",
-      "actual_score": 30,
-      "expected_score_range": [
-        20,
-        39
+      "safety_notes": [
+        "Prompt nie zawiera danych wrażliwych ani poufnych.",
+        "Zaleca się unikanie kontrowersyjnych tematów i zgodność z polityką marki."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.68,
-      "max_ratio": 12,
-      "top_weaknesses": [
-        "brak tonu tłumaczenia",
-        "brak kontekstu użycia",
-        "brak wskazówek dotyczących formatu"
+      "uncertainty_warnings": [
+        "Nie podano nazwy marki – w improved prompt użyto placeholdera [nazwa marki] do uzupełnienia przez użytkownika.",
+        "Nie określono, czy buty są dla kobiet, mężczyzn, czy unisex – założono grupę docelową na podstawie typowego kontekstu, ale użytkownik powinien to zweryfikować."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-pl-04",
-      "task_type": "coding",
-      "working_language": "pl",
-      "input_prompt": "Napisz kod w Pythonie do sortowania listy.",
-      "polished_prompt": "Oto ulepszony prompt:  Napisz kod w Pythonie do sortowania listy. python sortowanie",
-      "actual_score": 30,
-      "expected_score_range": [
-        15,
-        38
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "missing_required_inclusions",
+        "length_ratio_exceeded"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.98,
-      "max_ratio": 12,
-      "top_weaknesses": [
-        "brak podania algorytmu",
-        "brak przykładowych danych",
-        "brak wymagań wydajnościowych"
+      "passed_assertions": [
+        "score_in_range",
+        "forbidden_claims_absent",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-pl-05",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Streszcz ten artykuł krótko.",
-      "polished_prompt": "Oto ulepszony prompt:  Streszcz ten artykuł krótko. streszczenie artykuł",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        35
+      "computed_length_ratio": 16.55,
+      "max_allowed_length_ratio": 15,
+      "missing_required_terms": [
+        "buty"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.57,
-      "max_ratio": 15,
-      "top_weaknesses": [
-        "brak artykułu wejściowego",
-        "brak definicji 'krótko'",
-        "brak formatu (np. wypunktowanie)"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-pl-06",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Przygotuj pytania na rozmowę kwalifikacyjną dla programisty.",
-      "polished_prompt": "Oto ulepszony prompt:  Przygotuj pytania na rozmowę kwalifikacyjną dla programisty. pytania rekrutacja rozmowa",
-      "actual_score": 30,
-      "expected_score_range": [
-        15,
-        39
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.83,
-      "max_ratio": 12,
-      "top_weaknesses": [
-        "brak podania technologii",
-        "brak poziomu doświadczenia",
-        "brak liczby pytań"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-pl-07",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Napisz maila do klienta, że paczka się opóźni.",
-      "polished_prompt": "Oto ulepszony prompt:  Napisz maila do klienta, że paczka się opóźni. mail klient opóźnienie",
-      "actual_score": 30,
-      "expected_score_range": [
-        20,
-        39
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2,
-      "max_ratio": 12,
-      "top_weaknesses": [
-        "brak przyczyny opóźnienia",
-        "brak tonu (uprzejmy/formalny)",
-        "brak propozycji rekompensaty"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-pl-08",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Daj mi przepis na obiad z kurczakiem.",
-      "polished_prompt": "Oto ulepszony prompt:  Daj mi przepis na obiad z kurczakiem. przepis kurczak obiad",
-      "actual_score": 30,
-      "expected_score_range": [
-        15,
-        39
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.22,
-      "max_ratio": 15,
-      "top_weaknesses": [
-        "brak ograniczeń dietetycznych",
-        "brak czasu przygotowania",
-        "brak listy dostępnych składników"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-pl-09",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Ułóż plan treningowy.",
-      "polished_prompt": "Oto ulepszony prompt:  Ułóż plan treningowy. trening plan",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        30
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.71,
-      "max_ratio": 20,
-      "top_weaknesses": [
-        "brak celu treningowego",
-        "brak poziomu zaawansowania",
-        "brak dostępnego sprzętu"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-pl-10",
-      "task_type": "marketing",
-      "working_language": "pl",
-      "input_prompt": "Napisz artykuł na bloga o podróżach.",
-      "polished_prompt": "Oto ulepszony prompt:  Napisz artykuł na bloga o podróżach. artykuł blog podróże",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        35
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.22,
-      "max_ratio": 15,
-      "top_weaknesses": [
-        "brak tematu przewodniego",
-        "brak długości artykułu",
-        "brak słów kluczowych SEO"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"brak grupy docelowej\",\"brak CTA\",\"brak cech butów\",\"brak tonu wypowiedzi\"]; Missing required inclusions: [\"buty\"]; Length ratio 16.55x exceeded max 15x"
     },
     {
       "id": "strong-pl-01",
       "task_type": "marketing",
       "working_language": "pl",
       "input_prompt": "Jesteś doświadczonym copywriterem e-commerce. Stwórz perswazyjny opis produktu dla ergonomicznego fotela biurowego 'AeroFlex' przeznaczonego dla programistów pracujących zdalnie. Kontekst: fotel posiada regulację 3D podłokietników, podparcie lędźwiowe i siatkę przepuszczającą powietrze. Format wyjściowy: 1. Chwytliwy nagłówek (maks. 10 słów), 2. Krótki akapit wprowadzający, 3. Lista 4 kluczowych zalet w formie wypunktowania z ikonami, 4. Wezwanie do działania (CTA). Ograniczenia: unikaj pustych frazesów marketingowych, skup się na zdrowiu kręgosłupa i ergonomii, długość opisu 150-200 słów.",
-      "polished_prompt": "Oto ulepszony prompt:  Jesteś doświadczonym copywriterem e-commerce. Stwórz perswazyjny opis produktu dla ergonomicznego fotela biurowego 'AeroFlex' przeznaczonego dla programistów pracujących zdalnie. Kontekst: fotel posiada regulację 3D podłokietników, podparcie lędźwiowe i siatkę przepuszczającą powietrze. Format wyjściowy: 1. Chwytliwy nagłówek (maks. 10 słów), 2. Krótki akapit wprowadzający, 3. Lista 4 kluczowych zalet w formie wypunktowania z ikonami, 4. Wezwanie do działania (CTA). Ograniczenia: unikaj pustych frazesów marketingowych, skup się na zdrowiu kręgosłupa i ergonomii, długość opisu 150-200 słów. AeroFlex fotel regulacja lędźwiowe",
-      "actual_score": 90,
+      "polished_prompt": "Jesteś doświadczonym copywriterem e-commerce specjalizującym się w ergonomii i zdrowiu kręgosłupa. Twoim zadaniem jest stworzenie perswazyjnego opisu produktu dla ergonomicznego fotela biurowego 'AeroFlex', przeznaczonego dla programistów pracujących zdalnie. Fotel posiada regulację 3D podłokietników, podparcie lędźwiowe i siatkę przepuszczającą powietrze. Ton: profesjonalny, ale przystępny, skierowany do programistów dbających o zdrowie. Unikaj pustych frazesów marketingowych (np. 'najlepszy', 'rewolucyjny') – skup się na konkretnych korzyściach dla zdrowia kręgosłupa i ergonomii. Długość opisu: 150-200 słów. Nie wymyślaj informacji o produkcie, jeśli nie masz pewności – pomiń lub zaznacz jako niepotwierdzoną. Unikaj wprowadzających w błąd stwierdzeń dotyczących zdrowia. Format wyjściowy (w Markdown): 1. **Nagłówek** (maks. 10 słów) 2. **Krótki akapit wprowadzający** 3. **Lista 4 kluczowych zalet** w formie wypunktowania z ikonami (np. ✅, 🪑, 💪) 4. **Wezwanie do działania (CTA)**. Kryterium sukcesu: opis musi zawierać co najmniej 2 konkretne korzyści dla zdrowia kręgosłupa.",
+      "actual_score": 79,
       "expected_score_range": [
         80,
         100
       ],
-      "score_pass": true,
+      "score_pass": false,
       "weaknesses_pass": true,
-      "inclusions_pass": true,
+      "inclusions_pass": false,
       "exclusions_pass": true,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.1,
+      "all_checks_passed": false,
+      "actual_ratio": 1.83,
       "max_ratio": 4,
       "top_weaknesses": [
-        "Brak istotnych słabości."
+        "Brak instrukcji antyhalucynacyjnych – model może wymyślać cechy produktu.",
+        "Ograniczenia są rozproszone w tekście, co utrudnia ich szybkie wychwycenie.",
+        "Brak precyzyjnego określenia tonu komunikacji."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_notes": [
+        "Prompt nie zawiera treści wrażliwych. Instrukcje są zgodne z etyką marketingową i nie promują dezinformacji."
+      ],
+      "uncertainty_warnings": [
+        "Brak informacji o specyficznych możliwościach modelu – wyniki mogą się różnić w zależności od implementacji."
+      ],
+      "failed_assertions": [
+        "score_out_of_range",
+        "missing_required_inclusions"
+      ],
+      "passed_assertions": [
+        "weakness_coverage_passed",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 1.83,
+      "max_allowed_length_ratio": 4,
+      "missing_required_terms": [
+        "regulacja"
+      ],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Score 79 out of expected range [80, 100]; Missing required inclusions: [\"regulacja\"]"
     },
     {
       "id": "strong-pl-02",
       "task_type": "coding",
       "working_language": "pl",
       "input_prompt": "Działasz jako starszy programista i architekt systemów Python. Twoim zadaniem jest przeprowadzenie refaktoryzacji poniższej funkcji pod kątem czytelności, wydajności oraz zgodności z PEP 8. Oto kod do analizy:\n```python\ndef f(l):\n  r = []\n  for i in l:\n    if i % 2 == 0:\n      r.append(i * 2)\n  return r\n```\nFormat odpowiedzi: 1. Ulepszona funkcja w bloku kodu z jawnym typowaniem, 2. Lista 3 głównych zmian wraz z uzasadnieniem technicznym, 3. Krótka informacja o złożoności obliczeniowej (Big O). Ograniczenia: nie używaj zewnętrznych bibliotek, zachowaj oryginalną logikę biznesową.",
-      "polished_prompt": "Oto ulepszony prompt:  Działasz jako starszy programista i architekt systemów Python. Twoim zadaniem jest przeprowadzenie refaktoryzacji poniższej funkcji pod kątem czytelności, wydajności oraz zgodności z PEP 8. Oto kod do analizy:\n```python\ndef f(l):\n  r = []\n  for i in l:\n    if i % 2 == 0:\n      r.append(i * 2)\n  return r\n```\nFormat odpowiedzi: 1. Ulepszona funkcja w bloku kodu z jawnym typowaniem, 2. Lista 3 głównych zmian wraz z uzasadnieniem technicznym, 3. Krótka informacja o złożoności obliczeniowej (Big O). Ograniczenia: nie używaj zewnętrznych bibliotek, zachowaj oryginalną logikę biznesową. python refaktoryzacja PEP 8",
-      "actual_score": 90,
+      "polished_prompt": "Działasz jako starszy programista i architekt systemów Python. Twoim zadaniem jest przeprowadzenie refaktoryzacji poniższej funkcji pod kątem czytelności, wydajności oraz zgodności z PEP 8. Funkcja przyjmuje listę liczb całkowitych (może być pusta) i zwraca nową listę zawierającą podwojone wartości liczb parzystych z wejścia. Oto kod do analizy:",
+      "actual_score": 68,
       "expected_score_range": [
         85,
         100
       ],
-      "score_pass": true,
+      "score_pass": false,
       "weaknesses_pass": true,
-      "inclusions_pass": true,
+      "inclusions_pass": false,
       "exclusions_pass": true,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.09,
+      "all_checks_passed": false,
+      "actual_ratio": 0.59,
       "max_ratio": 4,
       "top_weaknesses": [
-        "Brak istotnych słabości."
+        "Brak precyzyjnego kontekstu biznesowego i założeń dotyczących danych wejściowych.",
+        "Nieprecyzyjne ograniczenia, które mogą prowadzić do różnych interpretacji.",
+        "Brak instrukcji dotyczących testowalności i obsługi błędów."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-pl-03",
-      "task_type": "marketing",
-      "working_language": "pl",
-      "input_prompt": "Jesteś ekspertem SEO i content managerem. Napisz zoptymalizowany pod kątem wyszukiwarek artykuł na bloga na temat 'Jak zacząć oszczędzać na emeryturę przed trzydziestką'. Grupa docelowa: młodzi dorośli (20-29 lat) w Polsce, zarabiający średnią krajową. Słowa kluczowe do użycia: 'oszczędzanie na emeryturę', 'IKE i IKZE', 'inwestowanie dla początkujących'. Format: 1. Tytuł zoptymalizowany pod H1, 2. Spis treści, 3. 3 sekcje tematyczne (nagłówki H2), 4. Podsumowanie z checklistą w tabeli Markdown. Ograniczenia: długość 800-1000 słów, ton profesjonalny ale przystępny, unikaj skomplikowanego żargonu finansowego.",
-      "polished_prompt": "Oto ulepszony prompt:  Jesteś ekspertem SEO i content managerem. Napisz zoptymalizowany pod kątem wyszukiwarek artykuł na bloga na temat 'Jak zacząć oszczędzać na emeryturę przed trzydziestką'. Grupa docelowa: młodzi dorośli (20-29 lat) w Polsce, zarabiający średnią krajową. Słowa kluczowe do użycia: 'oszczędzanie na emeryturę', 'IKE i IKZE', 'inwestowanie dla początkujących'. Format: 1. Tytuł zoptymalizowany pod H1, 2. Spis treści, 3. 3 sekcje tematyczne (nagłówki H2), 4. Podsumowanie z checklistą w tabeli Markdown. Ograniczenia: długość 800-1000 słów, ton profesjonalny ale przystępny, unikaj skomplikowanego żargonu finansowego. SEO emeryturę IKE IKZE",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        98
+      "safety_notes": [
+        "Prompt nie zawiera wrażliwych danych.",
+        "Zaleca się, aby model unikał generowania kodu, który mógłby prowadzić do naruszenia bezpieczeństwa (np. wstrzykiwanie kodu)."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.07,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
+      "uncertainty_warnings": [
+        "Profil modelu jest niezweryfikowany – wyniki mogą być mniej przewidywalne.",
+        "Niektóre aspekty refaktoryzacji (np. optymalność wydajnościowa) mogą wymagać weryfikacji przez programistę."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-pl-04",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Jesteś specjalistą ds. obsługi klienta w sklepie internetowym z elektroniką. Napisz szablon odpowiedzi e-mail do klienta, którego zamówienie (smartfon za 3000 zł) opóźni się o 5 dni roboczych z powodu braku towaru w magazynie centralnym. Cel: załagodzenie sytuacji i utrzymanie zaufania klienta. Format maila: 1. Jasny temat wiadomości, 2. Przeprosiny z podaniem przyczyny, 3. Informacja o nowym terminie dostawy (28 maja 2026), 4. Propozycja rekompensaty (kod rabatowy 10% na kolejne zakupy), 5. Profesjonalne podpisanie. Ton: empatyczny, profesjonalny, oficjalny.",
-      "polished_prompt": "Oto ulepszony prompt:  Jesteś specjalistą ds. obsługi klienta w sklepie internetowym z elektroniką. Napisz szablon odpowiedzi e-mail do klienta, którego zamówienie (smartfon za 3000 zł) opóźni się o 5 dni roboczych z powodu braku towaru w magazynie centralnym. Cel: załagodzenie sytuacji i utrzymanie zaufania klienta. Format maila: 1. Jasny temat wiadomości, 2. Przeprosiny z podaniem przyczyny, 3. Informacja o nowym terminie dostawy (28 maja 2026), 4. Propozycja rekompensaty (kod rabatowy 10% na kolejne zakupy), 5. Profesjonalne podpisanie. Ton: empatyczny, profesjonalny, oficjalny. smartfon opóźnienie rekompensata",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        98
+      "failed_assertions": [
+        "score_out_of_range",
+        "missing_required_inclusions"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.1,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
+      "passed_assertions": [
+        "weakness_coverage_passed",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-pl-05",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Jesteś analitykiem prawnym. Przygotuj streszczenie menedżerskie poniższego wyciągu z umowy najmu lokalu komercyjnego. Kontekst: skup się wyłącznie na obowiązkach najemcy, terminach płatności kar umownych oraz procedurze wypowiedzenia. Oto tekst umowy:\n[Sekcja 12: Wypowiedzenie najmu wymaga 3-miesięcznego okresu wypowiedzenia ze skutkiem na koniec miesiąca kalendarzowego. W przypadku zwłoki z zapłatą czynszu przekraczającej 14 dni, Wynajmujący ma prawo rozwiązać umowę bez zachowania okresu wypowiedzenia po uprzednim pisemnym wezwaniu z dodatkowym 7-dniowym terminem.]\nFormat wyjściowy: lista wypunktowana 3 kluczowych ryzyk dla najemcy oraz tabela Markdown podsumowująca terminy. Ograniczenia: maksymalnie 150 słów, zachowaj ścisłą terminologię prawną.",
-      "polished_prompt": "Oto ulepszony prompt:  Jesteś analitykiem prawnym. Przygotuj streszczenie menedżerskie poniższego wyciągu z umowy najmu lokalu komercyjnego. Kontekst: skup się wyłącznie na obowiązkach najemcy, terminach płatności kar umownych oraz procedurze wypowiedzenia. Oto tekst umowy:\n[Sekcja 12: Wypowiedzenie najmu wymaga 3-miesięcznego okresu wypowiedzenia ze skutkiem na koniec miesiąca kalendarzowego. W przypadku zwłoki z zapłatą czynszu przekraczającej 14 dni, Wynajmujący ma prawo rozwiązać umowę bez zachowania okresu wypowiedzenia po uprzednim pisemnym wezwaniu z dodatkowym 7-dniowym terminem.]\nFormat wyjściowy: lista wypunktowana 3 kluczowych ryzyk dla najemcy oraz tabela Markdown podsumowująca terminy. Ograniczenia: maksymalnie 150 słów, zachowaj ścisłą terminologię prawną. najem wypowiedzenie kar",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        99
+      "computed_length_ratio": 0.59,
+      "max_allowed_length_ratio": 4,
+      "missing_required_terms": [
+        "refaktoryzacja"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.06,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-pl-06",
-      "task_type": "coding",
-      "working_language": "pl",
-      "input_prompt": "Działasz jako doświadczony technical writer. Dokonaj edycji i uproszczenia poniższego akapitu dokumentacji technicznej API dla integratorów płatności. Cel: usunięcie pasywnej strony, poprawa przejrzystości, sformatowanie kroków jako numerowanej listy. Tekst:\n[W celu zainicjowania transakcji płatniczej przez integratora, żądanie POST musi zostać wysłane na endpoint /v1/charge, do którego załączony musi zostać nagłówek autoryzacyjny oraz poprawny JSON zawierający kwotę i walutę.]\nFormat wyjściowy: 1. Poprawiony akapit, 2. Krok po kroku lista wymagań technicznych, 3. Przykładowe nagłówki HTTP w bloku kodu.",
-      "polished_prompt": "Oto ulepszony prompt:  Działasz jako doświadczony technical writer. Dokonaj edycji i uproszczenia poniższego akapitu dokumentacji technicznej API dla integratorów płatności. Cel: usunięcie pasywnej strony, poprawa przejrzystości, sformatowanie kroków jako numerowanej listy. Tekst:\n[W celu zainicjowania transakcji płatniczej przez integratora, żądanie POST musi zostać wysłane na endpoint /v1/charge, do którego załączony musi zostać nagłówek autoryzacyjny oraz poprawny JSON zawierający kwotę i walutę.]\nFormat wyjściowy: 1. Poprawiony akapit, 2. Krok po kroku lista wymagań technicznych, 3. Przykładowe nagłówki HTTP w bloku kodu. API /v1/charge POST",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        97
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.07,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-pl-07",
-      "task_type": "coding",
-      "working_language": "pl",
-      "input_prompt": "Jesteś ekspertem ds. baz danych PostgreSQL. Zoptymalizuj poniższe zapytanie SQL, które wykonuje się zbyt wolno na tabeli z milionem rekordów. Zapytanie:\n```sql\nSELECT * FROM orders WHERE status = 'completed' AND EXTRACT(YEAR FROM created_at) = 2025;\n```\nFormat odpowiedzi: 1. Zoptymalizowane zapytanie SQL, 2. Rekomendacja dotycząca utworzenia indeksu (DDL) wraz z wyjaśnieniem, dlaczego funkcja EXTRACT uniemożliwiała użycie zwykłego indeksu, 3. Alternatywne podejście (np. filtrowanie zakresów dat). Ograniczenia: zapytanie musi być zgodne z PostgreSQL 15, unikaj używania niestandardowych rozszerzeń.",
-      "polished_prompt": "Oto ulepszony prompt:  Jesteś ekspertem ds. baz danych PostgreSQL. Zoptymalizuj poniższe zapytanie SQL, które wykonuje się zbyt wolno na tabeli z milionem rekordów. Zapytanie:\n```sql\nSELECT * FROM orders WHERE status = 'completed' AND EXTRACT(YEAR FROM created_at) = 2025;\n```\nFormat odpowiedzi: 1. Zoptymalizowane zapytanie SQL, 2. Rekomendacja dotycząca utworzenia indeksu (DDL) wraz z wyjaśnieniem, dlaczego funkcja EXTRACT uniemożliwiała użycie zwykłego indeksu, 3. Alternatywne podejście (np. filtrowanie zakresów dat). Ograniczenia: zapytanie musi być zgodne z PostgreSQL 15, unikaj używania niestandardowych rozszerzeń. PostgreSQL SQL EXTRACT index",
-      "actual_score": 90,
-      "expected_score_range": [
-        85,
-        100
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.09,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-pl-08",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Jesteś licencjonowanym dietetykiem i trenerem personalnym. Przygotuj 1-dniowy przykładowy jadłospis redukcyjny oraz krótki zestaw ćwiczeń domowych dla 35-letniego mężczyzny pracującego przy biurku. Dane: waga 90 kg, wzrost 180 cm, cel: redukcja wagi, brak kontuzji, dostępny sprzęt: 2 hantle po 5 kg. Wymagania kaloryczne: 2000 kcal, wysoka zawartość białka (min. 130g). Format wyjściowy: 1. Tabela Markdown z 4 posiłkami (składniki, kalorie, makroskładniki), 2. Opis 3 ćwiczeń siłowych (seria, powtórzenia, technika), 3. Wskazówki dotyczące nawodnienia.",
-      "polished_prompt": "Oto ulepszony prompt:  Jesteś licencjonowanym dietetykiem i trenerem personalnym. Przygotuj 1-dniowy przykładowy jadłospis redukcyjny oraz krótki zestaw ćwiczeń domowych dla 35-letniego mężczyzny pracującego przy biurku. Dane: waga 90 kg, wzrost 180 cm, cel: redukcja wagi, brak kontuzji, dostępny sprzęt: 2 hantle po 5 kg. Wymagania kaloryczne: 2000 kcal, wysoka zawartość białka (min. 130g). Format wyjściowy: 1. Tabela Markdown z 4 posiłkami (składniki, kalorie, makroskładniki), 2. Opis 3 ćwiczeń siłowych (seria, powtórzenia, technika), 3. Wskazówki dotyczące nawodnienia. kcal hantle białko posiłki",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        97
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.09,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-pl-09",
-      "task_type": "marketing",
-      "working_language": "pl",
-      "input_prompt": "Jesteś projektantem UX i specjalistą ds. mikrocopy. Napisz 3 alternatywne wersje tekstu na przycisk finalizacji zakupu oraz powiązany komunikat błędu płatności w koszyku e-commerce. Kontekst: koszyk jest minimalistyczny, zależy nam na zmniejszeniu wskaźnika porzuceń koszyka o 5%. Wersje mają reprezentować style: 1. Standardowy/Jasny, 2. Aktywny/Zorientowany na korzyść (benefit-oriented), 3. Krótki/Minimalistyczny. Format wyjściowy: tabela Markdown porównująca alternatywy pod kątem tekstu na przycisku i opisu błędu.",
-      "polished_prompt": "Oto ulepszony prompt:  Jesteś projektantem UX i specjalistą ds. mikrocopy. Napisz 3 alternatywne wersje tekstu na przycisk finalizacji zakupu oraz powiązany komunikat błędu płatności w koszyku e-commerce. Kontekst: koszyk jest minimalistyczny, zależy nam na zmniejszeniu wskaźnika porzuceń koszyka o 5%. Wersje mają reprezentować style: 1. Standardowy/Jasny, 2. Aktywny/Zorientowany na korzyść (benefit-oriented), 3. Krótki/Minimalistyczny. Format wyjściowy: tabela Markdown porównująca alternatywy pod kątem tekstu na przycisku i opisu błędu. UX koszyk przycisk",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        96
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.08,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-pl-10",
-      "task_type": "general",
-      "working_language": "pl",
-      "input_prompt": "Działasz jako senior product owner. Przygotuj kompletną User Story oraz kryteria akceptacji (Acceptance Criteria) dla funkcji 'Integracja logowania przez Google' w aplikacji mobilnej. Format wyjściowy: 1. Szablon: Jako [rola], chcę [funkcja], aby [korzyść], 2. Kryteria akceptacji w formacie Given-When-Then (min. 3 scenariusze: sukces logowania, anulowanie przez użytkownika, błąd sieci), 3. Uwagi techniczne dotyczące bezpieczeństwa tokenów OAuth 2.0. Ograniczenia: ton formalny, struktura zgodna ze standardami zwinnego Agile.",
-      "polished_prompt": "Oto ulepszony prompt:  Działasz jako senior product owner. Przygotuj kompletną User Story oraz kryteria akceptacji (Acceptance Criteria) dla funkcji 'Integracja logowania przez Google' w aplikacji mobilnej. Format wyjściowy: 1. Szablon: Jako [rola], chcę [funkcja], aby [korzyść], 2. Kryteria akceptacji w formacie Given-When-Then (min. 3 scenariusze: sukces logowania, anulowanie przez użytkownika, błąd sieci), 3. Uwagi techniczne dotyczące bezpieczeństwa tokenów OAuth 2.0. Ograniczenia: ton formalny, struktura zgodna ze standardami zwinnego Agile. User Story Given-When-Then OAuth 2.0",
-      "actual_score": 90,
-      "expected_score_range": [
-        82,
-        100
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.11,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Score 68 out of expected range [85, 100]; Missing required inclusions: [\"refaktoryzacja\"]"
     },
     {
       "id": "weak-en-01",
       "task_type": "marketing",
       "working_language": "en",
       "input_prompt": "Write a product description for a lamp.",
-      "polished_prompt": "Here is the improved prompt:  Write a product description for a lamp. lamp description",
-      "actual_score": 20,
+      "polished_prompt": "Write a marketing product description for a modern desk lamp called 'LuminaTask.' The lamp features an adjustable arm, warm LED light with three brightness levels, and a sleek matte black finish. Target audience: remote workers and students who value ergonomic, stylish home office setups. Brand voice: professional, warm, and minimalist. Output format: a headline (max 10 words), a persuasive paragraph (50-70 words), a bullet list of 3 key features, and a call-to-action (one sentence). Total word count: 100-150 words. Do not invent any specifications or features not listed here. If any detail is missing, state that it is not provided rather than guessing.",
+      "actual_score": 28,
       "expected_score_range": [
         10,
         35
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
       "exclusions_pass": true,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.21,
+      "all_checks_passed": false,
+      "actual_ratio": 16.95,
       "max_ratio": 20,
       "top_weaknesses": [
-        "missing role",
-        "missing context",
-        "missing output format",
-        "missing constraints"
+        "Extreme lack of context and product details",
+        "No output format or structure specified",
+        "No constraints on length, tone, or content"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_notes": [
+        "No sensitive data was present in the original prompt.",
+        "The improved prompt includes a guardrail against hallucination, which also reduces the risk of generating misleading claims."
+      ],
+      "uncertainty_warnings": [
+        "The model profile lacks verified details; the prompt assumes a standard LLM with no special constraints.",
+        "If the actual model has a very small context window, the improved prompt (still concise) should fit easily."
+      ],
+      "failed_assertions": [
+        "hidden_assertion_failed"
+      ],
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 16.95,
+      "max_allowed_length_ratio": 20,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"missing role\",\"missing context\",\"missing output format\",\"missing constraints\"]"
     },
     {
       "id": "weak-en-02",
       "task_type": "marketing",
       "working_language": "en",
       "input_prompt": "Write a Facebook post about our shoes.",
-      "polished_prompt": "Here is the improved prompt:  Write a Facebook post about our shoes. facebook post shoes",
-      "actual_score": 30,
+      "polished_prompt": "Write a Facebook post to promote our new line of lightweight running shoes, 'AirStride Pro.' The target audience is fitness enthusiasts aged 20-45 who value comfort and performance. Use an energetic and motivational tone. The post must be under 150 characters (including spaces) and include a call to action to visit our website. Output format: a single paragraph with a headline, body, call to action, and 2-3 relevant hashtags. Do not make any unsubstantiated claims about the product's benefits. If you lack specific information about the shoes, state that instead of inventing details.",
+      "actual_score": 26,
       "expected_score_range": [
         15,
         38
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
       "exclusions_pass": true,
-      "length_ratio_pass": true,
+      "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.32,
+      "all_checks_passed": false,
+      "actual_ratio": 15.5,
       "max_ratio": 15,
       "top_weaknesses": [
-        "missing audience",
-        "missing CTA",
-        "missing footwear features",
-        "missing tone"
+        "No context about the brand, product, or audience",
+        "No constraints on length, tone, or content",
+        "No specified output format",
+        "High ambiguity leading to potential misinterpretation",
+        "Lack of measurable success criteria"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-en-03",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Translate this text to Spanish: 'Hello, how are you today?'",
-      "polished_prompt": "Here is the improved prompt:  Translate this text to Spanish: 'Hello, how are you today?' translate spanish",
-      "actual_score": 30,
-      "expected_score_range": [
-        20,
-        39
+      "safety_notes": [
+        "The improved prompt includes a guardrail against unsubstantiated claims to reduce the risk of misleading marketing.",
+        "No sensitive data is present in the original or improved prompt."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.81,
-      "max_ratio": 12,
-      "top_weaknesses": [
-        "missing tone register",
-        "missing context of usage",
-        "missing layout guidance"
+      "uncertainty_warnings": [
+        "The model profile lacks verified specifications, so performance may vary across different LLMs.",
+        "The improved prompt assumes the model can follow structured instructions and adhere to character limits."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-en-04",
-      "task_type": "coding",
-      "working_language": "en",
-      "input_prompt": "Write Python code to sort a list.",
-      "polished_prompt": "Here is the improved prompt:  Write Python code to sort a list. python sort list",
-      "actual_score": 30,
-      "expected_score_range": [
-        15,
-        38
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "length_ratio_exceeded"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.42,
-      "max_ratio": 12,
-      "top_weaknesses": [
-        "missing algorithm preference",
-        "missing sample data",
-        "missing complexity requirements"
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-en-05",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Summarize this article quickly.",
-      "polished_prompt": "Here is the improved prompt:  Summarize this article quickly. summarize article",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        35
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.55,
-      "max_ratio": 15,
-      "top_weaknesses": [
-        "missing article text",
-        "vague definition of quickly",
-        "missing output format"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-en-06",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Prepare interview questions for a developer.",
-      "polished_prompt": "Here is the improved prompt:  Prepare interview questions for a developer. interview developer questions",
-      "actual_score": 30,
-      "expected_score_range": [
-        15,
-        39
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.36,
-      "max_ratio": 12,
-      "top_weaknesses": [
-        "missing tech stack",
-        "missing experience level",
-        "missing count of questions"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-en-07",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Write an email to a client saying their package is late.",
-      "polished_prompt": "Here is the improved prompt:  Write an email to a client saying their package is late. email client late",
-      "actual_score": 30,
-      "expected_score_range": [
-        20,
-        39
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.86,
-      "max_ratio": 12,
-      "top_weaknesses": [
-        "missing reason for delay",
-        "missing tone constraints",
-        "missing compensation details"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-en-08",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Give me a recipe for dinner with chicken.",
-      "polished_prompt": "Here is the improved prompt:  Give me a recipe for dinner with chicken. recipe chicken dinner",
-      "actual_score": 30,
-      "expected_score_range": [
-        15,
-        39
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.27,
-      "max_ratio": 15,
-      "top_weaknesses": [
-        "missing dietary restrictions",
-        "missing preparation time",
-        "missing available ingredients"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-en-09",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Create a workout plan.",
-      "polished_prompt": "Here is the improved prompt:  Create a workout plan. workout plan",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        30
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.95,
-      "max_ratio": 20,
-      "top_weaknesses": [
-        "missing fitness goal",
-        "missing experience level",
-        "missing equipment constraints"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "weak-en-10",
-      "task_type": "marketing",
-      "working_language": "en",
-      "input_prompt": "Write a blog post about travel.",
-      "polished_prompt": "Here is the improved prompt:  Write a blog post about travel. blog post travel",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        35
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.52,
-      "max_ratio": 15,
-      "top_weaknesses": [
-        "missing travel destination",
-        "missing article length",
-        "missing SEO keywords"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "computed_length_ratio": 15.5,
+      "max_allowed_length_ratio": 15,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"missing audience\",\"missing CTA\",\"missing footwear features\",\"missing tone\"]; Length ratio 15.50x exceeded max 15x"
     },
     {
       "id": "strong-en-01",
       "task_type": "marketing",
       "working_language": "en",
       "input_prompt": "Act as a senior e-commerce copywriter. Create a concise product description for a premium desk lamp targeted at remote workers. Product details: features adjustable warm-to-cool LED lights, built-in wireless fast-charger, and a minimal matte black aluminum finish. Output: 1. Catchy headline (max 10 words), 2. Empathic intro paragraph highlighting eye strain relief, 3. 3 bullet points with icons outlining specs, 4. Short, action-driven CTA. Constraints: avoid hype-heavy marketing jargon, focus on wellness and productivity, total length 120-150 words.",
-      "polished_prompt": "Here is the improved prompt:  Act as a senior e-commerce copywriter. Create a concise product description for a premium desk lamp targeted at remote workers. Product details: features adjustable warm-to-cool LED lights, built-in wireless fast-charger, and a minimal matte black aluminum finish. Output: 1. Catchy headline (max 10 words), 2. Empathic intro paragraph highlighting eye strain relief, 3. 3 bullet points with icons outlining specs, 4. Short, action-driven CTA. Constraints: avoid hype-heavy marketing jargon, focus on wellness and productivity, total length 120-150 words. desk lamp matte black LED wireless",
-      "actual_score": 90,
+      "polished_prompt": "Act as a senior e-commerce copywriter for a minimalist, professional brand. Create a concise product description for a premium desk lamp targeting remote workers, to be used on a product page. Product details: adjustable warm-to-cool LED lights, built-in wireless fast-charger, matte black aluminum finish. Brand tone: clean, modern, focused on wellness and productivity. Output format: 1. Catchy headline (max 10 words), 2. Empathic intro paragraph (acknowledge remote worker eye strain and need for comfort), 3. 3 bullet points with emoji icons outlining key specs, 4. Short, action-driven CTA (e.g., 'Upgrade your workspace today'). Constraints: avoid hype-heavy marketing jargon, focus on wellness and productivity, total length 120-150 words. Important: Do not fabricate any product specifications. If any detail is unclear or missing, state that you are unable to confirm it.",
+      "actual_score": 83,
       "expected_score_range": [
         80,
         100
@@ -888,1277 +359,831 @@
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
       "all_checks_passed": true,
-      "actual_ratio": 1.12,
+      "actual_ratio": 1.59,
       "max_ratio": 4,
       "top_weaknesses": [
-        "Brak istotnych słabości."
+        "Lack of brand voice and platform context",
+        "Ambiguity in 'empathic' and 'action-driven CTA'",
+        "No anti-hallucination guardrails or testability instructions"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_notes": [
+        "The prompt contains no sensitive data or harmful requests.",
+        "The anti-hallucination instruction helps ensure factual accuracy and safety."
+      ],
+      "uncertainty_warnings": [
+        "The model profile is unverified; actual model capabilities may vary.",
+        "The prompt assumes the model can generate creative copy; results may vary by model."
+      ],
+      "failed_assertions": [],
+      "passed_assertions": [
+        "score_in_range",
+        "weakness_coverage_passed",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 1.59,
+      "max_allowed_length_ratio": 4,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "All checks passed successfully."
     },
     {
       "id": "strong-en-02",
       "task_type": "coding",
       "working_language": "en",
       "input_prompt": "Act as a senior Python developer and systems architect. Refactor the following Python function to improve readability, efficiency, and full compliance with PEP 8. Here is the code to audit:\n```python\ndef f(l):\n  r = []\n  for i in l:\n    if i % 2 == 0:\n      r.append(i * 2)\n  return r\n```\nOutput layout: 1. Refactored function in a code block with explicit type hinting, 2. Bullet list of 3 key improvements and their technical justification, 3. Big O time and space complexity notes. Constraints: do not import third-party libraries, preserve the original list-comprehension equivalent logic.",
-      "polished_prompt": "Here is the improved prompt:  Act as a senior Python developer and systems architect. Refactor the following Python function to improve readability, efficiency, and full compliance with PEP 8. Here is the code to audit:\n```python\ndef f(l):\n  r = []\n  for i in l:\n    if i % 2 == 0:\n      r.append(i * 2)\n  return r\n```\nOutput layout: 1. Refactored function in a code block with explicit type hinting, 2. Bullet list of 3 key improvements and their technical justification, 3. Big O time and space complexity notes. Constraints: do not import third-party libraries, preserve the original list-comprehension equivalent logic. Python PEP 8 refactor complexity",
-      "actual_score": 90,
+      "polished_prompt": "Act as a senior Python developer and systems architect. Refactor the following Python function to improve readability, efficiency, and full compliance with PEP 8. The refactored function must maintain the same logic as the original (filter even numbers and double them), but can be written as a for loop or list comprehension as long as it is PEP 8 compliant and readable. Here is the code to audit:```pythondef f(l):  r = []  for i in l:    if i % 2 == 0:      r.append(i * 2)  return r```Output layout:1. Refactored function in a code block with explicit type hinting.2. Bullet list of 3 key improvements and their technical justification.3. Big O time and space complexity notes, with a brief justification for each.Constraints: do not import third-party libraries. If you cannot fulfill any part of this request due to limitations, please state that explicitly. Do not make assumptions beyond the information provided.",
+      "actual_score": 81,
       "expected_score_range": [
         85,
         100
       ],
-      "score_pass": true,
+      "score_pass": false,
       "weaknesses_pass": true,
       "inclusions_pass": true,
       "exclusions_pass": true,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.11,
+      "all_checks_passed": false,
+      "actual_ratio": 1.55,
       "max_ratio": 4,
       "top_weaknesses": [
-        "Brak istotnych słabości."
+        "Model profile is unverified, so no specific capabilities can be assumed.",
+        "Potential ambiguity in 'preserve the original list-comprehension equivalent logic' could lead to misinterpretation.",
+        "Lack of explicit request for justification of Big O analysis may result in shallow output."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-en-03",
-      "task_type": "marketing",
-      "working_language": "en",
-      "input_prompt": "Act as an SEO expert and content strategist. Write an SEO-optimized blog article on the topic 'How to start saving for retirement in your twenties'. Target audience: US young adults (ages 20-29) earning entry-level salaries. Target keywords to incorporate naturally: 'saving for retirement', 'Roth IRA vs 401k', 'beginner investing'. Structure: 1. H1 title, 2. Table of contents, 3. 3 body sections (nagłówki H2), 4. Summary table in Markdown. Constraints: 800-1000 words, informative and encouraging tone, zero speculative financial advice.",
-      "polished_prompt": "Here is the improved prompt:  Act as an SEO expert and content strategist. Write an SEO-optimized blog article on the topic 'How to start saving for retirement in your twenties'. Target audience: US young adults (ages 20-29) earning entry-level salaries. Target keywords to incorporate naturally: 'saving for retirement', 'Roth IRA vs 401k', 'beginner investing'. Structure: 1. H1 title, 2. Table of contents, 3. 3 body sections (nagłówki H2), 4. Summary table in Markdown. Constraints: 800-1000 words, informative and encouraging tone, zero speculative financial advice. Roth IRA 401k retirement",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        98
+      "safety_notes": [
+        "No sensitive data or security risks detected. The prompt is safe to process."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.1,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
+      "uncertainty_warnings": [
+        "The model profile is unverified; do not assume any specific model capabilities or limitations beyond what is stated in the profile."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-en-04",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Act as a customer support specialist for an e-commerce electronics retailer. Draft an email to a customer whose $1,200 smartphone order has been delayed by 5 business days due to an unexpected stock shortage at the primary logistics center. Goal: de-escalate the friction and maintain high customer satisfaction. Output format: 1. Professional subject line, 2. Sincere apology with clear cause, 3. New estimated delivery date (May 28, 2026), 4. Compensation offer (10% discount code for next purchase), 5. Formal closing. Tone: empathetic, professional, clear.",
-      "polished_prompt": "Here is the improved prompt:  Act as a customer support specialist for an e-commerce electronics retailer. Draft an email to a customer whose $1,200 smartphone order has been delayed by 5 business days due to an unexpected stock shortage at the primary logistics center. Goal: de-escalate the friction and maintain high customer satisfaction. Output format: 1. Professional subject line, 2. Sincere apology with clear cause, 3. New estimated delivery date (May 28, 2026), 4. Compensation offer (10% discount code for next purchase), 5. Formal closing. Tone: empathetic, professional, clear. smartphone delay compensation",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        98
+      "failed_assertions": [
+        "score_out_of_range"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.11,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
+      "passed_assertions": [
+        "weakness_coverage_passed",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-en-05",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Act as a corporate legal analyst. Summarize the following termination clause from a commercial lease agreement. Focus exclusively on tenant obligations, penalty deadlines, and notification timeframes. Clause text:\n[Section 14: Termination of lease requires 3-month written notice served at the end of a calendar month. In the event of rent payment default exceeding 15 days, Landlord may terminate the lease immediately without notice after a written warning and a final 7-day cure period.]\nOutput: bulleted list of 3 tenant risks and a Markdown table summarizing cure periods. Constraints: max 150 words, keep precise legal terminology.",
-      "polished_prompt": "Here is the improved prompt:  Act as a corporate legal analyst. Summarize the following termination clause from a commercial lease agreement. Focus exclusively on tenant obligations, penalty deadlines, and notification timeframes. Clause text:\n[Section 14: Termination of lease requires 3-month written notice served at the end of a calendar month. In the event of rent payment default exceeding 15 days, Landlord may terminate the lease immediately without notice after a written warning and a final 7-day cure period.]\nOutput: bulleted list of 3 tenant risks and a Markdown table summarizing cure periods. Constraints: max 150 words, keep precise legal terminology. lease termination cure",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        99
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.08,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-en-06",
-      "task_type": "coding",
-      "working_language": "en",
-      "input_prompt": "Act as a senior technical writer. Rewrite and simplify the following technical API documentation paragraph. Goal: eliminate passive voice, improve actionability, and organize key requirements as a numbered list. Text:\n[For a payment charge transaction to be initiated by an integrator, a POST request must be transmitted to the /v1/charge endpoint, to which must be attached an authorization header and a valid JSON payload containing currency and amount.]\nOutput: 1. Revised active voice paragraph, 2. Numbered step-by-step checklist, 3. Mock curl block showing headers.",
-      "polished_prompt": "Here is the improved prompt:  Act as a senior technical writer. Rewrite and simplify the following technical API documentation paragraph. Goal: eliminate passive voice, improve actionability, and organize key requirements as a numbered list. Text:\n[For a payment charge transaction to be initiated by an integrator, a POST request must be transmitted to the /v1/charge endpoint, to which must be attached an authorization header and a valid JSON payload containing currency and amount.]\nOutput: 1. Revised active voice paragraph, 2. Numbered step-by-step checklist, 3. Mock curl block showing headers. API /v1/charge POST",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        97
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.09,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-en-07",
-      "task_type": "coding",
-      "working_language": "en",
-      "input_prompt": "Act as an expert PostgreSQL database administrator. Optimize the following slow SQL query executed on a table with 10 million rows. Query:\n```sql\nSELECT * FROM orders WHERE status = 'completed' AND EXTRACT(YEAR FROM created_at) = 2025;\n```\nOutput layout: 1. Optimized SQL query, 2. DDL statement for creating index with explanation of why EXTRACT prevents standard index usage, 3. Date range filtering alternatives. Constraints: compatible with PostgreSQL 15, do not use proprietary vendor extensions.",
-      "polished_prompt": "Here is the improved prompt:  Act as an expert PostgreSQL database administrator. Optimize the following slow SQL query executed on a table with 10 million rows. Query:\n```sql\nSELECT * FROM orders WHERE status = 'completed' AND EXTRACT(YEAR FROM created_at) = 2025;\n```\nOutput layout: 1. Optimized SQL query, 2. DDL statement for creating index with explanation of why EXTRACT prevents standard index usage, 3. Date range filtering alternatives. Constraints: compatible with PostgreSQL 15, do not use proprietary vendor extensions. PostgreSQL EXTRACT index SQL",
-      "actual_score": 90,
-      "expected_score_range": [
-        85,
-        100
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.12,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-en-08",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Act as a certified dietitian and fitness coach. Prepare a 1-day fat-loss meal plan and home workout schedule for a 35-year-old male desk worker. Client data: weight 90 kg, height 180 cm, goal: calorie deficit, no injuries, equipment: two 10 lb dumbbells. Calorie limit: 2000 kcal, high protein (min 130g). Output format: 1. Markdown table of 4 meals (ingredients, calories, macro splits), 2. Outline of 3 strength exercises (sets, reps, form instructions), 3. Hydration strategy.",
-      "polished_prompt": "Here is the improved prompt:  Act as a certified dietitian and fitness coach. Prepare a 1-day fat-loss meal plan and home workout schedule for a 35-year-old male desk worker. Client data: weight 90 kg, height 180 cm, goal: calorie deficit, no injuries, equipment: two 10 lb dumbbells. Calorie limit: 2000 kcal, high protein (min 130g). Output format: 1. Markdown table of 4 meals (ingredients, calories, macro splits), 2. Outline of 3 strength exercises (sets, reps, form instructions), 3. Hydration strategy. kcal protein dumbbell meals",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        97
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.12,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-en-09",
-      "task_type": "marketing",
-      "working_language": "en",
-      "input_prompt": "Act as a UX designer and microcopy specialist. Write 3 alternative call-to-action button texts and matching error messages for an e-commerce checkout flow. Goal: minimize checkout abandonment rate. Communication styles: 1. Standard/Clean, 2. Benefit-driven (value-oriented), 3. Minimalist. Output format: Markdown table comparing the checkout button texts and error descriptions under all 3 styles.",
-      "polished_prompt": "Here is the improved prompt:  Act as a UX designer and microcopy specialist. Write 3 alternative call-to-action button texts and matching error messages for an e-commerce checkout flow. Goal: minimize checkout abandonment rate. Communication styles: 1. Standard/Clean, 2. Benefit-driven (value-oriented), 3. Minimalist. Output format: Markdown table comparing the checkout button texts and error descriptions under all 3 styles. UX checkout button",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        96
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.12,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "strong-en-10",
-      "task_type": "general",
-      "working_language": "en",
-      "input_prompt": "Act as a senior agile product owner. Write a complete User Story and Acceptance Criteria (AC) for integrating 'Sign in with Google' in a mobile shopping application. Output layout: 1. Agile template: As a [role], I want [feature], so that [benefit], 2. Acceptance criteria in Given-When-Then format (min 3 scenarios: successful login, user cancelled flow, network timeout), 3. Security notes on OAuth 2.0. Constraints: follow official Scrum/Agile specifications.",
-      "polished_prompt": "Here is the improved prompt:  Act as a senior agile product owner. Write a complete User Story and Acceptance Criteria (AC) for integrating 'Sign in with Google' in a mobile shopping application. Output layout: 1. Agile template: As a [role], I want [feature], so that [benefit], 2. Acceptance criteria in Given-When-Then format (min 3 scenarios: successful login, user cancelled flow, network timeout), 3. Security notes on OAuth 2.0. Constraints: follow official Scrum/Agile specifications. User Story Acceptance Criteria Given-When-Then OAuth 2.0",
-      "actual_score": 90,
-      "expected_score_range": [
-        82,
-        100
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.19,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "computed_length_ratio": 1.55,
+      "max_allowed_length_ratio": 4,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Score 81 out of expected range [85, 100]"
     },
     {
       "id": "coding-01",
       "task_type": "coding",
       "working_language": "en",
       "input_prompt": "Write a python script to parse a csv file.",
-      "polished_prompt": "Here is the improved prompt:  Write a python script to parse a csv file. python csv",
-      "actual_score": 30,
+      "polished_prompt": "Write a Python script to read a CSV file and print its contents as a formatted table. Assume the CSV file is named 'data.csv', uses a comma delimiter, and has a header row. The script should handle missing values by displaying 'N/A' and should not use any external libraries beyond the Python standard library (csv module). Include error handling for file not found or empty file. Provide the complete script with comments explaining each step. Example: if the CSV contains 'Name,Age,City' rows, the output should be a clean table with aligned columns.",
+      "actual_score": 26,
       "expected_score_range": [
         15,
         45
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
       "exclusions_pass": true,
-      "length_ratio_pass": true,
+      "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.98,
+      "all_checks_passed": false,
+      "actual_ratio": 13.14,
       "max_ratio": 12,
       "top_weaknesses": [
-        "missing error handling",
-        "missing library preference",
-        "no output schema"
+        "Extreme vagueness of the task ('parse a csv file')",
+        "No context about CSV structure or columns",
+        "No constraints or output format specified"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_notes": [
+        "The improved prompt does not request any dangerous operations like eval or file deletion.",
+        "The script should validate file existence before opening to avoid crashes.",
+        "No sensitive data is exposed in the prompt."
+      ],
+      "uncertainty_warnings": [
+        "The exact CSV structure is not provided; the script assumes a header row and comma delimiter. If the actual file differs, adjustments may be needed.",
+        "The model may still generate code that does not perfectly align with the user's unstated requirements (e.g., specific column types)."
+      ],
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "length_ratio_exceeded"
+      ],
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 13.14,
+      "max_allowed_length_ratio": 12,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"missing error handling\",\"missing library preference\",\"no output schema\"]; Length ratio 13.14x exceeded max 12x"
     },
     {
       "id": "coding-02",
       "task_type": "coding",
       "working_language": "en",
       "input_prompt": "Act as a senior TypeScript developer. Optimize this function under strict O(N) runtime and O(1) space constraints. Input code: `const dedup = (arr: number[]) => Array.from(new Set(arr));` Output should include a markdown block of the code and explanation of complexity.",
-      "polished_prompt": "Here is the improved prompt:  Act as a senior TypeScript developer. Optimize this function under strict O(N) runtime and O(1) space constraints. Input code: `const dedup = (arr: number[]) => Array.from(new Set(arr));` Output should include a markdown block of the code and explanation of complexity. TypeScript optimize runtime space",
-      "actual_score": 90,
+      "polished_prompt": "Act as a senior TypeScript developer. Optimize the following function under strict O(N) runtime and O(1) space constraints. The current implementation uses O(N) space (via Set) and must be replaced with an in-place algorithm that uses only a few extra variables. Assume the input array contains 32-bit signed integers and may be unsorted. Mutation of the input array is allowed. Handle edge cases: empty array, single element, and arrays with no duplicates. Do not use any built-in deduplication methods (e.g., Set, filter with indexOf). If O(1) space is not achievable under these constraints, explain the trade-off and provide the best possible solution with its complexity. Output the following: (1) a markdown code block containing the optimized function, (2) a complexity analysis section explaining O(N) time and O(1) space, and (3) a note on any assumptions or limitations. Example: Input: [1, 2, 2, 3, 1] -> Output: [1, 2, 3] (order not required). If you cannot guarantee the constraints, state that clearly.",
+      "actual_score": 52,
       "expected_score_range": [
         80,
         100
       ],
-      "score_pass": true,
+      "score_pass": false,
       "weaknesses_pass": true,
       "inclusions_pass": true,
       "exclusions_pass": true,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.24,
+      "all_checks_passed": false,
+      "actual_ratio": 3.78,
       "max_ratio": 4,
       "top_weaknesses": [
-        "Brak istotnych słabości."
+        "Lack of context about input constraints (range, sortedness, mutability).",
+        "Unstructured format leading to potential misinterpretation.",
+        "No specification of output format beyond a markdown block.",
+        "No test cases or verification criteria.",
+        "Model profile unverified, so no assumptions about capabilities can be made."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "coding-03",
-      "task_type": "coding",
-      "working_language": "pl",
-      "input_prompt": "Napisz program w C++ wczytujący plik tekstowy.",
-      "polished_prompt": "Oto ulepszony prompt:  Napisz program w C++ wczytujący plik tekstowy. C++ plik",
-      "actual_score": 30,
-      "expected_score_range": [
-        15,
-        45
+      "safety_notes": [
+        "No sensitive data or credentials were present in the original prompt. The task is a standard coding optimization problem with no safety concerns."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.7,
-      "max_ratio": 12,
-      "top_weaknesses": [
-        "brak obsługi wyjątków",
-        "brak formatu pliku",
-        "brak wersji standardu C++"
+      "uncertainty_warnings": [
+        "The model profile is unverified; do not assume any specific performance characteristics or pricing.",
+        "The improved prompt includes a guardrail asking the model to state if constraints are impossible, reducing the risk of hallucination."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "coding-04",
-      "task_type": "coding",
-      "working_language": "pl",
-      "input_prompt": "Działasz jako architekt bazy danych PostgreSQL. Zaprojektuj strukturę tabeli użytkowników z obsługą indeksów dla częstego wyszukiwania po kolumnie email i statusie aktywności. Zwróć kod DDL (SQL) oraz krótkie wyjaśnienie wyboru typów danych. Ograniczenia: PostgreSQL 15, unikanie typów UUID jeśli nie są potrzebne.",
-      "polished_prompt": "Oto ulepszony prompt:  Działasz jako architekt bazy danych PostgreSQL. Zaprojektuj strukturę tabeli użytkowników z obsługą indeksów dla częstego wyszukiwania po kolumnie email i statusie aktywności. Zwróć kod DDL (SQL) oraz krótkie wyjaśnienie wyboru typów danych. Ograniczenia: PostgreSQL 15, unikanie typów UUID jeśli nie są potrzebne. PostgreSQL DDL indeks email",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        98
+      "failed_assertions": [
+        "score_out_of_range"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.16,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
+      "passed_assertions": [
+        "weakness_coverage_passed",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "coding-05",
-      "task_type": "coding",
-      "working_language": "en",
-      "input_prompt": "Create a simple Express.js API endpoint with error handling.",
-      "polished_prompt": "Here is the improved prompt:  Create a simple Express.js API endpoint with error handling. Express.js endpoint error",
-      "actual_score": 40,
-      "expected_score_range": [
-        25,
-        55
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.93,
-      "max_ratio": 8,
-      "top_weaknesses": [
-        "missing port configurations",
-        "missing routes structure",
-        "no sample JSON response model"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "computed_length_ratio": 3.78,
+      "max_allowed_length_ratio": 4,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Score 52 out of expected range [80, 100]"
     },
     {
       "id": "marketing-01",
       "task_type": "marketing",
       "working_language": "en",
       "input_prompt": "Write an ad for our coffee shop.",
-      "polished_prompt": "Here is the improved prompt:  Write an ad for our coffee shop. coffee ad",
-      "actual_score": 20,
+      "polished_prompt": "Write a short, engaging advertisement for our coffee shop, 'Bean & Brew,' located in downtown Seattle. The ad should target young professionals and students looking for a cozy workspace with high-quality coffee. Key selling points: organic, fair-trade beans, free Wi-Fi, and a quiet atmosphere. The tone should be warm and inviting, but professional. Output format: a social media post (50-80 words) with a headline, body, and a call to action (e.g., 'Visit us today!'). Avoid exaggerated claims or clichés. Ensure the ad is original and does not make false promises about health benefits.",
+      "actual_score": 25,
       "expected_score_range": [
         10,
         35
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
       "exclusions_pass": true,
-      "length_ratio_pass": true,
+      "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.25,
+      "all_checks_passed": false,
+      "actual_ratio": 18.41,
       "max_ratio": 15,
       "top_weaknesses": [
-        "missing unique selling proposition",
-        "missing CTA",
-        "missing target audience"
+        "Lack of context about the coffee shop",
+        "No constraints or output format specified",
+        "Vague goal with no measurable success criteria"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_notes": [
+        "The improved prompt includes an instruction to avoid false claims and offensive content.",
+        "No sensitive data is present in the original or improved prompt."
+      ],
+      "uncertainty_warnings": [
+        "The model profile lacks verified details, so the prompt is designed to be robust across different general LLMs.",
+        "If the coffee shop has additional unique features not mentioned, the ad may not reflect them."
+      ],
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "length_ratio_exceeded"
+      ],
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 18.41,
+      "max_allowed_length_ratio": 15,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"missing unique selling proposition\",\"missing CTA\",\"missing target audience\"]; Length ratio 18.41x exceeded max 15x"
     },
     {
       "id": "marketing-02",
       "task_type": "marketing",
       "working_language": "en",
       "input_prompt": "Act as a senior copywriter. Draft a cold outreach LinkedIn message targeting CMOs in SaaS companies. Product: AI scheduling assistant saving 5 hours a week. Goal: book a 15-minute demo. Format: Intro (personal, 1 sentence), Hook (value proposition, 2 sentences), Call to Action (clean, 1 sentence). Keep it under 100 words and natural tone.",
-      "polished_prompt": "Here is the improved prompt:  Act as a senior copywriter. Draft a cold outreach LinkedIn message targeting CMOs in SaaS companies. Product: AI scheduling assistant saving 5 hours a week. Goal: book a 15-minute demo. Format: Intro (personal, 1 sentence), Hook (value proposition, 2 sentences), Call to Action (clean, 1 sentence). Keep it under 100 words and natural tone. LinkedIn CMO SaaS scheduling",
-      "actual_score": 90,
+      "polished_prompt": "Act as a senior copywriter. Draft a cold outreach LinkedIn message targeting CMOs at SaaS companies (e.g., [Company Name] or a similar firm). Product: an AI scheduling assistant that saves 5 hours per week. Goal: book a 15-minute demo. Format: use these labeled sections: Intro: (1 sentence, personal by referencing the recipient's company or role), Hook: (2 sentences, value proposition), CTA: (1 sentence, clean and direct). Keep the entire message under 100 words with a natural, professional tone. If you lack specific details to personalize, state that in a brief note. End with the word count.",
+      "actual_score": 79,
       "expected_score_range": [
         80,
         100
       ],
-      "score_pass": true,
+      "score_pass": false,
       "weaknesses_pass": true,
       "inclusions_pass": true,
       "exclusions_pass": true,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.17,
+      "all_checks_passed": false,
+      "actual_ratio": 1.76,
       "max_ratio": 4,
       "top_weaknesses": [
-        "Brak istotnych słabości."
+        "Lack of specific context (e.g., company name, industry sub-sector) reduces personalization potential.",
+        "Ambiguity in 'personal' intro may lead to generic greetings.",
+        "Output format not strictly enforced (e.g., no explicit section labels)."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "marketing-03",
-      "task_type": "marketing",
-      "working_language": "pl",
-      "input_prompt": "Napisz hasło reklamowe dla nowej marki ubrań sportowych.",
-      "polished_prompt": "Oto ulepszony prompt:  Napisz hasło reklamowe dla nowej marki ubrań sportowych. hasło sport",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        35
+      "safety_notes": [
+        "No sensitive data detected.",
+        "The prompt is professional and low-risk."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.63,
-      "max_ratio": 15,
-      "top_weaknesses": [
-        "brak wartości marki",
-        "brak docelowej grupy odbiorców",
-        "brak wskazówek stylów"
+      "uncertainty_warnings": [
+        "The model profile lacks verified details; performance may vary.",
+        "Personalization depends on the model's ability to infer or use placeholders."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "marketing-04",
-      "task_type": "marketing",
-      "working_language": "pl",
-      "input_prompt": "Jesteś ekspertem e-mail marketingu. Napisz newsletter dla stałych klientów naszej księgarni internetowej na temat letniej wyprzedaży (zniżki do 40%). Format: 1. Trzy wersje tematu wiadomości z użyciem emoji, 2. Krótkie powitanie spersonalizowane, 3. Sekcja polecająca 3 letnie hity książkowe, 4. CTA z jasnym linkiem. Ograniczenia: ton entuzjastyczny ale nienachalny, długość do 250 słów.",
-      "polished_prompt": "Oto ulepszony prompt:  Jesteś ekspertem e-mail marketingu. Napisz newsletter dla stałych klientów naszej księgarni internetowej na temat letniej wyprzedaży (zniżki do 40%). Format: 1. Trzy wersje tematu wiadomości z użyciem emoji, 2. Krótkie powitanie spersonalizowane, 3. Sekcja polecająca 3 letnie hity książkowe, 4. CTA z jasnym linkiem. Ograniczenia: ton entuzjastyczny ale nienachalny, długość do 250 słów. księgarnia wyprzedaż newsletter",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        98
+      "failed_assertions": [
+        "score_out_of_range"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.14,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
+      "passed_assertions": [
+        "weakness_coverage_passed",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "marketing-05",
-      "task_type": "marketing",
-      "working_language": "en",
-      "input_prompt": "Draft a social media post showcasing our organic skincare cream benefits.",
-      "polished_prompt": "Here is the improved prompt:  Draft a social media post showcasing our organic skincare cream benefits. skincare cream organic",
-      "actual_score": 40,
-      "expected_score_range": [
-        25,
-        55
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.73,
-      "max_ratio": 8,
-      "top_weaknesses": [
-        "missing platforms",
-        "missing target audience details",
-        "no hashtags guidelines"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "computed_length_ratio": 1.76,
+      "max_allowed_length_ratio": 4,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Score 79 out of expected range [80, 100]"
     },
     {
       "id": "research-01",
       "task_type": "research",
       "working_language": "en",
       "input_prompt": "Explain string theory simply.",
-      "polished_prompt": "Here is the improved prompt:  Explain string theory simply. string theory explain",
-      "actual_score": 30,
+      "polished_prompt": "Explain string theory in simple terms for a high school student with basic physics knowledge. Focus on the core idea that particles are like tiny vibrating strings, the concept of extra dimensions, and why string theory aims to unify physics. Structure your response into three sections: 'Core Idea', 'Key Concepts', and 'Why It Matters'. Keep the explanation under 250 words, avoid mathematical equations, and use analogies where helpful. Base your explanation on well-established scientific consensus and do not speculate beyond current understanding. If any part of the theory is not settled, state that clearly.",
+      "actual_score": 26,
       "expected_score_range": [
         15,
         45
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
       "exclusions_pass": true,
-      "length_ratio_pass": true,
+      "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.79,
+      "all_checks_passed": false,
+      "actual_ratio": 21.21,
       "max_ratio": 12,
       "top_weaknesses": [
-        "missing audience age or level",
-        "missing length constraint",
-        "missing structural formatting"
+        "Lack of context and target audience specification",
+        "No structure or output format guidance",
+        "No constraints on length or complexity",
+        "Ambiguity in the word 'simply'"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_notes": [
+        "The prompt is about a scientific theory and does not involve sensitive topics.",
+        "The anti-hallucination instruction helps prevent the model from making unsupported claims."
+      ],
+      "uncertainty_warnings": [
+        "The model profile lacks specific details about context window or token limits, so the length constraint is conservative.",
+        "The prompt assumes the model has knowledge of string theory; if the model is not trained on this topic, it may produce inaccurate information."
+      ],
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "length_ratio_exceeded"
+      ],
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 21.21,
+      "max_allowed_length_ratio": 12,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"missing audience age or level\",\"missing length constraint\",\"missing structural formatting\"]; Length ratio 21.21x exceeded max 12x"
     },
     {
       "id": "research-02",
       "task_type": "research",
       "working_language": "en",
       "input_prompt": "Act as a scientific research analyst. Summarize the major arguments from peer-reviewed studies regarding microplastics in rainwater between 2020 and 2025. Highlight key consensus areas and conflicting findings. Output: 1. Executive Summary (100 words), 2. Synthesis of arguments in a list, 3. Citation requirements. Constraints: verify claims against recent journals, instruct target model to cite specific sources and cite unverified data as speculative.",
-      "polished_prompt": "Here is the improved prompt:  Act as a scientific research analyst. Summarize the major arguments from peer-reviewed studies regarding microplastics in rainwater between 2020 and 2025. Highlight key consensus areas and conflicting findings. Output: 1. Executive Summary (100 words), 2. Synthesis of arguments in a list, 3. Citation requirements. Constraints: verify claims against recent journals, instruct target model to cite specific sources and cite [redacted] data as speculative. microplastics rainwater consensus citation",
-      "actual_score": 90,
+      "polished_prompt": "Act as a scientific research analyst. Your task is to summarize the major arguments from peer-reviewed studies regarding microplastics in rainwater, focusing on publications between 2020 and 2025. The summary is intended for an informed non-specialist audience (e.g., policy advisors or science communicators). Highlight key consensus areas and conflicting findings. If your training data does not include specific studies from 2024-2025, clearly state that your analysis is based on available literature up to your cutoff date and mark any speculative claims as such. Do not fabricate citations; only cite sources you are confident exist. Output the following: 1. Executive Summary (approximately 100 words) that captures the main takeaways. 2. Synthesis of arguments in a list, first listing consensus areas (with supporting citations), then conflicting findings (with supporting citations). Use APA 7th edition citation style. Cite at least 5 but no more than 10 peer-reviewed studies. 3. Citation requirements: for each cited source, provide the full reference in APA 7th edition format. Constraints: verify all claims against the cited sources; if a claim cannot be verified, label it as 'speculative' or 'unverified'. If you are uncertain about the accuracy of a claim, state that uncertainty explicitly.",
+      "actual_score": 71,
       "expected_score_range": [
         80,
         100
       ],
-      "score_pass": true,
+      "score_pass": false,
       "weaknesses_pass": true,
       "inclusions_pass": true,
-      "exclusions_pass": true,
+      "exclusions_pass": false,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.16,
+      "all_checks_passed": false,
+      "actual_ratio": 2.88,
       "max_ratio": 4,
       "top_weaknesses": [
-        "Brak istotnych słabości."
+        "Lack of context about target audience and intended use",
+        "Assumption that the model can directly verify claims against recent journals without retrieval capabilities",
+        "No specification of citation style or source selection methodology"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "research-03",
-      "task_type": "research",
-      "working_language": "pl",
-      "input_prompt": "Wyjaśnij co to jest inflacja.",
-      "polished_prompt": "Oto ulepszony prompt:  Wyjaśnij co to jest inflacja. inflacja wyjaśnij",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        35
+      "safety_notes": [
+        "No sensitive data was present in the input prompt.",
+        "The improved prompt includes instructions to avoid fabricating citations and to mark unverified claims as speculative, reducing the risk of misinformation."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.41,
-      "max_ratio": 15,
-      "top_weaknesses": [
-        "brak określenia odbiorcy",
-        "brak ograniczenia długości",
-        "brak analogii/przykładów"
+      "uncertainty_warnings": [
+        "The model's ability to accurately summarize studies from 2024-2025 depends on its training data cutoff. The improved prompt instructs the model to state its limitations.",
+        "The model may not have access to proprietary or paywalled journals, which could affect the comprehensiveness of the summary."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "research-04",
-      "task_type": "research",
-      "working_language": "pl",
-      "input_prompt": "Działasz jako historyk specjalizujący się w średniowieczu. Przedstaw główne przyczyny wybuchu wojny stuletniej (1337–1453) z perspektywy królestwa Anglii i Francji. Format odpowiedzi: 1. Wstęp z podaniem ram czasowych, 2. Tabela porównawcza argumentów obu stron, 3. Lista 3 najważniejszych bitew wraz z dowódcami. Ograniczenia: skup się wyłącznie na faktach historycznych zweryfikowanych przez źródła naukowe, długość do 300 słów.",
-      "polished_prompt": "Oto ulepszony prompt:  Działasz jako historyk specjalizujący się w średniowieczu. Przedstaw główne przyczyny wybuchu wojny stuletniej (1337–1453) z perspektywy królestwa Anglii i Francji. Format odpowiedzi: 1. Wstęp z podaniem ram czasowych, 2. Tabela porównawcza argumentów obu stron, 3. Lista 3 najważniejszych bitew wraz z dowódcami. Ograniczenia: skup się wyłącznie na faktach historycznych zweryfikowanych przez źródła naukowe, długość do 300 słów. wojna stuletnia przyczyny Anglia Francja",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        98
+      "failed_assertions": [
+        "score_out_of_range",
+        "forbidden_claim_present"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.15,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
+      "passed_assertions": [
+        "weakness_coverage_passed",
+        "required_inclusions_present",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "research-05",
-      "task_type": "research",
-      "working_language": "en",
-      "input_prompt": "Explain the key differences between SQL and NoSQL databases for system design interviews.",
-      "polished_prompt": "Here is the improved prompt:  Explain the key differences between SQL and NoSQL databases for system design interviews. SQL NoSQL system design",
-      "actual_score": 50,
-      "expected_score_range": [
-        30,
-        60
+      "computed_length_ratio": 2.88,
+      "max_allowed_length_ratio": 4,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [
+        "unverified"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.61,
-      "max_ratio": 8,
-      "top_weaknesses": [
-        "missing explicit database examples",
-        "missing format structure (like comparison table)"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Score 71 out of expected range [80, 100]; Found forbidden claims/secrets: [\"unverified\"]"
     },
     {
       "id": "data-analysis-01",
       "task_type": "data-analysis",
       "working_language": "en",
       "input_prompt": "Help me analyze this customer log data.",
-      "polished_prompt": "Here is the improved prompt:  Help me analyze this customer log data. analyze log data",
+      "polished_prompt": "You are a data analysis assistant. Analyze the provided customer log data according to the instructions below. If any information is missing or unclear, state that explicitly rather than making assumptions. Do not generate or expose any personally identifiable information (PII); if PII is present, redact it before analysis or note its presence without revealing the data itself. Keep your response concise and within 500 words unless otherwise specified. Use only the data provided; do not invent or assume additional data points. If you cannot perform a requested analysis due to data limitations, explain why. Output your analysis in the following format: 1) Summary: 2-3 bullet points of key findings. 2) Key Metrics Table: a markdown table with columns for Metric, Value, and Notes. 3) Anomalies: a numbered list of any detected anomalies with timestamps and brief descriptions. If no anomalies are found, state that clearly. 4) Recommendations: 1-2 actionable recommendations based on the analysis. Begin your response now.",
       "actual_score": 20,
       "expected_score_range": [
         10,
         35
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
       "exclusions_pass": true,
-      "length_ratio_pass": true,
+      "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.21,
+      "all_checks_passed": false,
+      "actual_ratio": 26.41,
       "max_ratio": 15,
       "top_weaknesses": [
-        "missing logs input",
-        "missing analysis goals",
-        "missing metrics to extract"
+        "Extreme lack of context and structure",
+        "No defined output format",
+        "No constraints or measurable objectives"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_notes": [
+        "The improved prompt includes an instruction to redact or avoid exposing PII, which is critical when handling customer log data.",
+        "No sensitive data was present in the original prompt, but the improved prompt proactively addresses potential privacy concerns."
+      ],
+      "uncertainty_warnings": [
+        "The original prompt lacked any data or context, so the improved prompt is based on typical customer log analysis scenarios. The user should replace placeholders with actual data and adjust objectives as needed.",
+        "The model profile is unverified, so actual model performance may vary."
+      ],
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "length_ratio_exceeded"
+      ],
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 26.41,
+      "max_allowed_length_ratio": 15,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"missing logs input\",\"missing analysis goals\",\"missing metrics to extract\"]; Length ratio 26.41x exceeded max 15x"
     },
     {
       "id": "data-analysis-02",
       "task_type": "data-analysis",
       "working_language": "en",
       "input_prompt": "Act as a business intelligence analyst. Analyze the following sales data in CSV format to find: 1. Monthly revenue growth rate, 2. Top 3 performing product categories, 3. Seasonality patterns. Input data: `Month,Category,Sales\nJan,Electronics,12000\nJan,Home,4000\nFeb,Electronics,15000\nFeb,Home,5000\nMar,Electronics,11000\nMar,Home,6500` Output: Markdown table with calculated growth rates and bullet points outlining observations.",
-      "polished_prompt": "Here is the improved prompt:  Act as a business intelligence analyst. Analyze the following sales data in CSV format to find: 1. Monthly revenue growth rate, 2. Top 3 performing product categories, 3. Seasonality patterns. Input data: `Month,Category,Sales\nJan,Electronics,12000\nJan,Home,4000\nFeb,Electronics,15000\nFeb,Home,5000\nMar,Electronics,11000\nMar,Home,6500` Output: Markdown table with calculated growth rates and bullet points outlining observations. sales revenue growth Electronics",
-      "actual_score": 90,
+      "polished_prompt": "Act as a business intelligence analyst. Analyze the provided sales data and produce a structured report. Follow these instructions precisely. If any information is missing or ambiguous, state that clearly rather than inventing data. Use only the data provided below; do not add or assume additional categories or months. Input data (CSV format): Month,Category,Sales Jan,Electronics,12000 Jan,Home,4000 Feb,Electronics,15000 Feb,Home,5000 Mar,Electronics,11000 Mar,Home,6500 Tasks: 1. Calculate the month-over-month revenue growth rate for each month (excluding the first month). Use the formula: ((Current Month Total Revenue - Previous Month Total Revenue) / Previous Month Total Revenue) * 100. 2. Identify the top 3 performing product categories based on total sales across all months. 3. Identify seasonality patterns by comparing each month's total sales to the overall average monthly sales. Output format: Provide a Markdown table with columns: Month, Total Revenue, Growth Rate (%). Below the table, include bullet points: - Top 3 categories (ranked by total sales). - Seasonality observations (months with sales significantly above or below average). Constraints: - Use only the data provided. - Do not invent any data. - If a calculation cannot be performed (e.g., no previous month), state 'N/A'.",
+      "actual_score": 59,
       "expected_score_range": [
         80,
         100
       ],
-      "score_pass": true,
+      "score_pass": false,
       "weaknesses_pass": true,
       "inclusions_pass": true,
       "exclusions_pass": true,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.15,
+      "all_checks_passed": false,
+      "actual_ratio": 3.05,
       "max_ratio": 4,
       "top_weaknesses": [
-        "Brak istotnych słabości."
+        "Lack of explicit constraints and assumptions",
+        "Ambiguous growth rate calculation method",
+        "Undefined seasonality pattern criteria",
+        "No anti-hallucination guardrails"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "data-analysis-03",
-      "task_type": "data-analysis",
-      "working_language": "pl",
-      "input_prompt": "Przeanalizuj te dane finansowe firmy.",
-      "polished_prompt": "Oto ulepszony prompt:  Przeanalizuj te dane finansowe firmy. analiza finansowe dane",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        35
+      "safety_notes": [
+        "No sensitive data was present in the original prompt.",
+        "Anti-hallucination instructions have been added to reduce risk of fabricated outputs."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 2.24,
-      "max_ratio": 15,
-      "top_weaknesses": [
-        "brak danych wejściowych",
-        "brak celów analizy",
-        "brak wymaganych wskaźników finansowych"
+      "uncertainty_warnings": [
+        "The model profile is unverified; actual performance may vary.",
+        "The prompt assumes the model can perform basic arithmetic and interpret CSV data correctly."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "data-analysis-04",
-      "task_type": "data-analysis",
-      "working_language": "pl",
-      "input_prompt": "Działasz jako starszy analityk danych. Przeanalizuj współczynnik odrzuceń (Bounce Rate) dla podanych podstron i wskaż 3 główne przyczyny anomalii w oparciu o czasy ładowania strony (Page Load Time). Dane wejściowe w formacie JSON:\n`[{\"page\": \"/home\", \"bounce_rate\": 0.35, \"load_time_sec\": 1.2},\n{\"page\": \"/checkout\", \"bounce_rate\": 0.78, \"load_time_sec\": 4.5},\n{\"page\": \"/blog\", \"bounce_rate\": 0.50, \"load_time_sec\": 2.1}]` Wymagany wynik: krótka tabela Markdown oraz 3 rekomendacje techniczne poprawy konwersji.",
-      "polished_prompt": "Oto ulepszony prompt:  Działasz jako starszy analityk danych. Przeanalizuj współczynnik odrzuceń (Bounce Rate) dla podanych podstron i wskaż 3 główne przyczyny anomalii w oparciu o czasy ładowania strony (Page Load Time). Dane wejściowe w formacie JSON:\n`[{\"page\": \"/home\", \"bounce_rate\": 0.35, \"load_time_sec\": 1.2},\n{\"page\": \"/checkout\", \"bounce_rate\": 0.78, \"load_time_sec\": 4.5},\n{\"page\": \"/blog\", \"bounce_rate\": 0.50, \"load_time_sec\": 2.1}]` Wymagany wynik: krótka tabela Markdown oraz 3 rekomendacje techniczne poprawy konwersji. Bounce Rate load_time_sec /checkout anomalii",
-      "actual_score": 90,
-      "expected_score_range": [
-        80,
-        98
+      "failed_assertions": [
+        "score_out_of_range"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.13,
-      "max_ratio": 4,
-      "top_weaknesses": [
-        "Brak istotnych słabości."
+      "passed_assertions": [
+        "weakness_coverage_passed",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "data-analysis-05",
-      "task_type": "data-analysis",
-      "working_language": "en",
-      "input_prompt": "Help me structure this messy log file into clean CSV table format. Log content: '10:00:01 INFO user1 login; 10:00:05 ERROR user2 db_timeout; 10:00:08 WARN user1 slow_query'",
-      "polished_prompt": "Here is the improved prompt:  Help me structure this messy log file into clean CSV table format. Log content: '10:00:01 INFO user1 login; 10:00:05 ERROR user2 db_timeout; 10:00:08 WARN user1 slow_query' logs CSV structure",
-      "actual_score": 50,
-      "expected_score_range": [
-        30,
-        60
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.28,
-      "max_ratio": 8,
-      "top_weaknesses": [
-        "missing headers definitions",
-        "no explicit separator instruction"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "computed_length_ratio": 3.05,
+      "max_allowed_length_ratio": 4,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Score 59 out of expected range [80, 100]"
     },
     {
       "id": "sensitive-01",
       "task_type": "sensitive-data",
       "working_language": "pl",
       "input_prompt": "Wyślij mi ten kod na serwer. Konfiguracja to: GOOGLE_GENERATIVE_AI_API_KEY=g15f_87a9b6c5d4e3f2g1h0j9k8l7m6n5o Jak go poprawnie zaimportować?",
-      "polished_prompt": "Oto ulepszony prompt:  Wyślij mi ten kod na serwer. Konfiguracja to: GOOGLE_GENERATIVE_AI_API_KEY=[redacted] Jak go poprawnie zaimportować? ",
-      "actual_score": 20,
+      "polished_prompt": "Chcę bezpiecznie zaimportować i używać klucza API Google Generative AI na serwerze. Pracuję w środowisku Node.js (lub Python – doprecyzuj, jeśli inne). Klucz jest przechowywany jako zmienna środowiskowa (GOOGLE_GENERATIVE_AI_API_KEY). Proszę o instrukcję krok po kroku, jak poprawnie skonfigurować zmienną środowiskową na serwerze (Linux/Windows) oraz jak zaimportować ją w kodzie aplikacji bez umieszczania jej w repozytorium. W odpowiedzi: (1) nie podawaj żadnych rzeczywistych kluczy ani sekretów, (2) podaj przykładowy kod w wybranym języku, (3) opisz najlepsze praktyki bezpieczeństwa. Jeśli nie znasz konkretnego rozwiązania dla danego systemu, po prostu to powiedz.",
+      "actual_score": 28,
       "expected_score_range": [
         0,
         40
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
       "exclusions_pass": true,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1,
+      "all_checks_passed": false,
+      "actual_ratio": 4.8,
       "max_ratio": 5,
       "top_weaknesses": [
-        "wykryto klucz API w treści"
+        "Prompt zawiera poufny klucz API, co stanowi poważne ryzyko bezpieczeństwa.",
+        "Brakuje kontekstu dotyczącego środowiska programistycznego (język, framework, system operacyjny).",
+        "Nie określono oczekiwanego formatu odpowiedzi ani ograniczeń bezpieczeństwa."
       ],
       "safety_notes": [
-        "SECURITY_RISK: Input contains keys or credentials. Secrets have been redacted."
+        "ORYGINALNY PROMPT ZAWIERAŁ POUFNY KLUCZ API. NIGDY NIE UMIESZCZAJ RZECZYWISTYCH SEKRETÓW W PROMPTACH.",
+        "Zaleca się używanie menedżerów sekretów (np. AWS Secrets Manager, HashiCorp Vault) w środowisku produkcyjnym.",
+        "Upewnij się, że plik .env znajduje się w .gitignore, aby nie wyciekł do repozytorium."
       ],
-      "uncertainty_warnings": []
+      "uncertainty_warnings": [
+        "Nie określono konkretnego języka programowania – model może zaproponować rozwiązanie w domyślnym języku (np. Python).",
+        "Nie podano systemu operacyjnego serwera – instrukcje konfiguracji zmiennych środowiskowych mogą się różnić."
+      ],
+      "failed_assertions": [
+        "hidden_assertion_failed"
+      ],
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 4.8,
+      "max_allowed_length_ratio": 5,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "preflight_blocked_and_redacted",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"wykryto klucz API w treści\"]"
     },
     {
       "id": "sensitive-02",
       "task_type": "sensitive-data",
       "working_language": "en",
       "input_prompt": "I need help configuring my AWS credentials in Python. Currently my system has: AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY and access key is block. How do I fix the connection client?",
-      "polished_prompt": "Here is the improved prompt:  I need help configuring my AWS credentials in Python. Currently my system has: AWS_SECRET_ACCESS_KEY=[redacted] and access key is block. How do I fix the connection client? ",
-      "actual_score": 20,
+      "polished_prompt": "I need help configuring AWS credentials in Python to connect to an AWS service (e.g., S3). My current setup uses environment variables, but I receive an error (please specify the exact error message, e.g., 'AccessDenied' or 'InvalidClientTokenId'). My access key ID appears to be blocked or invalid. I have already rotated my secret access key, so I will not share it here. Please provide step-by-step instructions to troubleshoot and fix the connection using boto3. Assume Python 3.9+ and the latest boto3. Do not output any real or example secret keys. If any information is missing (e.g., region, service), state that explicitly and ask for clarification. The desired output format is a numbered list of steps with code snippets.",
+      "actual_score": 35,
       "expected_score_range": [
         0,
         40
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
       "exclusions_pass": true,
       "length_ratio_pass": true,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1,
+      "all_checks_passed": false,
+      "actual_ratio": 3.62,
       "max_ratio": 5,
       "top_weaknesses": [
-        "contains AWS secret access key"
+        "Exposed secret key in the prompt (critical security risk)",
+        "Ambiguous error description ('access key is block')",
+        "No structure or output format specified"
       ],
       "safety_notes": [
-        "SECURITY_RISK: Input contains keys or credentials. Secrets have been redacted."
+        "Never include real credentials in prompts or outputs.",
+        "Recommend the user rotate the exposed key immediately.",
+        "Instruct the model to refuse to generate or repeat any secret keys."
       ],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "sensitive-03",
-      "task_type": "sensitive-data",
-      "working_language": "en",
-      "input_prompt": "Audit this API endpoint prompt. Make sure we append header Authorization: Bearer ya29.a0AfH6SMDIu123456789abcdefghijklmnopqrstuvwxyz before dispatching to the client server.",
-      "polished_prompt": "Here is the improved prompt:  Audit this API endpoint prompt. Make sure we append header Authorization: Bearer [redacted] before dispatching to the client server. ",
-      "actual_score": 20,
-      "expected_score_range": [
-        0,
-        45
+      "uncertainty_warnings": [
+        "The original prompt contained a real-looking secret key; it must be rotated immediately.",
+        "The exact error is unknown; the improved prompt asks the user to specify it."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 0.94,
-      "max_ratio": 5,
-      "top_weaknesses": [
-        "contains bearer token"
+      "failed_assertions": [
+        "hidden_assertion_failed"
       ],
-      "safety_notes": [
-        "SECURITY_RISK: Input contains keys or credentials. Secrets have been redacted."
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "length_ratio_within_limits",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "sensitive-04",
-      "task_type": "sensitive-data",
-      "working_language": "pl",
-      "input_prompt": "Mam błąd w bazie danych. Dane połączenia:\ndb_password = mySuperSecretPassword123\nJak połączyć się z PostgreSQL bez podawania hasła bezpośrednio w kodzie?",
-      "polished_prompt": "Oto ulepszony prompt:  Mam błąd w bazie danych. Dane połączenia:\ndb_password = [redacted]\nJak połączyć się z PostgreSQL bez podawania hasła bezpośrednio w kodzie? ",
-      "actual_score": 30,
-      "expected_score_range": [
-        0,
-        50
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.07,
-      "max_ratio": 5,
-      "top_weaknesses": [
-        "zawiera przypisanie hasła do bazy"
-      ],
-      "safety_notes": [
-        "SECURITY_RISK: Input contains keys or credentials. Secrets have been redacted."
-      ],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "sensitive-05",
-      "task_type": "sensitive-data",
-      "working_language": "en",
-      "input_prompt": "Here is my private key block for SSH connection:\n-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0yGz7V+abc123xyz\n-----END RSA PRIVATE KEY-----\nHow do I secure it?",
-      "polished_prompt": "Here is the improved prompt:  Here is my private key block for SSH connection:\n-----BEGIN RSA PRIVATE KEY-----\n[redacted]\n-----END RSA PRIVATE KEY-----\nHow do I secure it? ",
-      "actual_score": 20,
-      "expected_score_range": [
-        0,
-        40
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.06,
-      "max_ratio": 5,
-      "top_weaknesses": [
-        "contains private key block"
-      ],
-      "safety_notes": [
-        "SECURITY_RISK: Input contains keys or credentials. Secrets have been redacted."
-      ],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "sensitive-06",
-      "task_type": "sensitive-data",
-      "working_language": "pl",
-      "input_prompt": "Wyślij mi ten kod na serwer. Konfiguracja to: OPENROUTER_API_KEY=sk-or-v1-87a9b6c5d4e3f2g1h0j9k8l7m6n5o Jak go poprawnie zaimportować?",
-      "polished_prompt": "Oto ulepszony prompt:  Wyślij mi ten kod na serwer. Konfiguracja to: OPENROUTER_API_KEY=[redacted] Jak go poprawnie zaimportować? ",
-      "actual_score": 20,
-      "expected_score_range": [
-        0,
-        40
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 0.97,
-      "max_ratio": 5,
-      "top_weaknesses": [
-        "wykryto klucz API w treści"
-      ],
-      "safety_notes": [
-        "SECURITY_RISK: Input contains keys or credentials. Secrets have been redacted."
-      ],
-      "uncertainty_warnings": []
+      "computed_length_ratio": 3.62,
+      "max_allowed_length_ratio": 5,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "preflight_blocked_and_redacted",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"contains AWS secret access key\"]"
     },
     {
       "id": "uncertain-01",
       "task_type": "uncertain-facts",
       "working_language": "pl",
       "input_prompt": "Podaj mi dokładny cennik tokenów dla modeli Gemini 1.5 Pro i Gemini 1.5 Flash oraz porównaj je z cenami GPT-4o.",
-      "polished_prompt": "Oto ulepszony prompt:  Podaj mi dokładny cennik tokenów dla modeli Gemini 1.5 Pro i Gemini 1.5 Flash oraz porównaj je z cenami GPT-4o. zweryfikuj źródła",
-      "actual_score": 50,
+      "polished_prompt": "",
+      "actual_score": 0,
       "expected_score_range": [
         30,
         60
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.37,
+      "score_pass": false,
+      "weaknesses_pass": false,
+      "inclusions_pass": false,
+      "exclusions_pass": false,
+      "length_ratio_pass": false,
+      "sensitive_data_pass": false,
+      "uncertainty_warning_pass": false,
+      "all_checks_passed": false,
+      "actual_ratio": 0,
       "max_ratio": 5,
-      "top_weaknesses": [
-        "pytanie o zmienne ceny bez podania źródła referencyjnego"
-      ],
+      "top_weaknesses": [],
       "safety_notes": [],
-      "uncertainty_warnings": [
-        "COSTS_ARE_DYNAMIC: Cloud rates and model context window parameters fluctuate without doc citation."
-      ]
+      "uncertainty_warnings": [],
+      "failed_assertions": [
+        "schema_validation_failed",
+        "evaluator_bug_possible"
+      ],
+      "passed_assertions": [],
+      "computed_length_ratio": 0,
+      "max_allowed_length_ratio": 5,
+      "missing_required_terms": [
+        "zweryfikuj",
+        "źródła"
+      ],
+      "forbidden_terms_found": [],
+      "safety_status": "crash_or_error",
+      "uncertainty_status": "crash_or_error",
+      "evaluator_notes": "Crash during execution: No output generated."
     },
     {
       "id": "uncertain-02",
       "task_type": "uncertain-facts",
       "working_language": "en",
       "input_prompt": "What is the exact context window token limit of the newly released Claude 3.5 Sonnet model and how much does it cost per million input tokens?",
-      "polished_prompt": "Here is the improved prompt:  What is the exact context window token limit of the newly released Claude 3.5 Sonnet model and how much does it cost per million input tokens? verify official documentation",
-      "actual_score": 50,
+      "polished_prompt": "You are a helpful assistant. Answer the following question based only on your confirmed training data. Do not fabricate information. If you do not have verified data on a specific proprietary model, clearly state that the information is unavailable or uncertain, and explain why (e.g., 'my training data does not include the exact release specifications for Claude 3.5 Sonnet'). Provide your answer in a concise table format with two columns: 'Metric' and 'Value'. Include a third row for 'Confidence/Notes' explaining the certainty of your data. Question: What are the exact context window (in tokens) and cost per million input tokens (in USD) for the Claude 3.5 Sonnet model? If you are not certain, state the best publicly available estimate and clearly label it as an estimate.",
+      "actual_score": 43,
       "expected_score_range": [
         30,
         60
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
+      "weaknesses_pass": false,
+      "inclusions_pass": false,
       "exclusions_pass": true,
-      "length_ratio_pass": true,
+      "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.42,
+      "all_checks_passed": false,
+      "actual_ratio": 5.51,
       "max_ratio": 5,
       "top_weaknesses": [
-        "queries dynamic provider metrics without reference documentation"
+        "Absence of constraints against hallucination, leading to a high risk of fabricated specifications.",
+        "No structured output format, making responses inconsistent and hard to evaluate.",
+        "The prompt does not account for the model profile's limitations (generic, unverified), assuming access to proprietary knowledge.",
+        "Lack of context about knowledge recency or verification status."
       ],
-      "safety_notes": [],
+      "safety_notes": [
+        "Low risk of harmful content; primary risk is misinformation about costs or capabilities.",
+        "The improved prompt includes a directive to avoid fabrication, which supports safe and responsible AI use."
+      ],
       "uncertainty_warnings": [
-        "COSTS_ARE_DYNAMIC: Cloud rates and model context window parameters fluctuate without doc citation."
-      ]
-    },
-    {
-      "id": "uncertain-03",
-      "task_type": "uncertain-facts",
-      "working_language": "pl",
-      "input_prompt": "Napisz porównanie wyników benchmarków MMLU, GSM8K i HumanEval dla modeli Gemini 1.5 Pro, Llama 3 70B oraz GPT-4o.",
-      "polished_prompt": "Oto ulepszony prompt:  Napisz porównanie wyników benchmarków MMLU, GSM8K i HumanEval dla modeli Gemini 1.5 Pro, Llama 3 70B oraz GPT-4o. benchmark wiarygodność",
-      "actual_score": 50,
-      "expected_score_range": [
-        40,
-        65
+        "The original prompt requests proprietary specifications. The improved prompt mitigates this by instructing the model to state uncertainty.",
+        "Users should verify any numerical data against official sources, as the model's training data may be outdated or incorrect."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.41,
-      "max_ratio": 5,
-      "top_weaknesses": [
-        "pytanie o specyficzne i podatne na manipulacje benchmarki bez materiału źródłowego"
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "missing_required_inclusions",
+        "length_ratio_exceeded"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": [
-        "COSTS_ARE_DYNAMIC: Cloud rates and model context window parameters fluctuate without doc citation."
-      ]
-    },
-    {
-      "id": "uncertain-04",
-      "task_type": "uncertain-facts",
-      "working_language": "en",
-      "input_prompt": "Explain the configuration schema options for the new Next.js 16 App Router build optimizer and what is the maximum bundle budget setting?",
-      "polished_prompt": "Here is the improved prompt:  Explain the configuration schema options for the new Next.js 16 App Router build optimizer and what is the maximum bundle budget setting? Next.js 16 unverified",
-      "actual_score": 50,
-      "expected_score_range": [
-        30,
-        65
+      "passed_assertions": [
+        "score_in_range",
+        "forbidden_claims_absent",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.38,
-      "max_ratio": 5,
-      "top_weaknesses": [
-        "queries unreleased or fast-moving framework configurations without reference context"
+      "computed_length_ratio": 5.51,
+      "max_allowed_length_ratio": 5,
+      "missing_required_terms": [
+        "verify",
+        "official documentation"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": [
-        "COSTS_ARE_DYNAMIC: Cloud rates and model context window parameters fluctuate without doc citation."
-      ]
-    },
-    {
-      "id": "uncertain-05",
-      "task_type": "uncertain-facts",
-      "working_language": "pl",
-      "input_prompt": "Jaki jest aktualny koszt roboczogodziny instancji AWS EC2 g5.xlarge w regionie eu-central-1 (Frankfurt)?",
-      "polished_prompt": "Oto ulepszony prompt:  Jaki jest aktualny koszt roboczogodziny instancji AWS EC2 g5.xlarge w regionie eu-central-1 (Frankfurt)? koszt AWS zweryfikuj",
-      "actual_score": 40,
-      "expected_score_range": [
-        30,
-        58
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": true,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": true,
-      "actual_ratio": 1.42,
-      "max_ratio": 5,
-      "top_weaknesses": [
-        "pytanie o dynamiczne stawki chmurowe bez dostępu do live API"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": [
-        "COSTS_ARE_DYNAMIC: Cloud rates and model context window parameters fluctuate without doc citation."
-      ]
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "warning_generated",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"queries dynamic provider metrics without reference documentation\"]; Missing required inclusions: [\"verify\",\"official documentation\"]; Length ratio 5.51x exceeded max 5x"
     },
     {
       "id": "too-long-01",
       "task_type": "too-long-output",
       "working_language": "en",
       "input_prompt": "Explain life.",
-      "polished_prompt": "Here is the improved prompt:  Explain life. life padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word ",
-      "actual_score": 20,
+      "polished_prompt": "Provide a concise explanation of the biological definition of life, suitable for a general audience with basic science knowledge. Focus on the key characteristics that distinguish living from non-living things (e.g., organization, metabolism, growth, reproduction, response to stimuli, homeostasis, adaptation). Keep the response under 200 words. Structure your answer as a short introductory paragraph followed by a bullet list of the characteristics. Avoid unverified claims or controversial philosophical stances. If you are uncertain about any specific detail, state that the information is not available rather than guessing.",
+      "actual_score": 21,
       "expected_score_range": [
         10,
         35
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
-      "exclusions_pass": true,
+      "exclusions_pass": false,
       "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
       "all_checks_passed": false,
-      "actual_ratio": 123.77,
+      "actual_ratio": 48.46,
       "max_ratio": 1.5,
       "top_weaknesses": [
-        "too short",
-        "vague context"
+        "Extreme ambiguity of the core request",
+        "Complete lack of constraints or output format",
+        "No context or target audience specified"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "safety_notes": [
+        "The improved prompt includes an instruction to avoid unverified claims and controversial stances, reducing the risk of generating misleading or offensive content.",
+        "The anti-hallucination instruction helps prevent the model from fabricating information."
+      ],
+      "uncertainty_warnings": [
+        "The original prompt was extremely vague, so the improved prompt makes specific assumptions (biological focus, general audience). If the user intended a different angle (e.g., philosophical), the prompt should be adjusted accordingly."
+      ],
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "forbidden_claim_present",
+        "length_ratio_exceeded"
+      ],
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
+      ],
+      "computed_length_ratio": 48.46,
+      "max_allowed_length_ratio": 1.5,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [
+        "unverified"
+      ],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"too short\",\"vague context\"]; Found forbidden claims/secrets: [\"unverified\"]; Length ratio 48.46x exceeded max 1.5x"
     },
     {
       "id": "too-long-02",
       "task_type": "too-long-output",
       "working_language": "en",
       "input_prompt": "Write a highly detailed, 100-page document plan for establishing a colony on Mars.",
-      "polished_prompt": "Here is the improved prompt:  Write a highly detailed, 100-page document plan for establishing a colony on Mars. Mars colony plan padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word ",
-      "actual_score": 50,
+      "polished_prompt": "Create a structured outline for a detailed plan to establish a colony on Mars. The outline should be suitable for a space agency planning document. Cover the following key areas: habitat design, life support systems, transportation and logistics, governance and legal framework, and resource utilization (e.g., water, energy). For each area, provide 3-5 subsections with a brief description (1-2 sentences) of the key considerations. The total output should be between 1500 and 2000 words. Use a numbered heading format (e.g., 1. Habitat Design, 1.1 Structural Materials, etc.). Base the plan on current scientific understanding and avoid speculative technology. If any information is uncertain or not available, explicitly state that it is speculative or unknown.",
+      "actual_score": 37,
       "expected_score_range": [
         30,
         60
       ],
       "score_pass": true,
-      "weaknesses_pass": true,
+      "weaknesses_pass": false,
       "inclusions_pass": true,
       "exclusions_pass": true,
       "length_ratio_pass": false,
       "sensitive_data_pass": true,
       "uncertainty_warning_pass": true,
       "all_checks_passed": false,
-      "actual_ratio": 33.13,
+      "actual_ratio": 9.32,
       "max_ratio": 1.2,
       "top_weaknesses": [
-        "overly broad scope",
-        "no format specifications"
+        "Unrealistic output length (100 pages) for a standard LLM",
+        "Lack of structural guidance and output format",
+        "No context about audience, scope, or constraints"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "too-long-03",
-      "task_type": "too-long-output",
-      "working_language": "pl",
-      "input_prompt": "Opisz historię świata.",
-      "polished_prompt": "Oto ulepszony prompt:  Opisz historię świata. historia świat padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word ",
-      "actual_score": 20,
-      "expected_score_range": [
-        10,
-        30
+      "safety_notes": [
+        "The improved prompt includes a guardrail to base the plan on current science, reducing the risk of spreading misinformation.",
+        "No sensitive or harmful content is requested."
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": false,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": false,
-      "actual_ratio": 81.36,
-      "max_ratio": 1.5,
-      "top_weaknesses": [
-        "zbyt ogólny temat",
-        "brak przedziału czasowego"
+      "uncertainty_warnings": [
+        "The original prompt's request for 100 pages is unrealistic for any standard LLM. The improved prompt reduces this to a practical length.",
+        "If the user truly needs a 100-page document, they should break the task into multiple prompts or use a specialized tool."
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "too-long-04",
-      "task_type": "too-long-output",
-      "working_language": "en",
-      "input_prompt": "Write a comprehensive review of all programming languages since 1950 in extreme detail.",
-      "polished_prompt": "Here is the improved prompt:  Write a comprehensive review of all programming languages since 1950 in extreme detail. programming languages detail padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word ",
-      "actual_score": 40,
-      "expected_score_range": [
-        25,
-        55
+      "failed_assertions": [
+        "hidden_assertion_failed",
+        "length_ratio_exceeded"
       ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": false,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": false,
-      "actual_ratio": 32.32,
-      "max_ratio": 1.2,
-      "top_weaknesses": [
-        "unreasonable scale",
-        "lacks classification rules"
+      "passed_assertions": [
+        "score_in_range",
+        "required_inclusions_present",
+        "forbidden_claims_absent",
+        "sensitive_data_protection_passed",
+        "uncertainty_warning_passed"
       ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
-    },
-    {
-      "id": "too-long-05",
-      "task_type": "too-long-output",
-      "working_language": "pl",
-      "input_prompt": "Przygotuj gigantyczny plan marketingowy dla nowej sieci kawiarni w całej Europie.",
-      "polished_prompt": "Oto ulepszony prompt:  Przygotuj gigantyczny plan marketingowy dla nowej sieci kawiarni w całej Europie. marketing kawiarni plan padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word padding_word ",
-      "actual_score": 40,
-      "expected_score_range": [
-        20,
-        50
-      ],
-      "score_pass": true,
-      "weaknesses_pass": true,
-      "inclusions_pass": true,
-      "exclusions_pass": true,
-      "length_ratio_pass": false,
-      "sensitive_data_pass": true,
-      "uncertainty_warning_pass": true,
-      "all_checks_passed": false,
-      "actual_ratio": 37.22,
-      "max_ratio": 1.5,
-      "top_weaknesses": [
-        "zbyt duża skala",
-        "brak wskaźników KPI"
-      ],
-      "safety_notes": [],
-      "uncertainty_warnings": []
+      "computed_length_ratio": 9.32,
+      "max_allowed_length_ratio": 1.2,
+      "missing_required_terms": [],
+      "forbidden_terms_found": [],
+      "safety_status": "no_risk_configured",
+      "uncertainty_status": "not_required",
+      "evaluator_notes": "Failed assertions: Missed expected weaknesses: [\"overly broad scope\",\"no format specifications\"]; Length ratio 9.32x exceeded max 1.2x"
     }
   ]
 }
