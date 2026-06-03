@@ -145,3 +145,12 @@ During live runs, pass rates can vary by **10% - 20%** depending on:
 *   **LLM Provider Latencies & Context Windows**: Variations in provider parameters can shift criteria ratings.
 *   **Target Model Verbosity**: Different base models (e.g. DeepSeek vs GPT) have varying default conversational lengths, affecting the length ratio checks.
 *   **Synonym Variation**: Although the harness uses concept-based matching, models may occasionally generate novel phrasing outside the mapped synonym dictionaries, requiring periodic calibration of keyword files.
+
+### Provider Timeout & Transient Failures Segmentation
+To ensure that transient network anomalies, provider rate limits, and request timeouts do not skew quality metric assessments, the evaluator separates failures into distinct execution buckets:
+*   **`quality_failures`**: Pure prompt quality regressions (e.g. score out of range, missing required terms, forbidden claims present).
+*   **`provider_failures`**: External infrastructure faults (e.g. `provider_timeout`, `provider_rate_limited`, `provider_network_error`). Provider timeout errors are identified recursively up to 5 levels deep in the error cause stack.
+*   **`evaluator_failures`**: Internal execution bugs (e.g. semantic validation parsing issues or evaluator scripts inconsistencies).
+*   **`stress_case_failures`**: Expected failures configured purposely under extreme constraint benchmarks (such as intentional verbosity checks).
+
+If transient provider failures occur, the harness prints warnings describing the specific issue (e.g., `provider_timeout`) without counting them as quality constraints failures.

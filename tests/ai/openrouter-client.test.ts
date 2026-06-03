@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { executeOpenRouterAnalysis } from '@/lib/ai/openrouter-client'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
-import { normalizeProviderError, ProviderError } from '@/lib/ai/provider-errors'
+import { normalizeProviderError, ProviderError, isNestedTimeout } from '@/lib/ai/provider-errors'
 import { mockAnalysisResult } from '@/lib/ai/mock-analysis'
 import { APICallError, NoObjectGeneratedError } from 'ai'
 import { SemanticValidationError } from '@/lib/ai/semantic-validation'
@@ -154,6 +154,66 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
 
       expect(networkError).toBeDefined()
       expect(normalized.userMessage).toContain('handling high volume')
+    })
+  })
+
+  describe('isNestedTimeout & normalizeProviderError Timeout Detection', () => {
+    it('detects direct PROVIDER_TIMEOUT error', () => {
+      const err = new Error('PROVIDER_TIMEOUT: Request aborted after 60000ms')
+      expect(isNestedTimeout(err)).toBe(true)
+
+      const normalized = normalizeProviderError(err)
+      expect(normalized.errorCode).toBe('provider_timeout')
+      expect(normalized.message).toContain('PROVIDER_TIMEOUT')
+    })
+
+    it('detects nested timeout cause in error.cause', () => {
+      const nestedErr = new Error('Some wrapping error')
+      nestedErr.cause = new Error('PROVIDER_TIMEOUT: Request aborted after 60000ms')
+      expect(isNestedTimeout(nestedErr)).toBe(true)
+
+      const normalized = normalizeProviderError(nestedErr)
+      expect(normalized.errorCode).toBe('provider_timeout')
+      expect(normalized.message).toContain('PROVIDER_TIMEOUT')
+    })
+
+    it('detects nested timeout cause in ProviderError.rawError.cause', () => {
+      const apiError = new APICallError({
+        statusCode: 200,
+        cause: new Error('Request aborted after 60000ms'),
+        url: 'https://openrouter.ai/api/v1/chat/completions',
+        message: 'Request failed',
+        requestBodyValues: {}
+      })
+      const wrappingError = new ProviderError(
+        'Failed to process successful response',
+        'Standard error',
+        apiError
+      )
+
+      expect(isNestedTimeout(wrappingError)).toBe(true)
+
+      const normalized = normalizeProviderError(wrappingError)
+      expect(normalized.errorCode).toBe('provider_timeout')
+      expect(normalized.message).toContain('PROVIDER_TIMEOUT')
+    })
+
+    it('detects APICallError-like object with statusCode 200 and nested timeout cause', () => {
+      const mockApiError = {
+        name: 'APICallError',
+        statusCode: 200,
+        cause: {
+          name: 'Error',
+          message: 'PROVIDER_TIMEOUT: Request aborted after 60000ms'
+        }
+      }
+
+      expect(isNestedTimeout(mockApiError)).toBe(true)
+
+      const normalized = normalizeProviderError(mockApiError)
+      expect(normalized.errorCode).toBe('provider_timeout')
+      expect(normalized.statusCode).toBe(200)
+      expect(normalized.message).toContain('PROVIDER_TIMEOUT')
     })
   })
 })

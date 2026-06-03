@@ -1,9 +1,15 @@
 # AI Quality Evaluation Report — PromptPolish
 
-* **Timestamp**: 2026-06-02T22:36:25.641Z
+* **Timestamp**: 2026-06-03T18:19:49.102Z
 * **Execution Mode**: `MOCKED`
 * **Target Model**: `deepseek/deepseek-v4-flash`
 * **Overall Pass Rate**: `90.9%` (`10 / 11` fixtures)
+
+### Execution & Failure Categorization Breakdown
+* **Quality Failures**: `0` fixtures (prompt optimization quality regressions)
+* **Provider Failures**: `0` fixtures (network, rate limits, or timeouts)
+* **Evaluator Failures**: `0` fixtures (pipeline validation or internal scripting errors)
+* **Stress Case Failures**: `1` fixtures (expected failures under extreme constraints)
 
 ## 1. Aggregate Quality Metrics
 

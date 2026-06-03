@@ -1,7 +1,7 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { generateText, Output } from 'ai'
 import { analysisResultSchema, type AnalysisResult } from './schemas'
-import { normalizeProviderError, ProviderError } from './provider-errors'
+import { normalizeProviderError, ProviderError, isNestedTimeout } from './provider-errors'
 import { getOwnerConfiguredModelId } from './model-catalog'
 
 export interface OpenRouterClientOptions {
@@ -119,12 +119,17 @@ export async function executeOpenRouterAnalysis(
   } catch (error) {
     // Detect AbortError BEFORE normalizeProviderError so downstream callers
     // can distinguish provider_timeout from generic provider failures.
-    if (error instanceof Error && (error.name === 'AbortError' || error.message.startsWith('PROVIDER_TIMEOUT:'))) {
+    if (isNestedTimeout(error)) {
       const ms = timeoutMs ?? 0
+      if (error instanceof ProviderError) {
+        throw error
+      }
       throw new ProviderError(
         `PROVIDER_TIMEOUT: Request aborted after ${ms}ms`,
         'The prompt analysis request timed out. Please try again.',
-        error
+        error,
+        undefined,
+        'provider_timeout'
       )
     }
     // Standardized provider error normalization for all other failures

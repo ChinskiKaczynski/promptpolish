@@ -4,6 +4,7 @@ import { z } from 'zod'
 import Module from 'module'
 import crypto from 'crypto'
 import { type AnalysisResult } from '../lib/ai/schemas'
+import { isNestedTimeout } from '../lib/ai/provider-errors'
 
 // Mock server-only so standard node runs do not throw
 const require = Module.createRequire(import.meta.url)
@@ -500,12 +501,6 @@ async function main() {
   async function runLiveFixtureAnalysis(fixture: Fixture): ReturnType<typeof analyzePrompt> {
     let lastError: unknown
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      if (attempt > 0) {
-        const delay = attempt * 2_000 // 2 s, 4 s, …
-        console.log(`    [RETRY ${attempt}/${maxRetries}] Waiting ${delay}ms before next attempt…`)
-        await new Promise(res => setTimeout(res, delay))
-      }
-
       const attemptController = new AbortController()
       const attemptTimeout = setTimeout(() => {
         attemptController.abort(new Error(`PROVIDER_TIMEOUT: Request aborted after ${timeoutMs}ms`))
@@ -519,7 +514,7 @@ async function main() {
             selectedProfileSlug: fixture.profile_slug,
             taskType: fixture.task_type
           },
-          { abortSignal: attemptController.signal }
+          { abortSignal: attemptController.signal, timeoutMs }
         )
         clearTimeout(attemptTimeout)
         return result
@@ -527,13 +522,11 @@ async function main() {
         clearTimeout(attemptTimeout)
         lastError = err
 
-        const isTimeout = err instanceof Error && (
-          err.name === 'AbortError' ||
-          err.message.startsWith('PROVIDER_TIMEOUT:')
-        )
+        const isTimeout = isNestedTimeout(err)
         const isRateLimit = err instanceof Error && (
           err.message.includes('429') ||
-          err.message.toLowerCase().includes('rate limit')
+          err.message.toLowerCase().includes('rate limit') ||
+          err.message.toLowerCase().includes('rate_limit')
         )
         const isNetwork = err instanceof Error && (
           err.message.toLowerCase().includes('fetch') ||
@@ -543,8 +536,11 @@ async function main() {
         const isTransient = isTimeout || isRateLimit || isNetwork
 
         if (isTransient && attempt < maxRetries) {
-          const reason = isTimeout ? 'timeout' : isRateLimit ? 'rate-limited' : 'network error'
-          console.warn(`    [WARN] Attempt ${attempt + 1} failed (${reason}) — will retry`)
+          const reason = isTimeout ? 'provider_timeout' : isRateLimit ? 'provider_rate_limited' : 'provider_network_error'
+          console.warn(`    [WARN] Attempt ${attempt + 1}/${maxRetries + 1} failed for ${fixture.id}: ${reason}`)
+          const delay = (attempt + 1) * 2_000
+          console.log(`    [RETRY] Waiting ${delay}ms before next attempt...`)
+          await new Promise(res => setTimeout(res, delay))
           continue
         }
         // Non-transient or out of retries: propagate immediately
@@ -907,18 +903,14 @@ async function main() {
         console.error(`  [CRASH] Failed to analyze fixture ${fixture.id}:`, err)
 
         let crashType = 'evaluator_bug_possible'
-        if (err instanceof Error) {
+        if (isNestedTimeout(err)) {
+          crashType = 'provider_timeout'
+        } else if (err instanceof Error) {
           const name = err.name
           const msg = err.message // preserve original casing for prefix checks
           const msgLower = msg.toLowerCase()
 
           if (
-            name === 'AbortError' ||
-            msg.startsWith('PROVIDER_TIMEOUT:')
-          ) {
-            // Explicit timeout via AbortController
-            crashType = 'provider_timeout'
-          } else if (
             msgLower.includes('429') ||
             msgLower.includes('rate limit') ||
             msgLower.includes('rate_limit')
@@ -1070,10 +1062,37 @@ async function main() {
   const fixture_pass_rate = (passedFixtures / total) * 100
   const score_range_pass_rate = (scoreRangePass / total) * 100
 
+  // --- Categorize failed fixtures into distinct buckets ---
+  const quality_failures: EvalResult[] = []
+  const provider_failures: EvalResult[] = []
+  const evaluator_failures: EvalResult[] = []
+  const stress_case_failures: EvalResult[] = []
+
+  for (const r of allResults) {
+    if (r.all_checks_passed) continue
+
+    const hasProviderFailure = r.failed_assertions.some(a =>
+      ['provider_timeout', 'provider_rate_limited', 'provider_network_error', 'provider_error'].includes(a)
+    )
+    const hasEvaluatorFailure = r.failed_assertions.some(a =>
+      ['evaluator_bug_possible', 'analysis_pipeline_error'].includes(a)
+    )
+
+    if (hasProviderFailure) {
+      provider_failures.push(r)
+    } else if (hasEvaluatorFailure) {
+      evaluator_failures.push(r)
+    } else if (r.fixture.fixture_category === 'stress_case' || r.fixture.task_type === 'too-long-output') {
+      stress_case_failures.push(r)
+    } else {
+      quality_failures.push(r)
+    }
+  }
+
   // --- Aggregate Consistency Checks ---
   let evaluatorBugPossible = false
-  const hasWeaknessFailure = allResults.some(r => !r.weaknesses_pass)
-  const hasLengthFailure = allResults.some(r => !r.length_ratio_pass)
+  const hasWeaknessFailure = allResults.some(r => !r.weaknesses_pass && !provider_failures.includes(r))
+  const hasLengthFailure = allResults.some(r => !r.length_ratio_pass && !provider_failures.includes(r))
 
   if (hasWeaknessFailure && weakness_detection_rate === 100) {
     console.error('[CONSISTENCY ERROR] A fixture has weaknesses_pass=false, but weakness_detection_rate is 100%!')
@@ -1122,7 +1141,11 @@ async function main() {
     too_long_rate: parseFloat(too_long_rate.toFixed(1)),
     sensitive_data_pass_rate: parseFloat(sensitive_data_pass_rate.toFixed(1)),
     uncertainty_warning_pass_rate: parseFloat(uncertainty_warning_pass_rate.toFixed(1)),
-    evaluator_bug_possible: evaluatorBugPossible
+    evaluator_bug_possible: evaluatorBugPossible,
+    quality_failures_count: quality_failures.length,
+    provider_failures_count: provider_failures.length,
+    evaluator_failures_count: evaluator_failures.length,
+    stress_case_failures_count: stress_case_failures.length
   }
 
   // 6. Write reports
@@ -1202,6 +1225,12 @@ async function main() {
     mdReport += `> [!CAUTION]\n`
     mdReport += `> **EVALUATOR BUG POSSIBLE**: Contradictory aggregate or table values were detected during report generation. Please inspect the evaluator logic.\n\n`
   }
+
+  mdReport += `### Execution & Failure Categorization Breakdown\n`
+  mdReport += `* **Quality Failures**: \`${quality_failures.length}\` fixtures (prompt optimization quality regressions)\n`
+  mdReport += `* **Provider Failures**: \`${provider_failures.length}\` fixtures (network, rate limits, or timeouts)\n`
+  mdReport += `* **Evaluator Failures**: \`${evaluator_failures.length}\` fixtures (pipeline validation or internal scripting errors)\n`
+  mdReport += `* **Stress Case Failures**: \`${stress_case_failures.length}\` fixtures (expected failures under extreme constraints)\n\n`
 
   mdReport += `## 1. Aggregate Quality Metrics\n\n`
   mdReport += `| Metric | Pass Rate | Description |\n`
@@ -1316,11 +1345,27 @@ async function main() {
   console.log(`  - JSON Report: ${jsonReportPath}`)
   console.log(`  - Markdown Report: ${mdReportPath}`)
 
-  // Exit with non-zero code if any test failed (except when too-long-output tests fail length check which is expected)
-  const criticalFailures = allResults.filter(r => !r.all_checks_passed && r.fixture.task_type !== 'too-long-output')
-  if (criticalFailures.length > 0) {
-    console.warn(`\n[WARNING] ${criticalFailures.length} fixtures failed critical quality constraints.`)
-  } else {
+  // Console warnings and results summary based on failure categorization
+  if (quality_failures.length > 0) {
+    console.warn(`\n[WARNING] ${quality_failures.length} fixtures failed critical quality constraints.`)
+  }
+
+  if (provider_failures.length > 0) {
+    const timeoutFailures = provider_failures.filter(r => r.failed_assertions.includes('provider_timeout'))
+    if (timeoutFailures.length > 0) {
+      console.warn(`\n[WARNING] ${timeoutFailures.length} fixtures were not quality-evaluated because of provider_timeout.`)
+    }
+    const otherProviderFailures = provider_failures.length - timeoutFailures.length
+    if (otherProviderFailures > 0) {
+      console.warn(`\n[WARNING] ${otherProviderFailures} fixtures were not quality-evaluated because of provider failures.`)
+    }
+  }
+
+  if (evaluator_failures.length > 0) {
+    console.warn(`\n[WARNING] ${evaluator_failures.length} fixtures failed due to evaluator/system errors.`)
+  }
+
+  if (quality_failures.length === 0 && provider_failures.length === 0 && evaluator_failures.length === 0) {
     console.log(`\n[COMPLETE] All evaluated calibration cases passed target boundaries!`)
   }
 }
