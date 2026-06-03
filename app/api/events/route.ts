@@ -50,7 +50,9 @@ const ALLOWED_EVENT_TYPES = [
   'history_favorite_added',
   'history_favorite_removed',
   'analysis_deleted',
-  'account_viewed'
+  'account_viewed',
+  'landing_viewed',
+  'cta_analyze_clicked'
 ] as const
 
 const eventSchema = z.object({

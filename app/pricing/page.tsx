@@ -99,7 +99,7 @@ export default async function PricingPage() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <span className="text-emerald-500 text-base">✓</span>
-                    <span>Maksymalnie <strong>12,000</strong> znaków na prompt</span>
+                    <span>Maksymalnie <strong>{freeLimits.maxPromptChars.toLocaleString()}</strong> znaków na prompt</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <span className="text-emerald-500 text-base">✓</span>
@@ -107,7 +107,7 @@ export default async function PricingPage() {
                   </li>
                   <li className="flex items-center gap-2.5 text-slate-600">
                     <span>✗</span>
-                    <span>Eksport raportów do PDF / Markdown</span>
+                    <span>Eksport Markdown i TXT</span>
                   </li>
                   <li className="flex items-center gap-2.5 text-slate-600">
                     <span>✗</span>
@@ -130,14 +130,14 @@ export default async function PricingPage() {
           {/* Pro Plan */}
           <div className="rounded-3xl border-2 border-indigo-500/50 bg-slate-900/40 p-8 flex flex-col justify-between hover:shadow-2xl hover:shadow-indigo-500/5 transition duration-300 relative group">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-1 text-[10px] font-black text-white uppercase tracking-widest shadow-md">
-              Najpopularniejszy
+              Beta
             </div>
 
             <div>
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-xl font-bold text-white">{proLimits.name} Tier</h3>
-                  <p className="mt-2 text-xs text-slate-300">Dla zaawansowanych twórców i profesjonalistów.</p>
+                  <h3 className="text-xl font-bold text-white">{proLimits.name}</h3>
+                  <p className="mt-2 text-xs text-slate-300">Dla profesjonalistów potrzebujących zaawansowanych eksportów i zbiorczych analiz.</p>
                 </div>
                 {profile?.plan_slug === 'pro' && (
                   <span className="rounded-full bg-indigo-500/20 border border-indigo-500/30 px-3 py-1 text-[10px] font-black text-indigo-400 uppercase tracking-wider">
@@ -161,15 +161,15 @@ export default async function PricingPage() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <span className="text-indigo-400 text-base">✓</span>
-                    <span>Maksymalnie <strong>24,000</strong> znaków na prompt</span>
+                    <span>Maksymalnie <strong>{proLimits.maxPromptChars.toLocaleString()}</strong> znaków na prompt</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <span className="text-indigo-400 text-base">✓</span>
-                    <span><strong>Eksport Markdown (Pro)</strong> – pobierz natychmiast</span>
+                    <span><strong>Eksport Markdown i TXT</strong> – pobierz natychmiast</span>
                   </li>
-                  <li className="flex items-center gap-2.5">
-                    <span className="text-indigo-400 text-base">✓</span>
-                    <span><strong>Eksport PDF (Pro)</strong> – elegancki raport dla klienta</span>
+                  <li className="flex items-center gap-2.5 text-slate-500">
+                    <span>✓</span>
+                    <span>Eksport PDF *(w przygotowaniu)*</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <span className="text-indigo-400 text-base">✓</span>
@@ -251,13 +251,13 @@ export default async function PricingPage() {
             <div className="rounded-2xl border border-slate-900 bg-slate-900/10 p-5 space-y-2">
               <h4 className="text-sm font-bold text-white">Kiedy płatności będą w pełni aktywne?</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Obecnie PromptPolish jest w fazie zamkniętych testów beta. Pracujemy nad integracją Stripe, ale na ten moment wszystkie funkcje premium można testować bezpłatnie po zalogowaniu i włączeniu symulacji Pro.
+                Obecnie PromptPolish jest w fazie zamkniętych testów beta. Pracujemy nad integracją Stripe, ale na ten moment płatności są wyłączone.
               </p>
             </div>
             <div className="rounded-2xl border border-slate-900 bg-slate-900/10 p-5 space-y-2">
-              <h4 className="text-sm font-bold text-white">Jak mogę przetestować funkcje Pro?</h4>
+              <h4 className="text-sm font-bold text-white">Jak mogę przetestować plan Pro?</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Jeśli chcesz wypróbować możliwości wersji Pro (np. eksport PDF, Markdown lub wyższe limity długości promptu), zaloguj się i użyj przycisku „Aktywuj Symulację Pro” w sekcji deweloperskiej powyżej.
+                Jeśli chcesz przetestować plan Pro, skontaktuj się z nami.
               </p>
             </div>
             <div className="rounded-2xl border border-slate-900 bg-slate-900/10 p-5 space-y-2">
