@@ -50,28 +50,91 @@ function pct(num: number, den: number): string {
   return ((num / den) * 100).toFixed(1) + '%'
 }
 
+// Parse command line arguments
+const args = process.argv.slice(2)
+let days: number | undefined
+let since: string | undefined
+let sinceDate: Date | null = null
+
+const daysIdx = args.findIndex(arg => arg === '--days')
+if (daysIdx !== -1 && args[daysIdx + 1]) {
+  const parsed = parseInt(args[daysIdx + 1], 10)
+  if (!isNaN(parsed) && parsed > 0) {
+    days = parsed
+    sinceDate = new Date()
+    sinceDate.setDate(sinceDate.getDate() - days)
+  }
+}
+
+const sinceIdx = args.findIndex(arg => arg === '--since')
+if (sinceIdx !== -1 && args[sinceIdx + 1]) {
+  since = args[sinceIdx + 1].trim()
+  const parsedDate = new Date(since)
+  if (!isNaN(parsedDate.getTime())) {
+    sinceDate = parsedDate
+    if (sinceIdx > daysIdx) {
+      days = undefined
+    }
+  }
+}
+
 async function runMetricsReport() {
   console.log('================================================')
   console.log('   PromptPolish MVP Private Beta Metrics        ')
   console.log(`   Generated on: ${new Date().toISOString()}   `)
+  if (sinceDate) {
+    console.log(`   Filter window: since ${sinceDate.toISOString()}${days ? ` (last ${days} days)` : ''}`)
+  } else {
+    console.log('   Filter window: all-time                      ')
+  }
   console.log('================================================\n')
 
   try {
-    // Fetch all usage events
-    const { data: usage, error: ue } = await supabase.from('usage_events').select('*')
-    const { data: feedback, error: fe } = await supabase.from('feedback_events').select('*')
-    const { data: analyses, error: ae } = await supabase.from('prompt_analyses').select('*')
-    const { data: profiles, error: pe } = await supabase.from('user_profiles').select('*')
+    // Build Supabase queries
+    let usageQuery = supabase.from('usage_events').select('*')
+    let feedbackQuery = supabase.from('feedback_events').select('*')
+    let analysesQuery = supabase.from('prompt_analyses').select('*')
+    let profilesQuery = supabase.from('user_profiles').select('*')
+
+    if (sinceDate) {
+      const startStr = sinceDate.toISOString()
+      usageQuery = usageQuery.gte('created_at', startStr)
+      feedbackQuery = feedbackQuery.gte('created_at', startStr)
+      analysesQuery = analysesQuery.gte('created_at', startStr)
+      profilesQuery = profilesQuery.gte('created_at', startStr)
+    }
+
+    const { data: usage, error: ue } = await usageQuery
+    const { data: feedback, error: fe } = await feedbackQuery
+    const { data: analyses, error: ae } = await analysesQuery
+    const { data: profiles, error: pe } = await profilesQuery
 
     const errors = [ue, fe, ae, pe].filter(Boolean)
     if (errors.length > 0) {
       console.warn('Warning: Some queries had errors:', errors.map(e => e?.message).join(', '))
     }
 
-    const u = usage ?? []
-    const f = feedback ?? []
-    const a = analyses ?? []
-    const p = profiles ?? []
+    const u = (usage ?? []) as Array<{
+      event_type: string
+      owner_anonymous_id?: string | null
+      user_id?: string | null
+      created_at?: string | null
+      metadata_json?: unknown
+    }>
+    const f = (feedback ?? []) as Array<{
+      rating: 'up' | 'down'
+      created_at?: string | null
+    }>
+    const a = (analyses ?? []) as Array<{
+      is_share_enabled: boolean
+      overall_score: number
+      created_at?: string | null
+    }>
+    const p = (profiles ?? []) as Array<{
+      plan_slug: string
+      user_id: string
+      created_at?: string | null
+    }>
 
     // Core Funnel
     const started = u.filter(e => e.event_type === 'analysis_started').length
@@ -86,12 +149,20 @@ async function runMetricsReport() {
     const feedbackUp = f.filter(x => x.rating === 'up').length
     const feedbackDown = f.filter(x => x.rating === 'down').length
 
+    // Stable calculations
+    const isMismatch = completed > started
+    const completionRateStr = isMismatch ? 'invalid/instrumentation mismatch' : pct(completed, started)
+    
+    const totalFinished = completed + failed
+    const stableFailureRateVal = totalFinished > 0 ? (failed / totalFinished) * 100 : 0
+    const stableFailureRateStr = totalFinished > 0 ? pct(failed, totalFinished) : '—'
+
     // Plans
     const freeUsers = p.filter(x => x.plan_slug === 'free').length
     const proUsers = p.filter(x => x.plan_slug === 'pro').length
 
     // Owners
-    const completedOwners = u.filter(e => e.event_type === 'analysis_completed' && e.owner_anonymous_id).map(e => e.owner_anonymous_id)
+    const completedOwners = u.filter(e => e.event_type === 'analysis_completed' && e.owner_anonymous_id).map(e => e.owner_anonymous_id as string)
     const ownerCounts: Record<string, number> = {}
     completedOwners.forEach(o => { ownerCounts[o] = (ownerCounts[o] || 0) + 1 })
     const returning = Object.values(ownerCounts).filter(c => c >= 2).length
@@ -101,12 +172,46 @@ async function runMetricsReport() {
     const scores = a.map(x => x.overall_score).filter(s => typeof s === 'number' && !isNaN(s))
     const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0
 
+    // Beta signal calculation
+    const copyRateVal = completed > 0 ? (copies / completed) * 100 : 0
+    const totalFeedback = feedbackUp + feedbackDown
+    const positiveFeedbackRatio = totalFeedback > 0 ? (feedbackUp / totalFeedback) * 100 : 0
+
+    let betaSignal: 'INSUFFICIENT_DATA' | 'WEAK_SIGNAL' | 'MIXED_SIGNAL' | 'STRONG_SIGNAL' = 'INSUFFICIENT_DATA'
+    if (completed < 20) {
+      betaSignal = 'INSUFFICIENT_DATA'
+    } else {
+      if (copyRateVal < 20) {
+        betaSignal = 'WEAK_SIGNAL'
+      } else if (copyRateVal >= 20 && copyRateVal <= 40) {
+        betaSignal = 'MIXED_SIGNAL'
+      } else if (copyRateVal > 40 && positiveFeedbackRatio >= 70) {
+        betaSignal = 'STRONG_SIGNAL'
+      } else {
+        betaSignal = 'MIXED_SIGNAL'
+      }
+    }
+
+    let finalSignal = betaSignal
+    const shouldDowngrade = stableFailureRateVal > 20 && betaSignal !== 'INSUFFICIENT_DATA'
+    if (shouldDowngrade) {
+      if (betaSignal === 'STRONG_SIGNAL') {
+        finalSignal = 'MIXED_SIGNAL'
+      } else if (betaSignal === 'MIXED_SIGNAL') {
+        finalSignal = 'WEAK_SIGNAL'
+      }
+    }
+
     console.log('── Core Funnel ─────────────────────────────────')
-    console.log(`  Started:              ${started}`)
-    console.log(`  Completed:            ${completed}`)
-    console.log(`  Failed:               ${failed}`)
-    console.log(`  Completion Rate:      ${pct(completed, started)}`)
-    console.log(`  Failure Rate:         ${pct(failed, started)}`)
+    console.log(`  Started (events):     ${started}`)
+    console.log(`  Completed (events):   ${completed}`)
+    console.log(`  Total (analyses row): ${a.length}`)
+    console.log(`  Failed (events):      ${failed}`)
+    console.log(`  Completion Rate:      ${completionRateStr}`)
+    console.log(`  Failure Rate (stable): ${stableFailureRateStr}`)
+    if (isMismatch) {
+      console.log(`  [WARNING] analysis_started is undercounted; completion rate is not reliable`)
+    }
 
     console.log('\n── Value Metrics ───────────────────────────────')
     console.log(`  Copy Events:          ${copies}   (${pct(copies, completed)} of completed)`)
@@ -134,6 +239,15 @@ async function runMetricsReport() {
     console.log('\n── Prompt Quality ──────────────────────────────')
     console.log(`  Total Analyses:       ${a.length}`)
     console.log(`  Avg Score:            ${safe(avgScore, 1)}`)
+
+    console.log('\n── Beta Signal ──────────────────────────────────')
+    console.log(`  Initial Signal:       ${betaSignal}`)
+    if (shouldDowngrade) {
+      console.log(`  Failure Rate Check:   >20% (${stableFailureRateStr}) -> Downgrade 1 level`)
+      console.log(`  Final Signal Level:   ${finalSignal}`)
+    } else {
+      console.log(`  Final Signal Level:   ${finalSignal}`)
+    }
 
     console.log('\n================================================')
     console.log('  Full dashboard: /admin/metrics (admin only)')
