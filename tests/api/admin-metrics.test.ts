@@ -45,7 +45,7 @@ const SAFE_METRICS: AggregatedMetrics = {
     share_rate: 12.5,
     active_public_shares: 8,
     export_markdown: 3,
-    export_pdf: 1
+    export_txt: 1
   },
   retentionProxy: {
     unique_active_owners: 30,
@@ -107,7 +107,7 @@ const SAFE_METRICS: AggregatedMetrics = {
   },
   eventCoverage: [
     { eventType: 'analysis_started', countAllTime: 100, status: 'present' },
-    { eventType: 'export_pdf', countAllTime: 0, status: 'no_events_yet' }
+    { eventType: 'export_txt', countAllTime: 0, status: 'no_events_yet' }
   ],
   productInterpretation: {
     copy_rate_status: 'strong',

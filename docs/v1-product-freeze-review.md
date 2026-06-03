@@ -26,7 +26,7 @@ The application is exceptionally secure, responsive, and performance-optimized. 
    - 12k Character Max Limit             - Stripe Checkout Upgrades
    - Preflight Secret Interception       - Stripe Customer Management Portal
    - Low-entropy Cookie Bindings         - Stripe Webhook Synchronizer
-   - Opt-in Public Sharing               - PDF & Markdown Report Exports
+   - Opt-in Public Sharing               - TXT & Markdown Report Exports
 ========================================================================================
 ```
 
@@ -56,10 +56,10 @@ Here is the evaluation of the 18 specific review categories requested for the v1
 *   **Review Findings:** The plan entitlement layer in `lib/plans/config.ts` is fully implemented and backed by tests. It correctly maps static thresholds. For v1.0, the "Free" plan limits (20 monthly analyses, 5 daily abuse limit, 12,000 characters maximum) are strictly applied.
 *   **Verdict:** **GO** (Architectural layer active, but Pro tier logic remains dormant).
 
-### 5. Exports (PDF & Markdown)
-*   **Implementation Status:** **COMPLETE / DEFERRED**
-*   **Review Findings:** Exporters in `/api/export/markdown` and `/api/export/pdf` are beautifully crafted. The PDF engine utilizes `jsPDF` and a robust Polish accent translation utility. Both enforce strict entitlement checks. Since PDF and Markdown exports are premium "Pro" entitlements, they are deferred.
-*   **Verdict:** **FREEZE / POSTPONE TO V1.1**
+### 5. Exports (TXT & Markdown)
+*   **Implementation Status:** **COMPLETE / ENABLED FOR OWNERS**
+*   **Review Findings:** Exporters are now dynamic endpoints at `/api/export/[id]?format=markdown|txt`. Both enforce strict owner verification checks.
+*   **Verdict:** **GO**
 
 ### 6. Pricing Page
 *   **Implementation Status:** **COMPLETE / DEFERRED**
@@ -136,7 +136,7 @@ While the codebase is exceptionally clean and well-structured, several advanced 
 
 1.  **Stripe API Integration Layer:** Fully developed backend routes in `/api/billing/*` and `/api/webhooks/stripe`.
 2.  **User Account Panel & Login:** Active layouts in `app/login`, `app/account`, and `app/history` that are out-of-scope for a strictly anonymous MVP.
-3.  **PDF/Markdown Exporters:** Advanced doc generation engines developed under `/api/export/*` that represent Pro features.
+3.  **TXT/Markdown Exporters:** Document generation engines developed under `/api/export/[id]` that represent owner features.
 4.  **Developer Simulation Gates:** Bypass forms allowing staging environments to trigger Pro profiles on the fly.
 
 > [!TIP]
@@ -173,12 +173,12 @@ gantt
     Legal Compliance Sign-off   : 2026-06-01, 3d
     Enable Supabase Auth        : 2026-06-04, 4d
     Activate Stripe Checkout    : 2026-06-08, 5d
-    Enable PDF/Markdown Exports : 2026-06-13, 3d
+    Enable TXT/Markdown Exports : 2026-06-13, 3d
 ```
 
 1.  **Supabase Auth & User Profiles:** Move from cookie-based anonymous IDs to verified user accounts.
 2.  **Stripe Billing Integration:** Connect the `/api/billing/checkout` and webhook pipelines to live Stripe keys.
 3.  **Customer Management Billing Portal:** Enable self-service cancellations and card management via Stripe Customer Portal.
-4.  **PDF/Markdown Exports:** Unlock downloads for Pro-entitled profiles.
+4.  **TXT/Markdown Exports:** Unlock downloads for authorized owners.
 5.  **Audit History Dashboard:** Activate cloud preservation and search of past analyses under authenticated accounts.
 6.  **Legal & Tax Compliance Audit:** Engage legal counsel to review `/privacy`, `/terms`, and `/docs/refund-cancellation-policy.md`, scrub all "DRAFT" warnings, and activate **Stripe Tax** to handle automated sales tax/VAT in the EU and US.

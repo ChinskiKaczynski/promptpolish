@@ -56,3 +56,10 @@ Przed implementacją AI providera wykonaj zadanie z `MISSIONS_FOR_ANTIGRAVITY.md
 - Jeśli bramka Stripe jest wyłączona (`STRIPE_ENABLED=false`), użytkownicy widzą wyraźne ostrzeżenie, że system płatności działa w trybie zamkniętej bety (Simulated Beta Pro).
 - Wszelkie transakcje i subskrypcje Stripe są wstrzymane. Użytkownicy widzą aktualne wykorzystanie limitów analiz w danym miesiącu UTC za pomocą paska postępu.
 
+### 5. Eksport Wyników (Export v1)
+- **Formaty Eksportu**: Użytkownicy mogą eksportować szczegółowe raporty analizy promptów do formatów Markdown (`.md`) oraz czystego tekstu (`.txt`).
+- **Prywatność i Scrubbing danych**: Eksportowane pliki są w pełni oczyszczane ze wszystkich poufnych metadanych systemowych i osobowych (takich jak tokeny udostępniania publicznego, identyfikatory użytkowników i gości).
+- **Zabezpieczenie Dostępności**: Funkcja eksportu jest dostępna wyłącznie dla właściciela danej analizy (zarówno zalogowanego użytkownika, jak i gościa zabezpieczonego ciasteczkiem). Publiczne strony udostępniania (`/share/[token]`) nie eksponują kontrolek eksportu raportów.
+- **PDF**: Eksport do formatu PDF nie jest wspierany w tej wersji.
+
+

@@ -47,7 +47,7 @@ We performed validation compiling, linting, and comprehensive test suite executi
 *   **Private/Public Access Separation**: **VERIFIED**. 
     *   Private results (`/result/[id]`) are strictly owner-restricted. Unauthenticated users or non-owners are rejected with a safe `notFound()` (404) to prevent enumeration attacks.
     *   Public share views (`/share/[token]`) only serve scrubbed public fields (`input_prompt`, `overall_score`, `score_level`, `analysis_json`, `improved_prompt`, `created_at`) when public sharing is explicitly opted-in by the owner. It strips database keys (`id`), share tokens, and anonymous tracking IDs completely.
-*   **Markdown/PDF Export**: **VERIFIED**. Exports are guarded backend-side. Free-tier users are intercepted with an Upgrade modal, while Pro-tier users are allowed to download clean, professionally formatted files.
+*   **Markdown/TXT Export**: **VERIFIED**. Exports are guarded backend-side. Analysis owners are allowed to download clean, professionally formatted files.
 
 ---
 
@@ -59,7 +59,7 @@ We performed validation compiling, linting, and comprehensive test suite executi
     *   `analysis_failed` logs companion logs for rate limits, provider drops, or structural errors.
     *   `sensitive_data_warning_shown` and `sensitive_data_blocked` record scanners.
     *   `provider_error` and `invalid_structured_output` track API robustness.
-    *   `export_markdown` and `export_pdf` increment upon downing documents.
+    *   `export_markdown` and `export_txt` increment upon downing documents.
 *   **Admin Panel Isolation**: **VERIFIED**. `/admin/metrics` and `/api/admin/metrics` are server-side protected via `verifyAdminAccess()`. Non-admins and logged-out users are immediately rejected.
 *   **Privacy-Safe Metrics Contracts**: **VERIFIED**. Telemetry events *never* record private prompts, improved prompt text, user IDs, emails, share tokens, or database credentials in metadata. It only logs salted IP/User-Agent hashes and broad token metrics.
 

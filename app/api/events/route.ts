@@ -33,7 +33,7 @@ const ALLOWED_EVENT_TYPES = [
   'upgrade_cta_clicked',
   'limit_reached',
   'export_markdown',
-  'export_pdf',
+  'export_txt',
   'analysis_started',
   'analysis_completed',
   'analysis_failed',

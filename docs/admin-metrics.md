@@ -58,7 +58,7 @@ User engagement and output adoption signals.
 | `positive_feedback_ratio` | `up / total_feedback × 100` |
 | `share_link_created` | `usage_events` where `event_type = share_link_created` |
 | `active_public_shares` | `prompt_analyses` where `is_share_enabled = true` |
-| `export_markdown / export_pdf` | `usage_events` where `event_type = export_*` |
+| `export_markdown / export_txt` | `usage_events` where `event_type = export_*` |
 
 ### 3. Retention Proxy
 Owner re-use patterns — **no owner IDs are returned**.
@@ -175,8 +175,8 @@ All telemetry events conform strictly to the following contract. **No raw prompt
 | `feedback_submitted` | `/api/feedback` | User votes up/down on audit report | `analysis_id`, `rating`, `feedback_id` |
 | `share_link_created` | `/api/share` | Enable public link | `analysis_id` |
 | `share_link_disabled` | `/api/share/disable` | Disable public link | `analysis_id` |
-| `export_markdown` | `/api/export/markdown` | Download audit as Markdown | `analysis_id`, `export_type: 'markdown'` |
-| `export_pdf` | `/api/export/pdf` | Download audit as PDF | `analysis_id`, `export_type: 'pdf'` |
+| `export_markdown` | `/api/export/[id]` | Download audit as Markdown | `analysis_id`, `export_type: 'markdown'` |
+| `export_txt` | `/api/export/[id]` | Download audit as Plain TXT | `analysis_id`, `export_type: 'txt'` |
 
 ---
 

@@ -30,7 +30,7 @@ export interface AggregatedMetrics {
     share_rate: number
     active_public_shares: number
     export_markdown: number
-    export_pdf: number
+    export_txt: number
   }
 
   retentionProxy: {
@@ -283,7 +283,7 @@ export async function fetchAggregatedMetrics(
   const active_public_shares = analyses.filter((a) => a.is_share_enabled === true).length
 
   const export_markdown = usage.filter((e) => e.event_type === 'export_markdown').length
-  const export_pdf = usage.filter((e) => e.event_type === 'export_pdf').length
+  const export_txt = usage.filter((e) => e.event_type === 'export_txt').length
 
   // --- 3. RETENTION PROXY ---
   const allOwners = new Set(usage.map((e) => e.owner_anonymous_id).filter(Boolean).map(String))
@@ -532,7 +532,7 @@ export async function fetchAggregatedMetrics(
     'invalid_structured_output',
     'api_error',
     'export_markdown',
-    'export_pdf'
+    'export_txt'
   ]
 
   const eventCountsAllTime: Record<string, number> = {}
@@ -632,7 +632,7 @@ export async function fetchAggregatedMetrics(
       share_rate,
       active_public_shares,
       export_markdown,
-      export_pdf
+      export_txt
     },
     retentionProxy: {
       unique_active_owners,

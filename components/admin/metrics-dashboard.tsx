@@ -230,7 +230,7 @@ export function MetricsDashboard() {
                 <MetricCard label="Share Rate" value={data.valueMetrics.share_rate} format="percent" />
                 <MetricCard label="Active Public Shares" value={data.valueMetrics.active_public_shares} />
                 <MetricCard label="Export Markdown" value={data.valueMetrics.export_markdown} />
-                <MetricCard label="Export PDF" value={data.valueMetrics.export_pdf} />
+                <MetricCard label="Export TXT" value={data.valueMetrics.export_txt} />
               </div>
             </section>
 
