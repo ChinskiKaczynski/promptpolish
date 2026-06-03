@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
-import { ensureUserProfile } from '@/lib/supabase/queries'
+import { ensureUserProfile, createUsageEvent } from '@/lib/supabase/queries'
+import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { PLAN_LIMITS } from '@/lib/plans/config'
 import { CheckoutButton } from '@/components/pricing/checkout-button'
 import { SimulateProButton } from '@/components/pricing/simulate-pro-button'
+import { WaitlistForm } from '@/components/pricing/waitlist-form'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
 
@@ -22,12 +24,35 @@ export default async function PricingPage() {
     })
   }
 
+  // Resolve ownerAnonymousId for telemetry (works for both anonymous and authenticated users)
+  const ownerAnonymousId = await getOwnerIdFromCookies()
+
+  // Fire pricing_viewed telemetry event
+  createUsageEvent({
+    owner_anonymous_id: ownerAnonymousId || '',
+    user_id: user?.id ?? null,
+    event_type: 'pricing_viewed',
+    metadata_json: {
+      stripe_enabled: stripeEnabled,
+      plan_slug: profile?.plan_slug ?? null,
+    },
+  }).catch((err) => {
+    console.error('Failed to log pricing_viewed event:', err)
+  })
+
   const freeLimits = PLAN_LIMITS.free
   const proLimits = PLAN_LIMITS.pro
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.12),rgba(255,255,255,0))] text-slate-100 antialiased font-sans pb-16">
       <AppHeader theme="dark" />
+
+      {/* Beta Notice Banner */}
+      {!stripeEnabled && (
+        <div className="w-full bg-amber-500/10 border-b border-amber-500/20 px-6 py-2.5 text-center text-xs font-semibold text-amber-300">
+          ⚠️ <strong>Beta:</strong> Bramka płatności Stripe jest wyłączona. Zakup Pro jest niedostępny — możesz testować symulację Pro po zalogowaniu.
+        </div>
+      )}
 
       {/* Main Section */}
       <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-12">
@@ -171,9 +196,13 @@ export default async function PricingPage() {
                 <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <CheckoutButton lang="pl" />
                 </div>
-              ) : user ? (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-center text-xs font-semibold text-amber-300">
-                  Stripe jest wyłączony w becie. Do testów użyj symulacji Pro poniżej.
+              ) : user && !stripeEnabled ? (
+                /* Stripe disabled: show waitlist form as primary CTA, simulate-pro as dev tool */
+                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-center text-xs font-semibold text-amber-300">
+                    Zakup Pro niedostępny w becie.
+                  </div>
+                  <WaitlistForm lang="pl" />
                 </div>
               ) : (
                 <div className="space-y-3">

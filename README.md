@@ -62,4 +62,55 @@ Przed implementacją AI providera wykonaj zadanie z `MISSIONS_FOR_ANTIGRAVITY.md
 - **Zabezpieczenie Dostępności**: Funkcja eksportu jest dostępna wyłącznie dla właściciela danej analizy (zarówno zalogowanego użytkownika, jak i gościa zabezpieczonego ciasteczkiem). Publiczne strony udostępniania (`/share/[token]`) nie eksponują kontrolek eksportu raportów.
 - **PDF**: Eksport do formatu PDF nie jest wspierany w tej wersji.
 
+---
 
+## Beta Plans — Limits & Stripe State
+
+### Plan Limits (Beta)
+
+| Plan | Monthly Analyses | Daily Abuse Limit | Max Prompt Chars | Markdown Export | PDF Export | Batch Audit |
+|---|---|---|---|---|---|---|
+| **Anonymous** | 10 | 3 (env: `ANONYMOUS_DAILY_LIMIT`) | 12,000 | ✗ | ✗ | ✗ |
+| **Free** | 20 | 5 | 12,000 | ✗ | ✗ | ✗ |
+| **Pro** | 500 | 100 | 24,000 | ✓ | ✓ | ✓ |
+
+> Monthly limits are counted via `analysis_completed` events in UTC. They reset on the 1st of each month.
+
+### STRIPE_ENABLED=false Behavior
+
+When `STRIPE_ENABLED=false` (the default during beta):
+
+- `/api/billing/checkout` returns **403 `billing_disabled`** — no Stripe session is created
+- `/api/billing/portal` returns **400 `no_customer_record`** — no portal access
+- `/pricing` shows a **beta notice banner** and replaces the checkout button with a waitlist form
+- `/account` shows a **Beta Info amber banner** instead of subscription details
+- The `SimulateProButton` (developer tool) still works for admin emails or in development mode
+
+### Simulate-Pro (Beta Testing Tool)
+
+Endpoint: `POST /api/entitlements/simulate-pro`
+
+- **Development**: any authenticated user can call it (no admin check)
+- **Production**: only emails listed in `ADMIN_EMAILS` env var (comma-separated) can call it
+- Sets `user_profiles.plan_slug = 'pro'` directly in the database
+- Does **not** create any Stripe subscription records
+- Fires `simulate_pro_enabled` telemetry event
+- The UI shows a `Beta Symulacja` badge next to the Pro plan name
+
+### Usage Meter
+
+A reusable `<UsageMeter>` component is available at `components/plans/usage-meter.tsx`:
+- **Normal** (<80%): indigo progress bar
+- **Warning** (≥80%): amber progress bar + warning banner linking to `/pricing`
+- **Blocked** (100%): rose progress bar + blocked message with beta caveat
+
+The `/analyze` page fires a server-side `limit_warning_shown` event when a user loads the page with ≥80% of their monthly quota consumed.
+
+### What Changes Before Real Billing
+
+1. Set `STRIPE_ENABLED=true` in production environment
+2. Configure `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID_PRO`, `STRIPE_WEBHOOK_SECRET`
+3. Set up Stripe webhook endpoint at `/api/webhooks/stripe`
+4. The Stripe webhook handler automatically syncs `plan_slug` to `user_profiles` on subscription events
+5. The `SimulateProButton` section on `/pricing` should be removed or hidden from non-admin users
+6. Update pricing page to show real pricing instead of "Cena TBD"

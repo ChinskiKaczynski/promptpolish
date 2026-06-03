@@ -14,6 +14,7 @@ import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
 import { PortalButton } from '@/components/billing/portal-button'
 import { PLAN_LIMITS } from '@/lib/plans/config'
+import { UsageMeter } from '@/components/plans/usage-meter'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,8 +67,6 @@ export default async function AccountPage() {
   const monthlyCount = await getUsageCountThisMonthForUser(ownerAnonymousId || '', user.id)
   const limits = PLAN_LIMITS[planSlug]
   const monthlyLimit = limits.monthlyAnalyses
-  const remainingCount = Math.max(0, monthlyLimit - monthlyCount)
-  const usagePercentage = Math.min(100, Math.round((monthlyCount / monthlyLimit) * 100))
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50/50 selection:bg-indigo-100 antialiased font-sans">
@@ -125,49 +124,13 @@ export default async function AccountPage() {
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Analizy w tym miesiącu
-              </span>
-              <span className="mt-2 text-2xl font-black text-slate-800 block">
-                {monthlyCount} <span className="text-xs font-semibold text-slate-400">/ {monthlyLimit}</span>
-              </span>
-            </div>
-
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Pozostały limit
-              </span>
-              <span className="mt-2 text-2xl font-black text-slate-850 block">
-                {remainingCount}
-              </span>
-            </div>
-
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                Wykorzystanie limitu
-              </span>
-              <span className="mt-2 text-2xl font-black text-indigo-600 block">
-                {usagePercentage}%
-              </span>
-            </div>
-          </div>
-
-          {/* Progress Bar Visual */}
-          <div className="space-y-2">
-            <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 transition-all duration-500 ease-out"
-                style={{ width: `${usagePercentage}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-[11px] text-slate-400 font-semibold">
-              <span>0% użycia</span>
-              <span>{usagePercentage}% wykorzystane</span>
-              <span>100% limitu</span>
-            </div>
-          </div>
+          <UsageMeter
+            planSlug={planSlug}
+            monthlyCount={monthlyCount}
+            monthlyLimit={monthlyLimit}
+            variant="inline"
+            isSimulatedPro={planSlug === 'pro' && !stripeEnabled}
+          />
         </div>
 
         {/* Billing Status UI Section */}

@@ -106,6 +106,22 @@ describe('Stripe Billing Foundation API Suite', () => {
   })
 
   describe('POST /api/billing/checkout (Checkout Session)', () => {
+    it('returns 403 billing_disabled when STRIPE_ENABLED is false (beta mode)', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const env = process.env as any
+      env.STRIPE_ENABLED = 'false'
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(403)
+      expect(data.error).toBe('billing_disabled')
+      expect(mockStripeInstances.checkout.sessions.create).not.toHaveBeenCalled()
+
+      // Restore for subsequent tests
+      env.STRIPE_ENABLED = 'true'
+    })
+
     it('returns 401 when the user is not authenticated', async () => {
       vi.mocked(getAuthUser).mockResolvedValue(null)
 

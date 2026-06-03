@@ -7,12 +7,17 @@ vi.mock('@/lib/identity/auth', () => ({
 }))
 
 vi.mock('@/lib/supabase/queries', () => ({
-  setUserPlanSlug: vi.fn()
+  setUserPlanSlug: vi.fn(),
+  createUsageEvent: vi.fn().mockResolvedValue(null),
+}))
+
+vi.mock('@/lib/identity/anonymous', () => ({
+  getOwnerIdFromCookies: vi.fn().mockResolvedValue('mock-owner-id'),
 }))
 
 import { POST } from '@/app/api/entitlements/simulate-pro/route'
 import { getAuthUser } from '@/lib/identity/auth'
-import { setUserPlanSlug } from '@/lib/supabase/queries'
+import { setUserPlanSlug, createUsageEvent } from '@/lib/supabase/queries'
 import type { User } from '@supabase/supabase-js'
 
 describe('POST /api/entitlements/simulate-pro', () => {
@@ -181,5 +186,33 @@ describe('POST /api/entitlements/simulate-pro', () => {
 
     expect(response.status).toBe(500)
     expect(data.error).toBe('Could not update entitlement')
+  })
+
+  // ── Telemetry ──────────────────────────────────────────────────────────────
+
+  it('fires simulate_pro_enabled usage event after successful plan update', async () => {
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'admin1@test.com' } as User)
+
+    await POST()
+
+    expect(createUsageEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: 'user-123',
+        event_type: 'simulate_pro_enabled',
+        metadata_json: expect.objectContaining({
+          triggered_by: 'simulate-pro-api',
+        }),
+      })
+    )
+  })
+
+  it('does NOT fire simulate_pro_enabled when user is unauthorized', async () => {
+    vi.mocked(getAuthUser).mockResolvedValue(null)
+
+    await POST()
+
+    expect(createUsageEvent).not.toHaveBeenCalledWith(
+      expect.objectContaining({ event_type: 'simulate_pro_enabled' })
+    )
   })
 })
