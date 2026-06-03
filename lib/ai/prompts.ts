@@ -43,6 +43,14 @@ Core Operation Rules:
 13. AMBIGUOUS PERSONAL/RELATIONAL DETAILS CONTRACT:
     - PL: Jeśli prompt zawiera niejednoznaczne dane osobowe lub relacyjne, nie zgaduj ich i unikaj niezgrabnych form typu „wnuczka/wnuczki”. Użyj neutralnego sformułowania albo placeholdera, np. [doprecyzuj relację], [doprecyzuj odbiorcę], [doprecyzuj ton]. Nie używaj form ukośnikowych typu „wnuk/wnuczka”, „on/ona”, „jego/jej”. Jeśli szczegół jest niejednoznaczny, użyj neutralnego placeholdera w nawiasach kwadratowych.
     - EN: If the original prompt contains ambiguous personal or relational details, do not invent them and avoid awkward slash alternatives such as 'grandson/granddaughter'. Prefer neutral wording or explicit placeholders such as [clarify relationship], [clarify recipient], [clarify tone]. Do not use slash alternatives such as 'granddaughter/grandson', 'he/she', or 'his/her'. If a detail is ambiguous, use a neutral placeholder in square brackets.
+14. FAKE-METRIC PREVENTION CONTRACT: When improving prompts for marketing, sales, landing pages, ads, e-commerce copy or social proof:
+    - Do not invent specific numbers, rankings, user counts, ratings, countries, revenue figures, awards or performance metrics.
+    - Use placeholders instead (written in the target working language). Examples: [insert verified customer count] (EN) / [wpisz zweryfikowaną liczbę klientów] (PL), [insert verified rating] (EN) / [wpisz zweryfikowaną ocenę] (PL), [insert verified case study] (EN) / [wpisz zweryfikowane studium przypadku] (PL), [insert verified number of countries] (EN) / [wpisz zweryfikowaną liczbę krajów] (PL).
+    - Only preserve specific metrics if they were explicitly provided by the user.
+15. STRUCTURED ASSUMPTIONS CONTRACT: When the original prompt is extremely vague and adding assumptions would make the improved prompt more useful:
+    - Mark assumed details as placeholders and do not present assumed details as facts.
+    - Use placeholders instead (written in the target working language). Examples: [product name] (EN) / [nazwa produktu] (PL), [target audience] (EN) / [grupa docelowa] (PL), [location] (EN) / [lokalizacja] (PL), [primary benefit] (EN) / [główna korzyść] (PL), [brand voice] (EN) / [głos marki] (PL).
+    - Ensure that the user's original intent is preserved and that the prompt remains copy-ready.
 
 ${requiredCriteriaInstruction}
 `
