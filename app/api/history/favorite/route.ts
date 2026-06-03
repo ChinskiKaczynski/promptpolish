@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
-import { toggleFavoriteAnalysis } from '@/lib/supabase/queries'
+import { toggleFavoriteAnalysis, createUsageEvent } from '@/lib/supabase/queries'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +33,16 @@ export async function POST(request: Request) {
     if (!success) {
       return NextResponse.json({ error: 'Record not found or access denied.' }, { status: 403 })
     }
+
+    // 3. Log usage event
+    await createUsageEvent({
+      owner_anonymous_id: ownerAnonymousId || '',
+      user_id: user?.id || null,
+      event_type: isFavorite ? 'history_favorite_added' : 'history_favorite_removed',
+      metadata_json: { analysis_id: analysisId }
+    }).catch(err => {
+      console.error('Failed to log favorite usage event:', err)
+    })
 
     return NextResponse.json({ success: true })
   } catch (err) {

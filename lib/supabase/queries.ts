@@ -154,6 +154,7 @@ export async function getPromptAnalysesForUser(
     profile?: string
     taskType?: string
     isFavorite?: boolean
+    sortBy?: 'newest' | 'oldest' | 'highest_score' | 'lowest_score'
   }
 ): Promise<PromptAnalysisRow[]> {
   const supabase = getSupabaseAdminClient()
@@ -179,7 +180,21 @@ export async function getPromptAnalysesForUser(
     query = query.or(`input_prompt.ilike.%${filters.search}%,title.ilike.%${filters.search}%`)
   }
 
-  const { data, error } = await query.order('created_at', { ascending: false })
+  let orderField = 'created_at'
+  let ascending = false
+
+  if (filters?.sortBy === 'oldest') {
+    orderField = 'created_at'
+    ascending = true
+  } else if (filters?.sortBy === 'highest_score') {
+    orderField = 'overall_score'
+    ascending = false
+  } else if (filters?.sortBy === 'lowest_score') {
+    orderField = 'overall_score'
+    ascending = true
+  }
+
+  const { data, error } = await query.order(orderField, { ascending })
 
   if (error) {
     console.error('Error fetching prompt analyses for user:', error)

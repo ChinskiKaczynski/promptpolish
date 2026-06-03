@@ -6,11 +6,14 @@ import {
   getUserProfile,
   ensureUserProfile,
   getPromptAnalysesForUser,
+  createUsageEvent,
+  getUsageCountThisMonthForUser,
 } from '@/lib/supabase/queries'
 import { getSubscriptionByUserId } from '@/lib/supabase/billing'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
 import { PortalButton } from '@/components/billing/portal-button'
+import { PLAN_LIMITS } from '@/lib/plans/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,21 +44,37 @@ export default async function AccountPage() {
   // Safe fallback: only explicit "pro" is treated as Pro.
   const planSlug = profile?.plan_slug === 'pro' ? 'pro' : 'free'
 
-  // 3. Resolve history combining user_id and current anonymous owner ID.
+  // 3. Resolve history count combining user_id and current anonymous owner ID.
   const ownerAnonymousId = await getOwnerIdFromCookies()
   const history = await getPromptAnalysesForUser(user.id, ownerAnonymousId || '')
 
-  // 4. Fetch subscription only when Stripe is active.
-  // This avoids PGRST205 when billing tables are absent.
+  // 4. Log account_viewed event (server-side)
+  await createUsageEvent({
+    owner_anonymous_id: ownerAnonymousId || '',
+    user_id: user.id,
+    event_type: 'account_viewed',
+    metadata_json: {}
+  }).catch(err => {
+    console.error('Failed to log account_viewed event:', err)
+  })
+
+  // 5. Fetch subscription only when Stripe is active.
   const stripeEnabled = process.env.STRIPE_ENABLED === 'true'
   const subscription = stripeEnabled ? await getSubscriptionByUserId(user.id) : null
+
+  // 6. Calculate monthly usage metrics
+  const monthlyCount = await getUsageCountThisMonthForUser(ownerAnonymousId || '', user.id)
+  const limits = PLAN_LIMITS[planSlug]
+  const monthlyLimit = limits.monthlyAnalyses
+  const remainingCount = Math.max(0, monthlyLimit - monthlyCount)
+  const usagePercentage = Math.min(100, Math.round((monthlyCount / monthlyLimit) * 100))
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50/50 selection:bg-indigo-100 antialiased font-sans">
       <AppHeader />
 
       {/* Main Dashboard Layout */}
-      <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-10">
+      <main className="flex-1 mx-auto w-full max-w-4xl px-6 py-10 space-y-8">
         {/* Profile Card */}
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md shadow-slate-100/50">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
@@ -95,11 +114,73 @@ export default async function AccountPage() {
           </div>
         </div>
 
+        {/* Usage Stats Card */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md shadow-slate-100/50 space-y-6">
+          <div>
+            <h3 className="text-lg font-bold tracking-tight text-slate-900">
+              Statystyki użycia i limity
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Podsumowanie przeprowadzonych analiz w bieżącym miesiącu UTC.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Analizy w tym miesiącu
+              </span>
+              <span className="mt-2 text-2xl font-black text-slate-800 block">
+                {monthlyCount} <span className="text-xs font-semibold text-slate-400">/ {monthlyLimit}</span>
+              </span>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Pozostały limit
+              </span>
+              <span className="mt-2 text-2xl font-black text-slate-850 block">
+                {remainingCount}
+              </span>
+            </div>
+
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Wykorzystanie limitu
+              </span>
+              <span className="mt-2 text-2xl font-black text-indigo-600 block">
+                {usagePercentage}%
+              </span>
+            </div>
+          </div>
+
+          {/* Progress Bar Visual */}
+          <div className="space-y-2">
+            <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 transition-all duration-500 ease-out"
+                style={{ width: `${usagePercentage}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[11px] text-slate-400 font-semibold">
+              <span>0% użycia</span>
+              <span>{usagePercentage}% wykorzystane</span>
+              <span>100% limitu</span>
+            </div>
+          </div>
+        </div>
+
         {/* Billing Status UI Section */}
-        <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-md shadow-slate-100/50">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md shadow-slate-100/50">
           <h3 className="text-base font-bold tracking-tight text-slate-900 border-b border-slate-100 pb-4">
             Subskrypcja i rozliczenia
           </h3>
+
+          {!stripeEnabled && (
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/40 p-4 text-xs text-amber-900 leading-relaxed font-semibold">
+              <strong>Beta Info:</strong> Bramka płatności Stripe jest obecnie wyłączona (STRIPE_ENABLED=false). Cennik i funkcje konta Pro są symulowane.
+            </div>
+          )}
 
           {subscription ? (
             /* Stripe Subscription Details — shown only when STRIPE_ENABLED=true and row exists */
@@ -219,11 +300,11 @@ export default async function AccountPage() {
                 <div className="flex items-center gap-2">
                   <span className="inline-flex h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
                   <p className="text-sm font-bold text-slate-800">
-                    Dostęp Pro aktywny
+                    Dostęp Pro aktywny (Beta)
                   </p>
                 </div>
 
-                <p className="text-xs text-slate-500 max-w-xl">
+                <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
                   Korzystasz z dostępu Pro w ramach zamkniętych testów beta. Płatności Stripe
                   zostaną aktywowane wkrótce — do tego czasu wszystkie funkcje Pro są dostępne
                   bez opłat.
@@ -250,7 +331,7 @@ export default async function AccountPage() {
                   </p>
                 </div>
 
-                <p className="text-xs text-slate-500 max-w-xl">
+                <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
                   Twój limit to 20 analiz miesięcznie bez możliwości eksportu do PDF/Markdown
                   oraz zbiorczego audytu promptów. Odblokuj pełne możliwości platformy,
                   przechodząc na plan Pro.
@@ -261,130 +342,34 @@ export default async function AccountPage() {
                 href="/pricing"
                 className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer shrink-0"
               >
-                Ulepsz do Pro
+                Pokaż cennik
               </Link>
             </div>
           )}
         </div>
 
-        {/* History Section */}
-        <div className="mt-10">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-            <div>
-              <h3 className="text-lg font-bold tracking-tight text-slate-900">
-                Twoja historia audytów
-              </h3>
-              <p className="mt-1 text-xs text-slate-500">
-                Wszystkie analizy promptów skojarzone z Twoim kontem i obecną sesją.
-              </p>
-            </div>
-
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-              Suma: {history.length}
-            </span>
+        {/* Saved Library Shortcut Card */}
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-md shadow-slate-100/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="space-y-1.5">
+            <h3 className="text-lg font-bold tracking-tight text-slate-900">
+              Twoja historia analiz
+            </h3>
+            <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
+              Zarządzaj swoją biblioteką ulepszonych promptów, filtruj, wyszukuj, oznaczaj jako ulubione lub usuwaj stare raporty.
+            </p>
           </div>
 
-          {history.length === 0 ? (
-            <div className="mt-8 rounded-3xl border border-dashed border-slate-300 bg-white py-16 px-6 text-center shadow-sm">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-
-              <h4 className="mt-4 text-base font-bold text-slate-900">
-                Brak historii audytów
-              </h4>
-
-              <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto">
-                Nie przeanalizowałeś jeszcze żadnego promptu w tej sesji lub po zalogowaniu.
-                Rozpocznij pierwszy profesjonalny audyt.
-              </p>
-
-              <Link
-                href="/analyze"
-                className="mt-6 inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-6 py-3 text-sm font-semibold text-white shadow-md active:scale-95 transition-all"
-              >
-                Przetestuj pierwszy prompt
-              </Link>
-            </div>
-          ) : (
-            <div className="mt-6 grid gap-4">
-              {history.map((analysis) => {
-                const date = new Date(analysis.created_at).toLocaleDateString('pl-PL', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })
-
-                return (
-                  <div
-                    key={analysis.id}
-                    className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-md transition-all"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase text-slate-600">
-                          {analysis.working_language === 'pl' ? 'Polski (PL)' : 'Angielski (EN)'}
-                        </span>
-                        <span className="text-xs font-semibold text-slate-400">
-                          {date}
-                        </span>
-                      </div>
-
-                      <p className="mt-2 text-sm font-bold text-slate-900 truncate max-w-lg">
-                        {analysis.input_prompt}
-                      </p>
-
-                      <p className="mt-1 text-xs text-slate-400 truncate max-w-lg">
-                        Profil:{' '}
-                        {analysis.selected_profile_slug === 'openrouter-deepseek-v4-flash'
-                          ? analysis.working_language === 'pl'
-                            ? 'Zaawansowany model AI'
-                            : 'Advanced AI model'
-                          : analysis.working_language === 'pl'
-                            ? 'Uniwersalny model AI'
-                            : 'Universal AI model'}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-4 shrink-0">
-                      <div className="text-right">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                          Wynik
-                        </span>
-                        <span
-                          className={`mt-0.5 text-base font-black tracking-tight block ${
-                            analysis.overall_score >= 80
-                              ? 'text-emerald-600'
-                              : analysis.overall_score >= 50
-                                ? 'text-yellow-600'
-                                : 'text-red-500'
-                          }`}
-                        >
-                          {analysis.overall_score} / 100
-                        </span>
-                      </div>
-
-                      <Link
-                        href={`/result/${analysis.id}`}
-                        className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 hover:bg-indigo-50 hover:border-indigo-100 hover:text-indigo-600 px-4 text-xs font-bold text-slate-700 active:scale-95 transition-all"
-                      >
-                        Pokaż audyt
-                      </Link>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+              Zapisane: {history.length}
+            </span>
+            <Link
+              href="/history"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-900 hover:bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer shrink-0"
+            >
+              Przejdź do pełnej historii analiz
+            </Link>
+          </div>
         </div>
       </main>
 

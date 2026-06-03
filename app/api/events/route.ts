@@ -44,7 +44,13 @@ const ALLOWED_EVENT_TYPES = [
   'sensitive_data_warning_shown',
   'sensitive_data_blocked',
   'provider_error',
-  'invalid_structured_output'
+  'invalid_structured_output',
+  'history_viewed',
+  'history_result_opened',
+  'history_favorite_added',
+  'history_favorite_removed',
+  'analysis_deleted',
+  'account_viewed'
 ] as const
 
 const eventSchema = z.object({

@@ -8,13 +8,15 @@ interface HistoryFiltersProps {
   currentLang: string
   currentProfile: string
   currentFavorite: boolean
+  currentSort?: string
 }
 
 export function HistoryFilters({
   currentSearch,
   currentLang,
   currentProfile,
-  currentFavorite
+  currentFavorite,
+  currentSort
 }: HistoryFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -23,6 +25,7 @@ export function HistoryFilters({
   const [lang, setLang] = useState(currentLang)
   const [profile, setProfile] = useState(currentProfile)
   const [favorite, setFavorite] = useState(currentFavorite)
+  const [sort, setSort] = useState(currentSort || 'newest')
 
   // Update URL search parameters when filtering values change
   const applyFilters = (updates: {
@@ -30,6 +33,7 @@ export function HistoryFilters({
     lang?: string
     profile?: string
     favorite?: boolean
+    sort?: string
   }) => {
     const params = new URLSearchParams(searchParams.toString())
 
@@ -37,6 +41,7 @@ export function HistoryFilters({
     const newLang = updates.lang !== undefined ? updates.lang : lang
     const newProfile = updates.profile !== undefined ? updates.profile : profile
     const newFav = updates.favorite !== undefined ? updates.favorite : favorite
+    const newSort = updates.sort !== undefined ? updates.sort : sort
 
     if (newSearch) params.set('search', newSearch)
     else params.delete('search')
@@ -50,6 +55,9 @@ export function HistoryFilters({
     if (newFav) params.set('favorite', 'true')
     else params.delete('favorite')
 
+    if (newSort && newSort !== 'newest') params.set('sort', newSort)
+    else params.delete('sort')
+
     router.push(`/history?${params.toString()}`, { scroll: false })
   }
 
@@ -61,7 +69,7 @@ export function HistoryFilters({
 
   return (
     <form onSubmit={handleSubmit} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-      <div className="grid gap-4 sm:grid-cols-[1.5fr_1fr_1fr] items-end">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-[1.5fr_1fr_1fr_1fr] items-end">
         {/* Search Input */}
         <div>
           <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="search-input">
@@ -124,6 +132,27 @@ export function HistoryFilters({
             <option value="openrouter-deepseek-v4-flash">Zaawansowany model AI</option>
           </select>
         </div>
+
+        {/* Sort Select */}
+        <div>
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="sort-select">
+            Sortowanie
+          </label>
+          <select
+            id="sort-select"
+            value={sort}
+            onChange={(e) => {
+              setSort(e.target.value)
+              applyFilters({ sort: e.target.value })
+            }}
+            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
+          >
+            <option value="newest">Najnowsze</option>
+            <option value="oldest">Najstarsze</option>
+            <option value="highest_score">Najwyższy wynik</option>
+            <option value="lowest_score">Najniższy wynik</option>
+          </select>
+        </div>
       </div>
 
       <div className="flex items-center justify-between border-t border-slate-100 pt-4">
@@ -142,7 +171,7 @@ export function HistoryFilters({
         </label>
 
         {/* Reset Button */}
-        {(search || lang !== 'all' || profile !== 'all' || favorite) && (
+        {(search || lang !== 'all' || profile !== 'all' || favorite || sort !== 'newest') && (
           <button
             type="button"
             onClick={() => {
@@ -150,6 +179,7 @@ export function HistoryFilters({
               setLang('all')
               setProfile('all')
               setFavorite(false)
+              setSort('newest')
               router.push('/history', { scroll: false })
             }}
             className="text-xs font-bold text-slate-400 hover:text-indigo-600 transition"

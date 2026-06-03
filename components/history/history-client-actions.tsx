@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface HistoryClientActionsProps {
   analysisId: string
@@ -78,6 +79,21 @@ export function HistoryClientActions({
     }
   }
 
+  const handleOpenResult = () => {
+    fetch('/api/events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        event_type: 'history_result_opened',
+        analysis_id: analysisId
+      })
+    }).catch(err => {
+      console.error('Failed to log history_result_opened event:', err)
+    })
+  }
+
   return (
     <div className="flex items-center gap-3">
       {/* Favorite Button */}
@@ -129,6 +145,15 @@ export function HistoryClientActions({
           </svg>
         )}
       </button>
+
+      {/* Open Audit Details */}
+      <Link
+        href={`/result/${analysisId}`}
+        onClick={handleOpenResult}
+        className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 text-white hover:bg-indigo-600 px-4 text-xs font-bold transition active:scale-95 shadow-sm"
+      >
+        Otwórz wynik
+      </Link>
     </div>
   )
 }

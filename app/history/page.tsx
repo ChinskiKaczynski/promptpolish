@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
-import { getPromptAnalysesForUser } from '@/lib/supabase/queries'
+import { getPromptAnalysesForUser, createUsageEvent } from '@/lib/supabase/queries'
 import { HistoryFilters } from '@/components/history/history-filters'
 import { HistoryClientActions } from '@/components/history/history-client-actions'
 import { SignOutButton } from '@/components/auth/sign-out-button'
+import { scrubSensitiveData } from '@/lib/monitoring/observability'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,114 +15,133 @@ interface HistoryPageProps {
     lang?: string
     profile?: string
     favorite?: string
+    sort?: string
   }>
 }
 
 export default async function HistoryPage({ searchParams }: HistoryPageProps) {
-  // 1. Resolve secure authenticated session
+  // 1. Resolve secure identities
   const user = await getAuthUser()
   const ownerAnonymousId = await getOwnerIdFromCookies()
 
-  // 2. Render Guest CTA if user is not logged in
-  if (!user) {
-    return (
-      <div className="flex min-h-screen flex-col bg-slate-50/50 selection:bg-indigo-100 antialiased font-sans">
-        {/* Navigation Header */}
-        <header className="border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-            <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-md shadow-indigo-200">
-                <span className="font-bold text-white text-base">P</span>
-              </div>
-              <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-800 bg-clip-text text-transparent">
-                PromptPolish
-              </span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition active:scale-95 cursor-pointer"
-              >
-                Zaloguj się
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        {/* Guest Conversion CTA Box */}
-        <main className="flex-grow flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-2xl rounded-3xl border border-indigo-100 bg-white p-8 sm:p-12 shadow-xl shadow-indigo-50/30 text-center space-y-8">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0-6h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
-              </svg>
-            </div>
-
-            <div className="space-y-3">
-              <h2 className="text-2xl font-black text-slate-900 sm:text-3xl tracking-tight">
-                Zapisuj i śledź historię swoich audytów!
-              </h2>
-              <p className="text-slate-500 text-sm leading-relaxed max-w-lg mx-auto">
-                Bezpiecznie przechowuj ulepszone wersje promptów, filtruj audyty, organizuj ulubione instrukcje i zarządzaj linkami udostępniania z dowolnego urządzenia.
-              </p>
-            </div>
-
-            {/* Value Highlights */}
-            <div className="grid gap-4 sm:grid-cols-2 text-left max-w-lg mx-auto">
-              <div className="flex items-start gap-3">
-                <span className="text-indigo-500 font-bold text-sm">★</span>
-                <span className="text-xs text-slate-600 leading-relaxed font-semibold">Zapisuj nieograniczoną historię promptów</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-indigo-500 font-bold text-sm">🔍</span>
-                <span className="text-xs text-slate-600 leading-relaxed font-semibold">Wyszukuj i filtruj audyty błyskawicznie</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-indigo-500 font-bold text-sm">📁</span>
-                <span className="text-xs text-slate-600 leading-relaxed font-semibold">Grupuj najlepsze instrukcje w jednym miejscu</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-indigo-500 font-bold text-sm">🔗</span>
-                <span className="text-xs text-slate-600 leading-relaxed font-semibold">Pełna kontrola nad publicznym dzieleniem się</span>
-              </div>
-            </div>
-
-            <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all"
-              >
-                Załóż bezpłatne konto
-              </Link>
-              <Link
-                href="/analyze"
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-8 py-3.5 text-sm font-semibold text-slate-700 active:scale-95 transition-all"
-              >
-                Uruchom szybki audyt gościa
-              </Link>
-            </div>
-          </div>
-        </main>
-
-        {/* Footer */}
-        <footer className="border-t border-slate-200 bg-white py-8 px-6 text-center text-xs text-slate-400">
-          © {new Date().getFullYear()} PromptPolish. Wszystkie prawa zastrzeżone.
-        </footer>
-      </div>
-    )
-  }
-
-  // 3. Authenticated View - Load Filters
-  const { search = '', lang = 'all', profile = 'all', favorite = 'false' } = await searchParams
+  // 2. Resolve Filters and Sorting params
+  const { search = '', lang = 'all', profile = 'all', favorite = 'false', sort = 'newest' } = await searchParams
   const isFavoriteFiltered = favorite === 'true'
 
-  // 4. Query filtered database history
-  const history = await getPromptAnalysesForUser(user.id, ownerAnonymousId || '', {
+  const allowedSorts = ['newest', 'oldest', 'highest_score', 'lowest_score'] as const
+  type SortBy = typeof allowedSorts[number]
+  const sortByParam = allowedSorts.includes(sort as SortBy) ? (sort as SortBy) : 'newest'
+
+  // 3. Query filtered database history
+  const history = await getPromptAnalysesForUser(user?.id || '', ownerAnonymousId || '', {
     search,
     lang,
     profile,
-    isFavorite: isFavoriteFiltered
+    isFavorite: isFavoriteFiltered,
+    sortBy: sortByParam
   })
+
+  // 4. Log history_viewed event (server-side)
+  await createUsageEvent({
+    owner_anonymous_id: ownerAnonymousId || '',
+    user_id: user?.id || null,
+    event_type: 'history_viewed',
+    metadata_json: {}
+  }).catch(err => {
+    console.error('Failed to log history_viewed event:', err)
+  })
+
+  // 5. Guest Flow logic: show promotional CTA if user is guest and has ZERO analyses
+  if (!user) {
+    const totalGuestAnalyses = (await getPromptAnalysesForUser('', ownerAnonymousId || '')).length
+    if (totalGuestAnalyses === 0) {
+      return (
+        <div className="flex min-h-screen flex-col bg-slate-50/50 selection:bg-indigo-100 antialiased font-sans">
+          {/* Navigation Header */}
+          <header className="border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+              <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-md shadow-indigo-200">
+                  <span className="font-bold text-white text-base">P</span>
+                </div>
+                <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-800 bg-clip-text text-transparent">
+                  PromptPolish
+                </span>
+              </Link>
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition active:scale-95 cursor-pointer"
+                >
+                  Zaloguj się
+                </Link>
+              </div>
+            </div>
+          </header>
+
+          {/* Guest Conversion CTA Box */}
+          <main className="flex-grow flex items-center justify-center px-6 py-12">
+            <div className="w-full max-w-2xl rounded-3xl border border-indigo-100 bg-white p-8 sm:p-12 shadow-xl shadow-indigo-50/30 text-center space-y-8">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0-6h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
+                </svg>
+              </div>
+
+              <div className="space-y-3">
+                <h2 className="text-2xl font-black text-slate-900 sm:text-3xl tracking-tight">
+                  Zapisuj i śledź historię swoich audytów!
+                </h2>
+                <p className="text-slate-500 text-sm leading-relaxed max-w-lg mx-auto">
+                  Bezpiecznie przechowuj ulepszone wersje promptów, filtruj audyty, organizuj ulubione instrukcje i zarządzaj linkami udostępniania z dowolnego urządzenia.
+                </p>
+              </div>
+
+              {/* Value Highlights */}
+              <div className="grid gap-4 sm:grid-cols-2 text-left max-w-lg mx-auto">
+                <div className="flex items-start gap-3">
+                  <span className="text-indigo-500 font-bold text-sm">★</span>
+                  <span className="text-xs text-slate-600 leading-relaxed font-semibold">Zapisuj nieograniczoną historię promptów</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-indigo-500 font-bold text-sm">🔍</span>
+                  <span className="text-xs text-slate-600 leading-relaxed font-semibold">Wyszukuj i filtruj audyty błyskawicznie</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-indigo-500 font-bold text-sm">📁</span>
+                  <span className="text-xs text-slate-600 leading-relaxed font-semibold">Grupuj najlepsze instrukcje w jednym miejscu</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-indigo-500 font-bold text-sm">🔗</span>
+                  <span className="text-xs text-slate-600 leading-relaxed font-semibold">Pełna kontrola nad publicznym dzieleniem się</span>
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all"
+                >
+                  Załóż bezpłatne konto
+                </Link>
+                <Link
+                  href="/analyze"
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-8 py-3.5 text-sm font-semibold text-slate-700 active:scale-95 transition-all"
+                >
+                  Uruchom szybki audyt gościa
+                </Link>
+              </div>
+            </div>
+          </main>
+
+          {/* Footer */}
+          <footer className="border-t border-slate-200 bg-white py-8 px-6 text-center text-xs text-slate-400">
+            © {new Date().getFullYear()} PromptPolish. Wszystkie prawa zastrzeżone.
+          </footer>
+        </div>
+      )
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50/50 selection:bg-indigo-100 antialiased font-sans">
@@ -143,7 +163,24 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
             >
               Ulepsz prompt
             </Link>
-            <SignOutButton />
+            {user ? (
+              <>
+                <Link
+                  href="/account"
+                  className="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition"
+                >
+                  Konto
+                </Link>
+                <SignOutButton />
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition"
+              >
+                Zaloguj się
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -153,12 +190,32 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
         {/* Title area */}
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-950">
-            Historia Audytów & Biblioteka
+            Historia analiz
           </h1>
           <p className="mt-1 text-sm text-slate-500">
             Przeszukuj swoje analizy, filtruj wyniki inżynieryjne i zarządzaj swoimi ulubionymi promptami.
           </p>
         </div>
+
+        {/* Guest Warning Tip */}
+        {!user && (
+          <div className="rounded-3xl border border-amber-200 bg-amber-50/50 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
+            <div className="space-y-1">
+              <h4 className="text-sm font-bold text-amber-900 flex items-center gap-2">
+                <span>💡</span> Przeglądasz historię jako gość
+              </h4>
+              <p className="text-xs text-amber-800 leading-relaxed max-w-2xl">
+                Te analizy są zapisane tylko w tej przeglądarce i wygasną po 30 dniach lub po wyczyszczeniu ciasteczek. Załóż bezpłatne konto, aby zachować je na stałe.
+              </p>
+            </div>
+            <Link
+              href="/login"
+              className="inline-flex h-9 items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 text-xs font-bold text-white shadow-sm active:scale-95 transition-all shrink-0 cursor-pointer text-center"
+            >
+              Zarejestruj się
+            </Link>
+          </div>
+        )}
 
         {/* Filter Controls Component */}
         <HistoryFilters
@@ -166,6 +223,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
           currentLang={lang}
           currentProfile={profile}
           currentFavorite={isFavoriteFiltered}
+          currentSort={sort}
         />
 
         {/* History List Grid */}
@@ -178,10 +236,18 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h4 className="mt-4 text-base font-bold text-slate-900">Brak pasujących audytów</h4>
+              <h4 className="mt-4 text-base font-bold text-slate-900">Nie masz jeszcze zapisanych analiz</h4>
               <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto">
-                Nie znaleziono żadnych wyników spełniających obecne kryteria wyszukiwania lub filtry.
+                Nie znaleziono żadnych wyników spełniających obecne kryteria wyszukiwania lub filtry. Przejdź do analizatora, aby dodać nowy prompt.
               </p>
+              <div className="mt-6">
+                <Link
+                  href="/analyze"
+                  className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-sm font-semibold text-white shadow-md active:scale-95 transition-all"
+                >
+                  Przeanalizuj prompt
+                </Link>
+              </div>
             </div>
           ) : (
             /* Audited Prompts Cards */
@@ -210,6 +276,11 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                             ? (analysis.working_language === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model')
                             : (analysis.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')}
                         </span>
+                        {analysis.audit_mode && (
+                          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase text-slate-600">
+                            {analysis.audit_mode}
+                          </span>
+                        )}
                         <span className="text-xs font-semibold text-slate-400">{date}</span>
                       </div>
 
@@ -218,7 +289,11 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                       </h3>
 
                       <p className="mt-1 text-xs text-slate-500 leading-relaxed truncate max-w-xl">
-                        {analysis.input_prompt}
+                        {scrubSensitiveData(
+                          analysis.input_prompt.length > 120
+                            ? analysis.input_prompt.slice(0, 120) + '...'
+                            : analysis.input_prompt
+                        )}
                       </p>
                     </div>
 
@@ -239,19 +314,11 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                         </span>
                       </div>
 
-                      {/* Client-Side Interactive Mutations (Favorite & Soft Delete) */}
+                      {/* Client-Side Interactive Mutations (Favorite & Soft Delete & Open) */}
                       <HistoryClientActions
                         analysisId={analysis.id}
                         isFavoriteInitially={analysis.is_favorite}
                       />
-
-                      {/* Open Audit Details */}
-                      <Link
-                        href={`/result/${analysis.id}`}
-                        className="inline-flex h-10 items-center justify-center rounded-xl bg-slate-900 text-white hover:bg-indigo-600 px-4 text-xs font-bold transition active:scale-95 shadow-sm"
-                      >
-                        Pokaż audyt
-                      </Link>
                     </div>
                   </article>
                 )

@@ -139,5 +139,24 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
       expect(mockEq).toHaveBeenCalledWith('is_favorite', true)
       expect(mockOr).toHaveBeenCalledWith('input_prompt.ilike.%marketing%,title.ilike.%marketing%')
     })
+
+    it('applies oldest, highest_score, and lowest_score sorting', async () => {
+      mockOrder.mockResolvedValue({ data: [], error: null })
+
+      await getPromptAnalysesForUser('user-789', 'owner-123', {
+        sortBy: 'oldest'
+      })
+      expect(mockOrder).toHaveBeenLastCalledWith('created_at', { ascending: true })
+
+      await getPromptAnalysesForUser('user-789', 'owner-123', {
+        sortBy: 'highest_score'
+      })
+      expect(mockOrder).toHaveBeenLastCalledWith('overall_score', { ascending: false })
+
+      await getPromptAnalysesForUser('user-789', 'owner-123', {
+        sortBy: 'lowest_score'
+      })
+      expect(mockOrder).toHaveBeenLastCalledWith('overall_score', { ascending: true })
+    })
   })
 })
