@@ -5,7 +5,7 @@ test.describe('PromptPolish E2E Smoke Journey', () => {
   test('successfully navigates from / to /analyze and displays mock results', async ({ page }) => {
     // 1. Visit Landing Page
     await page.goto('/')
-    await expect(page.locator('nav')).toContainText('PromptPolish')
+    await expect(page.locator('header')).toContainText('PromptPolish')
 
     // 2. Click through to the Analyze form
     const startButton = page.locator('text=Rozpocznij analizę')
@@ -68,7 +68,7 @@ test.describe('PromptPolish E2E Smoke Journey', () => {
 
     // 10. Verify elements on the /result/mock page
     // ResultView renders MockResultPage content, which contains score and details
-    await expect(page.locator('h1')).toContainText('Raport Audytu Promptu')
+    await expect(page.locator('h1')).toContainText('Raport audytu promptu')
     
     // Check for circular score display presence (mockAnalysisResult has score 62)
     await expect(page.locator('text=62')).toBeVisible()
