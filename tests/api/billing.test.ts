@@ -93,7 +93,7 @@ describe('Stripe Billing Foundation API Suite', () => {
   })
 
   describe('Production Environment Safeguards', () => {
-    it.skip('requires Stripe environment variables in production mode (deferred to v1.1)', () => {
+    it('requires Stripe environment variables in production mode (deferred to v1.1)', () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const env = process.env as any
       env.NODE_ENV = 'production'
