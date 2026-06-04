@@ -26,42 +26,42 @@ const scoreLevelTranslations: Record<string, { label: string; desc: string; bg: 
   excellent: {
     label: 'Doskonały',
     desc: 'Prompt spełnia najwyższe standardy inżynierii promptów.',
-    bg: 'bg-emerald-50/30',
-    text: 'text-emerald-700',
-    border: 'border-emerald-200/60',
-    bar: 'from-emerald-500 to-teal-400'
+    bg: 'bg-[#6EE7B7]/5',
+    text: 'text-[#6EE7B7]',
+    border: 'border-[#6EE7B7]/20',
+    bar: 'from-[#059669] to-[#6EE7B7]'
   },
   strong: {
     label: 'Bardzo dobry',
     desc: 'Prompt jest solidny, wymaga jedynie kosmetycznych usprawnień.',
-    bg: 'bg-indigo-50/30',
-    text: 'text-indigo-700',
-    border: 'border-indigo-200/60',
-    bar: 'from-indigo-500 to-violet-500'
+    bg: 'bg-[#A78BFA]/5',
+    text: 'text-[#A78BFA]',
+    border: 'border-[#A78BFA]/20',
+    bar: 'from-[#7C3AED] to-[#A78BFA]'
   },
   decent: {
     label: 'Dostateczny',
     desc: 'Prompt działa poprawnie, lecz posiada istotne braki strukturalne.',
-    bg: 'bg-amber-50/30',
-    text: 'text-amber-705',
-    border: 'border-amber-200/60',
-    bar: 'from-amber-500 to-yellow-400'
+    bg: 'bg-[#F59E0B]/5',
+    text: 'text-[#F59E0B]',
+    border: 'border-[#F59E0B]/20',
+    bar: 'from-[#B45309] to-[#F59E0B]'
   },
   needs_work: {
     label: 'Wymaga poprawek',
     desc: 'Prompt ma niską precyzję i może dawać niespójne odpowiedzi.',
-    bg: 'bg-orange-50/30',
-    text: 'text-orange-705',
-    border: 'border-orange-200/60',
-    bar: 'from-orange-500 to-amber-500'
+    bg: 'bg-[#F97316]/5',
+    text: 'text-[#F97316]',
+    border: 'border-[#F97316]/20',
+    bar: 'from-[#C2410C] to-[#F97316]'
   },
   weak: {
     label: 'Słaby',
     desc: 'Prompt jest chaotyczny, pozbawiony celu i kluczowych kontekstów.',
-    bg: 'bg-rose-50/30',
-    text: 'text-rose-700',
-    border: 'border-rose-200/60',
-    bar: 'from-rose-500 to-red-500'
+    bg: 'bg-[#F87171]/5',
+    text: 'text-[#F87171]',
+    border: 'border-[#F87171]/20',
+    bar: 'from-[#DC2626] to-[#F87171]'
   }
 }
 
@@ -101,14 +101,14 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
   return (
     <div className="space-y-8 pb-16">
       {/* Top Breadcrumb/Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-200/60 pb-6 animate-fade-in-up">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-[#2A2A3A] pb-6 animate-fade-in-up">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-indigo-50 border border-indigo-100/50 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700 uppercase">
+            <span className="inline-flex items-center rounded-md bg-[#1C1C27] border border-[#3A3A52] px-2.5 py-0.5 text-[11px] font-semibold text-[#A78BFA] uppercase tracking-wider">
               {isPublicMode ? 'Publiczny raport' : 'Prywatny audyt'}
             </span>
           </div>
-          <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Raport audytu promptu</h1>
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-[#E2E8F0] font-heading sm:text-3xl">Raport audytu promptu</h1>
         </div>
         <div className="flex flex-wrap gap-3">
           {!isPublicMode ? (
@@ -126,24 +126,24 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       {/* Main Score & Warning Cards Layout */}
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr] animate-fade-in-up animation-delay-100">
         {/* Score Display Card */}
-        <div className={`relative flex flex-col justify-between overflow-hidden rounded-3xl border p-6 sm:p-8 shadow-md transition-all ${scoreMeta.bg} ${scoreMeta.border}`}>
-          <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-white opacity-40 blur-xl" />
+        <div className={`relative flex flex-col justify-between overflow-hidden rounded-xl border p-6 sm:p-7 shadow-surface transition-all ${scoreMeta.bg} ${scoreMeta.border}`}>
+          <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-[#A78BFA]/5 opacity-30 blur-2xl pointer-events-none" />
           
           <div className="flex items-center justify-between gap-6 relative z-10">
             <div className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ogólna Ocena Jakości</p>
-              <h2 className={`text-3xl font-extrabold tracking-tight ${scoreMeta.text}`}>{scoreMeta.label}</h2>
-              <p className="text-xs leading-relaxed text-slate-600 max-w-[240px]">{scoreMeta.desc}</p>
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-[#4A5568]">Ogólna Ocena Jakości</p>
+              <h2 className={`text-2xl font-bold tracking-tight font-heading ${scoreMeta.text}`}>{scoreMeta.label}</h2>
+              <p className="text-xs leading-relaxed text-[#94A3B8] max-w-[240px]">{scoreMeta.desc}</p>
             </div>
             
             {/* SVG Circular Progress Meter */}
-            <div className="relative h-24 w-24 shrink-0 shadow-lg shadow-indigo-500/5 rounded-full bg-white flex items-center justify-center">
+            <div className="relative h-24 w-24 shrink-0 rounded-full bg-[#1C1C27] flex items-center justify-center border border-[#2A2A3A]">
               <svg className="h-22 w-22 -rotate-90">
                 <circle
                   cx="44"
                   cy="44"
                   r={radius}
-                  className="stroke-slate-100"
+                  className="stroke-[#1C1C27]"
                   strokeWidth={strokeWidth}
                   fill="transparent"
                 />
@@ -151,7 +151,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   cx="44"
                   cy="44"
                   r={radius}
-                  className="stroke-indigo-600 transition-all duration-1000 ease-out"
+                  className="stroke-[#A78BFA] transition-all duration-1000 ease-out"
                   strokeWidth={strokeWidth}
                   fill="transparent"
                   strokeDasharray={circumference}
@@ -160,39 +160,39 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black text-slate-900 leading-none">{result.overallScore}</span>
-                <span className="text-[9px] font-bold text-slate-400 mt-1">/ 100</span>
+                <span className="text-2xl font-black text-[#E2E8F0] font-mono leading-none">{result.overallScore}</span>
+                <span className="text-[9px] font-mono font-bold text-[#4A5568] mt-1">/ 100</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 border-t border-slate-200/50 pt-4 relative z-10">
-            <div className="flex items-center justify-between text-[11px] text-slate-450 font-medium">
-              <span>Wersja algorytmu: <strong>1.0.0</strong></span>
-              <span className="font-semibold text-slate-500">Szybki audyt anonimowy</span>
+          <div className="mt-6 border-t border-[#2A2A3A]/50 pt-4 relative z-10">
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#4A5568]">
+              <span>Wersja algorytmu: <strong className="font-semibold text-[#6EE7B7]/70">1.0.0</strong></span>
+              <span className="font-semibold text-[#6EE7B7]/70">Szybki audyt anonimowy</span>
             </div>
           </div>
         </div>
 
         {/* Dynamic Model Profile Info Area */}
-        <div className="flex flex-col justify-between rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
+        <div className="flex flex-col justify-between rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 shrink-0">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1C1C27] text-[#A78BFA] border border-[#2A2A3A] shrink-0">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-widest">PROFIL AUDYTU: UNIWERSALNY</h3>
+              <h3 className="text-xs font-bold text-[#94A3B8] uppercase tracking-widest">PROFIL AUDYTU: UNIWERSALNY</h3>
             </div>
             
             <div className="space-y-3">
-              <p className="text-xs leading-relaxed text-slate-500">
+              <p className="text-xs leading-relaxed text-[#94A3B8]">
                 Analiza ocenia prompt według uniwersalnych zasad: jasności celu, kontekstu, struktury, ograniczeń, formatu wyniku i bezpieczeństwa.
               </p>
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-4 flex gap-3">
+              <div className="rounded-lg border border-[#F59E0B]/20 bg-[#F59E0B]/5 p-3.5 flex gap-3">
                 <span className="text-lg">💡</span>
-                <p className="text-[11px] leading-relaxed text-amber-900 font-medium">
+                <p className="text-[11px] leading-relaxed text-[#F59E0B]/80 font-medium">
                   Ten audyt ma charakter ogólny. Przed użyciem promptu w krytycznym procesie zweryfikuj wynik samodzielnie.
                 </p>
               </div>
@@ -208,56 +208,56 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         <div className="space-y-8 animate-fade-in-up animation-delay-200">
           
           {/* Overall Summary Card */}
-          <section className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
-            <h3 className="text-lg font-bold tracking-tight text-slate-900 mb-4">Podsumowanie audytu</h3>
+          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 shadow-md">
+            <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading mb-4">Podsumowanie audytu</h3>
             <div className="relative">
-              <p className="text-xs sm:text-sm leading-relaxed text-slate-600 pl-2">
+              <p className="text-xs sm:text-sm leading-relaxed text-[#94A3B8] pl-2">
                 {result.overall_summary}
               </p>
             </div>
           </section>
 
           {/* Top Weaknesses Section */}
-          <section className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
+          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 shadow-md">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 border border-rose-100">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold tracking-tight text-slate-900">Największe słabości</h3>
+              <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">Największe słabości</h3>
             </div>
             
             <div className="grid gap-3">
               {result.top_weaknesses.map((weakness, i) => (
-                <div key={i} className="flex items-start gap-3 rounded-2xl bg-slate-50/50 p-4 border border-slate-100 hover:bg-slate-50 transition-colors">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-100 text-[10px] font-black text-rose-700">
+                <div key={i} className="flex items-start gap-3 rounded-xl bg-[#1C1C27] p-4 border border-[#2A2A3A] hover:bg-[#222230] transition-colors">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-500/10 text-[10px] font-black text-rose-400 border border-rose-500/20">
                     {i + 1}
                   </span>
-                  <p className="text-xs font-semibold text-slate-600 leading-relaxed">{weakness}</p>
+                  <p className="text-xs font-semibold text-[#94A3B8] leading-relaxed">{weakness}</p>
                 </div>
               ))}
             </div>
           </section>
 
           {/* Improvement Plan Section */}
-          <section className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
+          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 shadow-md">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold tracking-tight text-slate-900">Plan naprawy</h3>
+              <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">Plan naprawy</h3>
             </div>
 
             <div className="space-y-3.5">
               {result.improvement_plan.map((step, i) => (
                 <div key={i} className="flex items-start gap-3 p-1">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-600 border border-indigo-100">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#A78BFA]/10 text-[10px] font-black text-[#A78BFA] border border-[#A78BFA]/20">
                     {i + 1}
                   </div>
-                  <p className="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">{step}</p>
+                  <p className="text-xs font-bold text-[#94A3B8] mt-0.5 leading-relaxed">{step}</p>
                 </div>
               ))}
             </div>
@@ -266,41 +266,41 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Right Side: Criteria Breakdown with Native Details/Summary */}
-        <section className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md animate-fade-in-up animation-delay-300">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+        <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 shadow-md animate-fade-in-up animation-delay-300">
+          <div className="flex items-center justify-between border-b border-[#2A2A3A]/30 pb-4 mb-4">
             <div>
-              <h3 className="text-lg font-bold tracking-tight text-slate-900">Kryteria szczegółowe</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5 font-medium">Kliknij kryterium, aby zobaczyć wyjaśnienie</p>
+              <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">Kryteria szczegółowe</h3>
+              <p className="text-[11px] text-[#4A5568] mt-0.5 font-medium">Kliknij kryterium, aby zobaczyć wyjaśnienie</p>
             </div>
-            <span className="rounded-full bg-indigo-50 border border-indigo-100/50 px-2.5 py-0.5 text-[9px] font-bold text-indigo-700 uppercase tracking-wider">
+            <span className="rounded-full bg-[#A78BFA]/10 border border-[#A78BFA]/20 px-2.5 py-0.5 text-[9px] font-bold text-[#A78BFA] uppercase tracking-wider">
               10 Parametrów
             </span>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[#2A2A3A]/30">
             {result.criteria_scores.map((item) => {
               const barColor = item.raw_score_0_10 >= 8 
-                ? 'bg-emerald-500' 
+                ? 'from-[#059669] to-[#6EE7B7]' 
                 : item.raw_score_0_10 >= 6 
-                ? 'bg-indigo-500' 
+                ? 'from-[#7C3AED] to-[#A78BFA]' 
                 : item.raw_score_0_10 >= 4 
-                ? 'bg-amber-500' 
-                : 'bg-rose-500'
+                ? 'from-[#B45309] to-[#F59E0B]' 
+                : 'from-[#DC2626] to-[#F87171]'
 
               const scoreBg = item.raw_score_0_10 >= 8 
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-100' 
+                ? 'bg-[#6EE7B7]/10 text-[#6EE7B7] border-[#6EE7B7]/20' 
                 : item.raw_score_0_10 >= 6 
-                ? 'bg-indigo-50 text-indigo-700 border-indigo-100' 
+                ? 'bg-[#A78BFA]/10 text-[#A78BFA] border-[#A78BFA]/20' 
                 : item.raw_score_0_10 >= 4 
-                ? 'bg-amber-50 text-amber-700 border-amber-100' 
-                : 'bg-rose-50 text-rose-700 border-rose-100'
+                ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20' 
+                : 'bg-[#F87171]/10 text-[#F87171] border-[#F87171]/20'
 
               return (
                 <details key={item.criterion} className="group py-4 first:pt-0 last:pb-0">
                   <summary className="flex w-full items-center justify-between gap-4 text-left hover:opacity-90 active:scale-[0.99] transition-all list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none">
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs sm:text-sm font-bold text-slate-800">
+                        <span className="text-xs sm:text-sm font-bold text-[#E2E8F0]">
                           {criterionTranslations[item.criterion] || item.criterion}
                         </span>
                         <span className={`rounded-xl border px-2.5 py-0.5 text-xs font-black ${scoreBg}`}>
@@ -309,18 +309,18 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                       </div>
                       
                       {/* Progress Bar with smooth growth animation */}
-                      <div className="mt-2.5 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                      <div className="mt-2.5 h-1.5 w-full bg-[#1C1C27] rounded-full overflow-hidden border border-[#2A2A3A]">
                         <div
-                          className={`h-full rounded-full ${barColor} transition-all duration-1000 ease-out`}
+                          className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-1000 ease-out`}
                           style={{ width: mounted ? `${item.raw_score_0_10 * 10}%` : '0%' }}
                         />
                       </div>
                     </div>
                     
                     {/* Expand/Collapse Chevron */}
-                    <div className="shrink-0 p-1 text-slate-400">
+                    <div className="shrink-0 p-1 text-[#4A5568]">
                       <svg
-                        className="h-5 w-5 transition-transform duration-300 group-open:rotate-180 group-open:text-indigo-600"
+                        className="h-5 w-5 transition-transform duration-300 group-open:rotate-180 group-open:text-[#A78BFA]"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -332,14 +332,14 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
 
                   {/* Expandable Details Container */}
                   <div className="mt-3.5 transition-all duration-300">
-                    <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-3">
+                    <div className="rounded-xl bg-[#1C1C27] border border-[#2A2A3A] p-4 space-y-3">
                       <div>
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Analiza słabości:</p>
-                        <p className="mt-1 text-xs text-slate-600 leading-relaxed font-semibold">{item.rationale}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-[#4A5568]">Analiza słabości:</p>
+                        <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed font-semibold">{item.rationale}</p>
                       </div>
-                      <div className="border-t border-slate-200/50 pt-2.5">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500">Rekomendowane ulepszenie:</p>
-                        <p className="mt-1 text-xs text-indigo-900 font-bold leading-relaxed">{item.improvement_suggestion}</p>
+                      <div className="border-t border-[#2A2A3A] pt-2.5">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-[#A78BFA]">Rekomendowane ulepszenie:</p>
+                        <p className="mt-1 text-xs text-[#A78BFA] font-bold leading-relaxed">{item.improvement_suggestion}</p>
                       </div>
                     </div>
                   </div>
@@ -352,17 +352,17 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       </div>
 
       {/* Improved Prompt Block (Sleek Dark Theme Editor Style matching layout mockup) */}
-      <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl animate-fade-in-up animation-delay-400">
+      <section className="overflow-hidden rounded-xl border border-[#2A2A3A] bg-[#0C0C10] shadow-2xl animate-fade-in-up animation-delay-400">
         {/* Editor Top Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 bg-slate-900/60 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#2A2A3A] bg-[#13131A] px-6 py-4">
           <div className="flex items-center gap-3">
             {/* Mock Windows controls from screenshot mockup */}
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="h-3 w-3 rounded-full bg-rose-500/80" />
-              <span className="h-3 w-3 rounded-full bg-amber-500/80" />
-              <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
+              <span className="h-3 w-3 rounded-full bg-rose-500/85" />
+              <span className="h-3 w-3 rounded-full bg-amber-500/85" />
+              <span className="h-3 w-3 rounded-full bg-emerald-500/85" />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400 border-l border-slate-800 pl-3">
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#94A3B8] border-l border-[#2A2A3A] pl-3">
               POPRAWIONY PROMPT
             </span>
           </div>
@@ -371,14 +371,14 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Editor Code Area */}
-        <div className="p-6 font-mono text-sm leading-relaxed text-indigo-200 selection:bg-indigo-500/30">
+        <div className="p-6 font-mono text-sm leading-relaxed text-[#E2E8F0] selection:bg-[#A78BFA]/20">
           <pre className="whitespace-pre-wrap break-words font-mono w-full">
             {promptLines.map((line, i) => (
-              <div key={i} className="flex items-start hover:bg-white/5 transition-colors duration-150 rounded py-0.5 px-1">
-                <span className="select-none w-8 text-right text-slate-600 shrink-0 pr-3 border-r border-slate-800/40 font-mono">
+              <div key={i} className="flex items-start hover:bg-[#A78BFA]/5 transition-colors duration-150 rounded py-0.5 px-1">
+                <span className="select-none w-8 text-right text-[#4A5568] shrink-0 pr-3 border-r border-[#2A2A3A]/40 font-mono">
                   {i + 1}
                 </span>
-                <code className="pl-4 whitespace-pre-wrap break-words font-mono flex-1 block">
+                <code className="pl-4 whitespace-pre-wrap break-words font-mono text-[#E2E8F0] flex-1 block">
                   {line || ' '}
                 </code>
               </div>
@@ -391,53 +391,53 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 animate-fade-in-up animation-delay-500">
         
         {/* Change Explanations */}
-        <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm space-y-3.5">
-          <div className="flex items-center gap-2.5 text-indigo-600">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 shadow-sm space-y-3.5">
+          <div className="flex items-center gap-2.5 text-[#A78BFA]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">Wyjaśnienie Zmian</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Wyjaśnienie Zmian</h4>
           </div>
-          <ul className="list-disc pl-4 space-y-2 text-xs text-slate-500 leading-relaxed font-semibold">
+          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed">
             {result.change_explanations.map((note, i) => <li key={i}>{note}</li>)}
           </ul>
         </div>
 
         {/* Model Fit Notes */}
-        <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm space-y-3.5">
-          <div className="flex items-center gap-2.5 text-indigo-600">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 shadow-sm space-y-3.5">
+          <div className="flex items-center gap-2.5 text-[#A78BFA]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">ZGODNOŚĆ Z PROFILEM</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">ZGODNOŚĆ Z PROFILEM</h4>
           </div>
-          <ul className="list-disc pl-4 space-y-2 text-xs text-slate-500 leading-relaxed font-semibold">
+          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed">
             {result.model_fit_notes.map((note, i) => <li key={i}>{note}</li>)}
           </ul>
         </div>
 
         {/* Uncertainty Warnings */}
-        <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm space-y-3.5">
-          <div className="flex items-center gap-2.5 text-amber-600">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 shadow-sm space-y-3.5">
+          <div className="flex items-center gap-2.5 text-[#F59E0B]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">OSTRZEŻENIA</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">OSTRZEŻENIA</h4>
           </div>
-          <ul className="list-disc pl-4 space-y-2 text-xs text-slate-500 leading-relaxed font-semibold">
+          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed">
             {result.uncertainty_warnings.map((note, i) => <li key={i}>{note}</li>)}
           </ul>
         </div>
 
         {/* Safety Notes */}
-        <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm space-y-3.5">
-          <div className="flex items-center gap-2.5 text-rose-600">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 shadow-sm space-y-3.5">
+          <div className="flex items-center gap-2.5 text-[#F87171]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">BEZPIECZEŃSTWO</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">BEZPIECZEŃSTWO</h4>
           </div>
-          <ul className="list-disc pl-4 space-y-2 text-xs text-slate-500 leading-relaxed font-semibold">
+          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed">
             {result.safety_notes.map((note, i) => <li key={i}>{note}</li>)}
           </ul>
         </div>

@@ -16,13 +16,13 @@ export function LoaderBackdrop({
   const progressPct = Math.round(((currentStepIndex + 1) / loadingSteps.length) * 100)
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md transition-all duration-300">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0C0C10]/95 backdrop-blur-md transition-all duration-300">
       <div className="relative flex flex-col items-center max-w-md px-6 text-center">
         
         {/* Spinning gradient ring */}
         <div className="relative flex h-20 w-20 items-center justify-center">
-          <div className="absolute h-full w-full animate-spin rounded-full border-4 border-indigo-500/20 border-t-indigo-500" />
-          <svg className="h-8 w-8 text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="absolute h-full w-full animate-spin rounded-full border-4 border-[#A78BFA]/20 border-t-[#A78BFA]" />
+          <svg className="h-8 w-8 text-[#A78BFA] animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
         </div>
@@ -32,20 +32,20 @@ export function LoaderBackdrop({
         </h3>
         
         {/* Steps Progress Indicator */}
-        <div className="mt-6 w-80 rounded-full bg-slate-800 p-1 shadow-inner">
+        <div className="mt-6 w-80 rounded-full bg-[#13131A] p-1 border border-[#2A2A3A]">
           <div 
-            className="h-2 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-violet-500 transition-all duration-500 ease-out" 
+            className="h-2 rounded-full bg-gradient-to-r from-[#7C3AED] via-[#A78BFA] to-[#6EE7B7] transition-all duration-500 ease-out" 
             style={{ width: `${progressPct}%` }}
           />
         </div>
         
-        <div className="mt-3 flex justify-between w-80 text-[10px] font-bold text-slate-450 uppercase tracking-widest px-1">
+        <div className="mt-3 flex justify-between w-80 text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest px-1">
           <span>{workingLanguage === 'pl' ? `Krok ${currentStepIndex + 1} z ${loadingSteps.length}` : `Step ${currentStepIndex + 1} of ${loadingSteps.length}`}</span>
-          <span className="text-indigo-400 animate-pulse">{progressPct}%</span>
+          <span className="text-[#A78BFA] animate-pulse">{progressPct}%</span>
         </div>
 
         {/* Visual Engineering Checkpoints List */}
-        <div className="mt-8 text-left space-y-3 w-80 max-w-full border-t border-white/5 pt-6">
+        <div className="mt-8 text-left space-y-3 w-80 max-w-full border-t border-[#2A2A3A] pt-6">
           {loadingSteps.map((step, idx) => {
             const isCompleted = idx < currentStepIndex
             const isActive = idx === currentStepIndex
@@ -53,15 +53,15 @@ export function LoaderBackdrop({
               <div 
                 key={idx} 
                 className={`flex items-center gap-3 text-xs transition-all duration-300 ${
-                  isCompleted ? 'text-indigo-400/80 opacity-60' :
+                  isCompleted ? 'text-[#A78BFA]/80 opacity-60' :
                   isActive ? 'text-white font-bold scale-[1.02] translate-x-1' :
-                  'text-slate-600'
+                  'text-[#4A5568]'
                 }`}
               >
                 <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] shrink-0 border transition-all duration-300 ${
-                  isCompleted ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300' :
-                  isActive ? 'border-indigo-400 bg-indigo-500 animate-pulse text-white font-bold shadow-md shadow-indigo-500/40' :
-                  'border-slate-800 text-slate-600'
+                  isCompleted ? 'border-[#A78BFA] bg-[#A78BFA]/20 text-[#A78BFA]' :
+                  isActive ? 'border-[#A78BFA] bg-[#7C3AED] animate-pulse text-white font-bold shadow-md shadow-[#A78BFA]/40' :
+                  'border-[#2A2A3A] text-[#4A5568]'
                 }`}>
                   {isCompleted ? '✓' : idx + 1}
                 </div>

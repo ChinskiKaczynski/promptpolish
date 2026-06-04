@@ -119,7 +119,7 @@ export default async function AccountPage() {
             <h3 className="text-lg font-bold tracking-tight text-slate-900">
               Statystyki użycia i limity
             </h3>
-            <p className="mt-1 text-xs text-slate-450 font-medium">
+            <p className="mt-1 text-xs text-[#4A5568] font-medium">
               Podsumowanie przeprowadzonych analiz w bieżącym miesiącu UTC.
             </p>
           </div>
