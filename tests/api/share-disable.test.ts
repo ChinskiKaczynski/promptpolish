@@ -15,12 +15,18 @@ vi.mock('@/lib/supabase/queries', () => ({
   createUsageEvent: vi.fn()
 }))
 
+vi.mock('@/lib/plans/config', () => ({
+  getPlanSlugForUser: vi.fn(),
+  canShare: vi.fn(),
+}))
+
 import type { User } from '@supabase/supabase-js'
 
 import { POST } from '@/app/api/share/disable/route'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { disableShareLink, createUsageEvent } from '@/lib/supabase/queries'
+import { getPlanSlugForUser, canShare } from '@/lib/plans/config'
 
 const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
 const OWNER_ID = 'owner-anon-uuid'
@@ -40,6 +46,8 @@ describe('POST /api/share/disable', () => {
     vi.mocked(getAuthUser).mockResolvedValue(null)
     vi.mocked(disableShareLink).mockResolvedValue(true)
     vi.mocked(createUsageEvent).mockResolvedValue(null)
+    vi.mocked(getPlanSlugForUser).mockResolvedValue('pro')
+    vi.mocked(canShare).mockReturnValue(true)
   })
 
   describe('Validation', () => {
@@ -87,10 +95,22 @@ describe('POST /api/share/disable', () => {
       expect(data.error).toBe('forbidden')
       expect(createUsageEvent).not.toHaveBeenCalled()
     })
+
+    it('returns 403 for free plan user — share management requires Pro', async () => {
+      vi.mocked(getPlanSlugForUser).mockResolvedValue('free')
+      vi.mocked(canShare).mockReturnValue(false)
+
+      const response = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
+      const data = await response.json()
+
+      expect(response.status).toBe(403)
+      expect(data.error).toBe('forbidden')
+      expect(disableShareLink).not.toHaveBeenCalled()
+    })
   })
 
   describe('Successful disable', () => {
-    it('disables the share link for guest, logs event, and returns success', async () => {
+    it('disables the share link for Pro guest owner, logs event, and returns success', async () => {
       const response = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
       const data = await response.json()
 
@@ -109,7 +129,7 @@ describe('POST /api/share/disable', () => {
       )
     })
 
-    it('disables the share link for authenticated user, logs event, and returns success', async () => {
+    it('disables the share link for authenticated Pro user, logs event, and returns success', async () => {
       vi.mocked(getAuthUser).mockResolvedValue({ id: USER_ID, email: 'user@test.com' } as unknown as User)
 
       const response = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))

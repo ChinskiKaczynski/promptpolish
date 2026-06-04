@@ -4,7 +4,7 @@ import { getAuthUser } from '@/lib/identity/auth'
 import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
 import { formatAnalysis } from '@/lib/export/format-analysis'
 import { generatePdf } from '@/lib/export/generate-pdf'
-import { getPlanSlugForUser, canExportPdf } from '@/lib/plans/config'
+import { getPlanSlugForUser, canExportMarkdown, canExportPdf } from '@/lib/plans/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,11 +40,18 @@ export async function GET(
       return new NextResponse('Not Found or Access Denied', { status: 404 })
     }
 
-    // 2b. If PDF format requested, strictly check Pro subscription entitlement
+    // 2b. Check Pro subscription entitlement for all export formats
     if (format === 'pdf') {
       const planSlug = await getPlanSlugForUser(user?.id || null)
       if (!canExportPdf(planSlug)) {
         return new NextResponse('PDF export requires a Pro subscription', { status: 403 })
+      }
+    }
+
+    if (format === 'markdown' || format === 'txt') {
+      const planSlug = await getPlanSlugForUser(user?.id || null)
+      if (!canExportMarkdown(planSlug)) {
+        return new NextResponse('Export requires a Pro subscription', { status: 403 })
       }
     }
 

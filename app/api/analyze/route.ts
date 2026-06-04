@@ -494,8 +494,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: isTransient ? 'provider_unavailable' : 'provider_error',
-          message: error.userMessage,
-          details: error.message
+          message: error.userMessage
         },
         { status }
       )

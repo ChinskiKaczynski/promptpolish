@@ -11,6 +11,7 @@ export interface PlanConfig {
   maxPromptChars: number
   exportMarkdown: boolean
   exportPdf: boolean
+  shareResult: boolean
   batchAudit: boolean
 }
 
@@ -23,6 +24,7 @@ export const PLAN_LIMITS: Record<PlanSlug, PlanConfig> = {
     maxPromptChars: 12000,
     exportMarkdown: false,
     exportPdf: false,
+    shareResult: false,
     batchAudit: false,
   },
   free: {
@@ -33,6 +35,7 @@ export const PLAN_LIMITS: Record<PlanSlug, PlanConfig> = {
     maxPromptChars: 12000,
     exportMarkdown: false,
     exportPdf: false,
+    shareResult: false,
     batchAudit: false,
   },
   pro: {
@@ -43,6 +46,7 @@ export const PLAN_LIMITS: Record<PlanSlug, PlanConfig> = {
     maxPromptChars: 24000,
     exportMarkdown: true,
     exportPdf: true,
+    shareResult: true,
     batchAudit: true,
   },
 } as const
@@ -94,6 +98,13 @@ export function canExportMarkdown(planSlug: PlanSlug): boolean {
  */
 export function canExportPdf(planSlug: PlanSlug): boolean {
   return PLAN_LIMITS[planSlug].exportPdf
+}
+
+/**
+ * Check if the user is allowed to create or disable a public share link.
+ */
+export function canShare(planSlug: PlanSlug): boolean {
+  return PLAN_LIMITS[planSlug].shareResult
 }
 
 /**

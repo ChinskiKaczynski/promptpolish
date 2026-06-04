@@ -15,12 +15,18 @@ vi.mock('@/lib/supabase/queries', () => ({
   createUsageEvent: vi.fn()
 }))
 
+vi.mock('@/lib/plans/config', () => ({
+  getPlanSlugForUser: vi.fn(),
+  canShare: vi.fn(),
+}))
+
 import type { User } from '@supabase/supabase-js'
 
 import { POST } from '@/app/api/share/route'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { createShareLink, createUsageEvent } from '@/lib/supabase/queries'
+import { getPlanSlugForUser, canShare } from '@/lib/plans/config'
 
 const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
 const OWNER_ANON_ID = 'owner-anon-uuid'
@@ -40,6 +46,8 @@ describe('POST /api/share', () => {
     vi.mocked(getAuthUser).mockResolvedValue(null)
     vi.mocked(createShareLink).mockResolvedValue('mocked-share-token')
     vi.mocked(createUsageEvent).mockResolvedValue(null)
+    vi.mocked(getPlanSlugForUser).mockResolvedValue('pro')
+    vi.mocked(canShare).mockReturnValue(true)
   })
 
   describe('Validation', () => {
@@ -74,25 +82,34 @@ describe('POST /api/share', () => {
       expect(createShareLink).not.toHaveBeenCalled()
     })
 
-    it('allows guest with anonymous cookie to share unlinked analysis', async () => {
+    it('returns 403 for anonymous (no plan) user — share requires Pro', async () => {
+      vi.mocked(getPlanSlugForUser).mockResolvedValue('anonymous')
+      vi.mocked(canShare).mockReturnValue(false)
+
       const response = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
       const data = await response.json()
 
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.share_token).toBe('mocked-share-token')
-      expect(createShareLink).toHaveBeenCalledWith(ANALYSIS_ID, OWNER_ANON_ID, undefined)
-      expect(createUsageEvent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          owner_anonymous_id: OWNER_ANON_ID,
-          user_id: null,
-          event_type: 'share_link_created'
-        })
-      )
+      expect(response.status).toBe(403)
+      expect(data.error).toBe('forbidden')
+      expect(createShareLink).not.toHaveBeenCalled()
     })
 
-    it('allows logged-in user to share their own analysis', async () => {
+    it('returns 403 for free plan user — share requires Pro', async () => {
+      vi.mocked(getPlanSlugForUser).mockResolvedValue('free')
+      vi.mocked(canShare).mockReturnValue(false)
+
+      const response = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
+      const data = await response.json()
+
+      expect(response.status).toBe(403)
+      expect(data.error).toBe('forbidden')
+      expect(createShareLink).not.toHaveBeenCalled()
+    })
+
+    it('allows Pro user to share their own analysis', async () => {
       vi.mocked(getAuthUser).mockResolvedValue({ id: USER_ID, email: 'user@test.com' } as unknown as User)
+      vi.mocked(getPlanSlugForUser).mockResolvedValue('pro')
+      vi.mocked(canShare).mockReturnValue(true)
 
       const response = await POST(makeRequest({ analysis_id: ANALYSIS_ID }))
       const data = await response.json()

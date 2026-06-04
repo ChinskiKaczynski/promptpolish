@@ -18,13 +18,14 @@ vi.mock('@/lib/supabase/queries', () => ({
 vi.mock('@/lib/plans/config', () => ({
   getPlanSlugForUser: vi.fn(),
   canExportPdf: vi.fn(),
+  canExportMarkdown: vi.fn(),
 }))
 
 import { GET } from '@/app/api/export/[id]/route'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
-import { getPlanSlugForUser, canExportPdf } from '@/lib/plans/config'
+import { getPlanSlugForUser, canExportPdf, canExportMarkdown } from '@/lib/plans/config'
 import type { PromptAnalysisRow } from '@/lib/supabase/types'
 
 const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
@@ -90,6 +91,7 @@ describe('Export v1 API Dynamic Routes', () => {
     vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(mockAnalysisRecord)
     vi.mocked(getPlanSlugForUser).mockResolvedValue('pro')
     vi.mocked(canExportPdf).mockReturnValue(true)
+    vi.mocked(canExportMarkdown).mockReturnValue(true)
   })
 
   it('rejects with 400 if format is missing or invalid', async () => {
@@ -248,6 +250,31 @@ describe('Export v1 API Dynamic Routes', () => {
     const res = await GET(req, { params })
 
     expect(res.status).toBe(404)
+    expect(createUsageEvent).not.toHaveBeenCalled()
+  })
+  it('returns 403 Forbidden for Free plan requesting Markdown export', async () => {
+    vi.mocked(getPlanSlugForUser).mockResolvedValue('free')
+    vi.mocked(canExportMarkdown).mockReturnValue(false)
+
+    const req = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=markdown`)
+    const params = Promise.resolve({ id: ANALYSIS_ID })
+    const res = await GET(req, { params })
+
+    expect(res.status).toBe(403)
+    expect(await res.text()).toContain('Export requires a Pro subscription')
+    expect(createUsageEvent).not.toHaveBeenCalled()
+  })
+
+  it('returns 403 Forbidden for Free plan requesting TXT export', async () => {
+    vi.mocked(getPlanSlugForUser).mockResolvedValue('free')
+    vi.mocked(canExportMarkdown).mockReturnValue(false)
+
+    const req = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=txt`)
+    const params = Promise.resolve({ id: ANALYSIS_ID })
+    const res = await GET(req, { params })
+
+    expect(res.status).toBe(403)
+    expect(await res.text()).toContain('Export requires a Pro subscription')
     expect(createUsageEvent).not.toHaveBeenCalled()
   })
 })

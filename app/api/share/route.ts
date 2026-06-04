@@ -4,6 +4,7 @@ import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { createShareLink, createUsageEvent } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
+import { getPlanSlugForUser, canShare } from '@/lib/plans/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
 
     const { analysis_id } = parsed.data
 
-    // 1. Resolve owner identity from signed secure cookie or authenticated session
+    // 2. Check Pro subscription entitlement for sharing
     const user = await getAuthUser()
     const ownerAnonymousId = await getOwnerIdFromCookies()
 
@@ -53,7 +54,18 @@ export async function POST(request: Request) {
       )
     }
 
-    // 2. Enable sharing and generate cryptographically secure share token
+    const planSlug = await getPlanSlugForUser(user?.id || null)
+    if (!canShare(planSlug)) {
+      return NextResponse.json(
+        {
+          error: 'forbidden',
+          message: 'Sharing results requires a Pro subscription.'
+        },
+        { status: 403 }
+      )
+    }
+
+    // 3. Enable sharing and generate cryptographically secure share token
     const shareToken = await createShareLink(analysis_id, ownerAnonymousId || '', user?.id)
     if (!shareToken) {
       return NextResponse.json(

@@ -91,8 +91,6 @@ export function isNestedTimeout(error: unknown): boolean {
  * Logs full diagnostic information server-side while providing a safe generic user-facing message.
  */
 export function normalizeProviderError(error: unknown): ProviderError {
-  // Log the raw error internally for server-side developer diagnostics
-  console.error('[AI Provider Error - Internal Diagnostics]:', error)
 
   const highVolumeMessage = 'Our prompt analysis engine is currently handling high volume. Please wait a few moments and try again.'
   const generalErrorMessage = 'Our prompt analysis engine encountered an error while processing your request. Please try again.'
