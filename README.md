@@ -1,14 +1,6 @@
-# PromptPolish — Profesjonalny Audyt i Ulepszanie Promptów (Beta)
+# PromptPolish — Antigravity Starter
 
-PromptPolish to anonimowa, szybka i precyzyjna platforma SaaS do diagnozowania, oceniania i optymalizacji promptów dla modeli językowych (LLM). Narzędzie analizuje instrukcje pod kątem jasności roli, kontekstu, ograniczeń oraz formatu, a następnie zwraca gotową poprawkę z ustrukturyzowanym uzasadnieniem.
-
-## Pozycjonowanie V1 Beta
-
-PromptPolish V1 Beta zostało zaprojektowane jako publicznie dostępne narzędzie bezpłatne, bez wymogu rejestracji na podstawowym poziomie.
-
-- **Główny cel**: Natychmiastowa pomoc w audytowaniu promptów, aby wyeliminować niespójności, niejasne formaty wyjściowe oraz halucynacje LLM.
-- **Darmowy dostęp**: Każdy użytkownik może natychmiast sprawdzić swój prompt za pomocą precyzyjnych ocen 0–100 i otrzymać gotowe, ulepszone wersje instrukcji.
-- **Płatności i Stripe**: Wszelkie funkcje premium są udostępnione w celach testowych w fazie Beta bez pobierania opłat. Integracja ze Stripe jest celowo wyłączona w konfiguracji (`STRIPE_ENABLED=false`).
+Starter repo dla anonymous-first PromptPolish.
 
 ## Co jest w paczce
 
@@ -80,7 +72,7 @@ Przed implementacją AI providera wykonaj zadanie z `MISSIONS_FOR_ANTIGRAVITY.md
 |---|---|---|---|---|---|---|
 | **Anonymous** | 10 | 3 (env: `ANONYMOUS_DAILY_LIMIT`) | 12,000 | ✗ | ✗ | ✗ |
 | **Free** | 20 | 5 | 12,000 | ✗ | ✗ | ✗ |
-| **Pro** | 500 | 100 | 24,000 | ✓ | ✓ (coming soon) | ✓ |
+| **Pro** | 500 | 100 | 24,000 | ✓ | ✓ | ✓ |
 
 > Monthly limits are counted via `analysis_completed` events in UTC. They reset on the 1st of each month.
 

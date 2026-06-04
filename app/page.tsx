@@ -1,44 +1,6 @@
 import Link from 'next/link'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
-import { LandingTracker } from '@/components/layout/landing-tracker'
-
-const problemPoints = [
-  {
-    icon: '🎯',
-    title: 'Niejasny wynik',
-    desc: 'Model nie wie, czego oczekujesz — zwraca ogólną, bezużyteczną odpowiedź zamiast konkretnego rozwiązania.',
-  },
-  {
-    icon: '📐',
-    title: 'Zły format wyjściowy',
-    desc: 'Brak jawnej instrukcji formatu powoduje, że model formatuje dane inaczej przy każdym uruchomieniu.',
-  },
-  {
-    icon: '🌀',
-    title: 'Zbyt szeroki zakres',
-    desc: 'Prompt bez ograniczeń prowadzi do dryfowania tematu, bocznych wątków i nadmiernej długości odpowiedzi.',
-  },
-  {
-    icon: '🧊',
-    title: 'Ryzyko halucynacji',
-    desc: 'Słaby kontekst i brak roli dla modelu znacznie zwiększają prawdopodobieństwo zmyślonych faktów.',
-  },
-  {
-    icon: '💸',
-    title: 'Koszt iteracji',
-    desc: 'Kolejne poprawki "na czuja" marnują czas, tokeny i budżet — bez gwarancji poprawy jakości.',
-  },
-]
-
-const useCases = [
-  { emoji: '✍️', label: 'Content & SEO', desc: 'Teksty sprzedażowe, opisy produktów, meta-tagi.' },
-  { emoji: '💻', label: 'Programowanie', desc: 'System instructions, code review, generowanie kodu.' },
-  { emoji: '🔬', label: 'Badania & Research', desc: 'Streszczenia, ekstrakcja danych, analiza dokumentów.' },
-  { emoji: '📊', label: 'Analiza danych', desc: 'Raporty, SQL z języka naturalnego, wykresy.' },
-  { emoji: '📣', label: 'Marketing & Sprzedaż', desc: 'Newslettery, kreacje reklamowe, cold e-maile.' },
-  { emoji: '🤖', label: 'Agenty & Workflow', desc: 'Orkiestracja agentów, system prompts, RAG pipelines.' },
-]
 
 const benefits = [
   {
@@ -115,15 +77,13 @@ const steps = [
   {
     num: '04',
     title: 'Gotowy wynik',
-    desc: 'Odbierasz ustrukturyzowany raport z punktacją, listą zmian i gotowym do wdrożenia, ulepszonym promptem. Zapisujesz lub eksportujesz wynik.'
+    desc: 'Odbierasz ustrukturyzowany raport, punktację, listę zmian oraz gotowy do wdrożenia, ulepszony prompt.'
   }
 ]
 
 export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50/30 font-sans text-slate-900 selection:bg-indigo-100 antialiased">
-      {/* Fire landing_viewed telemetry on mount (client-side, fire-and-forget) */}
-      <LandingTracker />
       <AppHeader />
 
       {/* Main Content */}
@@ -139,7 +99,7 @@ export default async function HomePage() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
                   </span>
-                  Zamknięta Beta — bez rejestracji, bez opłat
+                  Darmowy audyt promptu bez rejestracji
                 </div>
                 <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl leading-[1.1]">
                   Zobacz, co osłabia Twój prompt —{' '}
@@ -148,25 +108,18 @@ export default async function HomePage() {
                   </span>
                 </h1>
                 <p className="mt-6 text-lg leading-relaxed text-slate-600">
-                  Wklej prompt, a PromptPolish oceni go w skali 0–100, wskaże słabe punkty i zwróci gotową do użycia, ulepszoną wersję. Zero zgadywania, zero ręcznego iterowania.
+                  Wklej swój prompt, wybierz język i tryb audytu. System oceni instrukcję, wskaże słabe punkty i wygeneruje poprawioną wersję gotową do skopiowania.
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    id="hero-cta-analyze"
-                    className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all"
-                    href="/analyze"
-                  >
-                    Przeprowadź audyt promptu
+                  <Link className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all" href="/analyze">
+                    Rozpocznij analizę
                     <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </Link>
-                  <Link
-                    className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-6 py-3.5 text-center text-sm font-semibold text-slate-700 active:scale-95 transition-all"
-                    href="/pricing"
-                  >
-                    Zobacz cennik
-                  </Link>
+                  <a className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-6 py-3.5 text-center text-sm font-semibold text-slate-700 active:scale-95 transition-all" href="#features">
+                    Zobacz możliwości
+                  </a>
                 </div>
               </div>
 
@@ -207,40 +160,6 @@ export default async function HomePage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Problem Section */}
-        <section className="bg-slate-900 px-6 py-20">
-          <div className="mx-auto max-w-6xl">
-            <div className="text-center">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-rose-400">Problem</h2>
-              <p className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Dlaczego słaby prompt kosztuje Cię czas i pieniądze?
-              </p>
-              <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-                Praca z LLM bez struktury to jak pisanie kodu bez testów — działa do momentu, gdy przestaje. Oto co idzie nie tak.
-              </p>
-            </div>
-
-            <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-              {problemPoints.map((point, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl border border-slate-800 bg-slate-800/40 p-6 hover:border-slate-700 hover:bg-slate-800/60 transition-all"
-                >
-                  <span className="text-3xl">{point.icon}</span>
-                  <h3 className="mt-4 text-sm font-bold text-white">{point.title}</h3>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-400">{point.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-12 text-center">
-              <p className="text-sm text-slate-400">
-                PromptPolish wykrywa te problemy automatycznie i dostarcza gotową poprawkę — bez iterowania.
-              </p>
             </div>
           </div>
         </section>
@@ -295,48 +214,6 @@ export default async function HomePage() {
               </article>
             ))}
           </div>
-
-          {/* Feature highlights strip */}
-          <div className="mt-12 rounded-2xl border border-slate-100 bg-slate-50 px-6 py-5">
-            <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Dostępne teraz w Becie</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {[
-                'Wynik 0–100', 'Top 3 słabości', 'Plan naprawczy', 'Ulepszona wersja promptu',
-                'Historia analiz', 'Eksport Markdown & TXT', 'Link do udostępnienia', 'Skan danych wrażliwych',
-              ].map((f) => (
-                <span key={f} className="inline-flex items-center gap-1 rounded-full border border-indigo-100 bg-white px-3 py-1 text-xs font-semibold text-indigo-700">
-                  <span className="text-indigo-500">✓</span> {f}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Use Cases Section */}
-        <section className="bg-indigo-600 px-6 py-20">
-          <div className="mx-auto max-w-6xl">
-            <div className="text-center">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-200">Zastosowania</h2>
-              <p className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                Sprawdza się w każdym kontekście
-              </p>
-              <p className="mx-auto mt-4 max-w-2xl text-indigo-100">
-                Od marketingu przez programowanie po orkiestrację agentów — PromptPolish pomaga wszędzie, gdzie piszesz instrukcje dla modeli językowych.
-              </p>
-            </div>
-
-            <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {useCases.map((uc, i) => (
-                <div key={i} className="flex items-start gap-4 rounded-2xl border border-indigo-500/40 bg-indigo-700/30 p-5 hover:bg-indigo-700/50 transition-all">
-                  <span className="text-2xl shrink-0">{uc.emoji}</span>
-                  <div>
-                    <h3 className="text-sm font-bold text-white">{uc.label}</h3>
-                    <p className="mt-1 text-xs text-indigo-200 leading-relaxed">{uc.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </section>
 
         {/* Target Users Section */}
@@ -364,9 +241,9 @@ export default async function HomePage() {
         </section>
 
         {/* How It Works (Flow Explanation) Section */}
-        <section id="jak-to-dziala" className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
+        <section className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
           <div className="text-center">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-blue-600">Jak to działa</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-blue-600">Proces</h2>
             <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
               Jak przebiega audyt promptu?
             </p>
@@ -388,49 +265,9 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-16 text-center">
-            <Link
-              id="how-it-works-cta"
-              className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all"
-              href="/analyze"
-            >
-              Przeprowadź audyt promptu
+            <Link className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all" href="/analyze">
+              Sprawdź swój prompt teraz
             </Link>
-          </div>
-        </section>
-
-        {/* Beta Note Section */}
-        <section className="px-6 pb-16">
-          <div className="mx-auto max-w-6xl">
-            <div className="rounded-3xl border border-indigo-100 bg-indigo-50/40 p-8 sm:p-10 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-100/60 px-3.5 py-1 text-xs font-bold text-indigo-700 mb-4">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
-                </span>
-                Zamknięta Beta
-              </div>
-              <h2 className="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl">
-                PromptPolish jest teraz w fazie zamkniętej bety
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-600">
-                Wszystkie funkcje są dostępne bezpłatnie. Płatności są wyłączone — nie potrzebujesz karty kredytowej. Twoja opinia kształtuje produkt.
-              </p>
-              <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                <Link
-                  id="beta-cta-analyze"
-                  className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-100 active:scale-95 transition-all"
-                  href="/analyze"
-                >
-                  Wypróbuj za darmo
-                </Link>
-                <Link
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-6 py-3 text-sm font-semibold text-slate-700 active:scale-95 transition-all"
-                  href="/pricing"
-                >
-                  Plany i limity →
-                </Link>
-              </div>
-            </div>
           </div>
         </section>
       </main>

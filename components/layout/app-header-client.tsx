@@ -158,6 +158,14 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
 
         {/* Mobile Navigation Toggle (Hamburger) */}
         <div className="flex md:hidden items-center gap-3">
+          {/* Badge for anonymous MVP on mobile */}
+          {!isLoggedIn && !publicShare && (
+            <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+              theme === 'dark' ? 'bg-slate-900 text-slate-400' : 'bg-slate-100 text-slate-500'
+            }`}>
+              MVP
+            </span>
+          )}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={`p-2 rounded-lg border transition ${
