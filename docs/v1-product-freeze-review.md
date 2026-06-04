@@ -1,184 +1,316 @@
 # Product Freeze & Production Readiness Review (v1.0) — PromptPolish
 
-**Date:** 2026-05-24  
-**Reviewer:** Senior Product & Engineering Reviewer  
-**Status:** **COMPLETED**  
-**Version Target:** v1.0 (Anonymous-First Prompt Analysis MVP)  
+**Date:** 2026-06-04  
+**Author:** Senior SaaS Release Manager & Product/Security Reviewer  
+**Status:** **COMPLETED & FROZEN**  
+**Version Target:** v1.0 (Auth & History Enabled, Stripe in Test Mode)
 
 ---
 
 ## 1. Executive Verdict & Core Recommendation
 
-### 🟢 Overall Verdict: **GO (For Anonymous MVP v1.0)**  
-### 🔴 Billing & Auth Verdict: **NO-GO (Freeze & Deferred to v1.1)**  
-
-After a meticulous, module-by-module audit of the `PromptPolish` codebase, database structures, security boundaries, and automated test coverages, the engineering and product team is cleared to launch the **Anonymous-First Prompt Analysis MVP (v1.0)**. 
-
-The application is exceptionally secure, responsive, and performance-optimized. However, to preserve launch velocity and adhere strictly to core product roadmaps, all advanced SaaS features (such as user authentication, pricing pages, billing management, Stripe checkout, PDF exports, and payment webhooks) have been **frozen and deferred to v1.1**.
+Based on a detailed audit of the current PromptPolish codebase, database schema, security boundaries, and automated test coverages, we have evaluated three distinct deployment configurations for the v1.0 launch:
 
 ```
 ========================================================================================
                                V1.0 RELEASE MATRIX
 ========================================================================================
-   [ IN-SCOPE MVP (GO) ]                 [ SAAS PRO FEATURES (FREEZE / DEFER TO V1.1) ]
-   - Anonymous Audits (PL/EN)            - Supabase Authentication
-   - 3-Audit Daily Quota / IP            - Personal Account History Dashboard
-   - 12k Character Max Limit             - Stripe Checkout Upgrades
-   - Preflight Secret Interception       - Stripe Customer Management Portal
-   - Low-entropy Cookie Bindings         - Stripe Webhook Synchronizer
-   - Opt-in Public Sharing               - TXT & Markdown Report Exports
+   [ ANONYMOUS/PRIVATE BETA ]         [ PAID BETA (TEST-MODE) ]       [ PAID PRODUCTION ]
+            🟢 GO                               🟢 GO                       🔴 NO-GO
+   - Core prompt auditing (PL/EN)      - stripe-cli event routing       - STRIPE_ENABLED=false
+   - Supabase Auth signups/logins      - Sandbox Pro simulation badge   - Missing live entity info
+   - Account History & Favorites       - Upgrade & Downgrade webhooks   - Unsigned vendor DPAs
+   - Dynamic exports (TXT, MD)         - PDF export Pro gate testing    - No tax counsel sign-off
 ========================================================================================
 ```
 
----
+### Go/No-Go Decision Verdicts
 
-## 2. Comprehensive Module Review & Audit
-
-Here is the evaluation of the 18 specific review categories requested for the v1.0 product freeze:
-
-### 1. MVP Core Flow
-*   **Implementation Status:** **100% COMPLETE & VERIFIED**
-*   **Review Findings:** Users can input prompts in Polish or English, select a model profile (`general-llm` or `openrouter-deepseek-v4-flash`), and receive a structured analysis. The flow is fast, intuitive, and works flawlessly without requiring sign-ups. 
-*   **Verdict:** **GO**
-
-### 2. Authentication
-*   **Implementation Status:** **PREPARED / OUT OF SCOPE**
-*   **Review Findings:** Supabase Auth elements are drafted (`app/login`, `app/account`). However, an active auth layer introduces substantial onboarding friction and email verification complexities that are not required for a free utility.
-*   **Verdict:** **FREEZE / POSTPONE TO V1.1** (Remove active auth links from the navigation header for the v1.0 launch).
-
-### 3. History
-*   **Implementation Status:** **PREPARED / OUT OF SCOPE**
-*   **Review Findings:** An audit history dashboard is drafted in `app/history`. For v1.0, user prompt history is restricted to browser session cookies (`owner_anonymous_id`), which permanently bind specific results to the user's browser.
-*   **Verdict:** **FREEZE / POSTPONE TO V1.1**
-
-### 4. Entitlements
-*   **Implementation Status:** **COMPLETE & ARCHITECTURAL**
-*   **Review Findings:** The plan entitlement layer in `lib/plans/config.ts` is fully implemented and backed by tests. It correctly maps static thresholds. For v1.0, the "Free" plan limits (20 monthly analyses, 5 daily abuse limit, 12,000 characters maximum) are strictly applied.
-*   **Verdict:** **GO** (Architectural layer active, but Pro tier logic remains dormant).
-
-### 5. Exports (TXT & Markdown)
-*   **Implementation Status:** **COMPLETE / ENABLED FOR OWNERS**
-*   **Review Findings:** Exporters are now dynamic endpoints at `/api/export/[id]?format=markdown|txt`. Both enforce strict owner verification checks.
-*   **Verdict:** **GO**
-
-### 6. Pricing Page
-*   **Implementation Status:** **COMPLETE / DEFERRED**
-*   **Review Findings:** `app/pricing/page.tsx` is built with a sleek, premium dark-mode grid comparing Free and Pro benefits. It features a temporary "Beta / Waitlist" visual badge. To prevent transaction expectations, live billing redirects must be disabled.
-*   **Verdict:** **GO (Cosmetic Waitlist Only)** / **FREEZE (Live Upgrades deferred to v1.1)**
-
-### 7. Stripe Checkout
-*   **Implementation Status:** **COMPLETE / DEFERRED**
-*   **Review Findings:** The checkout session creator (`app/api/billing/checkout/route.ts`) maps Supabase users to Stripe customers. Because user auth is deferred, live checkout is frozen.
-*   **Verdict:** **FREEZE / POSTPONE TO V1.1**
-
-### 8. Customer Portal
-*   **Implementation Status:** **COMPLETE / DEFERRED**
-*   **Review Findings:** The billing manager route `/api/billing/portal/route.ts` is built. It safely redirects subscribed users to their Stripe panel.
-*   **Verdict:** **FREEZE / POSTPONE TO V1.1**
-
-### 9. Webhook Handling
-*   **Implementation Status:** **COMPLETE / DEFERRED**
-*   **Review Findings:** `/api/webhooks/stripe/route.ts` is fully implemented. It processes events (`customer.subscription.created`, `customer.subscription.deleted`, `invoice.payment_failed`) using raw text buffers to verify cryptographic signatures against `STRIPE_WEBHOOK_SECRET`.
-*   **Verdict:** **FREEZE / POSTPONE TO V1.1**
-
-### 10. Pro Enforcement
-*   **Implementation Status:** **100% COMPLETE & SECURE**
-*   **Review Findings:** Pro entitlement checks are executed strictly on the server side in backend routes. The client UI is strictly cosmetic; the backend directly queries the database state, ensuring security boundaries cannot be bypassed by client-side browser overrides.
-*   **Verdict:** **GO** (Enforcement architecture verified, but active "Pro" state validation is dormant in v1.0).
-
-### 11. Privacy, Terms, and Refund Drafts
-*   **Implementation Status:** **COMPLETE / DRAFTS READY**
-*   **Review Findings:** Comprehensive legal drafts cover SHA-256 IP anonymization, cookie-based session tracking, and vendor data sub-processing. Draft warning headers are present on the landing page drafts (`/privacy`, `/terms`).
-*   **Verdict:** **GO (As Drafts for v1.0)** / **NO-GO (Live payments require formal legal and tax audits before upgrading to v1.1)**.
-
-### 12. Monitoring & Observability
-*   **Implementation Status:** **100% COMPLETE & OPTIMIZED**
-*   **Review Findings:** Observability logging (`lib/monitoring/observability`) utilizes specific, searchable prefixes (`[PROVIDER_ERROR]`, `[STRIPE_WEBHOOK_FAILURE]`, `[Sensitive Data Blocked]`) easily captured by Vercel and Datadog.
-*   **Verdict:** **GO**
-
-### 13. Support Playbook
-*   **Implementation Status:** **100% COMPLETE & SYSTEMATIZED**
-*   **Review Findings:** Documented in `docs/operations-runbook.md`. The refund SOP applies a strict double-gate (14-day limit and fewer than 10 analyses consumed) to protect the business from computational expense harvesting.
-*   **Verdict:** **GO**
-
-### 14. Mobile UX
-*   **Implementation Status:** **100% COMPLETE & RESPONSIVE**
-*   **Review Findings:** Styled with Tailwind CSS Flex and Grid parameters. Scaling is highly responsive across small mobile viewports, tablets, and desktops.
-*   **Verdict:** **GO**
-
-### 15. Error States
-*   **Implementation Status:** **100% COMPLETE & SAFE**
-*   **Review Findings:** Handled via Next.js Route Boundaries (`error.tsx`, `not-found.tsx`) and robust error normalization. Server-side exceptions are safely caught, redacting internal trace details to prevent code structure leaks to the end user.
-*   **Verdict:** **GO**
-
-### 16. AI Quality & Structured Outputs
-*   **Implementation Status:** **100% COMPLETE & CALIBRATED**
-*   **Review Findings:** Calibration tests on 46 prompts (`docs/evaluation-results.md`) show exceptional accuracy. OpenRouter structured Zod output (`analysisResultSchema`) is locked in via Vercel AI SDK `Output.object` using DeepSeek v4 Flash with a temperature of `0.1` to eliminate model hallucinations.
-*   **Verdict:** **GO**
-
-### 17. Cost Controls & Quotas
-*   **Implementation Status:** **100% COMPLETE & VERIFIED**
-*   **Review Findings:** Free tier rate limiting strictly caps users at 3 audits per day per IP. Safe token length rules (20 - 12,000 characters) are validated at request time on the server. The cost per single-turn audit on DeepSeek v4 Flash via OpenRouter is calculated at an extremely low **~$0.000315 USD**, making the free tier highly sustainable.
-*   **Verdict:** **GO**
-
-### 18. Security Boundaries
-*   **Implementation Status:** **100% COMPLETE & AUDITED**
-*   **Review Findings:** Backed by automated tests:
-    1.  `tests/security/client-exposure-checks.test.ts` statically scans client bundles to prevent private key and database connection imports.
-    2.  `tests/supabase/share-privacy.test.ts` asserts that public share views strictly redact session IDs, creator IP hashes, and internal metadata at the database wire level.
-*   **Verdict:** **GO**
+*   **Anonymous / Private Beta: 🟢 GO**
+    *   *Rationale:* Core prompt analysis logic is stable, localized in PL/EN, and calibrated with high-accuracy scores. Supabase Auth, history dashboards, favorites, and soft-delete features are robustly covered by automated integration tests and compile cleanly.
+*   **Paid Beta (Test-Mode Staging): 🟢 GO**
+    *   *Rationale:* Stripe test-mode infrastructure (redirects, customer portal, webhook status mappings, past-due grace warnings, and unpaid downgrades) is complete and validated in development environments. The staging branch can safely run in test mode (`STRIPE_ENABLED=true` pointing to Stripe Test Keys).
+*   **Paid Production: 🔴 NO-GO**
+    *   *Rationale:* There are critical, outstanding legal, tax, and registration blockers (VAT OSS, Stripe Tax configurations, finalized legal entity data, and executed processor DPAs) that must be resolved by professional counsel before live card payments are enabled. `STRIPE_ENABLED=false` must remain the default setting in production.
 
 ---
 
-## 3. Scope Creep Identification
+## 2. Freeze Summary & Release Scope
 
-While the codebase is exceptionally clean and well-structured, several advanced SaaS components have been implemented in advance of their roadmap stage. This constitutes **SaaS Scope Creep in the v1.0 Workspace**:
+This release locks the current codebase containing the anonymous prompt auditing features and prepares the foundations for user authentication, metrics, and billing checkouts.
 
-1.  **Stripe API Integration Layer:** Fully developed backend routes in `/api/billing/*` and `/api/webhooks/stripe`.
-2.  **User Account Panel & Login:** Active layouts in `app/login`, `app/account`, and `app/history` that are out-of-scope for a strictly anonymous MVP.
-3.  **TXT/Markdown Exporters:** Document generation engines developed under `/api/export/[id]` that represent owner features.
-4.  **Developer Simulation Gates:** Bypass forms allowing staging environments to trigger Pro profiles on the fly.
-
-> [!TIP]
-> **Product Rationale for Keeping Mocks Dormant:**  
-> Rather than deleting these beautifully written files, they are safely isolated. By removing all visible navigation links pointing to `/login`, `/history`, `/account`, and keeping `/pricing` strictly in "beta waitlist sign-up mode" without live Stripe triggers, we contain the v1.0 launch footprint to the anonymous core.
-
----
-
-## 4. Operational Release Tasks (Before Launch)
-
-To achieve complete production readiness, the following operations items must be resolved (none are blockers, but all are critical configuration steps):
-
-| Task ID | Operational Action Required | Primary Owner | Target Timeline |
-| :---: | :--- | :---: | :---: |
-| **OP-01** | **Apply Remote DB Migrations:** Execute `db/migrations/0001_init.sql` and `db/seed/model_profiles.sql` against the live production hosted Supabase database to initialize tables. | DevOps / DB Admin | Pre-Launch |
-| **OP-02** | **Configure Vercel Production Environment Variables:** Provision live keys for `OPENROUTER_API_KEY`, `OPENROUTER_MODEL_ID` (optional, defaults to DeepSeek), `COOKIE_SIGNING_SECRET`, `SUPABASE_SECRET_KEY`, and `CRON_SECRET`. | Tech Lead | Pre-Launch |
-| **OP-03** | **Setup Vercel Cron Scheduler:** Target `/api/cron/cleanup` daily with the `Authorization: Bearer <CRON_SECRET>` header to automate database purges. | Systems Engineer | Pre-Launch |
-| **OP-04** | **Remove Admin/Auth Header Links:** Hide active "Moje konto" (My Account) and "Zaloguj się" (Login) headers in `app/page.tsx` and header components to present a strictly anonymous layout. | Front-end Dev | Launch Day |
+### A. Active Release Scope (v1.0 In-Scope)
+*   **Prompt Analysis Engine:** Real-time scoring using OpenRouter DeepSeek v4 Flash, input length verification, safety preflights, Polish/English localization.
+*   **Aesthetics & Scorecard:** Modern responsive visual criteria grids, color-coded score badges, and copy-ready recommendations.
+*   **Supabase Auth Integration:** User registration, email verification, sign-in, and account status panels.
+*   **User Account History:** Dynamic history logging, filtering, favorites selection, and cascading soft-deletes.
+*   **Public Share Routing:** User-controlled sharing controls, public-safe read-only layouts, and instant 404 revocation.
+*   **Multi-Format Document Exporters:** dynamic `/api/export/[id]` route supporting dynamic Markdown and TXT formats (owner restricted).
+*   **Pro-Tier Entitlement Layer:** Configuration structure (`lib/plans/config.ts`) mapping limits and gating premium actions (Pro-only PDF exports).
+*   **Simulate Pro Sandbox:** Developer panel for logging in and simulating Pro tier behavior.
+*   **Stripe Test-Mode Integration:** Checkout generation, Customer Portal redirections, and webhook status syncing logic.
+*   **Legal Policy Drafts:** footer-linked `/terms` and `/privacy` pages loaded with policy placeholders.
 
 ---
 
-## 5. Deferral Matrix (v1.1 Target Backlog)
+## 3. Production Paid Launch Blockers
 
-The following backlog is formally deferred from the v1.0 release and will form the foundation of the **v1.1 Paid SaaS Launch**:
+The following items are critical blockers that **must** be resolved before changing `STRIPE_ENABLED=true` in production:
+
+### A. Business & Entity Configuration
+1.  **Legal Entity Finalization:** Update the physical company address, legal name, and support/privacy email address placeholders on `/terms`, `/privacy`, and emails.
+2.  **Monitored Support Mailboxes:** Set up and test the functional support and privacy inboxes (e.g. `[SUPPORT EMAIL TBD]`).
+
+### B. Financial & Tax Compliance
+3.  **VAT OSS Registration:** Finalize B2C VAT registration under the EU VAT One-Stop Shop (OSS) scheme or determine micro-business tax thresholds.
+4.  **Stripe Tax Activation:** Enable Stripe Tax in the live Stripe Dashboard to dynamically calculate location-based sales taxes and VAT.
+5.  **B2B Reverse Charge:** Verify that VAT ID input components are active at checkout to apply tax exemptions for corporate buyers.
+6.  **Sequential Invoice Compliance:** Configure live Stripe invoice templates to issue sequentially numbered invoices to comply with tax audit regulations.
+
+### C. Privacy & Vendor DPAs
+7.  **Processor Agreements:** Formally execute and vault Data Processing Addendums (DPAs) containing Standard Contractual Clauses (SCCs) with our primary vendors:
+    *   *Vercel, Inc.* (Serverless hosting and compute residency verification)
+    *   *Supabase, Inc.* (EEA-confined database hosting verification)
+    *   *Stripe, Inc.* (Financial data transfer safety)
+    *   *OpenRouter / AI Provider* (AI API prompt logging/training terms check to verify prompts are not used for downstream model tuning)
+8.  **Withdrawal Waiver Consent:** Add a mandatory checkbox to the Stripe Checkout flow where EU users waive their statutory 14-day digital goods withdrawal right once performance (prompt generation) begins.
+
+---
+
+## 4. Key Project Risks
+
+The following potential points of failure have been identified for the v1.0 release:
+
+*   **Third-Party API Outages:** Cold starts, latency spikes, or quota exhaustion at OpenRouter will directly block prompt analyses. This is mitigated by structured logging (`[PROVIDER_ERROR]`) and graceful degradation boundaries.
+*   **GDPR Right to Erasure Conflict:** Financial regulations mandate that Stripe retains customer billing invoices for 5–7 years, which directly conflicts with a user's right to complete database erasure under GDPR Article 17. Legal counsel must verify if retention is shielded by regulatory compliance exemptions (Article 17(3)(b)).
+*   **Anonymous Session Cookie Loss:** Because anonymous reports are bound to local client cookies, clearing browser caches or using Incognito sessions will result in the loss of ownership associations, prompting customer support history recovery requests.
+*   **Compliance Representation Risk:** Keeping the legal drafts active on the production domain with placeholder text exposes the application to early compliance scrutiny if public traffic is directed before official counsel sign-off.
+
+---
+
+## 5. Post-v1.0 Backlog (Postponed Items)
+
+The following items are deferred from the v1.0 freeze and do not block the initial launch:
+
+*   **User Onboarding Tutorials:** Interactive popups or guides for first-time website visitors.
+*   **Granular Custom Analytics:** Tracking of UI clicks, copy interactions, and UI navigation steps in third-party metrics tooling.
+*   **PDF Styling Layouts:** Custom fonts, letterheads, page-number structures, and customized branding.
+*   **Transactional Email Alerts:** Automated notifications triggered on payments, cancellations, or grace period entries.
+*   **Yearly Billing Tiers:** Checkout options and discounts for annual subscription purchases.
+*   **Teams / Organization Accounts:** Workspace sharing, user invitation flows, and central billing management.
+*   **Advanced Analytics Filtering:** Sorting options on the metrics dashboard based on scoring quality or language profiles.
+*   **Production Stripe Configuration:** Registering live credentials and production webhook hooks.
+
+---
+
+## 6. Release Freeze Rules (Must-Not-Change List)
+
+To prevent regressions, the following modules must not be modified or redeployed prior to the v1.0 release unless patching a P0/P1 emergency vulnerability:
+
+1.  **AI Prompts & System Parameters:** Prompts and system instruction matrices must remain frozen to protect score calibrations.
+2.  **Scoring Weights & Logic:** Criteria scoring calculations in `lib/scoring` must not be adjusted.
+3.  **Provider & Model Catalog:** The model parameters (`deepseek/deepseek-v4-flash` via OpenRouter at `0.1` temperature) must remain unchanged.
+4.  **Database Migrations & Schemas:** No changes or new tables may be added to Supabase.
+5.  **Auth & Export Ownership Checks:** Access validation check scripts in auth libraries and dynamic routes are locked.
+6.  **Webhook Signature Logic:** Raw-buffer cryptographic verification on `/api/webhooks/stripe` is frozen.
+7.  **Rate Limits & Entitlements:** Plan restrictions (3 daily anonymous, 20 monthly Free, 500 monthly Pro) are frozen.
+
+---
+
+## 7. Recommended Next Release Path
+
+To progress safely from the v1.0 product freeze to a fully compliant production paid model, we recommend the following step-by-step release roadmap:
 
 ```mermaid
-gantt
-    title PromptPolish Roadmap Evolution
-    dateFormat  YYYY-MM-DD
-    section v1.0 Anonymous MVP
-    Apply DB Migrations         :active, 2026-05-24, 1d
-    Launch Anonymous Beta       :active, 2026-05-25, 5d
-    section v1.1 Paid SaaS Upgrade
-    Legal Compliance Sign-off   : 2026-06-01, 3d
-    Enable Supabase Auth        : 2026-06-04, 4d
-    Activate Stripe Checkout    : 2026-06-08, 5d
-    Enable TXT/Markdown Exports : 2026-06-13, 3d
+graph TD
+    A[v1.0 Freeze Complete] --> B[Launch v1.0 Anonymous/Private Beta]
+    B --> C[Configure Live Business & Support Email Inboxes]
+    C --> D[Obtain Legal Counsel Sign-off on Terms/Privacy Policies]
+    D --> E[Obtain Tax Counsel Sign-off on VAT OSS & Stripe Tax]
+    E --> F[Execute Sub-processor DPAs with Vercel, Supabase, Stripe, OpenRouter]
+    F --> G[Register Live Products & Price IDs on Stripe live dashboard]
+    G --> H[Toggle STRIPE_ENABLED=true with Production Keys]
+    H --> I[Execute Live Production Smoke Tests]
+    I --> J[Paid Production General Availability]
 ```
 
-1.  **Supabase Auth & User Profiles:** Move from cookie-based anonymous IDs to verified user accounts.
-2.  **Stripe Billing Integration:** Connect the `/api/billing/checkout` and webhook pipelines to live Stripe keys.
-3.  **Customer Management Billing Portal:** Enable self-service cancellations and card management via Stripe Customer Portal.
-4.  **TXT/Markdown Exports:** Unlock downloads for authorized owners.
-5.  **Audit History Dashboard:** Activate cloud preservation and search of past analyses under authenticated accounts.
-6.  **Legal & Tax Compliance Audit:** Engage legal counsel to review `/privacy`, `/terms`, and `/docs/refund-cancellation-policy.md`, scrub all "DRAFT" warnings, and activate **Stripe Tax** to handle automated sales tax/VAT in the EU and US.
+1.  **Deploy v1.0 Anonymous/Private Beta:** Promote the current stable build to the production domain with `STRIPE_ENABLED=false` to test core engine traffic.
+2.  **Resolve Legal & Tax Blocks:** Complete corporate entity registration, support mailbox setups, tax structure resolutions, and obtain legal counsel signature reviews.
+3.  **Execute Processor DPAs:** Formally execute DPAs with Vercel, Stripe, Supabase, and OpenRouter.
+4.  **Provision Live stripe Credentials:** Create production pricing IDs in Stripe, set up live webhook urls, and populate production environment keys.
+5.  **Promote Billing Switch:** Set `STRIPE_ENABLED=true` on production, execute Phase 3 (Real purchase) of the manual smoke tests, and declare Paid Production General Availability.
+
+---
+
+## 8. Manual Smoke Tests Remaining
+
+The following manual test cycles must be executed on the live environment immediately post-deployment:
+
+### Phase 1: Pre-Billing Tests (`STRIPE_ENABLED=false` Active in Production)
+- [ ] **Secret Preflight Block:** Paste a prompt containing mock credentials. Verify the scan halts the audit client-side.
+- [ ] **Standard Audit Check:** Audit a normal prompt. Verify redirection to `/result/[id]`.
+- [ ] **Waitlist/Wait Banner Display:** Navigate to `/pricing`. Verify Pro options display beta labels, waitlist signup forms, or "Beta Mode" banners instead of Stripe redirects.
+- [ ] **Sandbox Pro Verification:** Log in, access the account settings, activate the developer Pro simulation slider, and verify the plan badge switches to "Simulated Pro". Test that PDF export is unlocked.
+
+### Phase 2: Staging Test-Mode Checkout (`STRIPE_ENABLED=true` Active in Staging Branch Only)
+- [ ] **Stripe Checkout Redirect:** Navigate to `/pricing`, click "Buy Pro", and confirm it opens the secure `checkout.stripe.com` page.
+- [ ] **Mock Purchase:** Complete payment with test card `4242 4242 4242 4242`. Confirm redirection back to the success route.
+- [ ] **Plan Upgrade Sync:** Confirm the plan badge has changed to "Pro" on `/account`.
+- [ ] **PDF Entitlement Activation:** Go to a result page, click PDF export, and confirm a clean document downloads successfully.
+- [ ] **Portal Subscription Cancellation:** Open Customer Portal, click cancel, close portal, and verify the account page reports the subscription is scheduled for downgrade at period end.
+- [ ] **Database State Downgrade:** Force-cancel the subscription in the Stripe Developer Dashboard, and verify the plan badge reverts to "Free" on the client interface.
+
+---
+
+## 9. Verification Results & Command Output
+
+The workspace was validated using the required test, lint, build, and analytics scripts. All checks completed with 100% success.
+
+### A. Linting (`pnpm lint`)
+ESLint validation completed cleanly with zero warnings or errors.
+
+```
+> prompt-polish@0.1.0 lint D:\AI\promptpolish
+> eslint . --max-warnings=0
+```
+
+### B. Unit & Integration Tests (`pnpm test`)
+All 338 tests passed successfully across 38 files in 2.29 seconds, validating data access layer (RLS mocks), share privacy, auth linking, plan limits, preflights, and billing webhook events.
+
+```
+Test Files  38 passed (38)
+     Tests  338 passed (338)
+  Start at  06:54:23
+  Duration  2.29s (transform 3.86s, setup 1.95s, import 9.85s, tests 664ms, environment 5ms)
+```
+
+### C. Build Compilation (`pnpm build`)
+Next.js Turbopack compiler successfully generated the static and dynamic route package without warnings.
+
+```
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.production.local, .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.4s
+  Running TypeScript ...
+  Finished TypeScript in 5.0s ...
+  Collecting page data using 19 workers ...
+  Generating static pages using 19 workers (0/13) ...
+✓ Generating static pages using 19 workers (13/13) in 372ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /account
+├ ƒ /admin/metrics
+├ ƒ /analyze
+├ ƒ /api/admin/metrics
+├ ƒ /api/analyze
+├ ƒ /api/auth/session
+├ ƒ /api/billing/checkout
+├ ƒ /api/billing/portal
+├ ƒ /api/cron/cleanup
+├ ƒ /api/entitlements/simulate-pro
+├ ƒ /api/events
+├ ƒ /api/export/[id]
+├ ƒ /api/feedback
+├ ƒ /api/history/delete
+├ ƒ /api/history/favorite
+├ ƒ /api/share
+├ ƒ /api/share/disable
+├ ƒ /api/webhooks/stripe
+├ ƒ /history
+├ ƒ /login
+├ ƒ /pricing
+├ ƒ /privacy
+├ ƒ /result/[id]
+├ ○ /result/mock
+├ ○ /robots.txt
+├ ƒ /share/[token]
+└ ƒ /terms
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+```
+
+### D. MVP Metrics Report (`pnpm run metrics:mvp -- --days 7`)
+Execution of the MVP metrics reporting tool returned the following client statistics for the past 7 days:
+
+```
+================================================
+   PromptPolish MVP Private Beta Metrics        
+   Generated on: 2026-06-04T04:54:43.291Z   
+   Filter window: since 2026-05-28T04:54:43.290Z (last 7 days)
+================================================
+
+── Core Funnel ─────────────────────────────────
+  Started (events):     7
+  Completed (events):   18
+  Total (analyses row): 18
+  Failed (events):      0
+  Completion Rate:      invalid/instrumentation mismatch
+  Failure Rate (stable): 0.0%
+  [WARNING] analysis_started is undercounted; completion rate is not reliable
+
+── Value Metrics ───────────────────────────────
+  Copy Events:          8   (44.4% of completed)
+  Feedback (👍):        8
+  Feedback (👎):        2
+  Up/Down Ratio:        8:2 (80.0% positive)
+  Share Links Created:  7
+  Share Links Disabled: 1
+  Active Public Shares: 6
+  Export Markdown:      4
+  Export TXT:           1
+
+── Retention Proxy ─────────────────────────────
+  Unique Owners w/ Completed: 7
+  Returning Owners (≥2):      3
+  Returning Rate:             42.9%
+
+── Plans ───────────────────────────────────────
+  Free Users:           0
+  Pro Users:            1
+
+── Reliability ─────────────────────────────────
+  Analysis Failures:    0
+  Sensitive Warnings:   0
+  Sensitive Blocks:     0
+  Limit Reached:        2
+
+── Prompt Quality ──────────────────────────────
+  Total Analyses:       18
+  Avg Score:            42.7
+
+── Beta Signal ──────────────────────────────────
+  [WARNING] Insufficient data to evaluate beta traction signals.
+  Completed analyses (18) is below the threshold of 20.
+  Initial Signal:       INSUFFICIENT_DATA
+  Final Signal Level:   INSUFFICIENT_DATA
+
+================================================
+  Full dashboard: /admin/metrics (admin only)
+================================================
+```
+
+---
+
+## 10. Changed Files
+
+No functional codebase files have been added, modified, or removed during this freeze review procedure. The review itself has been saved to:
+*   [docs/v1-product-freeze-review.md](./v1-product-freeze-review.md) — Product Freeze & Production Readiness Review Document (NEW/OVERWRITTEN).
+
+---
+
+## 11. Confirmations & Declarations
+
+As release manager, I hereby certify the following:
+*   **Runtime Integrity:** No application source code files, route actions, database query logic, or UI pages have been changed during this audit.
+*   **Schema Safety:** No database migrations or schema adjustments have been committed.
+*   **Environment Safety:** No production secrets have been logged, exposed, or committed to tracking.
+*   **Stripe Safety Enforcement:** Paid production checkout is strictly disabled (`STRIPE_ENABLED=false` remains default in configuration).
+*   **AI Quality Safety:** Prompt parameters, criteria templates, scoring coefficients, and models are fully locked.
+
+This freeze review completes the v1.0 release planning requirements. PromptPolish is ready for deployment as an **Anonymous / Private Beta**, while live billing remains locked.
