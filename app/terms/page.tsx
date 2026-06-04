@@ -16,7 +16,7 @@ export default function TermsPage() {
             <div>
               <h3 className="text-sm font-bold text-amber-950 uppercase tracking-wider">Wersja Robocza Regulaminu / Draft Terms</h3>
               <p className="mt-1 text-xs leading-relaxed text-amber-900 font-medium">
-                To jest roboczy draft regulaminu (warunków korzystania) dla fazy MVP narzędzia <strong>PromptPolish</strong>. Dokument służy celom demonstracyjnym i testowym, nie stanowi oficjalnej opinii prawnej i musi przejść weryfikację prawną przed wdrożeniem do komercyjnej eksploatacji produkcyjnej. Wdrożenie systemu płatności produkcyjnych (Paid Production) jest zawieszone do czasu ukończenia pełnego audytu podatkowego i konsumenckiego. Zgodność z przepisami RODO i prawami konsumenta w UE nie jest na tym etapie gwarantowana.
+                To jest roboczy draft regulaminu (warunków korzystania) dla platformy <strong>PromptPolish</strong>. Dokument służy celom deweloperskim i testowym, nie stanowi oficjalnej opinii prawnej i musi przejść pełną weryfikację przez certyfikowanego radcę prawnego przed udostępnieniem dla publicznego ruchu lub transakcji płatniczych. Wdrożenie systemu płatności produkcyjnych (Paid Production) pozostaje nieaktywne/zawieszone do czasu ukończenia pełnego audytu podatkowego i konsumenckiego. Zgodność z przepisami RODO (GDPR) nie jest na tym etapie gwarantowana.
               </p>
             </div>
           </div>
@@ -27,105 +27,133 @@ export default function TermsPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
             Regulamin Korzystania (Draft MVP)
           </h1>
-          <p className="mt-2 text-xs text-slate-400">Ostatnia aktualizacja: 24 maja 2026 r.</p>
+          <p className="mt-2 text-xs text-slate-400">Ostatnia aktualizacja: 4 czerwca 2026 r.</p>
           
           <div className="mt-8 space-y-8 text-sm leading-relaxed text-slate-700">
             
             <section className="space-y-3">
               <h2 className="text-lg font-bold text-slate-900">1. Opis i Charakterystyka Usługi</h2>
               <p>
-                PromptPolish jest narzędziem pomocniczym służącym do audytowania, oceniania i ulepszania promptów (instrukcji) kierowanych do modeli językowych (LLM). Usługa jest udostępniana w formule <strong>Anonymous-first MVP</strong> (bezpłatna analiza do określonego limitu) oraz w formule płatnej subskrypcji (Pro Plan) po rejestracji konta.
+                PromptPolish jest oprogramowaniem typu SaaS (Software-as-a-Service) służącym do audytowania, oceniania, punktowania i optymalizacji instrukcji tekstowych (&quot;promptów&quot;) kierowanych do wielkich modeli językowych (LLM). Narzędzie analizuje strukturę instrukcji, wskazuje ich luki oraz sugeruje ulepszone wersje wejściowych promptów.
               </p>
               <p>
-                Wersja bezpłatna (Free Tier) posiada dobowy limit nadużyć wynoszący **3 bezpłatne analizy dziennie** na poziomie ciasteczka sesyjnego/adresu IP.
+                Usługa jest udostępniana w formule <strong>Anonymous-first MVP</strong> (podstawowa bezpłatna analiza do określonego limitu bez rejestracji) oraz w formule rejestrowanej (z dostępem do historii analiz, ulubionych raportów oraz potencjalnych planów premium po zalogowaniu).
               </p>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">2. Subskrypcja Pro Plan – Opłaty i Warunki Finansowe</h2>
+              <h2 className="text-lg font-bold text-slate-900">2. Dostęp Anonimowy i Pliki Cookie</h2>
               <p>
-                Użytkownicy, którzy zdecydują się na ulepszenie konta do planu premium (Pro Plan), podlegają następującym warunkom finansowym:
+                Użytkownicy mogą korzystać z podstawowych funkcji audytu bez zakładania konta. W tym scenariuszu, powiązanie przeglądarki z wygenerowanymi raportami w formacie <code>/result/[id]</code> opiera się wyłącznie na niezbędnym pliku cookie o nazwie <code>owner_anonymous_id</code> (atrybuty HttpOnly, Secure, SameSite=Strict).
+              </p>
+              <p className="font-semibold text-slate-900">
+                ⚠️ WAŻNE OSTRZEŻENIE: Wyczyszczenie plików cookie, pamięci podręcznej przeglądarki lub zmiana urządzenia spowoduje bezpowrotną utratę dostępu do Twoich prywatnych stron wyników. Nasz zespół techniczny nie posiada możliwości odzyskania lub przywrócenia dostępu do danych powiązanych z sesją anonimową po usunięciu ciasteczka identyfikacyjnego.
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-bold text-slate-900">3. Konta Użytkowników i Rejestracja</h2>
+              <p>
+                Dostęp do dodatkowych funkcji (takich jak przechowywanie i filtrowanie historii analiz, favorites, czy eksporty raportów) wymaga rejestracji konta przy użyciu dostawcy uwierzytelniania (Supabase Auth).
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-xs">
-                <li><strong>Cena subskrypcji:</strong> Ustalona na kwotę od <strong>$9.00 do $12.00 USD miesięcznie</strong> (cena podstawowa przed naliczeniem podatków lokalnych, takich jak VAT, zależnie od kraju kupującego).</li>
-                <li><strong>Procesowanie Płatności:</strong> Płatności są w całości obsługiwane przez firmę <strong>Stripe, Inc.</strong> za pomocą bezpiecznych formularzy Stripe Checkout.</li>
-                <li><strong>Automatyczne Odnawianie:</strong> Subskrypcja jest zawierana na czas nieokreślony i odnawia się automatycznie co miesiąc. Opłata jest pobierana z góry na początku każdego cyklu rozliczeniowego.</li>
+                <li>Użytkownik rejestrujący konto zobowiązuje się do zachowania poufności swoich danych uwierzytelniających oraz odpowiada za wszystkie operacje wykonane w ramach swojego profilu.</li>
+                <li>Z usługi mogą korzystać wyłącznie osoby, które ukończyły osiemnaście (18) lat lub osiągnęły pełnoletność w swojej jurysdykcji.</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">3. Zasady Anulowania i Polityka Zwrotów (Refund Policy)</h2>
+              <h2 className="text-lg font-bold text-slate-900">4. Subskrypcja Pro Plan i Płatności Stripe</h2>
               <p>
-                Zapewniamy pełną transparentność i łatwe zarządzanie finansami:
+                Platforma przewiduje płatny plan premium (&quot;Pro Plan&quot;), oferujący wyższe limity (np. do 500 analiz miesięcznie), rozszerzoną długość znaków (do 24 000), eksporty PDF/Markdown oraz zbiorcze audyty (Batch Audit).
               </p>
-              <ul className="list-disc pl-5 space-y-2 text-xs">
-                <li>
-                  <strong>Anulowanie Subskrypcji:</strong> Użytkownik może anulować subskrypcję w dowolnym momencie, korzystając z samoobsługowego portalu <strong>Stripe Customer Portal</strong> w ustawieniach konta. Po anulowaniu subskrypcja przechodzi w stan `cancel_at_period_end = true` – dostęp do funkcji Pro pozostaje aktywny do końca bieżącego okresu rozliczeniowego, po czym konto automatycznie ulega degradacji do planu bezpłatnego.
-                </li>
-                <li>
-                  <strong>14-dniowa Gwarancja Zwrotu (Refund Policy):</strong> Użytkownik ma prawo do odstąpienia od umowy i pełnego zwrotu kosztów w ciągu **14 dni** od zakupu lub odnowienia subskrypcji pod warunkiem, że w tym okresie **wykonał mniej niż 10 analiz promptów**.
-                </li>
-                <li>
-                  <strong>Wyłączenie Zwrotów:</strong> Ze względu na bezpośrednie koszty operacyjne infrastruktury AI (Google Gemini API), po wykonaniu 10 lub więcej analiz promptów w danym miesiącu, subskrypcja staje się **całkowicie bezzwrotna**.
-                </li>
-              </ul>
-            </section>
-
-            <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">4. Wyłączenie Odpowiedzialności i Brak Gwarancji</h2>
-              <p>
-                Narzędzie oraz wygenerowane analizy, punktacje i ulepszone wersje promptów są dostarczane w stanie, w jakim się znajdują (<strong>&quot;as-is&quot;</strong>), bez jakichkolwiek gwarancji – wyraźnych lub dorozumianych.
-              </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-xs">
-                <li>System nie gwarantuje, że poprawione prompty przyniosą określony rezultat biznesowy, sprzedażowy lub techniczny we współpracujących systemach AI.</li>
-                <li>System nie gwarantuje całkowitej poprawności i braku zjawiska tzw. halucynacji (generowania fałszywych informacji) przez zoptymalizowane instrukcje.</li>
-                <li>Użytkownik ponosi pełną odpowiedzialność za końcowe przetestowanie i zatwierdzenie zoptymalizowanego promptu we własnym środowisku roboczym lub produkcyjnym.</li>
-              </ul>
-            </section>
-
-            <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">5. Odpowiedzialność Użytkownika za Dane Wrażliwe</h2>
-              <p>
-                Korzystając z serwisu, użytkownik zobowiązuje się do nieprzesyłania do analizy jakichkolwiek treści o charakterze poufnym lub niebezpiecznym.
-              </p>
-              <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-4 font-semibold text-rose-950">
-                <p className="text-xs uppercase text-rose-800 mb-1">Czego nie wolno wklejać:</p>
-                <p className="text-xs leading-relaxed">
-                  Zabrania się wklejania haseł dostępowych, kluczy API, tokenów uwierzytelniających, wrażliwych danych osobowych (PII), danych medycznych, finansowych, a także danych klientów bez ich wyraźnej zgody. Użytkownik ponosi wyłączną odpowiedzialność za wszelkie szkody wynikłe z ujawnienia takich danych w promptach. PromptPolish nie odpowiada za wycieki danych spowodowane przez lekkomyślność użytkownika.
+              <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4 text-xs space-y-2">
+                <p>
+                  <strong>Stan wdrożenia:</strong> Subskrypcje płatne Pro Plan <strong>nie zostały jeszcze uruchomione produkcyjnie</strong>. Bramka płatności jest wyłączona dla transakcji komercyjnych.
+                </p>
+                <p>
+                  <strong>Cennik i Waluta:</strong> <code>[PRIMARY CURRENCY AND PRICE TBD — requires pricing/tax decision]</code>.
+                </p>
+                <p>
+                  <strong>Obsługa płatności:</strong> Kiedy subskrypcje zostaną wdrożone produkcyjnie, wszystkie płatności, faktury i transakcje będą obsługiwane wyłącznie za pośrednictwem certyfikowanego procesora <strong>Stripe, Inc.</strong> z wykorzystaniem Stripe Checkout. Nasz serwis nie przechowuje ani nie przetwarza danych kart płatniczych (PCI-DSS compliant).
                 </p>
               </div>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">6. Retencja Danych i Anonimowe Sesje</h2>
+              <h2 className="text-lg font-bold text-slate-900">5. Anulowanie Subskrypcji</h2>
               <p>
-                Zgodnie z naszą polityką retencji:
+                Po pełnym uruchomieniu subskrypcji Pro, użytkownicy będą mogli anulować odnawianie planu w dowolnym momencie w trybie samoobsługowym poprzez przekierowanie do portalu <strong>Stripe Customer Portal</strong> w zakładce ustawień konta.
+              </p>
+              <p>
+                Po anulowaniu, subskrypcja zachowa status aktywny do końca opłaconego okresu rozliczeniowego (<code>cancel_at_period_end = true</code>), po czym konto zostanie automatycznie zdegradowane do planu bezpłatnego.
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-bold text-slate-900">6. Polityka Zwrotów (Refund Policy)</h2>
+              <p>
+                Warunki zwrotu środków oraz odstąpienia od umowy w ramach płatnych subskrypcji są obecnie w trakcie ewaluacji prawnej:
+              </p>
+              <p className="font-semibold text-slate-900">
+                <code>[REFUND POLICY TBD — legal review required]</code>
+              </p>
+              <p className="text-xs">
+                Rozważana polityka zakłada 14-dniowe okno na zgłoszenie zwrotu, pod warunkiem zużycia poniżej 10 analiz promptów w danym okresie rozliczeniowym (w celu pokrycia bezpośrednich kosztów API). Wszelkie zgłoszenia po uruchomieniu płatności będą musiały być kierowane na adres: <code>[SUPPORT EMAIL TBD]</code>.
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-bold text-slate-900">7. Dozwolony Użytek (Acceptable Use)</h2>
+              <p>
+                Użytkownik zobowiązuje się do korzystania z platformy zgodnie z prawem i dobrymi obyczajami. Zabrania się:
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-xs">
-                <li>Raporty i wyniki audytów są przechowywane w bazie danych Supabase przez okres <strong>30 dni</strong> od momentu wygenerowania, po czym ulegają automatycznemu usunięciu.</li>
-                <li>Prywatne powiązanie z raportami opiera się na pliku cookie <code>owner_anonymous_id</code> o żywotności 30 dni.</li>
-                <li><strong>Ostrzeżenie o plikach cookie:</strong> Wyszyszczenie historii przeglądarki, usunięcie plików cookie lub zmiana urządzenia spowoduje permanentne zerwanie powiązania sesji. Oznacza to natychmiastową i nieodwraczną utratę dostępu do Twoich prywatnych stron wyników w formacie `/result/[id]`. Zespół techniczny nie posiada technicznej możliwości przywrócenia dostępu do tych danych.</li>
+                <li>Przesyłania do optymalizacji treści bezprawnych, naruszających dobra osobiste, prawa autorskie lub nawołujących do nienawiści.</li>
+                <li>Prób automatycznego scrapowania danych, omijania limitów zapytań (rate limiting), tudzież wykonywania ataków typu DoS/DDoS.</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">7. Funkcja Udostępniania (Public Share Links)</h2>
-              <p>
-                Wszystkie analizy są domyślnie ściśle prywatne. Udostępnienie wyników osobom trzecim za pomocą publicznego linku `/share/[token]` jest w pełni opcjonalne (**opt-in**). Użytkownik decyduje, kiedy wygenerować link i może go w każdej chwili zdezaktywować w panelu raportu, co wywoła natychmiastowe zablokowanie publicznego dostępu.
-              </p>
+              <h2 className="text-lg font-bold text-slate-900">8. Odpowiedzialność Użytkownika za Dane Wrażliwe</h2>
+              <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-4 text-rose-950 font-medium">
+                <p className="text-xs uppercase font-bold text-rose-800 mb-1">⚠️ Czego kategorycznie nie wolno wklejać:</p>
+                <p className="text-xs leading-relaxed">
+                  Zabrania się wklejania w polach analizy promptów jakichkolwiek haseł, kluczy API, tokenów dostępowych, wrażliwych danych osobowych (PII), danych medycznych, informacji finansowych, bądź poufnych tajemnic handlowych osób trzecich. PromptPolish nie odpowiada za skutki ujawnienia takich danych w zapytaniach. Użytkownik ponosi pełną i wyłączną odpowiedzialność za treść promptów przekazanych do analizy.
+                </p>
+              </div>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">8. Limitowanie Zapytań i Ochrona Serwisu</h2>
+              <h2 className="text-lg font-bold text-slate-900">9. Wyłączenie Odpowiedzialności i Brak Gwarancji AI</h2>
               <p>
-                W celu zapewnienia stabilności infrastruktury i równego dostępu dla wszystkich użytkowników, system nakłada limity częstotliwości zapytań (rate limiting). Wszelkie próby zautomatyzowanego scrapowania, przeciążania infrastruktury (ataków DoS/DDoS) lub omijania limitów za pomocą serwerów proxy będą skutkowały natychmiastowym zablokowaniem dostępu do aplikacji.
+                PromptPolish korzysta z zewnętrznych interfejsów programistycznych sztucznej inteligencji (takich jak OpenRouter / skonfigurowany dostawca modelu AI). Użytkownik przyjmuje do wiadomości, że:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                <li>Wyniki działania sztucznej inteligencji mogą być niepełne, niedokładne lub zawierać tzw. halucynacje.</li>
+                <li>Serwis nie gwarantuje, że ulepszone wersje promptów przyniosą określony rezultat biznesowy, wydajnościowy lub techniczny w docelowych systemach LLM.</li>
+                <li>Użytkownik jest zobowiązany do samodzielnego przetestowania i zatwierdzenia zoptymalizowanego promptu we własnym środowisku przed wdrożeniem produkcyjnym. Usługa jest świadczona w stanie &quot;as-is&quot; (w takim stanie, w jakim się znajduje).</li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-bold text-slate-900">10. Prawo Właściwe</h2>
+              <p>
+                Niniejszy regulamin oraz wszelkie spory z nim związane podlegają prawu: <code>[GOVERNING LAW JURISDICTION TBD — requires legal decision]</code>.
               </p>
             </section>
 
             <section className="space-y-3 border-t border-slate-100 pt-6">
-              <p className="text-xs text-slate-500">
-                Regulamin ten stanowi wersję roboczą (draft) na potrzeby deweloperskich testów platformy PromptPolish. Wszelkie zapytania prawne prosimy kierować na adres support@promptpolish.com.
+              <h2 className="text-base font-bold text-slate-900">11. Kontakt i Zgłoszenia</h2>
+              <p className="text-xs">
+                Wszelkie pytania, zgłoszenia błędów oraz wnioski dotyczące warunków świadczenia usług prosimy kierować na poniższe dane kontaktowe:
               </p>
+              <ul className="list-none space-y-1 text-xs">
+                <li><strong>E-mail wsparcia:</strong> <code>[SUPPORT EMAIL TBD]</code></li>
+                <li><strong>Zapytania prawne:</strong> <code>[SUPPORT EMAIL TBD]</code></li>
+                <li><strong>Nazwa podmiotu:</strong> <code>[LEGAL ENTITY NAME TBD]</code></li>
+                <li><strong>Adres rejestrowy:</strong> <code>[REGISTERED BUSINESS ADDRESS TBD]</code></li>
+              </ul>
             </section>
 
           </div>
