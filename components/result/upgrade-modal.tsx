@@ -47,7 +47,7 @@ export function UpgradeModal({ isOpen, onClose, featureName }: UpgradeModalProps
         <div className="mt-6 rounded-2xl bg-slate-950/40 border border-slate-800/80 p-4 space-y-3.5">
           <div className="flex items-center gap-3 text-xs">
             <span className="text-indigo-400 text-sm font-bold">✓</span>
-            <span className="text-slate-300">Nielimitowany eksport Markdown i PDF</span>
+            <span className="text-slate-300">Eksport PDF w planie Pro</span>
           </div>
           <div className="flex items-center gap-3 text-xs">
             <span className="text-indigo-400 text-sm font-bold">✓</span>

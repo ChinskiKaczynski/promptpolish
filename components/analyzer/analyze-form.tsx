@@ -422,7 +422,7 @@ export function AnalyzeForm() {
               </p>
               <p className="mt-1 text-slate-600 leading-relaxed break-words">
                 {detection.riskLevel === 'high' 
-                  ? (workingLanguage === 'pl' ? 'Nasz skaner preflight zidentyfikował wzorce krytycznych sekretów. Aby odblokować audyt, usuń je ze swojego promptu:' : 'Our safety preflight scan identified high-risk secret patterns. To unlock the audit button, please remove them from your prompt:') :
+                  ? (workingLanguage === 'pl' ? 'Nasz skaner preflight zidentyfikował wzorce krytycznych danych wrażliwych (np. kluczy API lub haseł). Aby odblokować audyt, usuń je ze swojego promptu:' : 'Our safety preflight scan identified high-risk secret patterns. To unlock the audit button, please remove them from your prompt:') :
                  detection.riskLevel === 'medium' 
                   ? (workingLanguage === 'pl' ? 'Wykryliśmy wzorce o średnim poziomie ryzyka (np. hasła). Zalecamy upewnić się, że nie są to dane produkcyjne przed kontynuacją:' : 'We detected medium-risk parameters (e.g. passwords). We highly recommend verifying these are non-production placeholders:') :
                  (workingLanguage === 'pl' ? 'Wykryliśmy podstawowe dane kontaktowe (np. adres e-mail). Narzędzie działa w 100% anonimowo, ale zalecamy ostrożność:' : 'We detected common contact details (e.g. email). Although this tool is 100% anonymous, please stay cautious:')}
@@ -526,7 +526,7 @@ export function AnalyzeForm() {
           </div>
           <div className="relative flex justify-center">
             <span className="bg-white px-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-              {workingLanguage === 'pl' ? 'Ustawienia zaawansowane' : 'Advanced settings'}
+              {workingLanguage === 'pl' ? 'Ustawienia zaawansowane' : 'Advanced Settings'}
             </span>
           </div>
         </div>

@@ -43,7 +43,7 @@ const targetUsers = [
   },
   {
     role: 'Marketerzy i copywriterzy',
-    benefit: 'Optymalizacja promptów generujących teksty sprzedażowe, newslettery i kreacje w celu uzyskania spójnego tonu i uniknięcia halucynacji AI.',
+    benefit: 'Optymalizacja promptów generujących teksty sprzedażowe, newslettery i kreacje w celu uzyskania spójnego tonu i zminimalizowania ryzyka halucynacji AI.',
     bg: 'bg-violet-50/50 hover:bg-violet-50 border-violet-100'
   },
   {

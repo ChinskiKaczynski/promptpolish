@@ -105,9 +105,13 @@ export default async function PricingPage() {
                     <span className="text-emerald-500 text-base">✓</span>
                     <span>Pełna historia analiz (wymaga logowania)</span>
                   </li>
+                  <li className="flex items-center gap-2.5">
+                    <span className="text-emerald-500 text-base">✓</span>
+                    <span>Eksport do Markdown / TXT</span>
+                  </li>
                   <li className="flex items-center gap-2.5 text-slate-600">
                     <span>✗</span>
-                    <span>Eksport raportów do PDF / Markdown</span>
+                    <span>Eksport do PDF (Pro)</span>
                   </li>
                   <li className="flex items-center gap-2.5 text-slate-600">
                     <span>✗</span>
@@ -162,10 +166,6 @@ export default async function PricingPage() {
                   <li className="flex items-center gap-2.5">
                     <span className="text-indigo-400 text-base">✓</span>
                     <span>Maksymalnie <strong>24,000</strong> znaków na prompt</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <span className="text-indigo-400 text-base">✓</span>
-                    <span><strong>Eksport Markdown (Pro)</strong> – pobierz natychmiast</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <span className="text-indigo-400 text-base">✓</span>
