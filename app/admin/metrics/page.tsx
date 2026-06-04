@@ -61,7 +61,7 @@ export default async function AdminMetricsPage() {
         <MetricsDashboard />
       </main>
 
-      <AppFooter />
+      <AppFooter theme="dark" />
     </div>
   )
 }

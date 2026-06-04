@@ -212,11 +212,8 @@ export function AnalyzeForm() {
       />
 
       {/* Main Analyzer Form */}
-      <form onSubmit={handleSubmit} className="pp-panel p-6 sm:p-8 space-y-6 border-2 border-pp-border relative">
-        <div className="absolute top-0 right-4 -translate-y-1/2 bg-pp-bg px-2 text-[10px] font-bold text-pp-cyan tracking-widest font-mono uppercase">
-          {"// PANEL_STEROWANIA"}
-        </div>
-
+      <form onSubmit={handleSubmit} className="space-y-8 rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-10 shadow-xl shadow-slate-100/40 glow-purple">
+        
         <MonthlyLimitBanner
           isMonthlyLimitReached={isMonthlyLimitReached}
           setIsMonthlyLimitReached={setIsMonthlyLimitReached}
@@ -225,12 +222,16 @@ export function AnalyzeForm() {
         />
 
         {/* Upper Dashboard: Safety Warnings & Daily Quotas */}
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           {/* Privacy Disclaimer Card */}
-          <div className="border border-pp-border bg-pp-panel-2 p-4 text-[11px] leading-relaxed text-pp-muted flex gap-3">
-            <span className="text-pp-warning text-sm font-bold shrink-0">[i]</span>
+          <div className="rounded-2xl border border-amber-200/70 bg-amber-50/20 p-4.5 text-xs leading-relaxed text-amber-900 flex gap-3.5 shadow-sm">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m0-6h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
+              </svg>
+            </div>
             <div>
-              <span className="font-bold text-pp-text block mb-0.5">
+              <span className="font-bold block mb-0.5 text-amber-950">
                 {workingLanguage === 'pl' ? 'Ochrona Prywatności' : 'Privacy Protection'}
               </span>
               {workingLanguage === 'pl' 
@@ -240,10 +241,14 @@ export function AnalyzeForm() {
           </div>
 
           {/* Daily Limit Badge */}
-          <div className="border border-pp-border bg-pp-panel-2 p-4 text-[11px] leading-relaxed text-pp-muted flex gap-3">
-            <span className="text-pp-cyan text-sm font-bold shrink-0">[#]</span>
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-4.5 text-xs leading-relaxed text-indigo-900 flex gap-3.5 shadow-sm">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
             <div>
-              <span className="font-bold text-pp-text block mb-0.5">
+              <span className="font-bold block mb-0.5 text-indigo-950">
                 {workingLanguage === 'pl' ? 'Dzienny Limit Analiz' : 'Daily Analysis Limit'}
               </span>
               {workingLanguage === 'pl' 
@@ -254,11 +259,11 @@ export function AnalyzeForm() {
         </div>
 
         {/* Mandatory Selections */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-2 text-xs font-bold uppercase tracking-wider text-pp-text block">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <label className="space-y-2 text-sm font-semibold text-slate-800">
             {workingLanguage === 'pl' ? 'Język roboczy' : 'Working language'}
             <select 
-              className="pp-select block mt-1.5" 
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-150 focus:bg-white shadow-sm" 
               value={workingLanguage} 
               onChange={(e) => setWorkingLanguage(e.target.value as 'pl' | 'en')}
             >
@@ -267,12 +272,12 @@ export function AnalyzeForm() {
             </select>
           </label>
 
-          <label className="space-y-2 text-xs font-bold uppercase tracking-wider text-pp-text block">
+          <label className="space-y-2 text-sm font-semibold text-slate-800">
             <span className="block">
               {workingLanguage === 'pl' ? 'Tryb audytu' : 'Audit mode'}
             </span>
             <select 
-              className="pp-select block mt-1.5" 
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-150 focus:bg-white shadow-sm" 
               value={auditMode} 
               onChange={(e) => setAuditMode(e.target.value)}
             >
@@ -288,20 +293,20 @@ export function AnalyzeForm() {
         </div>
 
         {/* Primary Prompt Input Textarea */}
-        <div className="space-y-2">
+        <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold uppercase tracking-wider text-pp-text">
+            <label className="text-sm font-semibold text-slate-850">
               {workingLanguage === 'pl' ? 'Prompt do audytu (Wymagany)' : 'Prompt to audit (Required)'}
             </label>
-            <span className={`text-[10px] font-bold ${isTooLong ? 'text-pp-danger' : isApproachingLimit ? 'text-pp-warning' : 'text-pp-muted'}`}>
+            <span className={`text-xs font-semibold ${isTooLong ? 'text-red-650' : isApproachingLimit ? 'text-amber-650' : 'text-slate-400'}`}>
               {inputPrompt.length.toLocaleString()} / {MAX_PROMPT_CHARS.toLocaleString()} {workingLanguage === 'pl' ? 'znaków' : 'characters'}
             </span>
           </div>
           <textarea
-            className={`pp-textarea min-h-[220px] ${
-              isTooLong ? 'border-pp-danger bg-red-950/5' : 
-              isApproachingLimit ? 'border-pp-warning bg-amber-950/5' : 
-              ''
+            className={`min-h-[240px] w-full rounded-2xl border px-4 py-4 text-sm leading-relaxed transition-all focus:outline-none focus:ring-2 shadow-sm ${
+              isTooLong ? 'border-red-300 focus:ring-red-100 bg-red-50/10' : 
+              isApproachingLimit ? 'border-amber-300 focus:ring-amber-100 bg-amber-50/10' : 
+              'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100 bg-slate-50/20 focus:bg-white'
             }`}
             placeholder={workingLanguage === 'pl' 
               ? 'Wklej tutaj treść promptu, który chcesz przetestować i ulepszyć (minimum 20 znaków)...' 
@@ -318,14 +323,14 @@ export function AnalyzeForm() {
 
         {/* Warning messages */}
         {isApproachingLimit && (
-          <p className="text-[10px] font-bold text-pp-warning flex items-center gap-1.5 animate-pulse">
+          <p className="text-xs font-semibold text-amber-700 flex items-center gap-1.5 animate-pulse">
             ⚠️ {workingLanguage === 'pl' 
               ? `Zbliżasz się do maksymalnego limitu ${MAX_PROMPT_CHARS.toLocaleString()} znaków. Ogranicz tekst.`
               : `You are approaching the limit of ${MAX_PROMPT_CHARS.toLocaleString()} characters. Please trim the text.`}
           </p>
         )}
         {isTooLong && (
-          <p className="text-[10px] font-bold text-pp-danger flex items-center gap-1.5">
+          <p className="text-xs font-semibold text-red-750 flex items-center gap-1.5">
             ❌ {workingLanguage === 'pl'
               ? `Błąd: Twój prompt przekracza maksymalny dopuszczalny limit ${MAX_PROMPT_CHARS.toLocaleString()} znaków (obecnie ${inputPrompt.length.toLocaleString()}).`
               : `Error: Your prompt exceeds the maximum allowed limit of ${MAX_PROMPT_CHARS.toLocaleString()} characters (currently ${inputPrompt.length.toLocaleString()}).`}
@@ -335,11 +340,11 @@ export function AnalyzeForm() {
         {/* Divider for optional parameters */}
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-pp-border" />
+            <div className="w-full border-t border-slate-200/70" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-pp-panel px-4 text-[10px] font-bold uppercase tracking-widest text-pp-muted">
-              {workingLanguage === 'pl' ? 'Opcjonalne Uściślenia Celu' : 'Optional Task Calibration'}
+            <span className="bg-white px-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+              {workingLanguage === 'pl' ? 'Opcjonalne Uściślenia Celu (Rekomendowane)' : 'Optional Task Calibration (Recommended)'}
             </span>
           </div>
         </div>
@@ -359,27 +364,22 @@ export function AnalyzeForm() {
         {/* Advanced Settings */}
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-pp-border" />
+            <div className="w-full border-t border-slate-200/70" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-pp-panel px-4 text-[10px] font-bold uppercase tracking-widest text-pp-muted">
+            <span className="bg-white px-4 text-xs font-bold uppercase tracking-widest text-slate-400">
               {workingLanguage === 'pl' ? 'Ustawienia zaawansowane' : 'Advanced Settings'}
             </span>
           </div>
         </div>
 
         <div className="space-y-4">
-          <label className="space-y-2 text-xs font-bold uppercase tracking-wider text-pp-text block">
+          <label className="space-y-2 text-sm font-semibold text-slate-800 block">
             <span className="block">
               {workingLanguage === 'pl' ? 'Docelowy model AI' : 'Target AI model'}
             </span>
-            <span className="block text-[11px] font-normal text-pp-muted leading-relaxed uppercase mt-1">
-              {workingLanguage === 'pl'
-                ? 'Opcjonalnie wybierz typ modelu. Ustawienie wpływa na rekomendacje.'
-                : 'Optionally select target model type. Affects recommendation advice.'}
-            </span>
             <select
-              className="pp-select mt-1.5"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-150 focus:bg-white shadow-sm block"
               value={profileSlug}
               onChange={(e) => setProfileSlug(e.target.value)}
             >
@@ -395,8 +395,10 @@ export function AnalyzeForm() {
 
         {/* Mapped Localized Error Banners */}
         {errorMessage && (
-          <div className="border-2 border-pp-danger bg-pp-danger/10 p-4 text-[11px] font-bold text-pp-danger flex gap-3 shadow-sm items-center animate-pulse">
-            <span className="text-lg">!</span>
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-800 flex gap-3 shadow-sm items-center animate-pulse">
+            <svg className="h-5 w-5 shrink-0 text-red-655" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
             <div>
               <span className="font-bold block mb-0.5">{workingLanguage === 'pl' ? 'Wystąpił Błąd' : 'An Error Occurred'}</span>
               {errorMessage}
@@ -407,30 +409,32 @@ export function AnalyzeForm() {
         {/* Submission Button */}
         <div className="pt-4">
           <button
-            className="pp-button pp-button-primary w-full text-xs py-4 flex items-center justify-center gap-2"
+            className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4.5 text-sm active:scale-[0.99] disabled:scale-100 disabled:cursor-not-allowed disabled:bg-slate-205 disabled:text-slate-400 shadow-md shadow-indigo-100 hover:shadow-indigo-200 active:shadow-sm transition-all flex items-center justify-center gap-2"
             disabled={isTooShort || isTooLong || isBlocked}
             type="submit"
           >
-            <span>&gt;&gt;</span>
-            {workingLanguage === 'pl' ? 'PRZEPROWADŹ AUDYT PROMPTU' : 'CONDUCT PROMPT AUDIT'}
+            <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 00-2-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            {workingLanguage === 'pl' ? 'Przeprowadź audyt promptu' : 'Conduct prompt audit'}
           </button>
         </div>
 
         {/* Validation Warnings Labels at Footer */}
         {isTooShort && (
-          <p className="text-center text-[10px] font-bold text-pp-muted">
+          <p className="text-center text-xs font-medium text-slate-500">
             💡 {workingLanguage === 'pl' 
               ? `Aby rozpocząć analizę, wpisz prompt o długości przynajmniej ` 
               : `To start the analysis, enter a prompt of at least `}
-            <strong className="text-pp-text">{MIN_PROMPT_CHARS} {workingLanguage === 'pl' ? 'znaków' : 'characters'}</strong> 
+            <strong className="text-slate-700">{MIN_PROMPT_CHARS} {workingLanguage === 'pl' ? 'znaków' : 'characters'}</strong> 
             {workingLanguage === 'pl' ? ` (obecnie: ${inputPrompt.length}).` : ` (currently: ${inputPrompt.length}).`}
           </p>
         )}
         {isBlocked && (
-          <p className="text-center text-[10px] font-bold text-pp-danger">
+          <p className="text-center text-xs font-semibold text-red-650 animate-pulse">
             ⚠️ {workingLanguage === 'pl' 
-              ? 'Ostrzeżenie: Wykryto wrażliwe dane. Usuń klucze API lub poufne teksty, aby odblokować przycisk.'
-              : 'Warning: Sensitive data detected. Remove API keys or credentials to unlock button.'}
+              ? 'Ostrzeżenie: Wykryto wrażliwe dane. Usuń klucze API lub poufne teksty, aby odblokować przycisk audytu.'
+              : 'Warning: Sensitive data detected. Remove API keys or credentials to unlock the audit button.'}
           </p>
         )}
       </form>

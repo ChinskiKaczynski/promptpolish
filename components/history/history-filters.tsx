@@ -68,38 +68,34 @@ export function HistoryFilters({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="pp-panel p-6 border-2 border-pp-border space-y-4 font-mono relative">
-      <div className="absolute top-0 right-4 -translate-y-1/2 bg-pp-bg px-2 text-[9px] font-bold text-pp-cyan tracking-widest uppercase">
-        {"// FILTRY_ARCHIWUM"}
-      </div>
-
+    <form onSubmit={handleSubmit} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-[1.5fr_1fr_1fr_1fr] items-end">
         {/* Search Input */}
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-pp-muted" htmlFor="search-input">
-            Wyszukaj słowo kluczowe
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="search-input">
+            Wyszukaj prompt lub tytuł
           </label>
           <div className="mt-1.5 flex gap-2">
             <input
               id="search-input"
               type="text"
-              placeholder="Wpisz frazę..."
+              placeholder="Wpisz słowo kluczowe..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pp-input text-xs"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
             />
             <button
               type="submit"
-              className="pp-button text-xs py-2 px-3 border-pp-border"
+              className="inline-flex h-10 items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-4 text-sm font-semibold text-white shadow-sm transition active:scale-95 cursor-pointer"
             >
-              SZUKAJ
+              Szukaj
             </button>
           </div>
         </div>
 
         {/* Language Select */}
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-pp-muted" htmlFor="lang-select">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="lang-select">
             Język roboczy
           </label>
           <select
@@ -109,7 +105,7 @@ export function HistoryFilters({
               setLang(e.target.value)
               applyFilters({ lang: e.target.value })
             }}
-            className="mt-1.5 pp-select text-xs"
+            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
           >
             <option value="all">Wszystkie języki</option>
             <option value="pl">Polski (PL)</option>
@@ -119,7 +115,7 @@ export function HistoryFilters({
 
         {/* Profile Select */}
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-pp-muted" htmlFor="profile-select">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="profile-select">
             Profil modelu
           </label>
           <select
@@ -129,7 +125,7 @@ export function HistoryFilters({
               setProfile(e.target.value)
               applyFilters({ profile: e.target.value })
             }}
-            className="mt-1.5 pp-select text-xs"
+            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
           >
             <option value="all">Wszystkie profile</option>
             <option value="general-llm">Uniwersalny model AI</option>
@@ -139,7 +135,7 @@ export function HistoryFilters({
 
         {/* Sort Select */}
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-wider text-pp-muted" htmlFor="sort-select">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="sort-select">
             Sortowanie
           </label>
           <select
@@ -149,7 +145,7 @@ export function HistoryFilters({
               setSort(e.target.value)
               applyFilters({ sort: e.target.value })
             }}
-            className="mt-1.5 pp-select text-xs"
+            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
           >
             <option value="newest">Najnowsze</option>
             <option value="oldest">Najstarsze</option>
@@ -159,7 +155,7 @@ export function HistoryFilters({
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-pp-border/30 pt-4 flex-wrap gap-4">
+      <div className="flex items-center justify-between border-t border-slate-100 pt-4">
         {/* Favorites Filter */}
         <label className="inline-flex items-center gap-3 cursor-pointer">
           <input
@@ -169,9 +165,9 @@ export function HistoryFilters({
               setFavorite(e.target.checked)
               applyFilters({ favorite: e.target.checked })
             }}
-            className="h-4 w-4 border-pp-border bg-pp-panel text-pp-primary-bright focus:ring-0 focus:ring-offset-0 cursor-pointer"
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
           />
-          <span className="text-xs font-semibold text-pp-text uppercase">Pokaż tylko ulubione (★)</span>
+          <span className="text-sm font-semibold text-slate-700">Pokaż tylko ulubione (★)</span>
         </label>
 
         {/* Reset Button */}
@@ -186,9 +182,9 @@ export function HistoryFilters({
               setSort('newest')
               router.push('/history', { scroll: false })
             }}
-            className="text-[10px] font-bold text-pp-muted hover:text-pp-cyan uppercase"
+            className="text-xs font-bold text-slate-400 hover:text-indigo-600 transition"
           >
-            [ Wyczyść filtry ]
+            Wyczyść wszystkie filtry
           </button>
         )}
       </div>

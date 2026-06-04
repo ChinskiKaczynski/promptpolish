@@ -66,8 +66,8 @@ describe('HistoryPage Routing and Access Control', () => {
     expect(jsx.type).toBe('div')
     const mainElement = jsx.props.children[1]
     expect(mainElement.type).toBe('main')
-    const ctaTitle = mainElement.props.children.props.children[2].props.children[0]
-    expect(ctaTitle.props.children).toBe('Zapisuj i śledź historię swoich promptów')
+    const ctaTitle = mainElement.props.children.props.children[1].props.children[0]
+    expect(ctaTitle.props.children).toBe('Zapisuj i śledź historię swoich audytów!')
   })
 
   it('renders History List for anonymous guest if they have at least 1 analysis', async () => {

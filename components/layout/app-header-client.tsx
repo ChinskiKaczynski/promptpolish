@@ -11,8 +11,9 @@ interface AppHeaderClientProps {
   publicShare: boolean
 }
 
-export function AppHeaderClient(props: AppHeaderClientProps) {
-  const { isLoggedIn, isAdmin, publicShare } = props
+export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: AppHeaderClientProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _ = theme
   const pathname = usePathname()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -36,40 +37,44 @@ export function AppHeaderClient(props: AppHeaderClientProps) {
     }
   }
 
+  // Theme style mappings - standard modern white-lavender
+  const bgStyle = 'bg-white/80 border-slate-200/60 text-slate-900'
+  const textStyle = 'text-slate-600 hover:text-indigo-600 transition-colors duration-200 font-medium'
+  const activeTextStyle = 'text-indigo-600 font-bold'
+  const buttonBorderClass = 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:border-slate-300 shadow-sm'
+
   const isLinkActive = (path: string) => pathname === path
 
   return (
-    <header className="border-b-2 border-pp-border bg-pp-panel sticky top-0 z-50 transition-all duration-200">
+    <header className={`border-b sticky top-0 z-50 backdrop-blur-md transition-all duration-200 ${bgStyle}`}>
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        {/* Logo / Console ID */}
-        <Link href="/" className="flex items-center gap-3 hover:opacity-90 active:translate-y-0.5 transition-all">
-          <div className="flex h-9 w-9 items-center justify-center border-2 border-pp-border-bright bg-pp-primary shadow-[2px_2px_0px_rgba(0,0,0,0.5)]">
-            <span className="font-mono font-bold text-white text-base">P</span>
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 active:scale-[0.98] transition-all">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100/80 shadow-sm">
+            {/* Elegant 4-pointed star logo matching the screenshot */}
+            <svg className="h-5 w-5 fill-indigo-600" viewBox="0 0 24 24">
+              <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z" />
+            </svg>
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-black tracking-widest text-pp-text uppercase">
-              PROMPT_POLISH
-            </span>
-            <span className="text-[9px] font-mono text-pp-cyan font-bold tracking-wider">
-              SYS.V1.0.0 // CONSOLE
-            </span>
-          </div>
+          <span className="text-lg font-bold tracking-tight text-slate-900 font-sans">
+            PromptPolish
+          </span>
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider font-mono">
+        <nav className="hidden md:flex items-center gap-8 text-sm">
           {/* Public Share page shows only home and analyze */}
           {publicShare ? (
             <>
               <Link
                 href="/"
-                className={isLinkActive('/') ? 'text-pp-cyan drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]' : 'text-pp-muted hover:text-pp-text'}
+                className={isLinkActive('/') ? activeTextStyle : textStyle}
               >
-                [ Strona główna ]
+                Strona główna
               </Link>
               <Link
                 href="/analyze"
-                className="pp-button pp-button-primary text-xs py-1.5 px-3"
+                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-100 hover:shadow-indigo-200 transition active:scale-95 cursor-pointer"
               >
                 Przeanalizuj prompt
               </Link>
@@ -78,29 +83,29 @@ export function AppHeaderClient(props: AppHeaderClientProps) {
             <>
               <Link
                 href="/"
-                className={isLinkActive('/') ? 'text-pp-cyan drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]' : 'text-pp-muted hover:text-pp-text'}
+                className={isLinkActive('/') ? activeTextStyle : textStyle}
               >
-                [ Start ]
+                Strona główna
               </Link>
               <Link
                 href="/analyze"
-                className={isLinkActive('/analyze') ? 'text-pp-cyan drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]' : 'text-pp-muted hover:text-pp-text'}
+                className={isLinkActive('/analyze') ? activeTextStyle : textStyle}
               >
-                [ Analizator ]
+                Nowy audyt
               </Link>
               <Link
                 href="/pricing"
-                className={isLinkActive('/pricing') ? 'text-pp-cyan drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]' : 'text-pp-muted hover:text-pp-text'}
+                className={isLinkActive('/pricing') ? activeTextStyle : textStyle}
               >
-                [ Cennik ]
+                Cennik
               </Link>
 
               {isAdmin && (
                 <Link
                   href="/admin/metrics"
-                  className={isLinkActive('/admin/metrics') ? 'text-pp-cyan drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]' : 'text-pp-muted hover:text-pp-text'}
+                  className={isLinkActive('/admin/metrics') ? activeTextStyle : textStyle}
                 >
-                  [ Admin Metrics ]
+                  Admin
                 </Link>
               )}
 
@@ -108,31 +113,39 @@ export function AppHeaderClient(props: AppHeaderClientProps) {
                 <>
                   <Link
                     href="/account"
-                    className={isLinkActive('/account') ? 'text-pp-cyan drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]' : 'text-pp-muted hover:text-pp-text'}
+                    className={isLinkActive('/account') ? activeTextStyle : textStyle}
                   >
-                    [ Konto ]
+                    Konto
                   </Link>
                   <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}
-                    className="pp-button text-[10px] py-1 px-2.5 bg-red-950 border-red-800 hover:border-red-500 text-red-200"
+                    className={`rounded-xl border px-4 py-2 text-xs font-bold transition active:scale-95 disabled:opacity-50 cursor-pointer ${buttonBorderClass}`}
                   >
-                    {isLoggingOut ? 'LOGOUT...' : 'Wyloguj'}
+                    {isLoggingOut ? 'Wylogowywanie...' : 'Wyloguj'}
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/login"
-                  className="pp-button text-[10px] py-1 px-3 border-pp-border hover:border-pp-border-bright"
-                >
-                  Zaloguj
-                </Link>
+                <>
+                  <Link
+                    href="/login"
+                    className={`rounded-xl border px-4 py-2 text-xs font-bold transition active:scale-95 cursor-pointer ${buttonBorderClass}`}
+                  >
+                    Zaloguj
+                  </Link>
+                  <Link
+                    href="/analyze"
+                    className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-100 hover:shadow-indigo-200 transition active:scale-95 cursor-pointer"
+                  >
+                    Zacznij za darmo
+                  </Link>
+                </>
               )}
 
               {/* Polish active indicator status badge for MVP */}
               {!isLoggedIn && (
-                <span className="border border-dashed border-pp-border bg-pp-panel px-2 py-0.5 text-[9px] font-bold text-pp-muted">
-                  TRYB_ANONIM
+                <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100/50">
+                  Działa bez konta
                 </span>
               )}
             </>
@@ -142,13 +155,13 @@ export function AppHeaderClient(props: AppHeaderClientProps) {
         {/* Mobile Navigation Toggle (Hamburger) */}
         <div className="flex md:hidden items-center gap-3">
           {!isLoggedIn && !publicShare && (
-            <span className="border border-pp-border bg-pp-panel px-2 py-0.5 text-[9px] font-bold text-pp-muted">
+            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100/50">
               MVP
             </span>
           )}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 border-2 border-pp-border text-pp-text bg-pp-panel-2 hover:border-pp-border-bright"
+            className="p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
             aria-label="Toggle navigation menu"
           >
             {isMobileMenuOpen ? (
@@ -166,55 +179,55 @@ export function AppHeaderClient(props: AppHeaderClientProps) {
 
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t-2 border-pp-border px-6 py-4 space-y-4 bg-pp-panel animate-in slide-in-from-top duration-200">
+        <div className="md:hidden border-t px-6 py-4 space-y-4 animate-in slide-in-from-top duration-200 bg-white border-slate-200/60">
           {publicShare ? (
-            <div className="flex flex-col gap-3 font-mono text-xs uppercase font-bold tracking-wider">
+            <div className="flex flex-col gap-3">
               <Link
                 href="/"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`py-2 ${isLinkActive('/') ? 'text-pp-cyan' : 'text-pp-muted'}`}
+                className={`text-sm py-2 font-medium ${isLinkActive('/') ? activeTextStyle : textStyle}`}
               >
-                [ Strona główna ]
+                Strona główna
               </Link>
               <Link
                 href="/analyze"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="pp-button pp-button-primary w-full text-center py-2 text-xs"
+                className="w-full text-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95"
               >
                 Przeanalizuj prompt
               </Link>
             </div>
           ) : (
-            <nav className="flex flex-col gap-2 font-mono text-xs uppercase font-bold tracking-wider">
+            <nav className="flex flex-col gap-2">
               <Link
                 href="/"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`py-2 border-b border-pp-border/30 ${isLinkActive('/') ? 'text-pp-cyan' : 'text-pp-muted'}`}
+                className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/') ? activeTextStyle : textStyle}`}
               >
-                [ START ]
+                Strona główna
               </Link>
               <Link
                 href="/analyze"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`py-2 border-b border-pp-border/30 ${isLinkActive('/analyze') ? 'text-pp-cyan' : 'text-pp-muted'}`}
+                className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/analyze') ? activeTextStyle : textStyle}`}
               >
-                [ ANALIZATOR ]
+                Nowy audyt
               </Link>
               <Link
                 href="/pricing"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`py-2 border-b border-pp-border/30 ${isLinkActive('/pricing') ? 'text-pp-cyan' : 'text-pp-muted'}`}
+                className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/pricing') ? activeTextStyle : textStyle}`}
               >
-                [ CENNIK ]
+                Cennik
               </Link>
 
               {isAdmin && (
                 <Link
                   href="/admin/metrics"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`py-2 border-b border-pp-border/30 ${isLinkActive('/admin/metrics') ? 'text-pp-cyan' : 'text-pp-muted'}`}
+                  className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/admin/metrics') ? activeTextStyle : textStyle}`}
                 >
-                  [ METRYKI ]
+                  Admin
                 </Link>
               )}
 
@@ -223,26 +236,35 @@ export function AppHeaderClient(props: AppHeaderClientProps) {
                   <Link
                     href="/account"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`py-2 border-b border-pp-border/30 ${isLinkActive('/account') ? 'text-pp-cyan' : 'text-pp-muted'}`}
+                    className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/account') ? activeTextStyle : textStyle}`}
                   >
-                    [ KONTO ]
+                    Konto
                   </Link>
                   <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}
-                    className="w-full text-left py-2 font-bold text-red-400 hover:text-red-300 disabled:opacity-50"
+                    className="w-full text-left text-sm py-2 font-bold text-rose-500 hover:text-rose-600 disabled:opacity-50"
                   >
-                    {isLoggingOut ? '[ LOGOUT IN PROGRESS... ]' : '[ WYLOGUJ ]'}
+                    {isLoggingOut ? 'Wylogowywanie...' : 'Wyloguj'}
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="pp-button w-full text-center py-2.5 mt-2"
-                >
-                  Zaloguj
-                </Link>
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full text-center block rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-750 active:scale-95"
+                  >
+                    Zaloguj
+                  </Link>
+                  <Link
+                    href="/analyze"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full text-center block rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 mt-2"
+                  >
+                    Zacznij za darmo
+                  </Link>
+                </>
               )}
             </nav>
           )}
