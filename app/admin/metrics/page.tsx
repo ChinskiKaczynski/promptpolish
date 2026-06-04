@@ -2,9 +2,20 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { verifyAdminAccess } from '@/lib/admin/auth'
-import { MetricsDashboard } from '@/components/admin/metrics-dashboard'
+import nextDynamic from 'next/dynamic'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
+
+const MetricsDashboard = nextDynamic(() => import('@/components/admin/metrics-dashboard').then((mod) => mod.MetricsDashboard), {
+  loading: () => (
+    <div className="flex items-center justify-center py-20 bg-slate-950 text-slate-100 min-h-[50vh]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-slate-400">Ładowanie panelu metryk...</p>
+      </div>
+    </div>
+  )
+})
 
 export const dynamic = 'force-dynamic'
 

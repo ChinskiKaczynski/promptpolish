@@ -16,7 +16,8 @@ const criteria_scores: AnalysisResult['criteria_scores'] = [
 
 const score = calculateScore(criteria_scores)
 
-export const mockAnalysisResult: AnalysisResult & { overallScore: number; scoreLevel: string } = {
+export const mockAnalysisResult: AnalysisResult & { overallScore: number; scoreLevel: string; id?: string } = {
+  id: 'mock',
   analysis_schema_version: analysisSchemaVersion,
   overall_summary: 'Prompt ma dobry kierunek, ale wymaga jaśniejszego celu, formatu odpowiedzi i kryteriów jakości.',
   detected_task_type: 'general_prompt_improvement',

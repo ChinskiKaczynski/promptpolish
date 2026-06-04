@@ -1,4 +1,3 @@
-'use client'
 
 interface MetricCardProps {
   label: string

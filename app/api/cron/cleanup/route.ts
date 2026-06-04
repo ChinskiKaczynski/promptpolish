@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { runRetentionCleanup } from '@/lib/privacy/retention'
 import { serverEnv } from '@/lib/env/server'
 
+export const dynamic = 'force-dynamic'
+
 async function handleCleanup(request: Request) {
   try {
     // 1. Verify cron authorization bearer token if configured
@@ -42,7 +44,9 @@ async function handleCleanup(request: Request) {
     })
   } catch (error: unknown) {
     console.error('[Retention Cron Error]: Cleanup execution failed:', error)
-    const message = error instanceof Error ? error.message : 'An unexpected error occurred during database cleanup.'
+    const message = process.env.NODE_ENV === 'production'
+      ? 'An unexpected error occurred during database cleanup.'
+      : (error instanceof Error ? error.message : 'An unexpected error occurred during database cleanup.')
     return NextResponse.json(
       {
         success: false,

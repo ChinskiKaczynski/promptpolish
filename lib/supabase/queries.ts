@@ -3,31 +3,7 @@ import { getSupabaseServerClient } from './server'
 import { getSupabaseAdminClient } from './admin'
 import { createShareToken } from '../result-access/share-token'
 import type { Database, ModelProfileRow, PromptAnalysisRow, UsageEventRow, FeedbackEventRow, UserProfileRow } from './types'
-
-function serializeDbError(error: unknown) {
-  if (!error) return null
-
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      cause: error.cause,
-    }
-  }
-
-  if (typeof error === 'object') {
-    return {
-      ...error,
-      ownProperties: Object.getOwnPropertyNames(error),
-      json: JSON.stringify(error),
-    }
-  }
-
-  return {
-    value: String(error),
-  }
-}
+import { serializeDbError } from './error-serializer'
 
 export type SharedPromptAnalysis = Pick<
   PromptAnalysisRow,
@@ -53,7 +29,7 @@ export async function getModelProfileBySlug(slug: string): Promise<ModelProfileR
     .maybeSingle()
 
   if (error) {
-    console.error('Error fetching model profile by slug:', error)
+    console.error('Error fetching model profile by slug:', serializeDbError(error))
     return null
   }
   return data ? (data as unknown as ModelProfileRow) : null
@@ -73,7 +49,7 @@ export async function createPromptAnalysis(
     .single()
 
   if (error) {
-    console.error('Error creating prompt analysis:', error)
+    console.error('Error creating prompt analysis:', serializeDbError(error))
     return null
   }
   return data ? (data as unknown as PromptAnalysisRow) : null
@@ -98,7 +74,7 @@ export async function getPromptAnalysisForOwner(
 
   if (error || !data) {
     if (error) {
-      console.error('Error fetching prompt analysis for owner:', error)
+      console.error('Error fetching prompt analysis for owner:', serializeDbError(error))
     }
     return null
   }
@@ -135,7 +111,7 @@ export async function linkAnonymousAnalyses(
     .is('user_id', null)
 
   if (error) {
-    console.error('Error linking anonymous analyses:', error)
+    console.error('Error linking anonymous analyses:', serializeDbError(error))
     return false
   }
   return true
@@ -197,7 +173,7 @@ export async function getPromptAnalysesForUser(
   const { data, error } = await query.order(orderField, { ascending })
 
   if (error) {
-    console.error('Error fetching prompt analyses for user:', error)
+    console.error('Error fetching prompt analyses for user:', serializeDbError(error))
     return []
   }
 
@@ -224,7 +200,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileRow | n
     .maybeSingle()
 
   if (error) {
-    console.error('Error fetching user profile:', error)
+    console.error('Error fetching user profile:', serializeDbError(error))
     return null
   }
   return data ? (data as unknown as UserProfileRow) : null
@@ -250,7 +226,7 @@ export async function createUserProfile(
     .single()
 
   if (error) {
-    console.error('Error creating user profile:', error)
+    console.error('Error creating user profile:', serializeDbError(error))
     return null
   }
   return data ? (data as unknown as UserProfileRow) : null
@@ -294,7 +270,7 @@ export async function ensureUserProfile(profile: {
       .single()
 
     if (error) {
-      console.error('Error ensuring existing user profile:', error)
+      console.error('Error ensuring existing user profile:', serializeDbError(error))
       return null
     }
 
@@ -314,7 +290,7 @@ export async function ensureUserProfile(profile: {
     .single()
 
   if (error) {
-    console.error('Error creating initial user profile:', error)
+    console.error('Error creating initial user profile:', serializeDbError(error))
     return null
   }
 
@@ -363,7 +339,7 @@ export async function setUserPlanSlug(profile: {
     .single()
 
   if (error) {
-    console.error('Error setting user plan slug:', error)
+    console.error('Error setting user plan slug:', serializeDbError(error))
     return null
   }
 
@@ -395,7 +371,7 @@ export async function getSharedPromptAnalysis(
     .maybeSingle()
 
   if (error) {
-    console.error('Error fetching shared prompt analysis:', error)
+    console.error('Error fetching shared prompt analysis:', serializeDbError(error))
     return null
   }
 
@@ -449,7 +425,7 @@ export async function createFeedbackEvent(
     .single()
 
   if (error) {
-    console.error('Error creating feedback event:', error)
+    console.error('Error creating feedback event:', serializeDbError(error))
     return null
   }
   return data ? (data as unknown as FeedbackEventRow) : null
@@ -497,7 +473,7 @@ export async function createShareLink(
     .maybeSingle()
 
   if (error) {
-    console.error('Error creating share link:', error)
+    console.error('Error creating share link:', serializeDbError(error))
     return null
   }
 
@@ -536,7 +512,7 @@ export async function disableShareLink(
     .maybeSingle()
 
   if (error) {
-    console.error('Error disabling share link:', error)
+    console.error('Error disabling share link:', serializeDbError(error))
     return false
   }
 
@@ -563,7 +539,7 @@ export async function getUsageCountToday(ownerAnonymousId: string): Promise<numb
     .gte('created_at', startOfDay.toISOString())
 
   if (error) {
-    console.error('Error counting usage events:', error)
+    console.error('Error counting usage events:', serializeDbError(error))
     return 0
   }
   return count ?? 0
@@ -659,7 +635,7 @@ export async function softDeleteAnalysis(
   const typedData = data as unknown as { id: string } | null
 
   if (error || !typedData) {
-    console.error('Error soft deleting analysis:', error)
+    console.error('Error soft deleting analysis:', serializeDbError(error))
     return false
   }
   return true
@@ -689,7 +665,7 @@ export async function toggleFavoriteAnalysis(
   const typedData = data as unknown as { id: string } | null
 
   if (error || !typedData) {
-    console.error('Error toggling favorite analysis:', error)
+    console.error('Error toggling favorite analysis:', serializeDbError(error))
     return false
   }
   return true

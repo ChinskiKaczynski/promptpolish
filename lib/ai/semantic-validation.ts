@@ -151,10 +151,5 @@ export function validateAnalysisResult(data: unknown): AnalysisResult {
     throw new SemanticValidationError(errors)
   }
 
-  if (!result.success) {
-    throw new SemanticValidationError(errors)
-  }
-
-  return result.data
+  return result.data as AnalysisResult
 }
-

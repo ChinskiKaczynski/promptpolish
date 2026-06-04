@@ -307,6 +307,20 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
       expect(mockEq).toHaveBeenCalledWith('id', 'analysis-uuid')
     })
   })
+
+  describe('deleted_at blocking checks', () => {
+    it('ensures getPromptAnalysisForOwner queries with is("deleted_at", null)', async () => {
+      mockMaybeSingle.mockResolvedValue({ data: null, error: null })
+      await getPromptAnalysisForOwner('analysis-uuid', 'owner-123')
+      expect(mockIs).toHaveBeenCalledWith('deleted_at', null)
+    })
+
+    it('ensures getSharedPromptAnalysis queries with is("deleted_at", null)', async () => {
+      mockMaybeSingle.mockResolvedValue({ data: null, error: null })
+      await getSharedPromptAnalysis('share-token')
+      expect(mockIs).toHaveBeenCalledWith('deleted_at', null)
+    })
+  })
 })
 
 

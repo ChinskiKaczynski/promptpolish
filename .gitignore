@@ -10,11 +10,11 @@ dist
 .DS_Store
 *.log
 
-.vercel
-test-results
+test-results/
+playwright-report/
 tsconfig.tsbuildinfo
 .antigravity
 gemini-leftovers.txt
-/reports
-/scratch
-/backups
+/reports/
+/scratch/
+/backups/

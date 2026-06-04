@@ -2,6 +2,7 @@ import 'server-only'
 import { getSupabaseAdminClient } from './admin'
 import { getUserProfile, setUserPlanSlug } from './queries'
 import type { StripeCustomerRow, SubscriptionRow } from './types'
+import { serializeDbError } from './error-serializer'
 
 /**
  * Fetches the Stripe customer mapping for a user.
@@ -22,7 +23,7 @@ export async function getStripeCustomer(
     .maybeSingle()
 
   if (error) {
-    console.error('Error fetching Stripe customer:', error)
+    console.error('Error fetching Stripe customer:', serializeDbError(error))
     return null
   }
 
@@ -59,7 +60,7 @@ export async function saveStripeCustomer(
     .single()
 
   if (error) {
-    console.error('Error saving Stripe customer mapping:', error)
+    console.error('Error saving Stripe customer mapping:', serializeDbError(error))
     return null
   }
 
@@ -85,7 +86,7 @@ export async function getUserIdByStripeCustomerId(
     .maybeSingle()
 
   if (error) {
-    console.error('Error matching Stripe customer ID to user ID:', error)
+    console.error('Error matching Stripe customer ID to user ID:', serializeDbError(error))
     return null
   }
 
@@ -111,7 +112,7 @@ export async function getSubscriptionByUserId(
     .maybeSingle()
 
   if (error) {
-    console.error('Error fetching subscription by user ID:', error)
+    console.error('Error fetching subscription by user ID:', serializeDbError(error))
     return null
   }
 
@@ -154,7 +155,7 @@ export async function saveSubscription(insertData: {
     .single()
 
   if (error) {
-    console.error('Error saving subscription record:', error)
+    console.error('Error saving subscription record:', serializeDbError(error))
     return null
   }
 
@@ -200,7 +201,7 @@ export async function cancelSubscriptionInDatabase(
     .maybeSingle()
 
   if (subError || !subData) {
-    console.error('Error finding subscription for cancel mapping:', subError)
+    console.error('Error finding subscription for cancel mapping:', serializeDbError(subError))
     return false
   }
 
@@ -215,7 +216,7 @@ export async function cancelSubscriptionInDatabase(
     .eq('stripe_subscription_id', stripeSubscriptionId)
 
   if (updateError) {
-    console.error('Error cancelling subscription in database:', updateError)
+    console.error('Error cancelling subscription in database:', serializeDbError(updateError))
     return false
   }
 
