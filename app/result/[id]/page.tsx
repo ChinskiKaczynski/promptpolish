@@ -52,10 +52,10 @@ export default async function PrivateResultPage({ params }: PageProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50/30 selection:bg-indigo-100 antialiased font-sans">
+    <div className="flex min-h-screen flex-col pp-grid-bg text-pp-text selection:bg-pp-border-bright selection:text-white antialiased font-mono">
       <AppHeader />
       
-      <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-10">
+      <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-10 z-10 relative">
         <ResultView result={mappedResult} mode="private" planSlug={planSlug} />
       </main>
 

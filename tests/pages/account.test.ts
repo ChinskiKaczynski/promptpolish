@@ -139,13 +139,13 @@ describe('AccountPage Beta & Plan Limitations UI', () => {
     expect(mainElement.type).toBe('main')
 
     const billingCard = mainElement.props.children[2]
-    const betaBanner = billingCard.props.children[1]
+    const betaBanner = billingCard.props.children[2]
     expect(betaBanner.props.children[0].props.children).toBe('Beta Info:')
     expect(betaBanner.props.children[1]).toContain('Bramka płatności Stripe jest obecnie wyłączona')
 
     // History shortcut link present
     const historyShortcut = mainElement.props.children[3]
-    const historyLink = historyShortcut.props.children[1].props.children[1]
+    const historyLink = historyShortcut.props.children[2].props.children[1]
     expect(historyLink.props.href).toBe('/history')
   })
 

@@ -46,15 +46,15 @@ export default async function AnalyzePage() {
   const showMeter = usagePct >= 80 || monthlyCount >= monthlyLimit
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50/30 selection:bg-indigo-100 antialiased font-sans">
+    <div className="flex min-h-screen flex-col pp-grid-bg text-pp-text selection:bg-pp-border-bright selection:text-white antialiased font-mono">
       <AppHeader />
 
-      <main className="flex-1 mx-auto w-full max-w-4xl px-6 py-10">
-        <div className="mb-8">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">PromptPolish</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">Przeanalizuj prompt</h1>
-          <p className="mt-3 text-slate-600 text-sm">
-            Wprowadź treść swojej instrukcji, zdefiniuj opcjonalny cel i rozpocznij audyt jakości promptu.
+      <main className="flex-1 mx-auto w-full max-w-4xl px-6 py-10 z-10 relative">
+        <div className="mb-8 border-b-2 border-pp-border pb-4">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-pp-cyan">{"// KONSOLA_ANALIZATORA // SYS_READY"}</p>
+          <h1 className="mt-2 text-2xl font-black uppercase tracking-wider text-pp-text">Przeprowadź audyt promptu</h1>
+          <p className="mt-2 text-pp-muted text-xs">
+            Wprowadź treść swojej instrukcji, zdefiniuj opcjonalny cel zadania i uruchom preflight analizy inżynieryjnej.
           </p>
         </div>
 

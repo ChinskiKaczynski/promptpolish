@@ -58,87 +58,89 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
     const totalGuestAnalyses = (await getPromptAnalysesForUser('', ownerAnonymousId || '')).length
     if (totalGuestAnalyses === 0) {
       return (
-        <div className="flex min-h-screen flex-col bg-slate-50/50 selection:bg-indigo-100 antialiased font-sans">
+        <div className="flex min-h-screen flex-col pp-grid-bg text-pp-text selection:bg-pp-border-bright selection:text-white antialiased font-mono">
           {/* Navigation Header */}
-          <header className="border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+          <header className="border-b-2 border-pp-border bg-pp-panel sticky top-0 z-50">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
               <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-md shadow-indigo-200">
+                <div className="flex h-9 w-9 items-center justify-center border-2 border-pp-border-bright bg-pp-primary shadow-md">
                   <span className="font-bold text-white text-base">P</span>
                 </div>
-                <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-800 bg-clip-text text-transparent">
-                  PromptPolish
+                <span className="text-sm font-black tracking-widest text-pp-text uppercase">
+                  PROMPT_POLISH
                 </span>
               </Link>
               <div className="flex items-center gap-4">
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition active:scale-95 cursor-pointer"
+                  className="pp-button pp-button-primary text-xs py-1.5 px-3"
                 >
-                  Zaloguj się
+                  ZALOGUJ SIĘ
                 </Link>
               </div>
             </div>
           </header>
 
           {/* Guest Conversion CTA Box */}
-          <main className="flex-grow flex items-center justify-center px-6 py-12">
-            <div className="w-full max-w-2xl rounded-3xl border border-indigo-100 bg-white p-8 sm:p-12 shadow-xl shadow-indigo-50/30 text-center space-y-8">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0-6h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
-                </svg>
+          <main className="flex-grow flex items-center justify-center px-6 py-12 z-10 relative">
+            <div className="w-full max-w-2xl pp-panel p-8 sm:p-12 border-2 border-pp-border text-center space-y-8 relative">
+              <div className="absolute top-0 right-4 -translate-y-1/2 bg-pp-bg px-2 text-[9px] font-bold text-pp-cyan tracking-widest uppercase">
+                {"// SYSTEM_ARCHIWIZACJI"}
+              </div>
+
+              <div className="mx-auto flex h-14 w-14 items-center justify-center border-2 border-pp-border-bright bg-pp-primary text-white text-lg">
+                ★
               </div>
 
               <div className="space-y-3">
-                <h2 className="text-2xl font-black text-slate-900 sm:text-3xl tracking-tight">
-                  Zapisuj i śledź historię swoich audytów!
+                <h2 className="text-xl font-black text-pp-text uppercase tracking-wider">
+                  Zapisuj i śledź historię swoich promptów
                 </h2>
-                <p className="text-slate-500 text-sm leading-relaxed max-w-lg mx-auto">
+                <p className="text-pp-muted text-xs leading-relaxed max-w-lg mx-auto uppercase">
                   Bezpiecznie przechowuj ulepszone wersje promptów, filtruj audyty, organizuj ulubione instrukcje i zarządzaj linkami udostępniania z dowolnego urządzenia.
                 </p>
               </div>
 
               {/* Value Highlights */}
-              <div className="grid gap-4 sm:grid-cols-2 text-left max-w-lg mx-auto">
-                <div className="flex items-start gap-3">
-                  <span className="text-indigo-500 font-bold text-sm">★</span>
-                  <span className="text-xs text-slate-600 leading-relaxed font-semibold">Zapisuj nieograniczoną historię promptów</span>
+              <div className="grid gap-4 sm:grid-cols-2 text-left max-w-lg mx-auto text-[11px] pp-inset p-4 bg-black/20">
+                <div className="flex items-start gap-2">
+                  <span className="text-pp-cyan font-bold">[★]</span>
+                  <span className="text-pp-text leading-relaxed font-semibold uppercase">Nielimitowana historia promptów</span>
                 </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-indigo-500 font-bold text-sm">🔍</span>
-                  <span className="text-xs text-slate-600 leading-relaxed font-semibold">Wyszukuj i filtruj audyty błyskawicznie</span>
+                <div className="flex items-start gap-2">
+                  <span className="text-pp-cyan font-bold">[🔍]</span>
+                  <span className="text-pp-text leading-relaxed font-semibold uppercase">Szybkie wyszukiwanie i filtry</span>
                 </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-indigo-500 font-bold text-sm">📁</span>
-                  <span className="text-xs text-slate-600 leading-relaxed font-semibold">Grupuj najlepsze instrukcje w jednym miejscu</span>
+                <div className="flex items-start gap-2">
+                  <span className="text-pp-cyan font-bold">[📁]</span>
+                  <span className="text-pp-text leading-relaxed font-semibold uppercase">Organizacja w bibliotece</span>
                 </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-indigo-500 font-bold text-sm">🔗</span>
-                  <span className="text-xs text-slate-600 leading-relaxed font-semibold">Pełna kontrola nad publicznym dzieleniem się</span>
+                <div className="flex items-start gap-2">
+                  <span className="text-pp-cyan font-bold">[🔗]</span>
+                  <span className="text-pp-text leading-relaxed font-semibold uppercase">Pełna kontrola nad share links</span>
                 </div>
               </div>
 
               <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all"
+                  className="pp-button pp-button-primary text-xs py-3 px-6"
                 >
-                  Załóż bezpłatne konto
+                  ZAŁÓŻ BEZPŁATNE KONTO
                 </Link>
                 <Link
                   href="/analyze"
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-8 py-3.5 text-sm font-semibold text-slate-700 active:scale-95 transition-all"
+                  className="pp-button text-xs py-3 px-6 border-pp-border"
                 >
-                  Uruchom szybki audyt gościa
+                  AUDYT GOŚCIA
                 </Link>
               </div>
             </div>
           </main>
 
           {/* Footer */}
-          <footer className="border-t border-slate-200 bg-white py-8 px-6 text-center text-xs text-slate-400">
-            © {new Date().getFullYear()} PromptPolish. Wszystkie prawa zastrzeżone.
+          <footer className="border-t-2 border-pp-border bg-pp-panel py-8 px-6 text-center text-[10px] text-pp-muted font-mono">
+            © {new Date().getFullYear()} PromptPolish. SYSTEM READY.
           </footer>
         </div>
       )
@@ -146,41 +148,41 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50/50 selection:bg-indigo-100 antialiased font-sans">
+    <div className="flex min-h-screen flex-col pp-grid-bg text-pp-text selection:bg-pp-border-bright selection:text-white antialiased font-mono">
       {/* Navigation Header */}
-      <header className="border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b-2 border-pp-border bg-pp-panel sticky top-0 z-50">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-md shadow-indigo-200">
+            <div className="flex h-9 w-9 items-center justify-center border-2 border-pp-border-bright bg-pp-primary shadow-md">
               <span className="font-bold text-white text-base">P</span>
             </div>
-            <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-800 bg-clip-text text-transparent">
-              PromptPolish
+            <span className="text-sm font-black tracking-widest text-pp-text uppercase">
+              PROMPT_POLISH
             </span>
           </Link>
           <div className="flex items-center gap-4">
             <Link
               href="/analyze"
-              className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition active:scale-95 cursor-pointer"
+              className="pp-button pp-button-primary text-xs py-1.5 px-3"
             >
-              Ulepsz prompt
+              NOWY AUDYT
             </Link>
             {user ? (
               <>
                 <Link
                   href="/account"
-                  className="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition"
+                  className="text-xs font-bold text-pp-muted hover:text-pp-cyan uppercase tracking-wider"
                 >
-                  Konto
+                  [ Konto ]
                 </Link>
                 <SignOutButton />
               </>
             ) : (
               <Link
                 href="/login"
-                className="text-sm font-semibold text-slate-600 hover:text-indigo-600 transition"
+                className="text-xs font-bold text-pp-muted hover:text-pp-cyan uppercase tracking-wider"
               >
-                Zaloguj się
+                [ Zaloguj się ]
               </Link>
             )}
           </div>
@@ -188,33 +190,33 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
       </header>
 
       {/* History Dashboard Main Area */}
-      <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-10 space-y-6">
+      <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-10 space-y-6 z-10 relative">
         {/* Title area */}
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-950">
+        <div className="border-b-2 border-pp-border pb-4">
+          <h1 className="text-2xl font-black uppercase tracking-wider text-pp-text">
             Historia analiz
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-xs text-pp-muted uppercase">
             Przeszukuj swoje analizy, filtruj wyniki inżynieryjne i zarządzaj swoimi ulubionymi promptami.
           </p>
         </div>
 
         {/* Guest Warning Tip */}
         {!user && (
-          <div className="rounded-3xl border border-amber-200 bg-amber-50/50 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
+          <div className="border-2 border-pp-warning bg-pp-warning/5 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm relative">
             <div className="space-y-1">
-              <h4 className="text-sm font-bold text-amber-900 flex items-center gap-2">
+              <h4 className="text-xs font-black text-pp-warning uppercase tracking-wider flex items-center gap-2">
                 <span>💡</span> Przeglądasz historię jako gość
               </h4>
-              <p className="text-xs text-amber-800 leading-relaxed max-w-2xl">
+              <p className="text-[11px] text-pp-muted leading-relaxed max-w-2xl font-mono">
                 Te analizy są zapisane tylko w tej przeglądarce i wygasną po 30 dniach lub po wyczyszczeniu ciasteczek. Załóż bezpłatne konto, aby zachować je na stałe.
               </p>
             </div>
             <Link
               href="/login"
-              className="inline-flex h-9 items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 text-xs font-bold text-white shadow-sm active:scale-95 transition-all shrink-0 cursor-pointer text-center"
+              className="pp-button text-[10px] py-1.5 px-3 border-pp-warning bg-pp-warning/10 text-pp-warning hover:bg-pp-warning/20 shrink-0"
             >
-              Zarejestruj się
+              ZAREJESTRUJ SIĘ
             </Link>
           </div>
         )}
@@ -232,22 +234,24 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
         <div className="space-y-4">
           {history.length === 0 ? (
             /* Friendly Empty State */
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white py-20 px-6 text-center shadow-sm">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div className="pp-panel border-2 border-dashed border-pp-border p-12 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center border border-pp-border bg-pp-panel text-pp-muted text-lg font-bold">
+                ?
               </div>
-              <h4 className="mt-4 text-base font-bold text-slate-900">Nie masz jeszcze zapisanych analiz</h4>
-              <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto">
-                Nie znaleziono żadnych wyników spełniających obecne kryteria wyszukiwania lub filtry. Przejdź do analizatora, aby dodać nowy prompt.
+              <h4 className="mt-4 text-xs font-black uppercase text-pp-text">
+                {search || lang !== 'all' || profile !== 'all' || isFavoriteFiltered
+                  ? 'Nie znaleziono zapisanych analiz'
+                  : 'Nie masz jeszcze zapisanych analiz'}
+              </h4>
+              <p className="mt-2 text-[11px] text-pp-muted max-w-sm mx-auto uppercase">
+                Brak wyników spełniających kryteria. Przejdź do analizatora, aby dodać nowy prompt.
               </p>
               <div className="mt-6">
                 <Link
                   href="/analyze"
-                  className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-sm font-semibold text-white shadow-md active:scale-95 transition-all"
+                  className="pp-button pp-button-primary text-xs py-2 px-4"
                 >
-                  Przeanalizuj prompt
+                  PRZEPROWADŹ AUDYT
                 </Link>
               </div>
             </div>
@@ -266,31 +270,29 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                 return (
                   <article
                     key={analysis.id}
-                    className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md hover:border-slate-300 transition-all"
+                    className="pp-panel p-5 hover:pp-panel-active border-2 border-pp-border flex flex-col gap-4 sm:flex-row sm:items-center justify-between transition-all"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase text-slate-600">
-                          {analysis.working_language === 'pl' ? 'Polski (PL)' : 'Angielski (EN)'}
+                        <span className="border border-pp-border bg-pp-bg px-2 py-0.5 text-[9px] font-bold text-pp-muted">
+                          {analysis.working_language === 'pl' ? 'PL' : 'EN'}
                         </span>
-                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold uppercase text-indigo-700">
-                          {analysis.selected_profile_slug === 'openrouter-deepseek-v4-flash'
-                            ? (analysis.working_language === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model')
-                            : (analysis.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')}
+                        <span className="border border-pp-border bg-pp-bg px-2 py-0.5 text-[9px] font-bold text-pp-cyan">
+                          {analysis.selected_profile_slug === 'openrouter-deepseek-v4-flash' ? 'ADV' : 'UNI'}
                         </span>
                         {analysis.audit_mode && (
-                          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase text-slate-600">
+                          <span className="border border-pp-border bg-pp-bg px-2 py-0.5 text-[9px] font-bold text-pp-muted uppercase">
                             {analysis.audit_mode}
                           </span>
                         )}
-                        <span className="text-xs font-semibold text-slate-400">{date}</span>
+                        <span className="text-[10px] font-bold text-pp-muted">{date}</span>
                       </div>
 
-                      <h3 className="mt-3 text-sm font-bold text-slate-900 truncate">
+                      <h3 className="mt-2.5 text-xs font-black text-pp-text uppercase tracking-wider truncate">
                         {analysis.title || `Audyt Promptu #${history.length - index}`}
                       </h3>
 
-                      <p className="mt-1 text-xs text-slate-500 leading-relaxed truncate max-w-xl">
+                      <p className="mt-1 text-[11px] text-pp-muted leading-normal truncate max-w-xl">
                         {scrubSensitiveData(
                           analysis.input_prompt.length > 120
                             ? analysis.input_prompt.slice(0, 120) + '...'
@@ -302,14 +304,14 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                     <div className="flex items-center gap-4 shrink-0 justify-between sm:justify-end">
                       {/* Score Indicator */}
                       <div className="text-right">
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Wynik</span>
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-pp-muted block">Wynik</span>
                         <span
-                          className={`mt-0.5 text-base font-black tracking-tight block ${
+                          className={`mt-0.5 text-sm font-black tracking-wider block ${
                             analysis.overall_score >= 80
-                              ? 'text-emerald-600'
+                              ? 'text-pp-success'
                               : analysis.overall_score >= 50
-                              ? 'text-yellow-600'
-                              : 'text-red-500'
+                              ? 'text-pp-warning'
+                              : 'text-pp-danger'
                           }`}
                         >
                           {analysis.overall_score} / 100
@@ -331,8 +333,8 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-8 px-6 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} PromptPolish. Wszystkie prawa zastrzeżone.
+      <footer className="border-t-2 border-pp-border bg-pp-panel py-8 px-6 text-center text-[10px] text-pp-muted font-mono">
+        © {new Date().getFullYear()} PromptPolish. SYSTEM READY.
       </footer>
     </div>
   )

@@ -67,24 +67,30 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-100/50">
-      <div className="text-center">
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
+    <div className="w-full max-w-md pp-panel p-6 sm:p-8 border-2 border-pp-border font-mono relative">
+      <div className="absolute top-0 right-4 -translate-y-1/2 bg-pp-bg px-2 text-[9px] font-bold text-pp-cyan tracking-widest uppercase">
+        {"// LOGOWANIE_KONSOLI"}
+      </div>
+
+      <div className="text-center space-y-1">
+        <h1 className="text-sm font-black uppercase tracking-wider text-pp-text">
           {isSignUp ? 'Utwórz bezpłatne konto' : 'Zaloguj się do PromptPolish'}
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="text-[11px] text-pp-muted uppercase">
           {isSignUp
             ? 'Zapisuj historię swoich promptów i uzyskaj dostęp do Pro planu.'
             : 'Zarządzaj swoimi ulepszonymi promptami i historią audytów.'}
         </p>
       </div>
 
-      {/* Toggle Tabs */}
-      <div className="mt-6 flex rounded-xl bg-slate-100 p-1">
+      {/* Toggle Tabs (Win98 retro tab strip layout) */}
+      <div className="mt-6 flex border-b border-pp-border">
         <button
           type="button"
-          className={`flex-1 rounded-lg py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
-            !isSignUp ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+          className={`flex-1 py-2 text-center text-xs font-bold transition-all uppercase tracking-wider cursor-pointer ${
+            !isSignUp 
+              ? 'border-t-2 border-l-2 border-r-2 border-pp-border bg-pp-panel text-pp-cyan' 
+              : 'text-pp-muted hover:text-pp-text'
           }`}
           onClick={() => {
             setIsSignUp(false)
@@ -92,12 +98,14 @@ export function LoginForm() {
             setSuccessMsg(null)
           }}
         >
-          Logowanie
+          LOGOWANIE
         </button>
         <button
           type="button"
-          className={`flex-1 rounded-lg py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
-            isSignUp ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+          className={`flex-1 py-2 text-center text-xs font-bold transition-all uppercase tracking-wider cursor-pointer ${
+            isSignUp 
+              ? 'border-t-2 border-l-2 border-r-2 border-pp-border bg-pp-panel text-pp-cyan' 
+              : 'text-pp-muted hover:text-pp-text'
           }`}
           onClick={() => {
             setIsSignUp(true)
@@ -111,15 +119,15 @@ export function LoginForm() {
             }).catch(() => null)
           }}
         >
-          Rejestracja
+          REJESTRACJA
         </button>
       </div>
 
       <form onSubmit={handleAuth} className="mt-6 space-y-4">
         {isSignUp && (
-          <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="displayName">
-              Imię / Nazwa użytkownika
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-pp-muted" htmlFor="displayName">
+              Nazwa użytkownika
             </label>
             <input
               id="displayName"
@@ -127,13 +135,13 @@ export function LoginForm() {
               placeholder="np. Jan Kowalski"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
+              className="pp-input text-xs"
             />
           </div>
         )}
 
-        <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="email">
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-pp-muted" htmlFor="email">
             Adres e-mail
           </label>
           <input
@@ -143,12 +151,12 @@ export function LoginForm() {
             placeholder="twoj@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
+            className="pp-input text-xs"
           />
         </div>
 
-        <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="password">
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold uppercase tracking-wider text-pp-muted" htmlFor="password">
             Hasło
           </label>
           <input
@@ -159,36 +167,33 @@ export function LoginForm() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
+            className="pp-input text-xs"
           />
         </div>
 
         {errorMsg && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-medium text-red-700 animate-in fade-in duration-200">
-            {errorMsg}
+          <div className="border border-pp-danger bg-pp-danger/10 p-3 text-[11px] font-bold text-pp-danger uppercase leading-relaxed">
+            [!] BŁĄD: {errorMsg}
           </div>
         )}
 
         {successMsg && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-medium text-emerald-700 leading-relaxed animate-in fade-in duration-200">
-            {successMsg}
+          <div className="border border-pp-success bg-pp-success/10 p-3 text-[11px] font-bold text-pp-success uppercase leading-relaxed">
+            [+] SUKCES: {successMsg}
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 w-full inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 transition-all active:scale-95 cursor-pointer"
+          className="pp-button pp-button-primary w-full text-xs py-3.5 mt-2 flex justify-center items-center gap-2"
         >
           {loading ? (
-            <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
+            <span>LOGOWANIE...</span>
           ) : isSignUp ? (
-            'Zarejestruj się'
+            'STWÓRZ KONTO'
           ) : (
-            'Zaloguj się'
+            'ZALOGUJ SIĘ // WEJŚCIE'
           )}
         </button>
       </form>

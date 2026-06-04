@@ -83,68 +83,66 @@ export function ShareSettings({
   if (!analysisId) return null
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
-      <div className="flex items-center justify-between">
+    <div className="pp-panel p-6 border-2 border-pp-border flex flex-col justify-between font-mono relative">
+      <div className="absolute top-0 right-4 -translate-y-1/2 bg-pp-bg px-2 text-[9px] font-bold text-pp-cyan tracking-widest uppercase">
+        {"// UDOSTĘPNIANIE"}
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900">Udostępnij raport</h3>
-          <p className="mt-1 text-xs text-slate-500">
-            Stwórz publiczny link. Domyślnie wyłączone (prywatny). Każdy z linkiem zobaczy treść promptu i raport.
+          <h3 className="text-xs font-bold text-pp-text uppercase tracking-wider">Status widoczności raportu</h3>
+          <p className="mt-1 text-[11px] text-pp-muted">
+            Stwórz publiczny link. Domyślnie wyłączone. Każdy z linkiem zobaczy raport.
           </p>
         </div>
 
-        {/* Toggle Switch */}
+        {/* Retro Toggle Button */}
         <button
           onClick={handleToggleShare}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-            isShareEnabled ? 'bg-indigo-600' : 'bg-slate-200'
+          className={`pp-button text-[10px] py-1.5 px-3 shrink-0 ${
+            isShareEnabled ? 'pp-button-primary' : 'border-pp-border'
           }`}
         >
-          <span
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-              isShareEnabled ? 'translate-x-5' : 'translate-x-0'
-            }`}
-          />
+          {isShareEnabled ? 'WIDOCZNY [WŁ]' : 'PRYWATNY [WYŁ]'}
         </button>
       </div>
 
       <div className="mt-6">
         {shareError && (
-          <p className="text-xs font-semibold text-red-600 mb-2">⚠️ {shareError}</p>
+          <p className="text-xs font-bold text-pp-danger mb-2">⚠️ {shareError}</p>
         )}
 
         {isShareEnabled && shareToken ? (
-          <div className="space-y-2.5 animate-fadeIn">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 block">Publiczny adres URL:</label>
+          <div className="space-y-3">
+            <label className="text-[9px] font-bold uppercase tracking-wider text-pp-cyan block">Publiczny adres URL:</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 readOnly
                 value={shareUrl}
-                className="flex-1 min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-500 focus:outline-none"
+                className="pp-input flex-1 min-w-0 text-xs text-pp-muted"
               />
               <button
                 onClick={handleCopyShareLink}
-                className="shrink-0 rounded-2xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white px-4 py-2.5 transition-colors cursor-pointer"
+                className="pp-button text-xs py-2 px-3 border-pp-border-bright"
               >
-                {isShareLinkCopied ? 'Skopiowano!' : 'Kopiuj'}
+                {isShareLinkCopied ? 'SKOPIOWANO!' : 'KOPIUJ'}
               </button>
             </div>
 
             {/* Public link safety warning block */}
-            <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-3 text-[10px] leading-relaxed text-amber-900 flex gap-2">
-              <svg className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+            <div className="border border-pp-warning bg-pp-warning/10 p-3 text-[10px] leading-relaxed text-pp-warning flex gap-2">
+              <span className="text-sm font-bold">!</span>
               <div>
-                <strong className="block mb-0.5">Uwaga: Raport staje się publiczny!</strong>
-                Każdy, kto posiada ten adres URL, będzie mógł go wyświetlić. Prywatne tokeny sesji i dane techniczne są ukrywane, lecz zachowaj ostrożność.
+                <strong className="block mb-0.5">UWAGA: RAPORT UPUBLICZNIONY</strong>
+                Każdy, kto posiada ten adres URL, będzie mógł wyświetlić wyniki. Twoje prywatne ciasteczka sesji są bezpieczne, ale dane promptu będą widoczne.
               </div>
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-center">
-            <span className="text-xs font-medium text-slate-400">
-              Włącz przełącznik, aby wygenerować link udostępniania.
+          <div className="pp-inset p-4 text-center">
+            <span className="text-[11px] text-pp-muted uppercase tracking-wider">
+              PRYWATNY RAPORT // AKTYWUJ PRZEŁĄCZNIK ABY GENEROWAĆ URL
             </span>
           </div>
         )}
