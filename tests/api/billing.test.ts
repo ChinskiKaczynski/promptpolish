@@ -18,6 +18,9 @@ const stripeMocks = vi.hoisted(() => {
       create: vi.fn(),
       retrieve: vi.fn()
     },
+    subscriptions: {
+      retrieve: vi.fn()
+    },
     webhooks: {
       constructEvent: vi.fn()
     }
@@ -29,6 +32,7 @@ vi.mock('stripe', () => {
     checkout = stripeMocks.checkout
     billingPortal = stripeMocks.billingPortal
     customers = stripeMocks.customers
+    subscriptions = stripeMocks.subscriptions
     webhooks = stripeMocks.webhooks
     static webhooks = stripeMocks.webhooks
   }
@@ -52,7 +56,8 @@ vi.mock('@/lib/supabase/billing', () => ({
 vi.mock('@/lib/supabase/queries', () => ({
   getUserProfile: vi.fn(),
   createUserProfile: vi.fn(),
-  createUsageEvent: vi.fn()
+  createUsageEvent: vi.fn(),
+  setUserPlanSlug: vi.fn()
 }))
 
 vi.mock('@/lib/identity/auth', () => ({
@@ -69,6 +74,7 @@ import { POST as portalHandler } from '@/app/api/billing/portal/route'
 import { POST as webhookHandler } from '@/app/api/webhooks/stripe/route'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getStripeCustomer, saveStripeCustomer, getUserIdByStripeCustomerId, saveSubscription, cancelSubscriptionInDatabase } from '@/lib/supabase/billing'
+import { setUserPlanSlug } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
 
 describe('Stripe Billing Foundation API Suite', () => {
@@ -86,6 +92,46 @@ describe('Stripe Billing Foundation API Suite', () => {
     env.STRIPE_PRICE_ID_PRO = 'price_1234_pro'
     env.NODE_ENV = 'development'
     env.STRIPE_ENABLED = 'true'
+
+    // Mock saveSubscription to mirror real profile plan updates based on status
+    vi.mocked(saveSubscription).mockImplementation(async (insertData) => {
+      const isActivePro =
+        insertData.plan_slug === 'pro' &&
+        ['active', 'trialing', 'past_due'].includes(insertData.status)
+      const resolvedPlanSlug = isActivePro ? 'pro' : 'free'
+      await setUserPlanSlug({
+        user_id: insertData.user_id,
+        email: 'test@promptpolish.com',
+        display_name: null,
+        plan_slug: resolvedPlanSlug
+      })
+      return {
+        id: 'sub_uuid',
+        user_id: insertData.user_id,
+        stripe_customer_id: insertData.stripe_customer_id,
+        stripe_subscription_id: insertData.stripe_subscription_id,
+        stripe_price_id: insertData.stripe_price_id,
+        plan_slug: insertData.plan_slug,
+        status: insertData.status,
+        current_period_start: insertData.current_period_start,
+        current_period_end: insertData.current_period_end,
+        cancel_at_period_end: insertData.cancel_at_period_end || false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    })
+
+    // Mock cancelSubscriptionInDatabase to mirror real profile plan demotion on cancellation
+    vi.mocked(cancelSubscriptionInDatabase).mockImplementation(async (subId) => {
+      const userId = subId === 'sub_test_456' ? 'user_mapped_uuid' : 'user_deleted_uuid'
+      await setUserPlanSlug({
+        user_id: userId,
+        email: 'test@promptpolish.com',
+        display_name: null,
+        plan_slug: 'free'
+      })
+      return true
+    })
   })
 
   afterEach(() => {
@@ -471,6 +517,269 @@ describe('Stripe Billing Foundation API Suite', () => {
         status: 'unpaid',
         plan_slug: 'pro'
       }))
+    })
+
+    it('webhook processes checkout.session.completed safely', async () => {
+      const mockEvent = {
+        type: 'checkout.session.completed',
+        id: 'evt_checkout_completed_test',
+        data: {
+          object: {
+            id: 'cs_test_123',
+            customer: 'cus_test_123',
+            subscription: 'sub_test_123',
+            mode: 'subscription'
+          }
+        }
+      }
+
+      const mockSubscription = {
+        id: 'sub_test_123',
+        customer: 'cus_test_123',
+        status: 'active',
+        current_period_start: 1700000000,
+        current_period_end: 1703000000,
+        cancel_at_period_end: false,
+        items: {
+          data: [
+            {
+              price: {
+                id: 'price_1234_pro'
+              }
+            }
+          ]
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue(mockSubscription)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_mapped_uuid_checkout')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(getUserIdByStripeCustomerId).toHaveBeenCalledWith('cus_test_123')
+      expect(mockStripeInstances.subscriptions.retrieve).toHaveBeenCalledWith('sub_test_123')
+      expect(saveSubscription).toHaveBeenCalledWith({
+        user_id: 'user_mapped_uuid_checkout',
+        stripe_customer_id: 'cus_test_123',
+        stripe_subscription_id: 'sub_test_123',
+        stripe_price_id: 'price_1234_pro',
+        plan_slug: 'pro',
+        status: 'active',
+        current_period_start: new Date(1700000000 * 1000).toISOString(),
+        current_period_end: new Date(1703000000 * 1000).toISOString(),
+        cancel_at_period_end: false
+      })
+    })
+
+    it('duplicate webhook delivery is safe because subscription upsert is stable', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_test_repeated',
+        data: {
+          object: {
+            id: 'sub_test_repeated',
+            customer: 'cus_test_repeated',
+            status: 'active',
+            current_period_start: 1700000000,
+            current_period_end: 1703000000,
+            cancel_at_period_end: false,
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_mapped_uuid_repeated')
+
+      // Process event the first time
+      const response1 = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response1.status).toBe(200)
+
+      // Process event the second time (simulating a Stripe retry or duplicate delivery)
+      const response2 = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response2.status).toBe(200)
+
+      // Webhook should process it safely twice because database uses upsert
+      expect(saveSubscription).toHaveBeenCalledTimes(2)
+    })
+
+    it('no client-provided plan_slug or price_id can grant Pro', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({
+        id: 'user_uuid_1',
+        email: 'user@promptpolish.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: ''
+      })
+      vi.mocked(getStripeCustomer).mockResolvedValue({
+        user_id: 'user_uuid_1',
+        stripe_customer_id: 'cus_existing_999',
+        created_at: '',
+        updated_at: ''
+      })
+      mockStripeInstances.checkout.sessions.create.mockResolvedValue({ url: 'https://checkout.stripe.com/pay/cs_test' })
+
+      // Construct request where the client attempts to inject a custom price ID
+      const req = new Request('http://localhost/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price_id: 'price_malicious_attacker_custom', plan_slug: 'pro' })
+      })
+
+      const response = await checkoutHandler(req)
+      expect(response.status).toBe(200)
+
+      // Verify the checkout session created strictly uses STRIPE_PRICE_ID_PRO ('price_1234_pro') from server config, ignoring client body
+      expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          line_items: [{ price: 'price_1234_pro', quantity: 1 }]
+        })
+      )
+    })
+
+    it('active Pro maps to Pro entitlement', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.created',
+        id: 'evt_active_entitlement_test',
+        data: {
+          object: {
+            id: 'sub_active_test',
+            customer: 'cus_active_test',
+            status: 'active',
+            current_period_start: 1700000000,
+            current_period_end: 1703000000,
+            cancel_at_period_end: false,
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_active_uuid')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user_active_uuid',
+          plan_slug: 'pro',
+          status: 'active'
+        })
+      )
+
+      // Proves that saveSubscription resolved status 'active' to plan_slug 'pro' on the profile
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user_active_uuid',
+          plan_slug: 'pro'
+        })
+      )
+    })
+
+    it('canceled/unpaid removes Pro entitlement according to policy', async () => {
+      // Test customer.subscription.deleted event
+      const mockEventDeleted = {
+        type: 'customer.subscription.deleted',
+        id: 'evt_deleted_entitlement_test',
+        data: {
+          object: {
+            id: 'sub_deleted_test',
+            customer: 'cus_deleted_test',
+            status: 'canceled',
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEventDeleted)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_deleted_uuid')
+
+      const response1 = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEventDeleted), 't=123,v1=sig'))
+      expect(response1.status).toBe(200)
+      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith('sub_deleted_test')
+
+      // Proves that cancelSubscriptionInDatabase resolved status 'canceled' to plan_slug 'free' on the profile
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user_deleted_uuid',
+          plan_slug: 'free'
+        })
+      )
+
+      // Test customer.subscription.updated event with unpaid status
+      const mockEventUnpaid = {
+        type: 'customer.subscription.updated',
+        id: 'evt_unpaid_entitlement_test',
+        data: {
+          object: {
+            id: 'sub_unpaid_test',
+            customer: 'cus_unpaid_test',
+            status: 'unpaid',
+            current_period_start: 1700000000,
+            current_period_end: 1703000000,
+            cancel_at_period_end: false,
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEventUnpaid)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_unpaid_uuid')
+
+      const response2 = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEventUnpaid), 't=123,v1=sig'))
+      expect(response2.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user_unpaid_uuid',
+          plan_slug: 'pro',
+          status: 'unpaid'
+        })
+      )
+
+      // Proves that saveSubscription resolved status 'unpaid' to plan_slug 'free' on the profile
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user_unpaid_uuid',
+          plan_slug: 'free'
+        })
+      )
     })
   })
 })

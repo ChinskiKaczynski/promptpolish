@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { getUserIdByStripeCustomerId, saveStripeCustomer, saveSubscription, cancelSubscriptionInDatabase } from '@/lib/supabase/billing'
-import { getSupabaseAdminClient } from '@/lib/supabase/admin'
+import { getUserIdByStripeCustomerId, saveSubscription, cancelSubscriptionInDatabase } from '@/lib/supabase/billing'
 import { recordStripeWebhookFailure } from '@/lib/monitoring/observability'
 import { createUsageEvent } from '@/lib/supabase/queries'
 
@@ -48,6 +47,92 @@ export async function POST(request: Request) {
 
   try {
     switch (eventType) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session
+        const stripeCustomerId = typeof session.customer === 'string' ? session.customer : null
+        const stripeSubscriptionId = typeof session.subscription === 'string' ? session.subscription : null
+
+        if (!stripeCustomerId) {
+          console.warn('[Stripe Webhook] checkout.session.completed missing customer ID. Acknowledging with 200 OK.');
+          break
+        }
+
+        if (session.mode === 'subscription' && !stripeSubscriptionId) {
+          console.warn('[Stripe Webhook] checkout.session.completed missing subscription ID for subscription mode. Acknowledging with 200 OK.');
+          break
+        }
+
+        const userId = await getUserIdByStripeCustomerId(stripeCustomerId)
+
+        if (!userId) {
+          console.warn('[Stripe Webhook] Webhook received for unmapped customer ID during checkout.session.completed. Acknowledging event with 200 OK.');
+          break
+        }
+
+        if (stripeSubscriptionId) {
+          try {
+            const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId)
+            const stripePriceId = subscription.items.data[0]?.price.id || ''
+            const planSlug = stripePriceId === stripePriceIdPro ? 'pro' : 'free'
+
+            const subscriptionRaw = subscription as unknown as {
+              current_period_start: number
+              current_period_end: number
+            }
+
+            await saveSubscription({
+              user_id: userId,
+              stripe_customer_id: stripeCustomerId,
+              stripe_subscription_id: stripeSubscriptionId,
+              stripe_price_id: stripePriceId,
+              plan_slug: planSlug,
+              status: subscription.status,
+              current_period_start: new Date(subscriptionRaw.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(subscriptionRaw.current_period_end * 1000).toISOString(),
+              cancel_at_period_end: subscription.cancel_at_period_end
+            })
+
+            // Telemetry: Log checkout success states with tightened privacy
+            if (subscription.status === 'active') {
+              await createUsageEvent({
+                owner_anonymous_id: 'stripe_webhook',
+                user_id: userId,
+                event_type: 'subscription_activated',
+                metadata_json: {
+                  plan_slug: planSlug,
+                  status: subscription.status
+                }
+              })
+              await createUsageEvent({
+                owner_anonymous_id: 'stripe_webhook',
+                user_id: userId,
+                event_type: 'checkout_completed',
+                metadata_json: {
+                  plan_slug: planSlug,
+                  status: subscription.status
+                }
+              })
+            }
+            console.log(`Successfully synced subscription status ${subscription.status} for user_id ${userId} from checkout.session.completed`)
+          } catch (err) {
+            console.error('Failed to retrieve subscription during checkout session completion:', err)
+          }
+        } else {
+          // Log checkout completed event without subscription metadata if non-subscription session mode
+          await createUsageEvent({
+            owner_anonymous_id: 'stripe_webhook',
+            user_id: userId,
+            event_type: 'checkout_completed',
+            metadata_json: {
+              plan_slug: 'free',
+              status: 'completed'
+            }
+          })
+          console.log(`Checkout session completed without subscription for user_id ${userId}`)
+        }
+        break
+      }
+
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
@@ -56,31 +141,7 @@ export async function POST(request: Request) {
         const stripePriceId = subscription.items.data[0]?.price.id || ''
 
         // Resolve local user_id associated with customer ID
-        let userId = await getUserIdByStripeCustomerId(stripeCustomerId)
-
-        if (!userId) {
-          // Defensive fallback: Retrieve customer from Stripe to find email
-          try {
-            const stripeCustomer = await stripe.customers.retrieve(stripeCustomerId)
-            const email = 'email' in stripeCustomer ? stripeCustomer.email : null
-            if (email) {
-              const supabase = getSupabaseAdminClient()
-              const { data } = await supabase
-                .from('user_profiles')
-                .select('user_id')
-                .eq('email', email)
-                .maybeSingle()
-
-              if (data) {
-                userId = (data as { user_id: string }).user_id
-                await saveStripeCustomer(userId, stripeCustomerId)
-                console.log(`Fallback resolved customer for email: ${email} -> user_id: ${userId}`)
-              }
-            }
-          } catch (err) {
-            console.error('Fallback customer resolution crashed:', err)
-          }
-        }
+        const userId = await getUserIdByStripeCustomerId(stripeCustomerId)
 
         if (!userId) {
           console.warn(`Webhook received for unmapped customer ID ${stripeCustomerId}. Acknowledging event with 200 OK.`);
@@ -107,17 +168,15 @@ export async function POST(request: Request) {
           cancel_at_period_end: subscription.cancel_at_period_end
         })
 
-        // Telemetry: Log subscription/checkout success states
+        // Telemetry: Log subscription/checkout success states with tightened privacy
         if (subscription.status === 'active') {
           await createUsageEvent({
             owner_anonymous_id: 'stripe_webhook',
             user_id: userId,
             event_type: 'subscription_activated',
             metadata_json: {
-              stripe_subscription_id: stripeSubscriptionId,
-              stripe_customer_id: stripeCustomerId,
-              price_id: stripePriceId,
-              plan_slug: planSlug
+              plan_slug: planSlug,
+              status: subscription.status
             }
           })
           await createUsageEvent({
@@ -125,8 +184,8 @@ export async function POST(request: Request) {
             user_id: userId,
             event_type: 'checkout_completed',
             metadata_json: {
-              stripe_subscription_id: stripeSubscriptionId,
-              stripe_customer_id: stripeCustomerId
+              plan_slug: planSlug,
+              status: subscription.status
             }
           })
         } else if (subscription.status === 'past_due') {
@@ -135,8 +194,8 @@ export async function POST(request: Request) {
             user_id: userId,
             event_type: 'subscription_past_due',
             metadata_json: {
-              stripe_subscription_id: stripeSubscriptionId,
-              stripe_customer_id: stripeCustomerId
+              plan_slug: planSlug,
+              status: subscription.status
             }
           })
         }
@@ -155,14 +214,14 @@ export async function POST(request: Request) {
         await cancelSubscriptionInDatabase(stripeSubscriptionId)
         console.log(`Successfully processed deleted subscription: ${stripeSubscriptionId}`)
 
-        // Telemetry: Log subscription_canceled event
+        // Telemetry: Log subscription_canceled event with tightened privacy
         await createUsageEvent({
           owner_anonymous_id: 'stripe_webhook',
           user_id: userId || null,
           event_type: 'subscription_canceled',
           metadata_json: {
-            stripe_subscription_id: stripeSubscriptionId,
-            stripe_customer_id: stripeCustomerId
+            plan_slug: 'free',
+            status: 'canceled'
           }
         })
         break
@@ -173,16 +232,14 @@ export async function POST(request: Request) {
         const stripeCustomerId = invoice.customer as string
         const userId = await getUserIdByStripeCustomerId(stripeCustomerId)
 
-        // Telemetry: Log checkout_failed event
+        // Telemetry: Log checkout_failed event with tightened privacy
         await createUsageEvent({
           owner_anonymous_id: 'stripe_webhook',
           user_id: userId || null,
           event_type: 'checkout_failed',
           metadata_json: {
-            invoice_id: invoice.id,
-            stripe_customer_id: stripeCustomerId,
-            amount_due: invoice.amount_due,
-            failure_reason: invoice.billing_reason
+            plan_slug: 'pro',
+            status: 'unpaid'
           }
         })
         break

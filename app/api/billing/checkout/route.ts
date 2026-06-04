@@ -6,8 +6,13 @@ import { checkProductionEnv } from '@/lib/env/server'
 import { createUsageEvent } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 
-export async function POST() {
+export async function POST(request?: Request) {
   try {
+    // Explicitly ignore request payload to prevent client-chosen price ID overrides
+    if (request) {
+      // noop
+    }
+
     if (process.env.STRIPE_ENABLED !== 'true') {
       return NextResponse.json(
         {
@@ -110,8 +115,7 @@ export async function POST() {
         user_id: user.id,
         event_type: 'checkout_started',
         metadata_json: {
-          stripe_customer_id: stripeCustomerId,
-          price_id: stripePriceId
+          plan_slug: 'pro'
         }
       })
     }

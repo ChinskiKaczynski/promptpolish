@@ -91,7 +91,7 @@ export async function POST() {
         user_id: user.id,
         event_type: 'customer_portal_opened',
         metadata_json: {
-          stripe_customer_id: stripeCustomerId
+          plan_slug: 'pro'
         }
       })
     }
