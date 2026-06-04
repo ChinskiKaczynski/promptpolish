@@ -18,7 +18,7 @@ export function AppFooter({ theme = 'light' }: AppFooterProps) {
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100/50 shadow-sm">
               {/* Elegant 4-pointed star logo matching the header */}
-              <svg className="h-4.5 w-4.5 fill-indigo-600" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 fill-indigo-600" viewBox="0 0 24 24">
                 <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z" />
               </svg>
             </div>

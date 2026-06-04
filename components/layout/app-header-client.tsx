@@ -253,7 +253,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                   <Link
                     href="/login"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="w-full text-center block rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-750 active:scale-95"
+                    className="w-full text-center block rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 active:scale-95"
                   >
                     Zaloguj
                   </Link>

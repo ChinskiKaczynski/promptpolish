@@ -25,7 +25,7 @@
 
 body {
   margin: 0;
-  background: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(120, 119, 198, 0.12), rgba(255, 255, 255, 0)), hsl(var(--background));
+  background: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -74,7 +74,7 @@ a {
 
 /* Customize details element scroll transition */
 details[open] summary ~ * {
-  animation: slideDown 0.2s ease-out forwards;
+  animation: slideDown 0.25s ease-out forwards;
 }
 
 @keyframes slideDown {
@@ -86,4 +86,64 @@ details[open] summary ~ * {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Floating Blobs Keyframes */
+@keyframes float-blob-1 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(40px, -60px) scale(1.15); }
+  66% { transform: translate(-30px, 30px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes float-blob-2 {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(-40px, 50px) scale(0.9); }
+  66% { transform: translate(50px, -30px) scale(1.15); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob-1 {
+  animation: float-blob-1 18s infinite ease-in-out;
+}
+
+.animate-blob-2 {
+  animation: float-blob-2 22s infinite ease-in-out;
+}
+
+/* Staggered Fade-in-up class definitions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+.animation-delay-500 {
+  animation-delay: 500ms;
 }

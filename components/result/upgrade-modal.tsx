@@ -73,7 +73,7 @@ export function UpgradeModal({ isOpen, onClose, featureName }: UpgradeModalProps
           </Link>
           <button
             onClick={onClose}
-            className="w-full rounded-2xl bg-slate-950 border border-slate-850 py-3 text-xs font-bold text-slate-400 hover:text-slate-200 transition cursor-pointer"
+            className="w-full rounded-2xl bg-slate-950 border border-slate-800 py-3 text-xs font-bold text-slate-400 hover:text-slate-200 transition cursor-pointer"
           >
             Wróć do darmowej wersji
           </button>

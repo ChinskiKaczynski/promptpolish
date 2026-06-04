@@ -17,7 +17,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-6xl">
             <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/50 px-3.5 py-1 text-xs font-semibold text-indigo-750">
+                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/50 px-3.5 py-1 text-xs font-semibold text-indigo-700">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-600"></span>
@@ -45,7 +45,7 @@ export default async function HomePage() {
                     </svg>
                   </Link>
                   <a 
-                    className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-7 py-4 text-center text-sm font-semibold text-slate-650 active:scale-95 transition-all shadow-sm" 
+                    className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-7 py-4 text-center text-sm font-semibold text-slate-600 active:scale-95 transition-all shadow-sm" 
                     href="#features"
                   >
                     <svg className="mr-2 h-4 w-4 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
@@ -105,7 +105,7 @@ export default async function HomePage() {
                       {/* Star brand logo */}
                       <div className="flex items-center gap-2">
                         <div className="flex h-6 w-6 items-center justify-center rounded bg-indigo-50 border border-indigo-100">
-                          <svg className="h-4.5 w-4.5 fill-indigo-600" viewBox="0 0 24 24">
+                          <svg className="h-4 w-4 fill-indigo-600" viewBox="0 0 24 24">
                             <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z" />
                           </svg>
                         </div>
@@ -218,7 +218,7 @@ export default async function HomePage() {
 
                     {/* Original & Polished Prompt side by side */}
                     <div className="mt-3.5 grid grid-cols-2 gap-3">
-                      <div className="rounded-xl border border-slate-150 bg-slate-50/50 p-2.5 flex flex-col justify-between h-28">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 flex flex-col justify-between h-28">
                         <div>
                           <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Original prompt</span>
                           <p className="mt-1 text-[9px] text-slate-600 leading-normal font-medium">Write a blog post about AI</p>
@@ -231,8 +231,8 @@ export default async function HomePage() {
                           Copy
                         </button>
                         <div>
-                          <span className="text-[8px] font-bold text-slate-450 uppercase tracking-wider">Polished prompt</span>
-                          <p className="mt-1 text-[9px] text-slate-650 leading-normal font-semibold">Write a 1,000-word blog post about the impact of generative AI...</p>
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Polished prompt</span>
+                          <p className="mt-1 text-[9px] text-slate-600 leading-normal font-semibold">Write a 1,000-word blog post about the impact of generative AI...</p>
                         </div>
                         <div className="flex items-center justify-between mt-1 border-t border-slate-100 pt-1.5">
                           <span className="text-[8px] text-slate-400 font-medium">42 tokens</span>
@@ -329,7 +329,7 @@ export default async function HomePage() {
             </article>
 
             <article className="group rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm hover:shadow-md transition-all">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 border border-purple-100 text-purple-650 mb-5">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 border border-purple-100 text-purple-600 mb-5">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -341,7 +341,7 @@ export default async function HomePage() {
             </article>
 
             <article className="group rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm hover:shadow-md transition-all">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-650 mb-5">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 mb-5">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
@@ -353,7 +353,7 @@ export default async function HomePage() {
             </article>
 
             <article className="group rounded-3xl border border-slate-200/70 bg-white p-6 shadow-sm hover:shadow-md transition-all">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 border border-purple-100 text-purple-650 mb-5">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 border border-purple-100 text-purple-600 mb-5">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2" />
                 </svg>
@@ -368,8 +368,8 @@ export default async function HomePage() {
 
         {/* Testimonials section matching screenshot */}
         <section className="bg-slate-50/50 py-16 px-6 border-t border-slate-100">
-          <div className="mx-auto max-w-4xl rounded-2xl border border-slate-150 bg-white p-8 sm:p-10 shadow-sm flex flex-col md:flex-row gap-6 items-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-indigo-650 shrink-0">
+          <div className="mx-auto max-w-4xl rounded-2xl border border-slate-200 bg-white p-8 sm:p-10 shadow-sm flex flex-col md:flex-row gap-6 items-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 shrink-0">
               <span className="text-xl font-serif">“</span>
             </div>
             <div className="flex-1 space-y-4 text-center md:text-left">
@@ -377,13 +377,13 @@ export default async function HomePage() {
                 PromptPolish has become an essential part of our workflow. The quality of our AI outputs has never been better.
               </p>
               <div className="flex items-center justify-center md:justify-start gap-3">
-                <div className="h-8 w-8 rounded-full bg-slate-205 overflow-hidden">
+                <div className="h-8 w-8 rounded-full bg-slate-200 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120" alt="Rohan Patel" className="h-full w-full object-cover" />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-900">Rohan Patel</h4>
-                  <p className="text-[10px] text-slate-450 font-medium">Head of Growth, Lumen</p>
+                  <p className="text-[10px] text-slate-400 font-medium">Head of Growth, Lumen</p>
                 </div>
               </div>
             </div>
@@ -438,11 +438,11 @@ export default async function HomePage() {
         {/* How It Works (Flow Explanation) Section */}
         <section className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
           <div className="text-center">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-650">Proces</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-indigo-600">Proces</h2>
             <p className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
               Jak przebiega audyt promptu?
             </p>
-            <p className="mx-auto mt-4 max-w-2xl text-slate-550 text-sm">
+            <p className="mx-auto mt-4 max-w-2xl text-slate-500 text-sm">
               Proste, bezwysiłkowe flow w 4 krokach, zrealizowane z dbałością o najwyższe standardy inżynierii AI.
             </p>
           </div>
@@ -470,7 +470,7 @@ export default async function HomePage() {
                 desc: 'Odbierasz ustrukturyzowany raport, punktację, lista zmian oraz gotowy do wdrożenia, ulepszony prompt.'
               }
             ].map((step, i) => (
-              <div key={i} className="relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-indigo-250 transition-all">
+              <div key={i} className="relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:border-indigo-200 transition-all">
                 <span className="text-3xl font-black bg-gradient-to-r from-slate-200 to-slate-100 bg-clip-text text-transparent absolute top-4 right-4">
                   {step.num}
                 </span>
@@ -481,7 +481,7 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-16 text-center">
-            <Link className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-8 py-4.5 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all font-sans cursor-pointer" href="/analyze">
+            <Link className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 px-8 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 active:scale-95 transition-all font-sans cursor-pointer" href="/analyze">
               Sprawdź swój prompt teraz
             </Link>
           </div>

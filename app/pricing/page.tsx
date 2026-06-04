@@ -77,7 +77,7 @@ export default async function PricingPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">{freeLimits.name}</h3>
-                  <p className="mt-2 text-xs text-slate-450">Dla hobbystów i osób testujących narzędzie.</p>
+                  <p className="mt-2 text-xs text-slate-400">Dla hobbystów i osób testujących narzędzie.</p>
                 </div>
                 {(!profile || profile.plan_slug === 'free') && (
                   <span className="rounded-full bg-slate-50 border border-slate-200/60 px-3 py-1 text-[10px] font-black text-slate-500 uppercase tracking-wider">
@@ -87,26 +87,26 @@ export default async function PricingPage() {
               </div>
               <div className="mt-6 flex items-baseline">
                 <span className="text-4xl font-extrabold text-slate-900">0 PLN</span>
-                <span className="ml-1.5 text-xs font-bold text-slate-455">/ na zawsze</span>
+                <span className="ml-1.5 text-xs font-bold text-slate-400">/ na zawsze</span>
               </div>
 
               <div className="mt-8 border-t border-slate-100 pt-6 space-y-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-450">Co zawiera plan Free:</p>
-                <ul className="space-y-3.5 text-sm text-slate-650">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Co zawiera plan Free:</p>
+                <ul className="space-y-3.5 text-sm text-slate-600">
                   <li className="flex items-center gap-2.5">
-                    <span className="text-emerald-555 font-bold">✓</span>
+                    <span className="text-emerald-600 font-bold">✓</span>
                     <span><strong>{freeLimits.monthlyAnalyses}</strong> analiz promptów miesięcznie</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <span className="text-emerald-555 font-bold">✓</span>
+                    <span className="text-emerald-600 font-bold">✓</span>
                     <span>Maksymalnie <strong>12,000</strong> znaków na prompt</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <span className="text-emerald-555 font-bold">✓</span>
+                    <span className="text-emerald-600 font-bold">✓</span>
                     <span>Pełna historia analiz (wymaga logowania)</span>
                   </li>
                   <li className="flex items-center gap-2.5">
-                    <span className="text-emerald-555 font-bold">✓</span>
+                    <span className="text-emerald-600 font-bold">✓</span>
                     <span>Eksport do Markdown / TXT</span>
                   </li>
                   <li className="flex items-center gap-2.5 text-slate-400">
@@ -141,7 +141,7 @@ export default async function PricingPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">{proLimits.name} Tier</h3>
-                  <p className="mt-2 text-xs text-slate-450">Dla zaawansowanych twórców i profesjonalistów.</p>
+                  <p className="mt-2 text-xs text-slate-400">Dla zaawansowanych twórców i profesjonalistów.</p>
                 </div>
                 {profile?.plan_slug === 'pro' && (
                   <span className="rounded-full bg-indigo-50 border border-indigo-100 px-3 py-1 text-[10px] font-black text-indigo-700 uppercase tracking-wider">
@@ -156,9 +156,9 @@ export default async function PricingPage() {
                 </span>
               </div>
 
-              <div className="mt-8 border-t border-slate-105 pt-6 space-y-4">
+              <div className="mt-8 border-t border-slate-200 pt-6 space-y-4">
                 <p className="text-xs font-bold uppercase tracking-widest text-indigo-600">Wszystkie zalety Pro:</p>
-                <ul className="space-y-3.5 text-sm text-slate-650">
+                <ul className="space-y-3.5 text-sm text-slate-600">
                   <li className="flex items-center gap-2.5">
                     <span className="text-indigo-600 font-bold">✓</span>
                     <span><strong>{proLimits.monthlyAnalyses}</strong> analiz promptów miesięcznie</span>

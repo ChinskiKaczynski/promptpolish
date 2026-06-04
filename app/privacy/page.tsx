@@ -14,7 +14,7 @@ export default function PrivacyPage() {
           <div className="flex gap-3">
             <span className="text-xl">⚠️</span>
             <div>
-              <h3 className="text-sm font-bold text-amber-955 uppercase tracking-wider">Wersja Robocza / Draft Privacy Policy</h3>
+              <h3 className="text-sm font-bold text-amber-900 uppercase tracking-wider">Wersja Robocza / Draft Privacy Policy</h3>
               <p className="mt-1 text-xs leading-relaxed text-amber-900 font-semibold">
                 To jest roboczy draft polityki prywatności dla platformy <strong>PromptPolish</strong>. Niniejszy dokument służy celom deweloperskim i testowym, nie stanowi oficjalnej porady prawnej i wymaga pełnego audytu prawnego przed udostępnieniem serwisu dla publicznego ruchu lub transakcji płatniczych z Unii Europejskiej (UE). Wdrożenie płatności produkcyjnych (Paid Production) jest wstrzymane do czasu ukończenia weryfikacji przez certyfikowanego radcę prawnego. Zgodność z RODO (GDPR) nie jest na tym etapie gwarantowana.
               </p>
@@ -114,17 +114,17 @@ export default function PrivacyPage() {
                   <tbody className="divide-y divide-slate-200 bg-white text-slate-600 font-semibold">
                     <tr>
                       <td className="px-4 py-3 font-bold text-slate-800">Anonimowe analizy promptów</td>
-                      <td className="px-4 py-3 text-indigo-650 font-bold">30 Dni</td>
+                      <td className="px-4 py-3 text-indigo-600 font-bold">30 Dni</td>
                       <td className="px-4 py-3">Automatycznie usuwane z bazy danych Supabase po 30 dniach od ich utworzenia.</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-bold text-slate-800">Zgromadzone logi i telemetria</td>
-                      <td className="px-4 py-3 text-indigo-650 font-bold">90 Dni</td>
+                      <td className="px-4 py-3 text-indigo-600 font-bold">90 Dni</td>
                       <td className="px-4 py-3">Używane do analizy błędów i zabezpieczania aplikacji.</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3 font-bold text-slate-800">Opinie i głosy (Upvote/Downvote)</td>
-                      <td className="px-4 py-3 text-indigo-650 font-bold">180 Dni</td>
+                      <td className="px-4 py-3 text-indigo-600 font-bold">180 Dni</td>
                       <td className="px-4 py-3">Zbierane w celach analizy jakości ocen audytora promptów.</td>
                     </tr>
                     <tr>

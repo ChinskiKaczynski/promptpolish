@@ -14,7 +14,7 @@ export default function TermsPage() {
           <div className="flex gap-3">
             <span className="text-xl">⚠️</span>
             <div>
-              <h3 className="text-sm font-bold text-amber-955 uppercase tracking-wider">Wersja Robocza Regulaminu / Draft Terms</h3>
+              <h3 className="text-sm font-bold text-amber-900 uppercase tracking-wider">Wersja Robocza Regulaminu / Draft Terms</h3>
               <p className="mt-1 text-xs leading-relaxed text-amber-900 font-semibold">
                 To jest roboczy draft regulaminu (warunków korzystania) dla platformy <strong>PromptPolish</strong>. Dokument służy celom deweloperskim i testowym, nie stanowi oficjalnej opinii prawnej i musi przejść pełną weryfikację przez certyfikowanego radcę prawnego przed udostępnieniem dla publicznego ruchu lub transakcji płatniczych. Wdrożenie systemu płatności produkcyjnych (Paid Production) pozostaje nieaktywne/zawieszone do czasu ukończenia pełnego audytu podatkowego i konsumenckiego. Zgodność z przepisami RODO (GDPR) nie jest na tym etapie gwarantowana.
               </p>
@@ -56,7 +56,7 @@ export default function TermsPage() {
               <p>
                 Dostęp do dodatkowych funkcji (takich jak przechowywanie i filtrowanie historii analiz, favorites, czy eksporty raportów) wymaga rejestracji konta przy użyciu dostawcy uwierzytelniania (Supabase Auth).
               </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-650 font-semibold">
+              <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-600 font-semibold">
                 <li>Użytkownik rejestrujący konto zobowiązuje się do zachowania poufności swoich danych uwierzytelniających oraz odpowiada za wszystkie operacje wykonane w ramach swojego profilu.</li>
                 <li>Z usługi mogą korzystać wyłącznie osoby, które ukończyły osiemnaście (18) lat lub osiągnęły pełnoletność w swojej jurysdykcji.</li>
               </ul>
@@ -129,7 +129,7 @@ export default function TermsPage() {
               <p>
                 PromptPolish korzysta z zewnętrznych interfejsów programistycznych sztucznej inteligencji (takich jak OpenRouter / skonfigurowany dostawca modelu AI). Użytkownik przyjmuje do wiadomości, że:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-650 font-semibold">
+              <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-600 font-semibold">
                 <li>Wyniki działania sztucznej inteligencji mogą być niepełne, niedokładne lub zawierać tzw. halucynacje.</li>
                 <li>Serwis nie gwarantuje, że ulepszone wersje promptów przyniosą określony rezultat biznesowy, wydajnościowy lub techniczny w docelowych systemach LLM.</li>
                 <li>Użytkownik jest zobowiązany do samodzielnego przetestowania i zatwierdzenia zoptymalizowanego promptu we własnym środowisku przed wdrożeniem produkcyjnym. Usługa jest świadczona w stanie &quot;as-is&quot; (w takim stanie, w jakim się znajduje).</li>

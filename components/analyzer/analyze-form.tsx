@@ -40,6 +40,7 @@ export function AnalyzeForm() {
   const [taskType, setTaskType] = useState('')
   const [expectedOutputFormat, setExpectedOutputFormat] = useState('')
   const [constraints, setConstraints] = useState('')
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false)
 
   // Real Audit Loading States & Session Ownership Mappings
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -224,9 +225,9 @@ export function AnalyzeForm() {
         {/* Upper Dashboard: Safety Warnings & Daily Quotas */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Privacy Disclaimer Card */}
-          <div className="rounded-2xl border border-amber-200/70 bg-amber-50/20 p-4.5 text-xs leading-relaxed text-amber-900 flex gap-3.5 shadow-sm">
+          <div className="rounded-2xl border border-amber-200/70 bg-amber-50/20 p-4 text-xs leading-relaxed text-amber-900 flex gap-3 shadow-sm">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m0-6h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
               </svg>
             </div>
@@ -241,9 +242,9 @@ export function AnalyzeForm() {
           </div>
 
           {/* Daily Limit Badge */}
-          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-4.5 text-xs leading-relaxed text-indigo-900 flex gap-3.5 shadow-sm">
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-4 text-xs leading-relaxed text-indigo-900 flex gap-3 shadow-sm">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
-              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
@@ -263,7 +264,7 @@ export function AnalyzeForm() {
           <label className="space-y-2 text-sm font-semibold text-slate-800">
             {workingLanguage === 'pl' ? 'Język roboczy' : 'Working language'}
             <select 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-150 focus:bg-white shadow-sm" 
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white shadow-sm" 
               value={workingLanguage} 
               onChange={(e) => setWorkingLanguage(e.target.value as 'pl' | 'en')}
             >
@@ -277,7 +278,7 @@ export function AnalyzeForm() {
               {workingLanguage === 'pl' ? 'Tryb audytu' : 'Audit mode'}
             </span>
             <select 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-150 focus:bg-white shadow-sm" 
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white shadow-sm" 
               value={auditMode} 
               onChange={(e) => setAuditMode(e.target.value)}
             >
@@ -295,10 +296,10 @@ export function AnalyzeForm() {
         {/* Primary Prompt Input Textarea */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-semibold text-slate-850">
+            <label className="text-sm font-semibold text-slate-800">
               {workingLanguage === 'pl' ? 'Prompt do audytu (Wymagany)' : 'Prompt to audit (Required)'}
             </label>
-            <span className={`text-xs font-semibold ${isTooLong ? 'text-red-650' : isApproachingLimit ? 'text-amber-650' : 'text-slate-400'}`}>
+            <span className={`text-xs font-semibold ${isTooLong ? 'text-red-600' : isApproachingLimit ? 'text-amber-600' : 'text-slate-400'}`}>
               {inputPrompt.length.toLocaleString()} / {MAX_PROMPT_CHARS.toLocaleString()} {workingLanguage === 'pl' ? 'znaków' : 'characters'}
             </span>
           </div>
@@ -330,73 +331,81 @@ export function AnalyzeForm() {
           </p>
         )}
         {isTooLong && (
-          <p className="text-xs font-semibold text-red-750 flex items-center gap-1.5">
+          <p className="text-xs font-semibold text-red-700 flex items-center gap-1.5">
             ❌ {workingLanguage === 'pl'
               ? `Błąd: Twój prompt przekracza maksymalny dopuszczalny limit ${MAX_PROMPT_CHARS.toLocaleString()} znaków (obecnie ${inputPrompt.length.toLocaleString()}).`
               : `Error: Your prompt exceeds the maximum allowed limit of ${MAX_PROMPT_CHARS.toLocaleString()} characters (currently ${inputPrompt.length.toLocaleString()}).`}
           </p>
         )}
 
-        {/* Divider for optional parameters */}
-        <div className="relative py-2">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-slate-200/70" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-white px-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-              {workingLanguage === 'pl' ? 'Opcjonalne Uściślenia Celu (Rekomendowane)' : 'Optional Task Calibration (Recommended)'}
-            </span>
-          </div>
-        </div>
-
-        <CalibrationFields
-          taskGoal={taskGoal}
-          setTaskGoal={setTaskGoal}
-          taskType={taskType}
-          setTaskType={setTaskType}
-          expectedOutputFormat={expectedOutputFormat}
-          setExpectedOutputFormat={setExpectedOutputFormat}
-          constraints={constraints}
-          setConstraints={setConstraints}
-          workingLanguage={workingLanguage}
-        />
-
-        {/* Advanced Settings */}
-        <div className="relative py-2">
-          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t border-slate-200/70" />
-          </div>
-          <div className="relative flex justify-center">
-            <span className="bg-white px-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-              {workingLanguage === 'pl' ? 'Ustawienia zaawansowane' : 'Advanced Settings'}
-            </span>
-          </div>
-        </div>
-
+        {/* Expandable Advanced Options Panel */}
         <div className="space-y-4">
-          <label className="space-y-2 text-sm font-semibold text-slate-800 block">
-            <span className="block">
-              {workingLanguage === 'pl' ? 'Docelowy model AI' : 'Target AI model'}
-            </span>
-            <select
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-150 focus:bg-white shadow-sm block"
-              value={profileSlug}
-              onChange={(e) => setProfileSlug(e.target.value)}
+          <button
+            type="button"
+            onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+            className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest transition shadow-sm"
+          >
+            <span>{workingLanguage === 'pl' ? 'Opcjonalna kalibracja i model docelowy' : 'Optional calibration & target model'}</span>
+            <svg
+              className={`h-5 w-5 text-slate-400 transition-transform duration-300 ${isAdvancedOpen ? 'rotate-180 text-indigo-600' : ''}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor"
             >
-              <option value="general-llm">
-                {workingLanguage === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model'}
-              </option>
-              <option value="openrouter-deepseek-v4-flash">
-                {workingLanguage === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model'}
-              </option>
-            </select>
-          </label>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isAdvancedOpen && (
+            <div className="space-y-6 pt-4 border-t border-slate-100 animate-in fade-in duration-200">
+              <CalibrationFields
+                taskGoal={taskGoal}
+                setTaskGoal={setTaskGoal}
+                taskType={taskType}
+                setTaskType={setTaskType}
+                expectedOutputFormat={expectedOutputFormat}
+                setExpectedOutputFormat={setExpectedOutputFormat}
+                constraints={constraints}
+                setConstraints={setConstraints}
+                workingLanguage={workingLanguage}
+              />
+
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div className="w-full border-t border-slate-200/70" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white px-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+                    {workingLanguage === 'pl' ? 'Ustawienia zaawansowane' : 'Advanced Settings'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="space-y-2 text-sm font-semibold text-slate-800 block">
+                  <span className="block">
+                    {workingLanguage === 'pl' ? 'Docelowy model AI' : 'Target AI model'}
+                  </span>
+                  <select
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white shadow-sm block"
+                    value={profileSlug}
+                    onChange={(e) => setProfileSlug(e.target.value)}
+                  >
+                    <option value="general-llm">
+                      {workingLanguage === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model'}
+                    </option>
+                    <option value="openrouter-deepseek-v4-flash">
+                      {workingLanguage === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model'}
+                    </option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Mapped Localized Error Banners */}
         {errorMessage && (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-800 flex gap-3 shadow-sm items-center animate-pulse">
-            <svg className="h-5 w-5 shrink-0 text-red-655" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <div>
@@ -409,11 +418,11 @@ export function AnalyzeForm() {
         {/* Submission Button */}
         <div className="pt-4">
           <button
-            className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4.5 text-sm active:scale-[0.99] disabled:scale-100 disabled:cursor-not-allowed disabled:bg-slate-205 disabled:text-slate-400 shadow-md shadow-indigo-100 hover:shadow-indigo-200 active:shadow-sm transition-all flex items-center justify-center gap-2"
+            className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 text-sm active:scale-[0.99] disabled:scale-100 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 shadow-md shadow-indigo-100 hover:shadow-indigo-200 active:shadow-sm transition-all flex items-center justify-center gap-2"
             disabled={isTooShort || isTooLong || isBlocked}
             type="submit"
           >
-            <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 00-2-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             {workingLanguage === 'pl' ? 'Przeprowadź audyt promptu' : 'Conduct prompt audit'}
@@ -431,7 +440,7 @@ export function AnalyzeForm() {
           </p>
         )}
         {isBlocked && (
-          <p className="text-center text-xs font-semibold text-red-650 animate-pulse">
+          <p className="text-center text-xs font-semibold text-red-600 animate-pulse">
             ⚠️ {workingLanguage === 'pl' 
               ? 'Ostrzeżenie: Wykryto wrażliwe dane. Usuń klucze API lub poufne teksty, aby odblokować przycisk audytu.'
               : 'Warning: Sensitive data detected. Remove API keys or credentials to unlock the audit button.'}

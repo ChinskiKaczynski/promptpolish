@@ -149,7 +149,7 @@ export default async function AccountPage() {
             /* Stripe Subscription Details */
             <div className="mt-6 space-y-6">
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="rounded-2xl border border-slate-150 bg-slate-50/50 p-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
                     Status subskrypcji
                   </span>
@@ -196,7 +196,7 @@ export default async function AccountPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-150 bg-slate-50/50 p-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
                     Okres rozliczeniowy
                   </span>
@@ -206,7 +206,7 @@ export default async function AccountPage() {
                   </span>
                 </div>
 
-                <div className="rounded-2xl border border-slate-150 bg-slate-50/50 p-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
                   <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
                     {subscription.cancel_at_period_end
                       ? 'Wygaśnięcie subskrypcji'
@@ -328,7 +328,7 @@ export default async function AccountPage() {
             </span>
             <Link
               href="/history"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 hover:bg-indigo-650 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer shrink-0 font-sans"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-900 hover:bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer shrink-0 font-sans"
             >
               Przejdź do historii
             </Link>

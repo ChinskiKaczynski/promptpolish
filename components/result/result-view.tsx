@@ -1,4 +1,6 @@
-import 'server-only'
+'use client'
+
+import { useState, useEffect } from 'react'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 import nextDynamic from 'next/dynamic'
 
@@ -78,6 +80,13 @@ export const criterionTranslations: Record<string, string> = {
 }
 
 export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 50)
+    return () => clearTimeout(timer)
+  }, [])
+
   const scoreMeta = scoreLevelTranslations[result.scoreLevel] || scoreLevelTranslations.decent
   const promptLines = result.improved_prompt.split('\n')
 
@@ -92,7 +101,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
   return (
     <div className="space-y-8 pb-16">
       {/* Top Breadcrumb/Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-200/60 pb-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-slate-200/60 pb-6 animate-fade-in-up">
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center rounded-full bg-indigo-50 border border-indigo-100/50 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700 uppercase">
@@ -115,7 +124,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       </div>
 
       {/* Main Score & Warning Cards Layout */}
-      <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
+      <div className="grid gap-6 md:grid-cols-[1fr_1.2fr] animate-fade-in-up animation-delay-100">
         {/* Score Display Card */}
         <div className={`relative flex flex-col justify-between overflow-hidden rounded-3xl border p-6 sm:p-8 shadow-md transition-all ${scoreMeta.bg} ${scoreMeta.border}`}>
           <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-white opacity-40 blur-xl" />
@@ -124,7 +133,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             <div className="space-y-2">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ogólna Ocena Jakości</p>
               <h2 className={`text-3xl font-extrabold tracking-tight ${scoreMeta.text}`}>{scoreMeta.label}</h2>
-              <p className="text-xs leading-relaxed text-slate-655 max-w-[240px]">{scoreMeta.desc}</p>
+              <p className="text-xs leading-relaxed text-slate-600 max-w-[240px]">{scoreMeta.desc}</p>
             </div>
             
             {/* SVG Circular Progress Meter */}
@@ -146,7 +155,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   strokeWidth={strokeWidth}
                   fill="transparent"
                   strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
+                  strokeDashoffset={mounted ? strokeDashoffset : circumference}
                   strokeLinecap="round"
                 />
               </svg>
@@ -196,13 +205,12 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         
         {/* Left Side: Summary, Weaknesses, Improvement Plan */}
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in-up animation-delay-200">
           
           {/* Overall Summary Card */}
           <section className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
             <h3 className="text-lg font-bold tracking-tight text-slate-900 mb-4">Podsumowanie audytu</h3>
             <div className="relative">
-              <div className="absolute -left-2 -top-2 h-8 w-8 text-indigo-50/50 -z-10" />
               <p className="text-xs sm:text-sm leading-relaxed text-slate-600 pl-2">
                 {result.overall_summary}
               </p>
@@ -213,7 +221,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           <section className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600 border border-rose-100">
-                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
@@ -236,7 +244,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           <section className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
-                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -246,7 +254,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             <div className="space-y-3.5">
               {result.improvement_plan.map((step, i) => (
                 <div key={i} className="flex items-start gap-3 p-1">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-650 border border-indigo-100">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-600 border border-indigo-100">
                     {i + 1}
                   </div>
                   <p className="text-xs font-bold text-slate-600 mt-0.5 leading-relaxed">{step}</p>
@@ -258,7 +266,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Right Side: Criteria Breakdown with Native Details/Summary */}
-        <section className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
+        <section className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md animate-fade-in-up animation-delay-300">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
             <div>
               <h3 className="text-lg font-bold tracking-tight text-slate-900">Kryteria szczegółowe</h3>
@@ -300,11 +308,11 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                         </span>
                       </div>
                       
-                      {/* Progress Bar */}
+                      {/* Progress Bar with smooth growth animation */}
                       <div className="mt-2.5 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${barColor}`}
-                          style={{ width: `${item.raw_score_0_10 * 10}%` }}
+                          className={`h-full rounded-full ${barColor} transition-all duration-1000 ease-out`}
+                          style={{ width: mounted ? `${item.raw_score_0_10 * 10}%` : '0%' }}
                         />
                       </div>
                     </div>
@@ -312,7 +320,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                     {/* Expand/Collapse Chevron */}
                     <div className="shrink-0 p-1 text-slate-400">
                       <svg
-                        className="h-4.5 w-4.5 transition-transform duration-300 group-open:rotate-180 group-open:text-indigo-650"
+                        className="h-5 w-5 transition-transform duration-300 group-open:rotate-180 group-open:text-indigo-600"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -324,14 +332,14 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
 
                   {/* Expandable Details Container */}
                   <div className="mt-3.5 transition-all duration-300">
-                    <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4.5 space-y-3">
+                    <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-3">
                       <div>
                         <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Analiza słabości:</p>
-                        <p className="mt-1 text-xs text-slate-650 leading-relaxed font-semibold">{item.rationale}</p>
+                        <p className="mt-1 text-xs text-slate-600 leading-relaxed font-semibold">{item.rationale}</p>
                       </div>
                       <div className="border-t border-slate-200/50 pt-2.5">
                         <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500">Rekomendowane ulepszenie:</p>
-                        <p className="mt-1 text-xs text-indigo-950 font-bold leading-relaxed">{item.improvement_suggestion}</p>
+                        <p className="mt-1 text-xs text-indigo-900 font-bold leading-relaxed">{item.improvement_suggestion}</p>
                       </div>
                     </div>
                   </div>
@@ -344,7 +352,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       </div>
 
       {/* Improved Prompt Block (Sleek Dark Theme Editor Style matching layout mockup) */}
-      <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl">
+      <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950 shadow-2xl animate-fade-in-up animation-delay-400">
         {/* Editor Top Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 bg-slate-900/60 px-6 py-4">
           <div className="flex items-center gap-3">
@@ -380,7 +388,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       </section>
 
       {/* Safety, Uncertainty, Model Fit & Change Notes Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 animate-fade-in-up animation-delay-500">
         
         {/* Change Explanations */}
         <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm space-y-3.5">
@@ -410,13 +418,13 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
 
         {/* Uncertainty Warnings */}
         <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm space-y-3.5">
-          <div className="flex items-center gap-2.5 text-amber-650">
+          <div className="flex items-center gap-2.5 text-amber-600">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">OSTRZEŻENIA</h4>
           </div>
-          <ul className="list-disc pl-4 space-y-2 text-xs text-slate-505 leading-relaxed font-semibold">
+          <ul className="list-disc pl-4 space-y-2 text-xs text-slate-500 leading-relaxed font-semibold">
             {result.uncertainty_warnings.map((note, i) => <li key={i}>{note}</li>)}
           </ul>
         </div>
@@ -438,7 +446,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
 
       {/* Footer Interactive Actions Section: Feedback & Public Sharing */}
       {!isPublicMode && (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 animate-fade-in-up animation-delay-500">
           <FeedbackSection analysisId={result.id} />
           <ShareSettings
             analysisId={result.id}

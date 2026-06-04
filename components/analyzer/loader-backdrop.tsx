@@ -1,4 +1,3 @@
-
 interface LoaderBackdropProps {
   isSubmitting: boolean
   workingLanguage: 'pl' | 'en'
@@ -14,9 +13,12 @@ export function LoaderBackdrop({
 }: LoaderBackdropProps) {
   if (!isSubmitting) return null
 
+  const progressPct = Math.round(((currentStepIndex + 1) / loadingSteps.length) * 100)
+
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md transition-all duration-300">
       <div className="relative flex flex-col items-center max-w-md px-6 text-center">
+        
         {/* Spinning gradient ring */}
         <div className="relative flex h-20 w-20 items-center justify-center">
           <div className="absolute h-full w-full animate-spin rounded-full border-4 border-indigo-500/20 border-t-indigo-500" />
@@ -30,20 +32,44 @@ export function LoaderBackdrop({
         </h3>
         
         {/* Steps Progress Indicator */}
-        <div className="mt-6 w-72 rounded-full bg-slate-800 p-1">
+        <div className="mt-6 w-80 rounded-full bg-slate-800 p-1 shadow-inner">
           <div 
-            className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500" 
-            style={{ width: `${((currentStepIndex + 1) / loadingSteps.length) * 100}%` }}
+            className="h-2 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-violet-500 transition-all duration-500 ease-out" 
+            style={{ width: `${progressPct}%` }}
           />
         </div>
         
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-indigo-400">
-          {workingLanguage === 'pl' ? `Krok ${currentStepIndex + 1} z ${loadingSteps.length}` : `Step ${currentStepIndex + 1} of ${loadingSteps.length}`}
-        </p>
-        
-        <p className="mt-2 text-sm text-slate-400 leading-relaxed min-h-[40px] animate-fade-in">
-          {loadingSteps[currentStepIndex]}
-        </p>
+        <div className="mt-3 flex justify-between w-80 text-[10px] font-bold text-slate-450 uppercase tracking-widest px-1">
+          <span>{workingLanguage === 'pl' ? `Krok ${currentStepIndex + 1} z ${loadingSteps.length}` : `Step ${currentStepIndex + 1} of ${loadingSteps.length}`}</span>
+          <span className="text-indigo-400 animate-pulse">{progressPct}%</span>
+        </div>
+
+        {/* Visual Engineering Checkpoints List */}
+        <div className="mt-8 text-left space-y-3 w-80 max-w-full border-t border-white/5 pt-6">
+          {loadingSteps.map((step, idx) => {
+            const isCompleted = idx < currentStepIndex
+            const isActive = idx === currentStepIndex
+            return (
+              <div 
+                key={idx} 
+                className={`flex items-center gap-3 text-xs transition-all duration-300 ${
+                  isCompleted ? 'text-indigo-400/80 opacity-60' :
+                  isActive ? 'text-white font-bold scale-[1.02] translate-x-1' :
+                  'text-slate-600'
+                }`}
+              >
+                <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] shrink-0 border transition-all duration-300 ${
+                  isCompleted ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300' :
+                  isActive ? 'border-indigo-400 bg-indigo-500 animate-pulse text-white font-bold shadow-md shadow-indigo-500/40' :
+                  'border-slate-800 text-slate-600'
+                }`}>
+                  {isCompleted ? '✓' : idx + 1}
+                </div>
+                <span className="truncate">{step}</span>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

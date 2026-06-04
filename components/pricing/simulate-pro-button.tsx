@@ -41,7 +41,7 @@ export function SimulateProButton({ isPro }: SimulateProButtonProps) {
       <button
         onClick={handleActivate}
         disabled={loading}
-        className="w-full text-center rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-white font-semibold py-2 text-xs border border-slate-800 transition active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full text-center rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white font-semibold py-2 text-xs border border-slate-800 transition active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading
           ? 'Przetwarzanie...'

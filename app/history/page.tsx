@@ -84,19 +84,19 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
               <div className="grid gap-4 sm:grid-cols-2 text-left max-w-lg mx-auto border-t border-slate-100 pt-6">
                 <div className="flex items-start gap-3">
                   <span className="text-indigo-500 font-bold text-sm">★</span>
-                  <span className="text-xs text-slate-650 font-semibold">Zapisuj nieograniczoną historię promptów</span>
+                  <span className="text-xs text-slate-600 font-semibold">Zapisuj nieograniczoną historię promptów</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-indigo-500 font-bold text-sm">🔍</span>
-                  <span className="text-xs text-slate-655 font-semibold">Wyszukuj i filtruj audyty błyskawicznie</span>
+                  <span className="text-xs text-slate-600 font-semibold">Wyszukuj i filtruj audyty błyskawicznie</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-indigo-500 font-bold text-sm">📁</span>
-                  <span className="text-xs text-slate-650 font-semibold">Grupuj najlepsze instrukcje w jednym miejscu</span>
+                  <span className="text-xs text-slate-600 font-semibold">Grupuj najlepsze instrukcje w jednym miejscu</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-indigo-500 font-bold text-sm">🔗</span>
-                  <span className="text-xs text-slate-655 font-semibold">Pełna kontrola nad publicznym dzieleniem się</span>
+                  <span className="text-xs text-slate-600 font-semibold">Pełna kontrola nad publicznym dzieleniem się</span>
                 </div>
               </div>
 
@@ -135,7 +135,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
             Historia analiz
           </h1>
-          <p className="text-xs sm:text-sm text-slate-450 font-medium">
+          <p className="text-xs sm:text-sm text-slate-400 font-medium">
             Przeszukuj swoje analizy, filtruj wyniki inżynieryjne i zarządzaj swoimi ulubionymi promptami.
           </p>
         </div>
@@ -144,7 +144,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
         {!user && (
           <div className="rounded-3xl border border-amber-200 bg-amber-50/20 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
             <div className="space-y-1">
-              <h4 className="text-sm font-bold text-amber-955 flex items-center gap-2">
+              <h4 className="text-sm font-bold text-amber-900 flex items-center gap-2">
                 <span>💡</span> Przeglądasz historię jako gość
               </h4>
               <p className="text-xs text-amber-900/90 leading-relaxed max-w-2xl font-semibold">
