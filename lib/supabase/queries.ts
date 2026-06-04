@@ -384,6 +384,7 @@ export async function setUserPlanSlug(profile: {
 export async function getSharedPromptAnalysis(
   shareToken: string
 ): Promise<SharedPromptAnalysis | null> {
+  if (!shareToken) return null
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('prompt_analyses')
@@ -474,8 +475,14 @@ export async function createCopyEvent(
  */
 export async function createShareLink(
   analysisId: string,
-  ownerAnonymousId: string
+  ownerAnonymousId: string,
+  userId?: string
 ): Promise<string | null> {
+  const analysis = await getPromptAnalysisForOwner(analysisId, ownerAnonymousId, userId)
+  if (!analysis) {
+    return null
+  }
+
   const shareToken = createShareToken()
   const supabase = getSupabaseAdminClient()
 
@@ -486,7 +493,6 @@ export async function createShareLink(
       share_token: shareToken
     })
     .eq('id', analysisId)
-    .eq('owner_anonymous_id', ownerAnonymousId)
     .select('share_token')
     .maybeSingle()
 
@@ -503,14 +509,20 @@ export async function createShareLink(
  * Disables public sharing by setting is_share_enabled = false and clearing the share token.
  * Verifies ownership first.
  *
- * Returns true only when a row owned by ownerAnonymousId was found and updated.
+ * Returns true only when a row owned by the owner was found and updated.
  * Returns false for non-owners, missing records, or DB errors — preventing
- * a silent false-success when the WHERE clause matches 0 rows.
+ * a silent false-success.
  */
 export async function disableShareLink(
   analysisId: string,
-  ownerAnonymousId: string
+  ownerAnonymousId: string,
+  userId?: string
 ): Promise<boolean> {
+  const analysis = await getPromptAnalysisForOwner(analysisId, ownerAnonymousId, userId)
+  if (!analysis) {
+    return false
+  }
+
   const supabase = getSupabaseAdminClient()
 
   const { data, error } = await supabase
@@ -520,7 +532,6 @@ export async function disableShareLink(
       share_token: null
     })
     .eq('id', analysisId)
-    .eq('owner_anonymous_id', ownerAnonymousId)
     .select('id')
     .maybeSingle()
 

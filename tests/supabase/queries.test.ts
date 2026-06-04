@@ -270,7 +270,11 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
 
   describe('createShareLink & disableShareLink', () => {
     it('enables sharing by generating share token and updating row', async () => {
-      mockMaybeSingle.mockResolvedValue({
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: { id: 'analysis-uuid', owner_anonymous_id: 'owner-123', user_id: null },
+        error: null
+      })
+      mockMaybeSingle.mockResolvedValueOnce({
         data: { share_token: 'mocked-32-char-share-token-xyz-123' },
         error: null
       })
@@ -282,12 +286,14 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
         share_token: 'mocked-32-char-share-token-xyz-123'
       })
       expect(mockEq).toHaveBeenCalledWith('id', 'analysis-uuid')
-      expect(mockEq).toHaveBeenCalledWith('owner_anonymous_id', 'owner-123')
     })
 
     it('disables public share by setting is_share_enabled=false and clearing token', async () => {
-      // Fixed implementation: returns data with the updated row id to confirm ownership match
-      mockMaybeSingle.mockResolvedValue({
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: { id: 'analysis-uuid', owner_anonymous_id: 'owner-123', user_id: null },
+        error: null
+      })
+      mockMaybeSingle.mockResolvedValueOnce({
         data: { id: 'analysis-uuid' },
         error: null
       })
@@ -299,7 +305,6 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
         share_token: null
       })
       expect(mockEq).toHaveBeenCalledWith('id', 'analysis-uuid')
-      expect(mockEq).toHaveBeenCalledWith('owner_anonymous_id', 'owner-123')
     })
   })
 })

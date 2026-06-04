@@ -252,11 +252,15 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
 describe('disableShareLink — Ownership Verification', () => {
   const mockMaybeSingle = vi.fn()
   const mockEq = vi.fn()
+  const mockIs = vi.fn()
   const mockSelect = vi.fn()
   const mockUpdate = vi.fn()
 
   const mockSupabaseClient = {
-    from: vi.fn(() => ({ update: mockUpdate }))
+    from: vi.fn(() => ({
+      select: mockSelect,
+      update: mockUpdate
+    }))
   }
 
   beforeEach(() => {
@@ -264,11 +268,13 @@ describe('disableShareLink — Ownership Verification', () => {
 
     const builder: Record<string, unknown> = {
       eq: mockEq,
+      is: mockIs,
       select: mockSelect,
       maybeSingle: mockMaybeSingle
     }
     mockUpdate.mockReturnValue(builder)
     mockEq.mockReturnValue(builder)
+    mockIs.mockReturnValue(builder)
     mockSelect.mockReturnValue(builder)
 
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
@@ -276,32 +282,37 @@ describe('disableShareLink — Ownership Verification', () => {
   })
 
   it('returns true when the owned row is successfully updated', async () => {
-    mockMaybeSingle.mockResolvedValue({ data: { id: 'analysis-uuid' }, error: null })
+    // 1. mock getPromptAnalysisForOwner resolve
+    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid', owner_anonymous_id: 'owner-123', user_id: null }, error: null })
+    // 2. mock update resolve
+    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid' }, error: null })
 
     const result = await disableShareLink('analysis-uuid', 'owner-123')
     expect(result).toBe(true)
   })
 
   it('returns false when no row matches (non-owner or wrong analysis_id)', async () => {
-    // DB returns null data when WHERE matches 0 rows
-    mockMaybeSingle.mockResolvedValue({ data: null, error: null })
+    // 1. mock getPromptAnalysisForOwner resolve with wrong owner -> returns null
+    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid', owner_anonymous_id: 'other-owner', user_id: null }, error: null })
 
-    const result = await disableShareLink('analysis-uuid', 'wrong-owner')
+    const result = await disableShareLink('analysis-uuid', 'owner-123')
     expect(result).toBe(false)
   })
 
-  it('enforces owner_anonymous_id in the WHERE clause', async () => {
-    mockMaybeSingle.mockResolvedValue({ data: { id: 'analysis-uuid' }, error: null })
+  it('enforces ownership checks and performs the correct update', async () => {
+    // 1. mock getPromptAnalysisForOwner resolve
+    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid', owner_anonymous_id: 'owner-123', user_id: null }, error: null })
+    // 2. mock update resolve
+    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid' }, error: null })
 
     await disableShareLink('analysis-uuid', 'owner-123')
 
     expect(mockEq).toHaveBeenCalledWith('id', 'analysis-uuid')
-    expect(mockEq).toHaveBeenCalledWith('owner_anonymous_id', 'owner-123')
     expect(mockUpdate).toHaveBeenCalledWith({ is_share_enabled: false, share_token: null })
   })
 
   it('returns false and logs error on database failure', async () => {
-    mockMaybeSingle.mockResolvedValue({ data: null, error: { message: 'DB timeout' } })
+    mockMaybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'DB timeout' } })
 
     const result = await disableShareLink('analysis-uuid', 'owner-123')
     expect(result).toBe(false)

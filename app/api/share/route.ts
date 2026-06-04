@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
+import { getAuthUser } from '@/lib/identity/auth'
 import { createShareLink, createUsageEvent } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
+
+export const dynamic = 'force-dynamic'
 
 const shareRequestSchema = z.object({
   analysis_id: z.string().uuid()
@@ -36,20 +39,22 @@ export async function POST(request: Request) {
 
     const { analysis_id } = parsed.data
 
-    // 1. Resolve owner identity from signed secure cookie
+    // 1. Resolve owner identity from signed secure cookie or authenticated session
+    const user = await getAuthUser()
     const ownerAnonymousId = await getOwnerIdFromCookies()
-    if (!ownerAnonymousId) {
+
+    if (!user && !ownerAnonymousId) {
       return NextResponse.json(
         {
           error: 'unauthorized',
-          message: 'Anonymous session required to perform this action.'
+          message: 'Authentication or anonymous session required to perform this action.'
         },
         { status: 401 }
       )
     }
 
     // 2. Enable sharing and generate cryptographically secure share token
-    const shareToken = await createShareLink(analysis_id, ownerAnonymousId)
+    const shareToken = await createShareLink(analysis_id, ownerAnonymousId || '', user?.id)
     if (!shareToken) {
       return NextResponse.json(
         {
@@ -62,7 +67,8 @@ export async function POST(request: Request) {
 
     // 3. Save telemetry log event
     await createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId,
+      owner_anonymous_id: ownerAnonymousId || '',
+      user_id: user?.id || null,
       event_type: 'share_link_created',
       metadata_json: {
         analysis_id
