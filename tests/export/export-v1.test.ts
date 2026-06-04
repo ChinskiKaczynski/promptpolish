@@ -15,10 +15,16 @@ vi.mock('@/lib/supabase/queries', () => ({
   createUsageEvent: vi.fn()
 }))
 
+vi.mock('@/lib/plans/config', () => ({
+  getPlanSlugForUser: vi.fn(),
+  canExportPdf: vi.fn(),
+}))
+
 import { GET } from '@/app/api/export/[id]/route'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
+import { getPlanSlugForUser, canExportPdf } from '@/lib/plans/config'
 import type { PromptAnalysisRow } from '@/lib/supabase/types'
 
 const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
@@ -82,6 +88,8 @@ describe('Export v1 API Dynamic Routes', () => {
     vi.mocked(getOwnerIdFromCookies).mockResolvedValue(OWNER_ID)
     vi.mocked(getAuthUser).mockResolvedValue(null)
     vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(mockAnalysisRecord)
+    vi.mocked(getPlanSlugForUser).mockResolvedValue('pro')
+    vi.mocked(canExportPdf).mockReturnValue(true)
   })
 
   it('rejects with 400 if format is missing or invalid', async () => {
@@ -189,6 +197,53 @@ describe('Export v1 API Dynamic Routes', () => {
     vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(null)
 
     const req = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=txt`)
+    const params = Promise.resolve({ id: ANALYSIS_ID })
+    const res = await GET(req, { params })
+
+    expect(res.status).toBe(404)
+    expect(createUsageEvent).not.toHaveBeenCalled()
+  })
+
+  it('returns 200 and PDF binary for authorized owner with Pro subscription', async () => {
+    const req = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=pdf`)
+    const params = Promise.resolve({ id: ANALYSIS_ID })
+    const res = await GET(req, { params })
+
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Content-Type')).toContain('application/pdf')
+    expect(res.headers.get('Content-Disposition')).toBe(`attachment; filename="promptpolish-audit-${ANALYSIS_ID}.pdf"`)
+
+    const body = await res.arrayBuffer()
+    expect(body.byteLength).toBeGreaterThan(0)
+
+    expect(createUsageEvent).toHaveBeenCalledWith({
+      owner_anonymous_id: OWNER_ID,
+      user_id: null,
+      event_type: 'export_pdf',
+      metadata_json: {
+        analysis_id: ANALYSIS_ID,
+        export_type: 'pdf'
+      }
+    })
+  })
+
+  it('returns 403 Forbidden for authorized owner with Free subscription', async () => {
+    vi.mocked(getPlanSlugForUser).mockResolvedValue('free')
+    vi.mocked(canExportPdf).mockReturnValue(false)
+
+    const req = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=pdf`)
+    const params = Promise.resolve({ id: ANALYSIS_ID })
+    const res = await GET(req, { params })
+
+    expect(res.status).toBe(403)
+    expect(await res.text()).toContain('PDF export requires a Pro subscription')
+    expect(createUsageEvent).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 for non-owners requesting PDF', async () => {
+    vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(null)
+
+    const req = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=pdf`)
     const params = Promise.resolve({ id: ANALYSIS_ID })
     const res = await GET(req, { params })
 
