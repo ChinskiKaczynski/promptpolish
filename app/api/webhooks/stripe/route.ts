@@ -5,6 +5,12 @@ import { recordStripeWebhookFailure } from '@/lib/monitoring/observability'
 import { createUsageEvent } from '@/lib/supabase/queries'
 
 
+function resolvePlanSlug(priceId: string, status: string, proPriceId: string): string {
+  const isProPrice = priceId === proPriceId
+  const isActiveStatus = ['active', 'trialing', 'past_due'].includes(status)
+  return (isProPrice && isActiveStatus) ? 'pro' : 'free'
+}
+
 export async function POST(request: Request) {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return new NextResponse('Stripe webhook disabled', { status: 200 })
@@ -12,10 +18,10 @@ export async function POST(request: Request) {
 
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-  const stripePriceIdPro = process.env.STRIPE_PRICE_ID_PRO
+  const stripePriceIdPro = process.env.STRIPE_PRICE_ID_PRO || ''
 
-  if (!stripeSecretKey || !webhookSecret) {
-    console.error('Stripe secret or webhook key is unconfigured on server.')
+  if (!stripeSecretKey || !webhookSecret || !stripePriceIdPro) {
+    console.error('Stripe secret, webhook key, or Pro Price ID is unconfigured on server.')
     return new NextResponse('Server configuration error', { status: 500 })
   }
 
@@ -43,7 +49,7 @@ export async function POST(request: Request) {
   }
 
   const eventType = event.type
-  console.log(`Received Stripe Webhook Event: ${eventType} (ID: ${event.id})`)
+  console.log(`Received Stripe Webhook Event: ${eventType}`)
 
   try {
     switch (eventType) {
@@ -73,7 +79,7 @@ export async function POST(request: Request) {
           try {
             const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId)
             const stripePriceId = subscription.items.data[0]?.price.id || ''
-            const planSlug = stripePriceId === stripePriceIdPro ? 'pro' : 'free'
+            const planSlug = resolvePlanSlug(stripePriceId, subscription.status, stripePriceIdPro)
 
             const subscriptionRaw = subscription as unknown as {
               current_period_start: number
@@ -113,7 +119,7 @@ export async function POST(request: Request) {
                 }
               })
             }
-            console.log(`Successfully synced subscription status ${subscription.status} for user_id ${userId} from checkout.session.completed`)
+            console.log(`Successfully synced subscription status ${subscription.status} from checkout.session.completed`)
           } catch (err) {
             console.error('Failed to retrieve subscription during checkout session completion:', err)
           }
@@ -128,7 +134,7 @@ export async function POST(request: Request) {
               status: 'completed'
             }
           })
-          console.log(`Checkout session completed without subscription for user_id ${userId}`)
+          console.log('Checkout session completed without subscription')
         }
         break
       }
@@ -144,12 +150,12 @@ export async function POST(request: Request) {
         const userId = await getUserIdByStripeCustomerId(stripeCustomerId)
 
         if (!userId) {
-          console.warn(`Webhook received for unmapped customer ID ${stripeCustomerId}. Acknowledging event with 200 OK.`);
+          console.warn('[Stripe Webhook] Webhook received for unmapped customer ID. Acknowledging event with 200 OK.');
           break
         }
 
-        // Entitlement mapping: Only price IDs matching allowlisted STRIPE_PRICE_ID_PRO unlock Pro
-        const planSlug = stripePriceId === stripePriceIdPro ? 'pro' : 'free'
+        // Entitlement mapping calculated strictly based on price ID and status resolution
+        const planSlug = resolvePlanSlug(stripePriceId, subscription.status, stripePriceIdPro)
 
         const subscriptionRaw = subscription as unknown as {
           current_period_start: number
@@ -200,7 +206,7 @@ export async function POST(request: Request) {
           })
         }
 
-        console.log(`Successfully synced subscription status ${subscription.status} for user_id ${userId}`)
+        console.log(`Successfully synced subscription status ${subscription.status}`)
         break
       }
 
@@ -212,7 +218,7 @@ export async function POST(request: Request) {
         const userId = await getUserIdByStripeCustomerId(stripeCustomerId)
 
         await cancelSubscriptionInDatabase(stripeSubscriptionId)
-        console.log(`Successfully processed deleted subscription: ${stripeSubscriptionId}`)
+        console.log('Successfully processed deleted subscription')
 
         // Telemetry: Log subscription_canceled event with tightened privacy
         await createUsageEvent({

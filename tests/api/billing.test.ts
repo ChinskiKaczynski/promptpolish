@@ -515,7 +515,7 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
         user_id: 'user_mapped_uuid_5',
         status: 'unpaid',
-        plan_slug: 'pro'
+        plan_slug: 'free'
       }))
     })
 
@@ -768,7 +768,7 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(saveSubscription).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: 'user_unpaid_uuid',
-          plan_slug: 'pro',
+          plan_slug: 'free',
           status: 'unpaid'
         })
       )
@@ -777,6 +777,53 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(setUserPlanSlug).toHaveBeenCalledWith(
         expect.objectContaining({
           user_id: 'user_unpaid_uuid',
+          plan_slug: 'free'
+        })
+      )
+    })
+
+    it('unknown or non-active status (like paused) maps to free', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_paused_test',
+        data: {
+          object: {
+            id: 'sub_paused_test',
+            customer: 'cus_paused_test',
+            status: 'paused',
+            current_period_start: 1700000000,
+            current_period_end: 1703000000,
+            cancel_at_period_end: false,
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_paused_uuid')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user_paused_uuid',
+          plan_slug: 'free',
+          status: 'paused'
+        })
+      )
+
+      expect(setUserPlanSlug).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: 'user_paused_uuid',
           plan_slug: 'free'
         })
       )
