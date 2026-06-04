@@ -46,17 +46,17 @@ A comprehensive text and expression scan of the repository was conducted. The fi
 
 | Finding ID | Target File / Context | Pattern Detected | Severity | Acceptability Status | Recommended Action |
 | :--- | :--- | :--- | :---: | :--- | :--- |
-| **US-01** | `./docs/` folder (several files) | `file://` | **Low** | **Acceptable** (Developer documentation only) | Convert absolute local links (`file:///d:/...`) to relative repository paths (e.g. `../tests/`) before production tag. |
-| **US-02** | `tests/monitoring/observability.test.ts#L106` | `sk_live` | **Low** | **Acceptable** (Mock key in test suite) | None. Key is a mock string verifying log scrubbing functions. |
-| **US-03** | `docs/ai-safety.md#L13` | `sk_live` | **Low** | **Acceptable** (Prohibited example list) | None. Used as a documented template of key formats to intercept. |
-| **US-04** | `tests/monitoring/observability.test.ts#L29`, `tests/api/...` | `sk_test` | **Low** | **Acceptable** (Stripe sandbox mock keys) | None. Mock test fixtures. |
-| **US-05** | `docs/stripe-test-mode-checklist.md#L15` | `sk_test` | **Low** | **Acceptable** (Operator instructions placeholder) | None. Instructional placeholder. |
-| **US-06** | `tests/api/production-readiness.test.ts#L59` | `whsec_` | **Low** | **Acceptable** (Stripe webhook mock keys) | None. Mock test fixtures. |
-| **US-07** | `docs/stripe-test-mode-checklist.md#L19` | `whsec_` | **Low** | **Acceptable** (Developer configuration guide) | None. |
-| **US-08** | `docs/data-deletion-flow.md#L75`, `docs/refund-cancellation-policy.md#L47` | `support@promptpolish.com` | **Low** | **Acceptable** (Policy draft placeholders) | Replace with verified active email inbox links once mailboxes are provisioned. |
-| **US-09** | `docs/support-playbook.md#L239` | `support@promptpolish.com` / `privacy@promptpolish.com` | **Low** | **Acceptable** (What-not-to-say communications examples) | None. Explicitly documents that staff must not email from these before activation. |
-| **US-10** | `docs/pre-production-launch-checklist.md#L73` | `$9.00` / `$12.00` | **Low** | **Acceptable** (Guideline for test mode setup) | Ensure Stripe Dashboard pricing matches finalized currency selection. |
-| **US-11** | `docs/support-playbook.md#L235` | `$9.00` / `$12.00` | **Low** | **Acceptable** (Prohibited communication Section) | None. Documents pricing promises that agents are barred from making. |
+| **US-01** | `./docs/` folder (several files) | `absolute local file link pattern` | **Low** | **Acceptable** (Developer documentation only) | Convert absolute local file links to relative repository paths (e.g. `../tests/`) before production tag. |
+| **US-02** | `tests/monitoring/observability.test.ts#L106` | `Stripe live secret-key prefix [REDACTED]` | **Low** | **Acceptable** (Mock key in test suite) | None. Key is a mock string verifying log scrubbing functions. |
+| **US-03** | `docs/ai-safety.md#L13` | `Stripe live secret-key prefix [REDACTED]` | **Low** | **Acceptable** (Prohibited example list) | None. Used as a documented template of key formats to intercept. |
+| **US-04** | `tests/monitoring/observability.test.ts#L29`, `tests/api/...` | `Stripe test secret-key prefix [REDACTED]` | **Low** | **Acceptable** (Stripe sandbox mock keys) | None. Mock test fixtures. |
+| **US-05** | `docs/stripe-test-mode-checklist.md#L15` | `Stripe test secret-key prefix [REDACTED]` | **Low** | **Acceptable** (Operator instructions placeholder) | None. Instructional placeholder. |
+| **US-06** | `tests/api/production-readiness.test.ts#L59` | `Stripe webhook secret prefix [REDACTED]` | **Low** | **Acceptable** (Stripe webhook mock keys) | None. Mock test fixtures. |
+| **US-07** | `docs/stripe-test-mode-checklist.md#L19` | `Stripe webhook secret prefix [REDACTED]` | **Low** | **Acceptable** (Developer configuration guide) | None. |
+| **US-08** | `docs/data-deletion-flow.md#L75`, `docs/refund-cancellation-policy.md#L47` | `[SUPPORT EMAIL PLACEHOLDER PATTERN]` | **Low** | **Acceptable** (Policy draft placeholders) | Replace with verified active email inbox links once mailboxes are provisioned. |
+| **US-09** | `docs/support-playbook.md#L239` | `[SUPPORT EMAIL PLACEHOLDER PATTERN] / [PRIVACY EMAIL PLACEHOLDER PATTERN]` | **Low** | **Acceptable** (What-not-to-say communications examples) | None. Explicitly documents that staff must not email from these before activation. |
+| **US-10** | `docs/pre-production-launch-checklist.md#L73` | `fixed price patterns [REDACTED]` | **Low** | **Acceptable** (Guideline for test mode setup) | Ensure Stripe Dashboard pricing matches finalized currency selection. |
+| **US-11** | `docs/support-playbook.md#L235` | `fixed price patterns [REDACTED]` | **Low** | **Acceptable** (Prohibited communication Section) | None. Documents pricing promises that agents are barred from making. |
 | **US-12** | `tests/supabase/share-privacy.test.ts#L52`, `tests/api/analyze.test.ts#L57` | `Gemini` | **Low** | **Acceptable** (Unit test mocks and keywords) | None. Test mocks verifying runtime mapping capability or keyword metadata. |
 | **US-13** | `docs/gemini-integration-decision.md` | `Gemini API` | **Low** | **Acceptable** (Archived architectural decision log) | None. Clearly marked as outdated; points to `./openrouter-integration-decision.md`. |
 | **US-14** | `docs/support-playbook.md#L227` | `GDPR compliant` | **Low** | **Acceptable** (Prohibited communication Section) | None. Prevents support staff from claiming certified compliance. |
