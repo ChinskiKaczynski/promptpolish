@@ -33,11 +33,15 @@ function StatusBanner({ status }: { status: string }) {
     improve_product_quality_first: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
     add_auth_history_next: 'bg-sky-500/10 border-sky-500/30 text-sky-400',
     consider_export_pro_value_layer_later: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+    strong_signal: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+    mixed_signal: 'bg-sky-500/10 border-sky-500/30 text-sky-400',
+    weak_signal: 'bg-orange-500/10 border-orange-500/30 text-orange-400',
+    insufficient_data: 'bg-slate-800/50 border-slate-700 text-slate-400',
   }
   const cls = styles[status] ?? styles.unknown
   const label = status.replace(/_/g, ' ')
   return (
-    <span className={`inline-block text-[11px] font-semibold px-3 py-1 rounded-full border capitalize ${cls}`}>
+    <span className={`inline-block text-[11px] font-semibold px-3 py-1 rounded-full border uppercase tracking-wider ${cls}`}>
       {label}
     </span>
   )
@@ -91,7 +95,21 @@ export function MetricsDashboard() {
             <h1 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
               <span className="h-2 w-2 rounded bg-indigo-500" /> Panel Metryk Administratora
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5">Prywatny panel beta — Tylko do odczytu</p>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
+              <span>Prywatny panel beta — Tylko do odczytu</span>
+              <span className="text-slate-700">•</span>
+              <span className="text-indigo-400 font-semibold bg-indigo-500/5 px-2 py-0.5 rounded border border-indigo-500/10">
+                Okno: {WINDOWS.find((w) => w.key === window)?.label}
+              </span>
+              {data && (
+                <>
+                  <span className="text-slate-700">•</span>
+                  <span className="text-slate-400 font-medium">
+                    {data.startDate ? new Date(data.startDate).toLocaleDateString() : 'Początek'} → {new Date(data.endDate).toLocaleDateString()}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Window Selector */}
@@ -141,6 +159,25 @@ export function MetricsDashboard() {
 
         {data && !loading && (
           <>
+            {/* Insufficient Data Beta Alert Banner */}
+            {data.coreFunnel.analysis_completed < 20 && (
+              <div className="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-5 text-amber-400/90 backdrop-blur-md relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent pointer-events-none" />
+                <div className="flex items-start gap-3 relative">
+                  <span className="text-xl">⚠️</span>
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-bold text-amber-300">Niewystarczająca ilość danych (Brak Sygnału Trakcji)</h3>
+                    <p className="text-xs text-slate-400 leading-relaxed max-w-4xl">
+                      Liczba zakończonych analiz wynosi <strong className="text-amber-300">{data.coreFunnel.analysis_completed}</strong> (próg beta: <strong>20</strong>). 
+                      Z powodu małej próbki w wybranym oknie czasowym, sygnał trakcji beta jest zdefiniowany jako 
+                      <strong className="text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded ml-1">INSUFFICIENT_DATA</strong>. 
+                      Zbierz więcej interakcji użytkowników, aby odblokować pełną analizę jakościową.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Overview Cards */}
             <section>
               <SectionHeader title="Overview" subtitle={`${data.startDate ? new Date(data.startDate).toLocaleDateString() + ' → ' : ''}${new Date(data.endDate).toLocaleDateString()}`} />
@@ -148,7 +185,10 @@ export function MetricsDashboard() {
                 <MetricCard
                   label="Completed Analyses"
                   value={data.coreFunnel.analysis_completed}
-                  subtext={`of ${data.coreFunnel.analysis_started} started`}
+                  subtext={data.coreFunnel.completion_rate === null 
+                    ? `Mismatch (Started: ${data.coreFunnel.analysis_started} / Completed: ${data.coreFunnel.analysis_completed})`
+                    : `of ${data.coreFunnel.analysis_started} started`}
+                  status={data.coreFunnel.completion_rate === null ? 'blocking' : null}
                 />
                 <MetricCard
                   label="Copy Rate"
@@ -162,7 +202,7 @@ export function MetricsDashboard() {
                   value={data.valueMetrics.positive_feedback_ratio}
                   format="percent"
                   status={data.productInterpretation.feedback_status === 'strong' ? 'strong' : data.productInterpretation.feedback_status === 'weak' ? 'weak' : null}
-                  subtext={`${data.valueMetrics.feedback_up} 👍 / ${data.valueMetrics.feedback_down} 👎`}
+                  subtext={`${data.valueMetrics.feedback_up} 👍 / ${data.valueMetrics.feedback_down} 👎 (Ratio: ${data.valueMetrics.feedback_up_down_ratio})`}
                 />
                 <MetricCard
                   label="Returning Owners"
@@ -181,7 +221,7 @@ export function MetricsDashboard() {
                 <MetricCard
                   label="Active Public Shares"
                   value={data.valueMetrics.active_public_shares}
-                  subtext={`${data.valueMetrics.share_link_created} links created`}
+                  subtext={`${data.valueMetrics.share_link_created} created / ${data.valueMetrics.share_link_disabled} disabled`}
                 />
                 <MetricCard
                   label="Limit Reached"
@@ -203,7 +243,13 @@ export function MetricsDashboard() {
                 <MetricCard label="Started" value={data.coreFunnel.analysis_started} />
                 <MetricCard label="Completed" value={data.coreFunnel.analysis_completed} />
                 <MetricCard label="Failed" value={data.coreFunnel.analysis_failed} />
-                <MetricCard label="Completion Rate" value={data.coreFunnel.completion_rate} format="percent" />
+                <MetricCard
+                  label="Completion Rate"
+                  value={data.coreFunnel.completion_rate !== null ? data.coreFunnel.completion_rate : 'N/A — Inconsistent'}
+                  format={data.coreFunnel.completion_rate !== null ? 'percent' : 'text'}
+                  status={data.coreFunnel.completion_rate === null ? 'blocking' : null}
+                  subtext={data.coreFunnel.completion_rate === null ? 'Undercounted started events' : undefined}
+                />
                 <MetricCard label="Failure Rate" value={data.coreFunnel.failure_rate} format="percent" />
                 <MetricCard label="Avg / Day" value={parseFloat(fmt(data.coreFunnel.average_analyses_per_day, 1))} format="number" />
                 {data.coreFunnel.latest_analysis_at && (
@@ -226,7 +272,9 @@ export function MetricsDashboard() {
                 <MetricCard label="Thumbs Up" value={data.valueMetrics.feedback_up} />
                 <MetricCard label="Thumbs Down" value={data.valueMetrics.feedback_down} />
                 <MetricCard label="Positive Ratio" value={data.valueMetrics.positive_feedback_ratio} format="percent" />
+                <MetricCard label="Up/Down Ratio" value={data.valueMetrics.feedback_up_down_ratio} format="text" />
                 <MetricCard label="Share Links Created" value={data.valueMetrics.share_link_created} />
+                <MetricCard label="Share Links Disabled" value={data.valueMetrics.share_link_disabled} />
                 <MetricCard label="Share Rate" value={data.valueMetrics.share_rate} format="percent" />
                 <MetricCard label="Active Public Shares" value={data.valueMetrics.active_public_shares} />
                 <MetricCard label="Export Markdown" value={data.valueMetrics.export_markdown} />
@@ -466,6 +514,7 @@ export function MetricsDashboard() {
                   { label: 'Feedback Quality', status: data.productInterpretation.feedback_status, desc: '≥70% positive = strong' },
                   { label: 'Retention Signal', status: data.productInterpretation.retention_status, desc: '≥25% returning = strong' },
                   { label: 'Reliability', status: data.productInterpretation.reliability_status, desc: '<5% failure = strong, 5–15% = warning, >15% = blocking' },
+                  { label: 'Beta Traction Signal', status: data.productInterpretation.beta_signal.toLowerCase(), desc: 'Based on copy rate, feedback, and system reliability' },
                   { label: 'Paid Readiness', status: data.productInterpretation.paid_readiness, desc: 'Based on combined signals — Stripe stays disabled' },
                 ].map(({ label, status, desc }) => (
                   <div key={label} className="rounded-2xl bg-slate-900 border border-slate-800 px-5 py-4 flex flex-col gap-2">

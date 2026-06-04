@@ -220,3 +220,144 @@ describe('fetchAggregatedMetrics — Event Coverage', () => {
     })
   })
 })
+describe('fetchAggregatedMetrics — Computed Values & Safety', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('marks completion_rate as null if completed analyses exceed started analyses', async () => {
+    mockFrom.mockImplementation((table: string) => {
+      const data: Record<string, unknown>[] = []
+      if (table === 'usage_events') {
+        data.push(
+          { event_type: 'analysis_started', created_at: new Date().toISOString() },
+          { event_type: 'analysis_completed', created_at: new Date().toISOString() },
+          { event_type: 'analysis_completed', created_at: new Date().toISOString() }
+        )
+      }
+      const p = Promise.resolve({ data, error: null, count: 0 })
+      return {
+        select: vi.fn().mockReturnValue({
+          gte: vi.fn().mockResolvedValue({ data, error: null }),
+          eq: vi.fn().mockReturnValue({
+            head: true,
+            then: p.then.bind(p),
+            catch: p.catch.bind(p),
+            finally: p.finally.bind(p),
+          }),
+          then: p.then.bind(p),
+          catch: p.catch.bind(p),
+          finally: p.finally.bind(p),
+        })
+      }
+    })
+
+    const metrics = await fetchAggregatedMetrics('allTime')
+    expect(metrics.coreFunnel.completion_rate).toBeNull()
+    expect(metrics.coreFunnel.completion_rate_invalid).toBe(true)
+  })
+
+  it('calculates feedback_up_down_ratio and counts share_link_disabled', async () => {
+    mockFrom.mockImplementation((table: string) => {
+      const data: Record<string, unknown>[] = []
+      if (table === 'usage_events') {
+        data.push({ event_type: 'share_link_disabled', created_at: new Date().toISOString() })
+      } else if (table === 'feedback_events') {
+        data.push(
+          { rating: 'up', created_at: new Date().toISOString() },
+          { rating: 'up', created_at: new Date().toISOString() },
+          { rating: 'down', created_at: new Date().toISOString() }
+        )
+      }
+      const p = Promise.resolve({ data, error: null, count: 0 })
+      return {
+        select: vi.fn().mockReturnValue({
+          gte: vi.fn().mockResolvedValue({ data, error: null }),
+          eq: vi.fn().mockReturnValue({
+            head: true,
+            then: p.then.bind(p),
+            catch: p.catch.bind(p),
+            finally: p.finally.bind(p),
+          }),
+          then: p.then.bind(p),
+          catch: p.catch.bind(p),
+          finally: p.finally.bind(p),
+        })
+      }
+    })
+
+    const metrics = await fetchAggregatedMetrics('allTime')
+    expect(metrics.valueMetrics.feedback_up_down_ratio).toBe('2:1')
+    expect(metrics.valueMetrics.share_link_disabled).toBe(1)
+  })
+
+  it('sets beta_signal to INSUFFICIENT_DATA if completed is less than 20', async () => {
+    mockFrom.mockImplementation((table: string) => {
+      const data: Record<string, unknown>[] = []
+      if (table === 'usage_events') {
+        for (let i = 0; i < 15; i++) {
+          data.push({ event_type: 'analysis_completed', created_at: new Date().toISOString() })
+          data.push({ event_type: 'copy', created_at: new Date().toISOString() })
+        }
+      }
+      const p = Promise.resolve({ data, error: null, count: 0 })
+      return {
+        select: vi.fn().mockReturnValue({
+          gte: vi.fn().mockResolvedValue({ data, error: null }),
+          eq: vi.fn().mockReturnValue({
+            head: true,
+            then: p.then.bind(p),
+            catch: p.catch.bind(p),
+            finally: p.finally.bind(p),
+          }),
+          then: p.then.bind(p),
+          catch: p.catch.bind(p),
+          finally: p.finally.bind(p),
+        })
+      }
+    })
+
+    const metrics = await fetchAggregatedMetrics('allTime')
+    expect(metrics.productInterpretation.beta_signal).toBe('INSUFFICIENT_DATA')
+  })
+
+  it('sets beta_signal correctly based on copy rate, feedback, and downgrades', async () => {
+    mockFrom.mockImplementation((table: string) => {
+      const data: Record<string, unknown>[] = []
+      if (table === 'usage_events') {
+        for (let i = 0; i < 25; i++) {
+          data.push({ event_type: 'analysis_completed', created_at: new Date().toISOString() })
+        }
+        for (let i = 0; i < 15; i++) {
+          data.push({ event_type: 'copy', created_at: new Date().toISOString() })
+        }
+        for (let i = 0; i < 7; i++) {
+          data.push({ event_type: 'analysis_failed', created_at: new Date().toISOString() })
+        }
+      } else if (table === 'feedback_events') {
+        for (let i = 0; i < 10; i++) {
+          data.push({ rating: 'up', created_at: new Date().toISOString() })
+        }
+      }
+      const p = Promise.resolve({ data, error: null, count: 0 })
+      return {
+        select: vi.fn().mockReturnValue({
+          gte: vi.fn().mockResolvedValue({ data, error: null }),
+          eq: vi.fn().mockReturnValue({
+            head: true,
+            then: p.then.bind(p),
+            catch: p.catch.bind(p),
+            finally: p.finally.bind(p),
+          }),
+          then: p.then.bind(p),
+          catch: p.catch.bind(p),
+          finally: p.finally.bind(p),
+        })
+      }
+    })
+
+    const metrics = await fetchAggregatedMetrics('allTime')
+    expect(metrics.productInterpretation.beta_signal).toBe('MIXED_SIGNAL')
+  })
+})
+

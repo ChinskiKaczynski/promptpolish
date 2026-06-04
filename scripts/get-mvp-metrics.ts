@@ -142,6 +142,9 @@ async function runMetricsReport() {
     const failed = u.filter(e => e.event_type === 'analysis_failed').length
     const copies = u.filter(e => e.event_type === 'copy_improved_prompt' || e.event_type === 'copy').length
     const shareCreated = u.filter(e => e.event_type === 'share_link_created').length
+    const shareDisabled = u.filter(e => e.event_type === 'share_link_disabled').length
+    const exportMarkdown = u.filter(e => e.event_type === 'export_markdown').length
+    const exportTxt = u.filter(e => e.event_type === 'export_txt').length
     const activeShares = a.filter(x => x.is_share_enabled).length
     const sensitiveBlocks = u.filter(e => e.event_type === 'sensitive_data_blocked').length
     const sensitiveWarnings = u.filter(e => e.event_type === 'sensitive_data_warning_shown').length
@@ -217,9 +220,12 @@ async function runMetricsReport() {
     console.log(`  Copy Events:          ${copies}   (${pct(copies, completed)} of completed)`)
     console.log(`  Feedback (👍):        ${feedbackUp}`)
     console.log(`  Feedback (👎):        ${feedbackDown}`)
-    console.log(`  Positive Ratio:       ${pct(feedbackUp, feedbackUp + feedbackDown)}`)
+    console.log(`  Up/Down Ratio:        ${feedbackUp}:${feedbackDown} (${pct(feedbackUp, feedbackUp + feedbackDown)} positive)`)
     console.log(`  Share Links Created:  ${shareCreated}`)
+    console.log(`  Share Links Disabled: ${shareDisabled}`)
     console.log(`  Active Public Shares: ${activeShares}`)
+    console.log(`  Export Markdown:      ${exportMarkdown}`)
+    console.log(`  Export TXT:           ${exportTxt}`)
 
     console.log('\n── Retention Proxy ─────────────────────────────')
     console.log(`  Unique Owners w/ Completed: ${uniqueCompleted}`)
@@ -241,12 +247,19 @@ async function runMetricsReport() {
     console.log(`  Avg Score:            ${safe(avgScore, 1)}`)
 
     console.log('\n── Beta Signal ──────────────────────────────────')
-    console.log(`  Initial Signal:       ${betaSignal}`)
-    if (shouldDowngrade) {
-      console.log(`  Failure Rate Check:   >20% (${stableFailureRateStr}) -> Downgrade 1 level`)
+    if (completed < 20) {
+      console.log(`  [WARNING] Insufficient data to evaluate beta traction signals.`)
+      console.log(`  Completed analyses (${completed}) is below the threshold of 20.`)
+      console.log(`  Initial Signal:       ${betaSignal}`)
       console.log(`  Final Signal Level:   ${finalSignal}`)
     } else {
-      console.log(`  Final Signal Level:   ${finalSignal}`)
+      console.log(`  Initial Signal:       ${betaSignal}`)
+      if (shouldDowngrade) {
+        console.log(`  Failure Rate Check:   >20% (${stableFailureRateStr}) -> Downgrade 1 level`)
+        console.log(`  Final Signal Level:   ${finalSignal}`)
+      } else {
+        console.log(`  Final Signal Level:   ${finalSignal}`)
+      }
     }
 
     console.log('\n================================================')

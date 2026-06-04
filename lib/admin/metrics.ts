@@ -12,7 +12,8 @@ export interface AggregatedMetrics {
     analysis_started: number
     analysis_completed: number
     analysis_failed: number
-    completion_rate: number
+    completion_rate: number | null
+    completion_rate_invalid?: boolean
     failure_rate: number
     average_analyses_per_day: number
     latest_analysis_at: string | null
@@ -25,8 +26,10 @@ export interface AggregatedMetrics {
     feedback_rate: number
     feedback_up: number
     feedback_down: number
+    feedback_up_down_ratio: string
     positive_feedback_ratio: number
     share_link_created: number
+    share_link_disabled: number
     share_rate: number
     active_public_shares: number
     export_markdown: number
@@ -138,6 +141,7 @@ export interface AggregatedMetrics {
       | 'improve_product_quality_first'
       | 'add_auth_history_next'
       | 'consider_export_pro_value_layer_later'
+    beta_signal: 'INSUFFICIENT_DATA' | 'WEAK_SIGNAL' | 'MIXED_SIGNAL' | 'STRONG_SIGNAL'
   }
 }
 
@@ -253,7 +257,10 @@ export async function fetchAggregatedMetrics(
   const analysis_completed = usage.filter((e) => e.event_type === 'analysis_completed').length
   const analysis_failed = usage.filter((e) => e.event_type === 'analysis_failed').length
 
-  const completion_rate = analysis_started > 0 ? (analysis_completed / analysis_started) * 100 : 0
+  const completion_rate_invalid = analysis_completed > analysis_started
+  const completion_rate = completion_rate_invalid
+    ? null
+    : (analysis_started > 0 ? (analysis_completed / analysis_started) * 100 : 0)
   const failure_rate = analysis_started > 0 ? (analysis_failed / analysis_started) * 100 : 0
   const average_analyses_per_day = analysis_completed / durationInDays
 
@@ -276,9 +283,11 @@ export async function fetchAggregatedMetrics(
   const feedback_rate = analysis_completed > 0 ? (feedback_submitted / analysis_completed) * 100 : 0
   const feedback_up = feedback.filter((f) => f.rating === 'up').length
   const feedback_down = feedback.filter((f) => f.rating === 'down').length
+  const feedback_up_down_ratio = `${feedback_up}:${feedback_down}`
   const positive_feedback_ratio = feedback_submitted > 0 ? (feedback_up / feedback_submitted) * 100 : 0
 
   const share_link_created = usage.filter((e) => e.event_type === 'share_link_created').length
+  const share_link_disabled = usage.filter((e) => e.event_type === 'share_link_disabled').length
   const share_rate = analysis_completed > 0 ? (share_link_created / analysis_completed) * 100 : 0
   const active_public_shares = analyses.filter((a) => a.is_share_enabled === true).length
 
@@ -607,6 +616,36 @@ export async function fetchAggregatedMetrics(
     paid_readiness = 'consider_export_pro_value_layer_later'
   }
 
+  // Beta Signal calculation
+  const totalFinished = analysis_completed + analysis_failed
+  const stableFailureRateVal = totalFinished > 0 ? (analysis_failed / totalFinished) * 100 : 0
+  const copyRateVal = analysis_completed > 0 ? (copy_improved_prompt / analysis_completed) * 100 : 0
+
+  let betaSignal: 'INSUFFICIENT_DATA' | 'WEAK_SIGNAL' | 'MIXED_SIGNAL' | 'STRONG_SIGNAL' = 'INSUFFICIENT_DATA'
+  if (analysis_completed < 20) {
+    betaSignal = 'INSUFFICIENT_DATA'
+  } else {
+    if (copyRateVal < 20) {
+      betaSignal = 'WEAK_SIGNAL'
+    } else if (copyRateVal >= 20 && copyRateVal <= 40) {
+      betaSignal = 'MIXED_SIGNAL'
+    } else if (copyRateVal > 40 && positive_feedback_ratio >= 70) {
+      betaSignal = 'STRONG_SIGNAL'
+    } else {
+      betaSignal = 'MIXED_SIGNAL'
+    }
+  }
+
+  let finalSignal = betaSignal
+  const shouldDowngrade = stableFailureRateVal > 20 && betaSignal !== 'INSUFFICIENT_DATA'
+  if (shouldDowngrade) {
+    if (betaSignal === 'STRONG_SIGNAL') {
+      finalSignal = 'MIXED_SIGNAL'
+    } else if (betaSignal === 'MIXED_SIGNAL') {
+      finalSignal = 'WEAK_SIGNAL'
+    }
+  }
+
   return {
     window,
     startDate: startDate ? startDate.toISOString() : null,
@@ -616,6 +655,7 @@ export async function fetchAggregatedMetrics(
       analysis_completed,
       analysis_failed,
       completion_rate,
+      completion_rate_invalid,
       failure_rate,
       average_analyses_per_day,
       latest_analysis_at
@@ -627,8 +667,10 @@ export async function fetchAggregatedMetrics(
       feedback_rate,
       feedback_up,
       feedback_down,
+      feedback_up_down_ratio,
       positive_feedback_ratio,
       share_link_created,
+      share_link_disabled,
       share_rate,
       active_public_shares,
       export_markdown,
@@ -689,7 +731,8 @@ export async function fetchAggregatedMetrics(
       feedback_status,
       retention_status,
       reliability_status,
-      paid_readiness
+      paid_readiness,
+      beta_signal: finalSignal
     }
   }
 }
