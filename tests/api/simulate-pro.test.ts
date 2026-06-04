@@ -22,19 +22,19 @@ import type { User } from '@supabase/supabase-js'
 
 describe('POST /api/entitlements/simulate-pro', () => {
   const originalEnv = process.env.NODE_ENV
-  const originalAdminEmails = process.env.ADMIN_EMAILS
+  const originalStripe = process.env.STRIPE_ENABLED
 
   beforeEach(() => {
     vi.clearAllMocks()
-    process.env.NODE_ENV = 'production'
-    process.env.ADMIN_EMAILS = 'admin1@test.com, admin2@test.com'
+    process.env.NODE_ENV = 'development'
+    process.env.STRIPE_ENABLED = 'false'
 
     // Default: successful upsert returning plan_slug = 'pro'
     vi.mocked(setUserPlanSlug).mockResolvedValue({
       user_id: 'user-123',
-      email: 'admin1@test.com',
+      email: 'user@test.com',
       plan_slug: 'pro',
-      display_name: 'admin1',
+      display_name: 'user',
       created_at: '',
       updated_at: ''
     })
@@ -42,7 +42,7 @@ describe('POST /api/entitlements/simulate-pro', () => {
 
   afterEach(() => {
     process.env.NODE_ENV = originalEnv
-    process.env.ADMIN_EMAILS = originalAdminEmails
+    process.env.STRIPE_ENABLED = originalStripe
   })
 
   // ── Auth / Access ──────────────────────────────────────────────────────────
@@ -58,8 +58,9 @@ describe('POST /api/entitlements/simulate-pro', () => {
     expect(setUserPlanSlug).not.toHaveBeenCalled()
   })
 
-  it('returns 403 JSON in production when authenticated user is not in ADMIN_EMAILS', async () => {
-    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'guest@test.com' } as User)
+  it('returns 403 JSON in production mode for any user', async () => {
+    process.env.NODE_ENV = 'production'
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'admin1@test.com' } as User)
 
     const response = await POST()
     const data = await response.json()
@@ -69,8 +70,8 @@ describe('POST /api/entitlements/simulate-pro', () => {
     expect(setUserPlanSlug).not.toHaveBeenCalled()
   })
 
-  it('returns 403 JSON in production when ADMIN_EMAILS env is empty or missing', async () => {
-    process.env.ADMIN_EMAILS = ''
+  it('returns 403 JSON when STRIPE_ENABLED is true even in development', async () => {
+    process.env.STRIPE_ENABLED = 'true'
     vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'admin1@test.com' } as User)
 
     const response = await POST()
@@ -83,8 +84,8 @@ describe('POST /api/entitlements/simulate-pro', () => {
 
   // ── Success ────────────────────────────────────────────────────────────────
 
-  it('always sets plan to pro and returns { ok: true, plan: "pro" } for admin user', async () => {
-    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'admin1@test.com' } as User)
+  it('always sets plan to pro and returns { ok: true, plan: "pro" } for authenticated user in dev', async () => {
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'user@test.com' } as User)
 
     const response = await POST()
     const data = await response.json()
@@ -98,13 +99,13 @@ describe('POST /api/entitlements/simulate-pro', () => {
   })
 
   it('returns pro on second consecutive call — no toggle to free', async () => {
-    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'admin1@test.com' } as User)
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'user@test.com' } as User)
     // Simulate DB already having plan_slug='pro' and second upsert returning same
     vi.mocked(setUserPlanSlug).mockResolvedValue({
       user_id: 'user-123',
-      email: 'admin1@test.com',
+      email: 'user@test.com',
       plan_slug: 'pro',
-      display_name: 'admin1',
+      display_name: 'user',
       created_at: '',
       updated_at: ''
     })
@@ -119,30 +120,6 @@ describe('POST /api/entitlements/simulate-pro', () => {
     for (const call of vi.mocked(setUserPlanSlug).mock.calls) {
       expect(call[0]).toMatchObject({ plan_slug: 'pro' })
     }
-  })
-
-  it('allows case-insensitive trimmed admin emails in production', async () => {
-    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: ' ADMIN1@TEST.COM ' } as User)
-
-    const response = await POST()
-    const data = await response.json()
-
-    expect(response.status).toBe(200)
-    expect(data.ok).toBe(true)
-    expect(data.plan).toBe('pro')
-  })
-
-  it('allows general access in development environment, bypassing admin config checks', async () => {
-    process.env.NODE_ENV = 'development'
-    process.env.ADMIN_EMAILS = ''
-    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-dev', email: 'any-user@test.com' } as User)
-
-    const response = await POST()
-    const data = await response.json()
-
-    expect(response.status).toBe(200)
-    expect(data.ok).toBe(true)
-    expect(data.plan).toBe('pro')
   })
 
   // ── DB Failure ─────────────────────────────────────────────────────────────

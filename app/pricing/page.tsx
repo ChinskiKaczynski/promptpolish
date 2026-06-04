@@ -1,13 +1,15 @@
 import Link from 'next/link'
+import nextDynamic from 'next/dynamic'
 import { getAuthUser } from '@/lib/identity/auth'
 import { ensureUserProfile, createUsageEvent } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { PLAN_LIMITS } from '@/lib/plans/config'
-import { CheckoutButton } from '@/components/pricing/checkout-button'
-import { SimulateProButton } from '@/components/pricing/simulate-pro-button'
-import { WaitlistForm } from '@/components/pricing/waitlist-form'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
+
+const CheckoutButton = nextDynamic(() => import('@/components/pricing/checkout-button').then((mod) => mod.CheckoutButton))
+const SimulateProButton = nextDynamic(() => import('@/components/pricing/simulate-pro-button').then((mod) => mod.SimulateProButton))
+const WaitlistForm = nextDynamic(() => import('@/components/pricing/waitlist-form').then((mod) => mod.WaitlistForm))
 
 export const dynamic = 'force-dynamic'
 

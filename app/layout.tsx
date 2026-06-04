@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
-import { AuthListener } from '@/components/auth/auth-listener'
+import dynamic from 'next/dynamic'
 import './globals.css'
+
+const AuthListener = dynamic(() => import('@/components/auth/auth-listener').then((mod) => mod.AuthListener))
 
 export const metadata: Metadata = {
   title: 'PromptPolish — Profesjonalny Audyt i Ulepszanie Promptów',

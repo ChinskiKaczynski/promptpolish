@@ -2,9 +2,11 @@ import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getPromptAnalysesForUser, createUsageEvent } from '@/lib/supabase/queries'
-import { HistoryFilters } from '@/components/history/history-filters'
-import { HistoryClientActions } from '@/components/history/history-client-actions'
-import { SignOutButton } from '@/components/auth/sign-out-button'
+import nextDynamic from 'next/dynamic'
+
+const HistoryFilters = nextDynamic(() => import('@/components/history/history-filters').then((mod) => mod.HistoryFilters))
+const HistoryClientActions = nextDynamic(() => import('@/components/history/history-client-actions').then((mod) => mod.HistoryClientActions))
+const SignOutButton = nextDynamic(() => import('@/components/auth/sign-out-button').then((mod) => mod.SignOutButton))
 import { scrubSensitiveData } from '@/lib/monitoring/observability'
 
 export const dynamic = 'force-dynamic'

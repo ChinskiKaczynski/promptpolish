@@ -1,7 +1,11 @@
 import 'server-only'
+import nextDynamic from 'next/dynamic'
 import { getAuthUser } from '@/lib/identity/auth'
 import { verifyAdminAccess } from '@/lib/admin/auth'
-import { AppHeaderClient } from './app-header-client'
+
+const AppHeaderClient = nextDynamic(() => import('./app-header-client').then((mod) => mod.AppHeaderClient), {
+  ssr: true
+})
 
 interface AppHeaderProps {
   theme?: 'light' | 'dark'

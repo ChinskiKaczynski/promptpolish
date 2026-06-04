@@ -14,18 +14,10 @@ export async function POST() {
     }
 
     const isDev = process.env.NODE_ENV === 'development'
-    const rawAdminEmails = process.env.ADMIN_EMAILS || ''
-    const adminEmails = rawAdminEmails
-      .split(',')
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean)
+    const isStripeEnabled = process.env.STRIPE_ENABLED === 'true'
 
-    if (!isDev) {
-      const isEmailAdmin = adminEmails.includes(user.email.trim().toLowerCase())
-
-      if (adminEmails.length === 0 || !isEmailAdmin) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-      }
+    if (!isDev || isStripeEnabled) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const updated = await setUserPlanSlug({

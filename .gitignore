@@ -11,3 +11,10 @@ dist
 *.log
 
 .vercel
+test-results
+tsconfig.tsbuildinfo
+.antigravity
+gemini-leftovers.txt
+/reports
+/scratch
+/backups

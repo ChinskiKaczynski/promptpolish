@@ -8,6 +8,17 @@ async function handleCleanup(request: Request) {
     const authHeader = request.headers.get('Authorization')
     const cronSecret = serverEnv.CRON_SECRET
 
+    if (process.env.NODE_ENV === 'production' && !cronSecret) {
+      console.error('[Retention Cron Error]: CRON_SECRET is not configured in production. Blocking execution for safety.')
+      return NextResponse.json(
+        {
+          error: 'misconfigured',
+          message: 'Cron secret is not configured in production.'
+        },
+        { status: 500 }
+      )
+    }
+
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json(
         {
@@ -16,10 +27,6 @@ async function handleCleanup(request: Request) {
         },
         { status: 401 }
       )
-    }
-
-    if (process.env.NODE_ENV === 'production' && !cronSecret) {
-      console.warn('[Retention Cron Warning]: CRON_SECRET is not configured in production!')
     }
 
     // 2. Parse dryRun flag from URL query string

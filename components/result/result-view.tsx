@@ -1,9 +1,11 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import 'server-only'
 import type { AnalysisResult } from '@/lib/ai/schemas'
-import { UpgradeModal } from './upgrade-modal'
+import nextDynamic from 'next/dynamic'
 
+const CopyButton = nextDynamic(() => import('./copy-button').then((mod) => mod.CopyButton))
+const FeedbackSection = nextDynamic(() => import('./feedback-section').then((mod) => mod.FeedbackSection))
+const ShareSettings = nextDynamic(() => import('./share-settings').then((mod) => mod.ShareSettings))
+const ExportActions = nextDynamic(() => import('./export-actions').then((mod) => mod.ExportActions))
 
 type ResultViewProps = {
   result: AnalysisResult & { 
@@ -16,7 +18,6 @@ type ResultViewProps = {
   mode: 'private' | 'share' | 'public'
   planSlug?: 'free' | 'pro'
 }
-
 
 // English to Polish translations for score levels
 const scoreLevelTranslations: Record<string, { label: string; desc: string; bg: string; text: string; border: string; bar: string }> = {
@@ -77,182 +78,6 @@ export const criterionTranslations: Record<string, string> = {
 }
 
 export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps) {
-  const [isCopied, setIsCopied] = useState(false)
-  const [feedbackVote, setFeedbackVote] = useState<'up' | 'down' | null>(null)
-  const [feedbackComment, setFeedbackComment] = useState('')
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
-  const [feedbackLoading, setFeedbackLoading] = useState(false)
-  const [feedbackError, setFeedbackError] = useState<string | null>(null)
-  const [isShareEnabled, setIsShareEnabled] = useState(result.isShareEnabled ?? false)
-  const [shareToken, setShareToken] = useState<string | null>(result.shareToken ?? null)
-  const [isShareLinkCopied, setIsShareLinkCopied] = useState(false)
-  const [expandedCriteria, setExpandedCriteria] = useState<Record<string, boolean>>({})
-  const [shareError, setShareError] = useState<string | null>(null)
-
-  // Upgrade Modal states
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false)
-  const [selectedFeature, setSelectedFeature] = useState('')
-
-  // Export handlers
-  const handleExportMarkdown = () => {
-    if (!result.id) return
-    window.location.href = `/api/export/${result.id}?format=markdown`
-  }
-
-  const handleExportTxt = () => {
-    if (!result.id) return
-    window.location.href = `/api/export/${result.id}?format=txt`
-  }
-
-  const handleExportPdf = () => {
-    if (!result.id) return
-    if (planSlug === 'pro') {
-      window.location.href = `/api/export/${result.id}?format=pdf`
-    } else {
-      setSelectedFeature('Eksport PDF')
-      setIsUpgradeModalOpen(true)
-    }
-  }
-
-  const handleCopyPrompt = async () => {
-    try {
-      await navigator.clipboard.writeText(result.improved_prompt)
-      setIsCopied(true)
-    } catch (err) {
-      console.error('Failed to copy text', err)
-    }
-    // Fire-and-forget: track copy event server-side without blocking UX
-    if (result.id) {
-      fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_type: 'copy_improved_prompt', analysis_id: result.id })
-      }).catch(() => { /* swallow silently — non-critical telemetry */ })
-    }
-  }
-
-  const handleFeedbackVote = async (rating: 'up' | 'down') => {
-    if (!result.id || feedbackSubmitted || feedbackLoading) return
-    setFeedbackVote(rating)
-    setFeedbackError(null)
-
-    // For thumbs-up: submit immediately (no comment needed)
-    // For thumbs-down: show comment textarea first, submit via handleSubmitFeedback
-    if (rating === 'up') {
-      await submitFeedback(rating, null)
-    }
-  }
-
-  const submitFeedback = async (rating: 'up' | 'down', comment: string | null) => {
-    if (!result.id) return
-    setFeedbackLoading(true)
-    setFeedbackError(null)
-    try {
-      const res = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          analysis_id: result.id,
-          rating,
-          comment: comment?.trim() || null
-        })
-      })
-      if (!res.ok) {
-        throw new Error('Nie udało się zapisać opinii. Spróbuj ponownie.')
-      }
-      setFeedbackSubmitted(true)
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Błąd podczas zapisu opinii.'
-      setFeedbackError(msg)
-    } finally {
-      setFeedbackLoading(false)
-    }
-  }
-
-  const handleSubmitFeedback = () => {
-    if (feedbackVote) {
-      submitFeedback(feedbackVote, feedbackComment)
-    }
-  }
-
-  useEffect(() => {
-    if (isCopied) {
-      const timer = setTimeout(() => setIsCopied(false), 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [isCopied])
-
-  const shareUrl = typeof window !== 'undefined' && shareToken
-    ? `${window.location.origin}/share/${shareToken}`
-    : ''
-
-  const handleCopyShareLink = async () => {
-    if (!shareUrl) return
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      setIsShareLinkCopied(true)
-    } catch (err) {
-      console.error('Failed to copy share link', err)
-    }
-  }
-
-  useEffect(() => {
-    if (isShareLinkCopied) {
-      const timer = setTimeout(() => setIsShareLinkCopied(false), 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [isShareLinkCopied])
-
-  const handleToggleShare = async () => {
-    if (!result.id) return
-    setShareError(null)
-    const targetState = !isShareEnabled
-
-    try {
-      if (targetState) {
-        // Enable public sharing via API
-        const res = await fetch('/api/share', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ analysis_id: result.id })
-        })
-
-        if (!res.ok) {
-          throw new Error('Nie udało się włączyć udostępniania publicznego.')
-        }
-
-        const data = await res.json()
-        setIsShareEnabled(true)
-        setShareToken(data.share_token)
-      } else {
-        // Disable public sharing via API
-        const res = await fetch('/api/share/disable', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ analysis_id: result.id })
-        })
-
-        if (!res.ok) {
-          throw new Error('Nie udało się wyłączyć udostępniania publicznego.')
-        }
-
-        setIsShareEnabled(false)
-        setShareToken(null)
-      }
-    } catch (err: unknown) {
-      const errorObject = err instanceof Error ? err : new Error(String(err))
-      console.error(errorObject)
-      setShareError(errorObject.message)
-    }
-  }
-
-  const toggleCriterion = (criterionKey: string) => {
-    setExpandedCriteria(prev => ({
-      ...prev,
-      [criterionKey]: !prev[criterionKey]
-    }))
-  }
-
   const scoreMeta = scoreLevelTranslations[result.scoreLevel] || scoreLevelTranslations.decent
   const promptLines = result.improved_prompt.split('\n')
 
@@ -277,60 +102,17 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Raport audytu promptu</h1>
         </div>
         <div className="flex flex-wrap gap-3">
-          {!isPublicMode && (
-            <>
-              <button
-                onClick={handleExportMarkdown}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>Eksportuj Markdown</span>
-              </button>
-              <button
-                onClick={handleExportTxt}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>Eksportuj TXT</span>
-              </button>
-              <button
-                onClick={handleExportPdf}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-semibold text-slate-700 active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>Eksportuj PDF</span>
-              </button>
-            </>
+          {!isPublicMode ? (
+            <ExportActions
+              analysisId={result.id}
+              planSlug={planSlug}
+              improvedPrompt={result.improved_prompt}
+            />
+          ) : (
+            <CopyButton text={result.improved_prompt} analysisId={result.id} variant="primary" />
           )}
-          <button
-            onClick={handleCopyPrompt}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 active:scale-[0.98] transition-all cursor-pointer"
-          >
-            {isCopied ? (
-              <>
-                <svg className="h-4 w-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Skopiowano prompt!</span>
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                </svg>
-                <span>Skopiuj ulepszony prompt</span>
-              </>
-            )}
-          </button>
         </div>
       </div>
-
 
       {/* Main Score & Warning Cards Layout */}
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
@@ -474,7 +256,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
 
         </div>
 
-        {/* Right Side: Criteria Breakdown with Expandable Details */}
+        {/* Right Side: Criteria Breakdown with Native Details/Summary */}
         <section className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-sm">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
@@ -488,7 +270,6 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
 
           <div className="mt-4 divide-y divide-slate-100">
             {result.criteria_scores.map((item) => {
-              const isExpanded = !!expandedCriteria[item.criterion]
               const barColor = item.raw_score_0_10 >= 8 
                 ? 'bg-emerald-500' 
                 : item.raw_score_0_10 >= 6 
@@ -506,11 +287,8 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                 : 'bg-rose-50 text-rose-700 border-rose-100'
 
               return (
-                <div key={item.criterion} className="py-3.5 first:pt-0 last:pb-0">
-                  <button
-                    onClick={() => toggleCriterion(item.criterion)}
-                    className="flex w-full items-center justify-between gap-4 text-left hover:opacity-90 active:scale-[0.99] transition-all"
-                  >
+                <details key={item.criterion} className="group py-3.5 first:pt-0 last:pb-0">
+                  <summary className="flex w-full items-center justify-between gap-4 text-left hover:opacity-90 active:scale-[0.99] transition-all list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none">
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-bold text-slate-800">
@@ -524,7 +302,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                       {/* Progress Bar */}
                       <div className="mt-2 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${barColor} transition-all duration-700`}
+                          className={`h-full rounded-full ${barColor}`}
                           style={{ width: `${item.raw_score_0_10 * 10}%` }}
                         />
                       </div>
@@ -533,7 +311,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                     {/* Expand/Collapse Chevron */}
                     <div className="shrink-0 p-1 text-slate-400">
                       <svg
-                        className={`h-4.5 w-4.5 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-indigo-600' : ''}`}
+                        className="h-4.5 w-4.5 transition-transform duration-300 group-open:rotate-180 group-open:text-indigo-600"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -541,15 +319,11 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
-                  </button>
+                  </summary>
 
                   {/* Expandable Details Container */}
-                  <div
-                    className={`grid transition-all duration-300 ease-in-out ${
-                      isExpanded ? 'grid-rows-[1fr] opacity-100 mt-3.5' : 'grid-rows-[0fr] opacity-0'
-                    }`}
-                  >
-                    <div className="overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-2.5">
+                  <div className="mt-3.5 transition-all duration-300">
+                    <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-2.5">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Analiza słabości:</p>
                         <p className="mt-1 text-xs text-slate-700 leading-relaxed">{item.rationale}</p>
@@ -560,7 +334,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                       </div>
                     </div>
                   </div>
-                </div>
+                </details>
               )
             })}
           </div>
@@ -583,26 +357,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             </span>
           </div>
 
-          <button
-            onClick={handleCopyPrompt}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-[0.97] border border-white/5 text-xs font-semibold text-white px-4 py-2 transition-all"
-          >
-            {isCopied ? (
-              <>
-                <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-emerald-400">Skopiowano!</span>
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <span>Kopiuj prompt</span>
-              </>
-            )}
-          </button>
+          <CopyButton text={result.improved_prompt} analysisId={result.id} variant="secondary" />
         </div>
 
         {/* Editor Code Area */}
@@ -682,167 +437,14 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       {/* Footer Interactive Actions Section: Feedback & Public Sharing */}
       {!isPublicMode && (
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Feedback Section */}
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
-            <div>
-              <h3 className="text-base font-bold text-slate-900">Czy ten audyt był pomocny?</h3>
-              <p className="mt-1 text-xs text-slate-500">Twój feedback pozwala nam stale ulepszać filtry inżynierii promptów.</p>
-            </div>
-
-            <div className="mt-6 space-y-3">
-              {feedbackSubmitted ? (
-                /* Confirmation state */
-                <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-100 px-4 py-3 text-xs font-bold text-emerald-700">
-                  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Dziękujemy za przesłanie opinii!</span>
-                </div>
-              ) : (
-                <>
-                  {/* Vote buttons — disabled after a vote is cast */}
-                  <div className="flex gap-3" role="group" aria-label="Oceń audyt">
-                    <button
-                      id="feedback-btn-up"
-                      onClick={() => handleFeedbackVote('up')}
-                      disabled={feedbackLoading}
-                      aria-pressed={feedbackVote === 'up'}
-                      className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-3 text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 ${
-                        feedbackVote === 'up'
-                          ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className="text-base">👍</span>
-                      <span>Tak, bardzo</span>
-                    </button>
-                    <button
-                      id="feedback-btn-down"
-                      onClick={() => handleFeedbackVote('down')}
-                      disabled={feedbackLoading}
-                      aria-pressed={feedbackVote === 'down'}
-                      className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-3 text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 ${
-                        feedbackVote === 'down'
-                          ? 'border-rose-300 bg-rose-50 text-rose-700'
-                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className="text-base">👎</span>
-                      <span>Nie, słaba jakość</span>
-                    </button>
-                  </div>
-
-                  {/* Optional comment — shown after thumbs-down to let user elaborate */}
-                  {feedbackVote === 'down' && (
-                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <label htmlFor="feedback-comment" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Co poszło nie tak? (opcjonalne, maks. 500 znaków)
-                      </label>
-                      <textarea
-                        id="feedback-comment"
-                        value={feedbackComment}
-                        onChange={e => setFeedbackComment(e.target.value)}
-                        maxLength={500}
-                        rows={3}
-                        placeholder="Opisz co mogło być lepsze..."
-                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none transition-colors"
-                      />
-                      <button
-                        id="feedback-submit-btn"
-                        onClick={handleSubmitFeedback}
-                        disabled={feedbackLoading}
-                        className="w-full rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 active:scale-[0.98] disabled:opacity-60 transition-all"
-                      >
-                        {feedbackLoading ? 'Wysyłanie...' : 'Wyślij opinię'}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Inline error */}
-                  {feedbackError && (
-                    <p className="text-xs font-medium text-rose-600">⚠️ {feedbackError}</p>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Share Link Generation */}
-          <div className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">Udostępnij raport</h3>
-                <p className="mt-1 text-xs text-slate-500">
-                  Stwórz publiczny link. Domyślnie wyłączone (prywatny). Każdy z linkiem zobaczy treść promptu i raport.
-                </p>
-              </div>
-              
-              {/* Toggle Switch */}
-              <button
-                onClick={handleToggleShare}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  isShareEnabled ? 'bg-indigo-600' : 'bg-slate-200'
-                }`}
-              >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    isShareEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
-            <div className="mt-6">
-              {shareError && (
-                <p className="text-xs font-semibold text-red-600 mb-2">⚠️ {shareError}</p>
-              )}
-
-              {isShareEnabled && shareToken ? (
-                <div className="space-y-2.5 animate-fadeIn">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 block">Publiczny adres URL:</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={shareUrl}
-                      className="flex-1 min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-500 focus:outline-none"
-                    />
-                    <button
-                      onClick={handleCopyShareLink}
-                      className="shrink-0 rounded-2xl bg-slate-900 hover:bg-slate-800 text-xs font-semibold text-white px-4 py-2.5 transition-colors"
-                    >
-                      {isShareLinkCopied ? 'Skopiowano!' : 'Kopiuj'}
-                    </button>
-                  </div>
-                  
-                  {/* Public link safety warning block */}
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-3 text-[10px] leading-relaxed text-amber-900 flex gap-2">
-                    <svg className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <div>
-                      <strong className="block mb-0.5">Uwaga: Raport staje się publiczny!</strong>
-                      Każdy, kto posiada ten adres URL, będzie mógł go wyświetlić. Prywatne tokeny sesji i dane techniczne są ukrywane, lecz zachowaj ostrożność.
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-center">
-                  <span className="text-xs font-medium text-slate-400">
-                    Włącz przełącznik, aby wygenerować link udostępniania.
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
+          <FeedbackSection analysisId={result.id} />
+          <ShareSettings
+            analysisId={result.id}
+            isShareEnabledInitially={result.isShareEnabled ?? false}
+            shareTokenInitially={result.shareToken ?? null}
+          />
         </div>
       )}
-
-      <UpgradeModal
-        isOpen={isUpgradeModalOpen}
-        onClose={() => setIsUpgradeModalOpen(false)}
-        featureName={selectedFeature}
-      />
     </div>
   )
 }

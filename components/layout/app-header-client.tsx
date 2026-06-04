@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { supabaseClient } from '@/lib/supabase/client'
 
 interface AppHeaderClientProps {
   theme: 'light' | 'dark'
@@ -21,6 +20,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
   const handleLogout = async () => {
     setIsLoggingOut(true)
     try {
+      const { supabaseClient } = await import('@/lib/supabase/client')
       if (supabaseClient) {
         await supabaseClient.auth.signOut()
       }

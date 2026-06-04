@@ -1,7 +1,6 @@
-import { AnalyzeForm } from '@/components/analyzer/analyze-form'
+import nextDynamic from 'next/dynamic'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
-import { UsageMeter } from '@/components/plans/usage-meter'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import {
@@ -9,6 +8,9 @@ import {
   getUsageCountThisMonthForUser,
 } from '@/lib/supabase/queries'
 import { getPlanSlugForUser, PLAN_LIMITS } from '@/lib/plans/config'
+
+const AnalyzeForm = nextDynamic(() => import('@/components/analyzer/analyze-form').then((mod) => mod.AnalyzeForm))
+const UsageMeter = nextDynamic(() => import('@/components/plans/usage-meter').then((mod) => mod.UsageMeter))
 
 export const dynamic = 'force-dynamic'
 

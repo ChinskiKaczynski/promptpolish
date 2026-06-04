@@ -2,8 +2,11 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { detectSensitiveData } from '@/lib/privacy/sensitive-data-detector'
+import { LoaderBackdrop } from './loader-backdrop'
+import { MonthlyLimitBanner } from './monthly-limit-banner'
+import { SensitiveDataAlert } from './sensitive-data-alert'
+import { CalibrationFields } from './calibration-fields'
 
 const MIN_PROMPT_CHARS = 20
 const MAX_PROMPT_CHARS = 12000
@@ -203,92 +206,22 @@ export function AnalyzeForm() {
 
   return (
     <>
-      {/* Full-Screen Simulated AI Audit Progress Backdrop */}
-      {isSubmitting && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md transition-all duration-300">
-          <div className="relative flex flex-col items-center max-w-md px-6 text-center">
-            {/* Spinning gradient ring */}
-            <div className="relative flex h-20 w-20 items-center justify-center">
-              <div className="absolute h-full w-full animate-spin rounded-full border-4 border-indigo-500/20 border-t-indigo-500" />
-              <svg className="h-8 w-8 text-indigo-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            </div>
-            
-            <h3 className="mt-8 text-lg font-bold text-white tracking-tight">
-              {workingLanguage === 'pl' ? 'Trwa inżynieryjny audyt promptu...' : 'Conducting prompt engineering audit...'}
-            </h3>
-            
-            {/* Steps Progress Indicator */}
-            <div className="mt-6 w-72 rounded-full bg-slate-800 p-1">
-              <div 
-                className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500" 
-                style={{ width: `${((currentStepIndex + 1) / loadingSteps.length) * 100}%` }}
-              />
-            </div>
-            
-            <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-indigo-400">
-              {workingLanguage === 'pl' ? `Krok ${currentStepIndex + 1} z ${loadingSteps.length}` : `Step ${currentStepIndex + 1} of ${loadingSteps.length}`}
-            </p>
-            
-            <p className="mt-2 text-sm text-slate-400 leading-relaxed min-h-[40px] animate-fade-in">
-              {loadingSteps[currentStepIndex]}
-            </p>
-          </div>
-        </div>
-      )}
+      <LoaderBackdrop
+        isSubmitting={isSubmitting}
+        workingLanguage={workingLanguage}
+        currentStepIndex={currentStepIndex}
+        loadingSteps={loadingSteps}
+      />
 
       {/* Main Analyzer Form */}
       <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 shadow-sm">
         
-        {/* Monthly Limit Reached Inline Upgrade CTA Card */}
-        {isMonthlyLimitReached && (
-          <div className="relative rounded-2xl border-2 border-indigo-500 bg-gradient-to-br from-slate-900 to-indigo-950/90 p-6 text-white shadow-lg shadow-indigo-500/10 animate-in fade-in slide-in-from-top-4 duration-300">
-            {/* Dismiss Button */}
-            <button
-              type="button"
-              onClick={() => setIsMonthlyLimitReached(false)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-white transition p-1 cursor-pointer"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <div className="flex gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 shadow-md shadow-indigo-500/20 text-white">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <div className="space-y-1.5 pr-6">
-                <h4 className="text-sm font-extrabold tracking-tight">
-                  {workingLanguage === 'pl' ? 'Osiągnięto miesięczny limit analiz' : 'Monthly Analysis Limit Reached'}
-                </h4>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  {workingLanguage === 'pl'
-                    ? `Wykorzystałeś miesięczny limit analiz (${monthlyLimitFromApi ?? '—'}/miesiąc) na Twoim planie. Przejdź na Pro, aby uzyskać do 500 analiz miesięcznie, eksport PDF/Markdown, wyższy limit znaków (24 000) i zbiorczy audyt. Zakup Pro jest niedostępny w becie — dostępny wkrótce po uruchomieniu Stripe.`
-                    : `You have reached the monthly analysis limit (${monthlyLimitFromApi ?? '—'}/month) for your plan. Upgrade to Pro for 500 monthly analyses, PDF/Markdown exports, higher character limits (24k), and batch audits. Pro purchase is unavailable in beta — available soon after Stripe activation.`}
-                </p>
-                <div className="pt-2 flex flex-wrap items-center gap-2">
-                  <Link
-                    href="/pricing"
-                    className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer"
-                  >
-                    {workingLanguage === 'pl' ? 'Zobacz cennik i ulepsz plan' : 'View Pricing & Upgrade'}
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => setIsMonthlyLimitReached(false)}
-                    className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition active:scale-95 cursor-pointer"
-                  >
-                    {workingLanguage === 'pl' ? 'Wróć do audytu' : 'Dismiss'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <MonthlyLimitBanner
+          isMonthlyLimitReached={isMonthlyLimitReached}
+          setIsMonthlyLimitReached={setIsMonthlyLimitReached}
+          monthlyLimitFromApi={monthlyLimitFromApi}
+          workingLanguage={workingLanguage}
+        />
 
         {/* Upper Dashboard: Safety Warnings & Daily Quotas */}
         <div className="grid gap-4 md:grid-cols-2">
@@ -386,67 +319,10 @@ export function AnalyzeForm() {
           />
         </div>
 
-        {/* Real-time Sensitive Data Scans Result */}
-        {detection.riskLevel !== 'none' && (
-          <div className={`rounded-2xl border p-4 sm:p-5 text-xs flex gap-3.5 transition-all shadow-sm ${
-            detection.riskLevel === 'high' ? 'border-red-200 bg-red-50/50 text-red-950 animate-shake' :
-            detection.riskLevel === 'medium' ? 'border-amber-200 bg-amber-50/50 text-amber-950' :
-            'border-slate-200 bg-slate-50/60 text-slate-800'
-          }`}>
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-              detection.riskLevel === 'high' ? 'bg-red-100 text-red-700' :
-              detection.riskLevel === 'medium' ? 'bg-amber-100 text-amber-700' :
-              'bg-slate-100 text-slate-600'
-            }`}>
-              {detection.riskLevel === 'high' ? (
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0-6h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
-                </svg>
-              ) : detection.riskLevel === 'medium' ? (
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              ) : (
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm leading-tight">
-                {detection.riskLevel === 'high' 
-                  ? (workingLanguage === 'pl' ? 'Zablokowano: Wykryto dane krytyczne' : 'Blocked: High-Risk Credentials Detected') :
-                 detection.riskLevel === 'medium' 
-                  ? (workingLanguage === 'pl' ? 'Ostrzeżenie: Potencjalne dane poufne' : 'Warning: Potential Secrets Found') :
-                 (workingLanguage === 'pl' ? 'Informacja: Zidentyfikowano dane kontaktowe' : 'Notice: Contact Identifiers Identified')}
-              </p>
-              <p className="mt-1 text-slate-600 leading-relaxed break-words">
-                {detection.riskLevel === 'high' 
-                  ? (workingLanguage === 'pl' ? 'Nasz skaner preflight zidentyfikował wzorce krytycznych danych wrażliwych (np. kluczy API lub haseł). Aby odblokować audyt, usuń je ze swojego promptu:' : 'Our safety preflight scan identified high-risk secret patterns. To unlock the audit button, please remove them from your prompt:') :
-                 detection.riskLevel === 'medium' 
-                  ? (workingLanguage === 'pl' ? 'Wykryliśmy wzorce o średnim poziomie ryzyka (np. hasła). Zalecamy upewnić się, że nie są to dane produkcyjne przed kontynuacją:' : 'We detected medium-risk parameters (e.g. passwords). We highly recommend verifying these are non-production placeholders:') :
-                 (workingLanguage === 'pl' ? 'Wykryliśmy podstawowe dane kontaktowe (np. adres e-mail). Narzędzie działa w 100% anonimowo, ale zalecamy ostrożność:' : 'We detected common contact details (e.g. email). Although this tool is 100% anonymous, please stay cautious:')}
-              </p>
-              <ul className="mt-3.5 space-y-2.5">
-                {detection.findings.map((finding, idx) => (
-                  <li key={`${finding.type}-${idx}`} className="rounded-xl border border-white/50 bg-white/40 p-3 flex flex-col gap-1.5 shadow-sm">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
-                        finding.riskLevel === 'high' ? 'bg-red-100 text-red-800' :
-                        finding.riskLevel === 'medium' ? 'bg-amber-100 text-amber-800' :
-                        'bg-slate-100 text-slate-800'
-                      }`}>
-                        {finding.riskLevel === 'high' ? (workingLanguage === 'pl' ? 'Krytyczne' : 'Critical') : finding.riskLevel === 'medium' ? (workingLanguage === 'pl' ? 'Ostrzeżenie' : 'Warning') : 'Info'}
-                      </span>
-                      <span className="font-mono text-xs font-bold text-slate-700 break-all">{finding.redactedValue}</span>
-                    </div>
-                    <p className="text-[11px] text-slate-600 leading-normal font-medium">{finding.message}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
+        <SensitiveDataAlert
+          detection={detection}
+          workingLanguage={workingLanguage}
+        />
 
         {/* Warning messages */}
         {isApproachingLimit && (
@@ -476,48 +352,17 @@ export function AnalyzeForm() {
           </div>
         </div>
 
-        {/* Optional Contextual Parameters Fields */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-2 text-sm font-semibold text-slate-800">
-            {workingLanguage === 'pl' ? 'Cel zadania (Goal)' : 'Task goal (Goal)'}
-            <input 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 focus:border-indigo-500 focus:bg-white focus:outline-none px-4 py-3 text-sm transition"
-              placeholder={workingLanguage === 'pl' ? 'np. Napisanie posta blogowego SEO' : 'e.g. Writing an SEO blog post'}
-              value={taskGoal} 
-              onChange={(e) => setTaskGoal(e.target.value)} 
-            />
-          </label>
-
-          <label className="space-y-2 text-sm font-semibold text-slate-800">
-            {workingLanguage === 'pl' ? 'Typ zadania (Task Type)' : 'Task type (Task Type)'}
-            <input 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 focus:border-indigo-500 focus:bg-white focus:outline-none px-4 py-3 text-sm transition"
-              placeholder={workingLanguage === 'pl' ? 'np. Kreatywne pisanie, Analiza danych, Kodowanie' : 'e.g. Creative writing, Data analysis, Coding'}
-              value={taskType} 
-              onChange={(e) => setTaskType(e.target.value)} 
-            />
-          </label>
-
-          <label className="space-y-2 text-sm font-semibold text-slate-800">
-            {workingLanguage === 'pl' ? 'Oczekiwany format wyjściowy (Expected Format)' : 'Expected output format (Expected Format)'}
-            <input 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 focus:border-indigo-500 focus:bg-white focus:outline-none px-4 py-3 text-sm transition"
-              placeholder={workingLanguage === 'pl' ? 'np. Tabela Markdown, Lista bulletpoints, Kod JSON' : 'e.g. Markdown table, Bulletpoints, JSON code'}
-              value={expectedOutputFormat} 
-              onChange={(e) => setExpectedOutputFormat(e.target.value)} 
-            />
-          </label>
-
-          <label className="space-y-2 text-sm font-semibold text-slate-800">
-            {workingLanguage === 'pl' ? 'Szczególne ograniczenia (Constraints)' : 'Specific constraints (Constraints)'}
-            <input 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/30 focus:border-indigo-500 focus:bg-white focus:outline-none px-4 py-3 text-sm transition"
-              placeholder={workingLanguage === 'pl' ? 'np. Maksymalnie 300 słów, Ton profesjonalny' : 'e.g. Maximum 300 words, Professional tone'}
-              value={constraints} 
-              onChange={(e) => setConstraints(e.target.value)} 
-            />
-          </label>
-        </div>
+        <CalibrationFields
+          taskGoal={taskGoal}
+          setTaskGoal={setTaskGoal}
+          taskType={taskType}
+          setTaskType={setTaskType}
+          expectedOutputFormat={expectedOutputFormat}
+          setExpectedOutputFormat={setExpectedOutputFormat}
+          constraints={constraints}
+          setConstraints={setConstraints}
+          workingLanguage={workingLanguage}
+        />
 
         {/* Advanced Settings */}
         <div className="relative py-2">

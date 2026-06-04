@@ -54,6 +54,28 @@ describe('Scheduled Cron Endpoint: /api/cron/cleanup', () => {
       expect(data.error).toBe('unauthorized')
       expect(runRetentionCleanup).not.toHaveBeenCalled()
     })
+
+    it('returns 500 Misconfigured when CRON_SECRET is missing in production', async () => {
+      const originalNodeEnv = process.env.NODE_ENV
+      process.env.NODE_ENV = 'production'
+
+      const { serverEnv } = await import('@/lib/env/server')
+      const originalSecret = serverEnv.CRON_SECRET
+      serverEnv.CRON_SECRET = undefined
+
+      try {
+        const request = makeCronRequest('http://localhost/api/cron/cleanup', 'super-secret-cron-token-xyz')
+        const response = await POST(request)
+        const data = await response.json()
+
+        expect(response.status).toBe(500)
+        expect(data.error).toBe('misconfigured')
+        expect(runRetentionCleanup).not.toHaveBeenCalled()
+      } finally {
+        process.env.NODE_ENV = originalNodeEnv
+        serverEnv.CRON_SECRET = originalSecret
+      }
+    })
   })
 
   describe('Successful Cleanup Execution', () => {
