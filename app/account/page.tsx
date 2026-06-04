@@ -68,7 +68,7 @@ export default async function AccountPage() {
   const monthlyLimit = limits.monthlyAnalyses
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50/30 selection:bg-indigo-100 antialiased font-sans">
+    <div className="flex min-h-screen flex-col bg-[#0C0C10] text-[#E2E8F0] selection:bg-[#A78BFA]/20 antialiased font-sans">
       <AppHeader />
 
       {/* Main Dashboard Layout */}

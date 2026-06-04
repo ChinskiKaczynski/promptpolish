@@ -37,26 +37,25 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
     }
   }
 
-  // Theme style mappings - standard modern white-lavender
-  const bgStyle = 'bg-white/80 border-slate-200/60 text-slate-900'
-  const textStyle = 'text-slate-600 hover:text-indigo-600 transition-colors duration-200 font-medium'
-  const activeTextStyle = 'text-indigo-600 font-bold'
-  const buttonBorderClass = 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:border-slate-300 shadow-sm'
+  // Theme style mappings - dark-mode-first
+  const textStyle = 'text-[#94A3B8] hover:text-[#E2E8F0] transition-colors duration-150 text-sm font-medium'
+  const activeTextStyle = 'text-[#A78BFA] font-semibold text-sm'
+  const buttonBorderClass = 'border-[#2A2A3A] bg-[#13131A] hover:bg-[#1C1C27] hover:border-[#3A3A52] text-[#E2E8F0] shadow-none'
 
   const isLinkActive = (path: string) => pathname === path
 
   return (
-    <header className={`border-b sticky top-0 z-50 backdrop-blur-md transition-all duration-200 ${bgStyle}`}>
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <header className="sticky top-0 z-50 bg-[#0C0C10]/90 backdrop-blur-xl border-b border-[#2A2A3A] transition-all duration-200">
+      <div className="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 active:scale-[0.98] transition-all">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100/80 shadow-sm">
-            {/* Elegant 4-pointed star logo matching the screenshot */}
-            <svg className="h-5 w-5 fill-indigo-600" viewBox="0 0 24 24">
-              <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z" />
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1C1C27] border border-[#3A3A52] group-hover:border-[#A78BFA]/50 transition-colors duration-200">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z"
+                    fill="#A78BFA" opacity="0.9"/>
             </svg>
           </div>
-          <span className="text-lg font-bold tracking-tight text-slate-900 font-sans">
+          <span className="text-base font-bold tracking-tight text-[#E2E8F0] font-heading">
             PromptPolish
           </span>
         </Link>
@@ -74,7 +73,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
               </Link>
               <Link
                 href="/analyze"
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-100 hover:shadow-indigo-200 transition active:scale-95 cursor-pointer"
+                className="inline-flex items-center justify-center rounded-lg gradient-btn px-4 py-2 text-xs font-bold text-white transition active:scale-95 cursor-pointer"
               >
                 Przeanalizuj prompt
               </Link>
@@ -120,7 +119,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                   <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}
-                    className={`rounded-xl border px-4 py-2 text-xs font-bold transition active:scale-95 disabled:opacity-50 cursor-pointer ${buttonBorderClass}`}
+                    className={`rounded-lg border px-4 py-2 text-xs font-bold transition active:scale-95 disabled:opacity-50 cursor-pointer ${buttonBorderClass}`}
                   >
                     {isLoggingOut ? 'Wylogowywanie...' : 'Wyloguj'}
                   </button>
@@ -129,13 +128,13 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                 <>
                   <Link
                     href="/login"
-                    className={`rounded-xl border px-4 py-2 text-xs font-bold transition active:scale-95 cursor-pointer ${buttonBorderClass}`}
+                    className={`rounded-lg border px-4 py-2 text-xs font-bold transition active:scale-95 cursor-pointer ${buttonBorderClass}`}
                   >
                     Zaloguj
                   </Link>
                   <Link
                     href="/analyze"
-                    className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-100 hover:shadow-indigo-200 transition active:scale-95 cursor-pointer"
+                    className="inline-flex items-center justify-center rounded-lg gradient-btn px-4 py-2 text-xs font-bold text-white transition active:scale-95 cursor-pointer"
                   >
                     Zacznij za darmo
                   </Link>
@@ -144,7 +143,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
 
               {/* Polish active indicator status badge for MVP */}
               {!isLoggedIn && (
-                <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100/50">
+                <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#1C1C27] text-[#6EE7B7] border border-[#6EE7B7]/20">
                   Działa bez konta
                 </span>
               )}
@@ -155,13 +154,13 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
         {/* Mobile Navigation Toggle (Hamburger) */}
         <div className="flex md:hidden items-center gap-3">
           {!isLoggedIn && !publicShare && (
-            <span className="rounded-full px-2.5 py-0.5 text-[10px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100/50">
+            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#1C1C27] text-[#6EE7B7] border border-[#6EE7B7]/20">
               MVP
             </span>
           )}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
+            className="p-2 rounded-lg border border-[#2A2A3A] text-[#94A3B8] hover:bg-[#1C1C27] hover:text-[#E2E8F0] transition"
             aria-label="Toggle navigation menu"
           >
             {isMobileMenuOpen ? (
@@ -179,7 +178,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
 
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t px-6 py-4 space-y-4 animate-in slide-in-from-top duration-200 bg-white border-slate-200/60">
+        <div className="md:hidden border-t border-[#2A2A3A] px-6 py-4 space-y-4 animate-in slide-in-from-top duration-200 bg-[#0C0C10]">
           {publicShare ? (
             <div className="flex flex-col gap-3">
               <Link
@@ -192,7 +191,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
               <Link
                 href="/analyze"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="w-full text-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95"
+                className="w-full text-center inline-flex items-center justify-center rounded-lg gradient-btn px-4 py-2 text-xs font-bold text-white transition active:scale-95"
               >
                 Przeanalizuj prompt
               </Link>
@@ -202,21 +201,21 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
               <Link
                 href="/"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/') ? activeTextStyle : textStyle}`}
+                className={`text-sm py-2 font-medium border-b border-[#2A2A3A]/30 ${isLinkActive('/') ? activeTextStyle : textStyle}`}
               >
                 Strona główna
               </Link>
               <Link
                 href="/analyze"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/analyze') ? activeTextStyle : textStyle}`}
+                className={`text-sm py-2 font-medium border-b border-[#2A2A3A]/30 ${isLinkActive('/analyze') ? activeTextStyle : textStyle}`}
               >
                 Nowy audyt
               </Link>
               <Link
                 href="/pricing"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/pricing') ? activeTextStyle : textStyle}`}
+                className={`text-sm py-2 font-medium border-b border-[#2A2A3A]/30 ${isLinkActive('/pricing') ? activeTextStyle : textStyle}`}
               >
                 Cennik
               </Link>
@@ -225,7 +224,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                 <Link
                   href="/admin/metrics"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/admin/metrics') ? activeTextStyle : textStyle}`}
+                  className={`text-sm py-2 font-medium border-b border-[#2A2A3A]/30 ${isLinkActive('/admin/metrics') ? activeTextStyle : textStyle}`}
                 >
                   Admin
                 </Link>
@@ -236,7 +235,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                   <Link
                     href="/account"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`text-sm py-2 font-medium border-b border-slate-100/5 ${isLinkActive('/account') ? activeTextStyle : textStyle}`}
+                    className={`text-sm py-2 font-medium border-b border-[#2A2A3A]/30 ${isLinkActive('/account') ? activeTextStyle : textStyle}`}
                   >
                     Konto
                   </Link>
@@ -253,14 +252,14 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                   <Link
                     href="/login"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="w-full text-center block rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 active:scale-95"
+                    className={`w-full text-center block rounded-lg border px-4 py-2 text-xs font-bold transition active:scale-95 cursor-pointer ${buttonBorderClass}`}
                   >
                     Zaloguj
                   </Link>
                   <Link
                     href="/analyze"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="w-full text-center block rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 mt-2"
+                    className="w-full text-center inline-flex items-center justify-center rounded-lg gradient-btn px-4 py-2 text-xs font-bold text-white transition active:scale-95 cursor-pointer mt-2"
                   >
                     Zacznij za darmo
                   </Link>

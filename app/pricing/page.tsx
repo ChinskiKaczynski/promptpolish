@@ -44,7 +44,7 @@ export default async function PricingPage() {
   const proLimits = PLAN_LIMITS.pro
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50/30 text-slate-900 antialiased font-sans pb-16">
+    <div className="flex min-h-screen flex-col bg-[#0C0C10] text-[#E2E8F0] selection:bg-[#A78BFA]/20 antialiased font-sans pb-16">
       <AppHeader />
 
       {/* Beta Notice Banner */}

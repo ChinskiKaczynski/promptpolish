@@ -42,8 +42,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="pl">
       <body className="min-h-screen bg-background font-sans antialiased relative">
         <div className="fixed inset-0 pointer-events-none overflow-hidden -z-50 select-none">
-          <div className="absolute top-[8%] left-[15%] w-[450px] h-[450px] rounded-full bg-indigo-200/25 blur-[120px] animate-blob-1" />
-          <div className="absolute bottom-[15%] right-[15%] w-[500px] h-[500px] rounded-full bg-purple-200/20 blur-[130px] animate-blob-2" />
+          <div className="absolute top-[8%] left-[15%] w-[500px] h-[500px] rounded-full bg-violet-900/20 blur-[140px] animate-blob-1" />
+          <div className="absolute bottom-[15%] right-[15%] w-[550px] h-[550px] rounded-full bg-indigo-900/15 blur-[160px] animate-blob-2" />
         </div>
         <AuthListener />
         {children}

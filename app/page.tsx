@@ -4,7 +4,7 @@ import { AppFooter } from '@/components/layout/app-footer'
 
 export default async function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50/30 font-sans text-slate-900 selection:bg-indigo-100 antialiased">
+    <div className="flex min-h-screen flex-col bg-[#0C0C10] font-sans text-[#E2E8F0] selection:bg-[#A78BFA]/20 antialiased">
       <AppHeader />
 
       {/* Main Content */}

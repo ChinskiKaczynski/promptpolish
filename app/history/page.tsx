@@ -59,7 +59,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
     const totalGuestAnalyses = (await getPromptAnalysesForUser('', ownerAnonymousId || '')).length
     if (totalGuestAnalyses === 0) {
       return (
-        <div className="flex min-h-screen flex-col bg-slate-50/30 selection:bg-indigo-100 antialiased font-sans">
+        <div className="flex min-h-screen flex-col bg-[#0C0C10] text-[#E2E8F0] selection:bg-[#A78BFA]/20 antialiased font-sans">
           <AppHeader />
 
           {/* Guest Conversion CTA Box */}
@@ -124,7 +124,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50/30 selection:bg-indigo-100 antialiased font-sans">
+    <div className="flex min-h-screen flex-col bg-[#0C0C10] text-[#E2E8F0] selection:bg-[#A78BFA]/20 antialiased font-sans">
       <AppHeader />
 
       {/* History Dashboard Main Area */}
