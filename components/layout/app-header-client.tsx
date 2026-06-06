@@ -38,6 +38,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
   }
 
   // Theme style mappings - dark-mode-first
+  const bgStyle = 'bg-[#0C0C10]/90 border-[#2A2A3A] text-[#E2E8F0]'
   const textStyle = 'text-[#94A3B8] hover:text-[#E2E8F0] transition-colors duration-150 text-sm font-medium'
   const activeTextStyle = 'text-[#A78BFA] font-semibold text-sm'
   const buttonBorderClass = 'border-[#2A2A3A] bg-[#13131A] hover:bg-[#1C1C27] hover:border-[#3A3A52] text-[#E2E8F0] shadow-none'
@@ -45,14 +46,13 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
   const isLinkActive = (path: string) => pathname === path
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0C0C10]/90 backdrop-blur-xl border-b border-[#2A2A3A] transition-all duration-200">
+    <header className={`border-b sticky top-0 z-50 backdrop-blur-xl transition-all duration-200 ${bgStyle}`}>
       <div className="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1C1C27] border border-[#3A3A52] group-hover:border-[#A78BFA]/50 transition-colors duration-200">
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z"
-                    fill="#A78BFA" opacity="0.9"/>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1C1C27] border border-[#3A3A52] hover:border-[#A78BFA]/50 transition-colors">
+            <svg className="h-5 w-5 fill-[#A78BFA]" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z" />
             </svg>
           </div>
           <span className="text-base font-bold tracking-tight text-[#E2E8F0] font-heading">

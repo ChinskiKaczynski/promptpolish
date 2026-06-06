@@ -213,7 +213,7 @@ export function AnalyzeForm() {
       />
 
       {/* Main Analyzer Form */}
-      <form onSubmit={handleSubmit} className="space-y-8 rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-10 shadow-xl shadow-slate-100/40 glow-purple">
+      <form onSubmit={handleSubmit} className="space-y-7 rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8">
         
         <MonthlyLimitBanner
           isMonthlyLimitReached={isMonthlyLimitReached}
@@ -222,49 +222,23 @@ export function AnalyzeForm() {
           workingLanguage={workingLanguage}
         />
 
-        {/* Upper Dashboard: Safety Warnings & Daily Quotas */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Privacy Disclaimer Card */}
-          <div className="rounded-2xl border border-amber-200/70 bg-amber-50/20 p-4 text-xs leading-relaxed text-amber-900 flex gap-3 shadow-sm">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m0-6h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
-              </svg>
-            </div>
-            <div>
-              <span className="font-bold block mb-0.5 text-amber-950">
-                {workingLanguage === 'pl' ? 'Ochrona Prywatności' : 'Privacy Protection'}
-              </span>
-              {workingLanguage === 'pl' 
-                ? 'Przed analizą system automatycznie skanuje instrukcje w poszukiwaniu danych wrażliwych. Nigdy nie wklejaj haseł ani kluczy prywatnych.'
-                : 'Before analysis, the system automatically scans prompts for sensitive details. Never paste passwords or private credentials.'}
-            </div>
-          </div>
-
-          {/* Daily Limit Badge */}
-          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-4 text-xs leading-relaxed text-indigo-900 flex gap-3 shadow-sm">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div>
-              <span className="font-bold block mb-0.5 text-indigo-950">
-                {workingLanguage === 'pl' ? 'Dzienny Limit Analiz' : 'Daily Analysis Limit'}
-              </span>
-              {workingLanguage === 'pl' 
-                ? 'Każdy użytkownik anonimowy otrzymuje bezpłatny dzienny limit. Pula odnawia się o północy UTC.' 
-                : 'Every anonymous user receives a free daily limit. Quotas reset daily at midnight UTC.'}
-            </div>
-          </div>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg border border-[#2A2A3A] bg-[#1C1C27] px-4 py-2.5 text-xs text-[#4A5568]">
+          <span className="flex items-center gap-1.5 text-[#94A3B8]">
+            <svg className="h-3.5 w-3.5 text-[#F97316] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
+            </svg>
+            {workingLanguage === 'pl' ? 'Nie wklejaj kluczy API ani haseł.' : 'Do not paste API keys or passwords.'}
+          </span>
+          <span className="hidden sm:inline text-[#2A2A3A]">·</span>
+          <span>{workingLanguage === 'pl' ? 'Limit dzienny odnawia się o północy UTC.' : 'Daily limit resets at midnight UTC.'}</span>
         </div>
 
         {/* Mandatory Selections */}
         <div className="grid gap-6 sm:grid-cols-2">
-          <label className="space-y-2 text-sm font-semibold text-slate-800">
+          <label className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] block">
             {workingLanguage === 'pl' ? 'Język roboczy' : 'Working language'}
             <select 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white shadow-sm" 
+              className="select-dark w-full rounded-lg px-4 py-3 text-sm font-medium transition cursor-pointer" 
               value={workingLanguage} 
               onChange={(e) => setWorkingLanguage(e.target.value as 'pl' | 'en')}
             >
@@ -273,12 +247,10 @@ export function AnalyzeForm() {
             </select>
           </label>
 
-          <label className="space-y-2 text-sm font-semibold text-slate-800">
-            <span className="block">
-              {workingLanguage === 'pl' ? 'Tryb audytu' : 'Audit mode'}
-            </span>
+          <label className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] block">
+            {workingLanguage === 'pl' ? 'Tryb audytu' : 'Audit mode'}
             <select 
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white shadow-sm" 
+              className="select-dark w-full rounded-lg px-4 py-3 text-sm font-medium transition cursor-pointer" 
               value={auditMode} 
               onChange={(e) => setAuditMode(e.target.value)}
             >
@@ -296,19 +268,15 @@ export function AnalyzeForm() {
         {/* Primary Prompt Input Textarea */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-semibold text-slate-800">
+            <label className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] block">
               {workingLanguage === 'pl' ? 'Prompt do audytu (Wymagany)' : 'Prompt to audit (Required)'}
             </label>
-            <span className={`text-xs font-semibold ${isTooLong ? 'text-red-600' : isApproachingLimit ? 'text-amber-600' : 'text-slate-400'}`}>
+            <span className={`text-xs font-mono font-medium ${isTooLong ? 'text-[#F87171]' : isApproachingLimit ? 'text-[#F97316]' : 'text-[#4A5568]'}`}>
               {inputPrompt.length.toLocaleString()} / {MAX_PROMPT_CHARS.toLocaleString()} {workingLanguage === 'pl' ? 'znaków' : 'characters'}
             </span>
           </div>
           <textarea
-            className={`min-h-[240px] w-full rounded-2xl border px-4 py-4 text-sm leading-relaxed transition-all focus:outline-none focus:ring-2 shadow-sm ${
-              isTooLong ? 'border-red-300 focus:ring-red-100 bg-red-50/10' : 
-              isApproachingLimit ? 'border-amber-300 focus:ring-amber-100 bg-amber-50/10' : 
-              'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100 bg-slate-50/20 focus:bg-white'
-            }`}
+            className={`prompt-textarea min-h-[220px] w-full rounded-lg px-4 py-3.5 resize-y transition-all ${isTooLong ? 'border-[#F87171]/60' : isApproachingLimit ? 'border-[#F97316]/50' : ''}`}
             placeholder={workingLanguage === 'pl' 
               ? 'Wklej tutaj treść promptu, który chcesz przetestować i ulepszyć (minimum 20 znaków)...' 
               : 'Paste the content of the prompt you want to test and improve here (minimum 20 characters)...'}
@@ -343,11 +311,11 @@ export function AnalyzeForm() {
           <button
             type="button"
             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-            className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest transition shadow-sm"
+            className="flex w-full items-center justify-between rounded-lg border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#1C1C27]/80 hover:border-[#3A3A52] px-5 py-3.5 text-xs font-bold text-[#94A3B8] uppercase tracking-widest transition"
           >
             <span>{workingLanguage === 'pl' ? 'Opcjonalna kalibracja i model docelowy' : 'Optional calibration & target model'}</span>
             <svg
-              className={`h-5 w-5 text-slate-400 transition-transform duration-300 ${isAdvancedOpen ? 'rotate-180 text-indigo-600' : ''}`}
+              className={`h-4 w-4 transition-transform duration-300 ${isAdvancedOpen ? 'rotate-180 text-[#A78BFA]' : 'text-[#4A5568]'}`}
               fill="none" viewBox="0 0 24 24" stroke="currentColor"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
@@ -355,7 +323,7 @@ export function AnalyzeForm() {
           </button>
 
           {isAdvancedOpen && (
-            <div className="space-y-6 pt-4 border-t border-slate-100 animate-in fade-in duration-200">
+            <div className="space-y-6 pt-4 border-t border-[#2A2A3A] animate-in fade-in duration-200">
               <CalibrationFields
                 taskGoal={taskGoal}
                 setTaskGoal={setTaskGoal}
@@ -370,22 +338,20 @@ export function AnalyzeForm() {
 
               <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div className="w-full border-t border-slate-200/70" />
+                  <div className="w-full border-t border-[#2A2A3A]" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-white px-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+                  <span className="bg-[#13131A] px-4 text-xs font-bold uppercase tracking-widest text-[#4A5568]">
                     {workingLanguage === 'pl' ? 'Ustawienia zaawansowane' : 'Advanced Settings'}
                   </span>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <label className="space-y-2 text-sm font-semibold text-slate-800 block">
-                  <span className="block">
-                    {workingLanguage === 'pl' ? 'Docelowy model AI' : 'Target AI model'}
-                  </span>
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] block">
+                  {workingLanguage === 'pl' ? 'Docelowy model AI' : 'Target AI model'}
                   <select
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/40 hover:bg-slate-50 px-4 py-3.5 text-sm font-medium transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white shadow-sm block"
+                    className="select-dark w-full rounded-lg px-4 py-3 text-sm font-medium transition cursor-pointer"
                     value={profileSlug}
                     onChange={(e) => setProfileSlug(e.target.value)}
                   >
@@ -404,8 +370,8 @@ export function AnalyzeForm() {
 
         {/* Mapped Localized Error Banners */}
         {errorMessage && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-800 flex gap-3 shadow-sm items-center animate-pulse">
-            <svg className="h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="rounded-lg border border-[#F87171]/30 bg-[#F87171]/8 p-4 text-xs font-semibold text-[#F87171] flex gap-3 items-center">
+            <svg className="h-5 w-5 shrink-0 text-[#F87171]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <div>
@@ -418,8 +384,8 @@ export function AnalyzeForm() {
         {/* Submission Button */}
         <div className="pt-4">
           <button
-            className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 text-sm active:scale-[0.99] disabled:scale-100 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 shadow-md shadow-indigo-100 hover:shadow-indigo-200 active:shadow-sm transition-all flex items-center justify-center gap-2"
-            disabled={isTooShort || isTooLong || isBlocked}
+            className="w-full rounded-lg gradient-btn text-white font-semibold py-4 text-sm disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none transition-all flex items-center justify-center gap-2"
+            disabled={isTooShort || isTooLong || isBlocked || isSubmitting}
             type="submit"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -431,16 +397,16 @@ export function AnalyzeForm() {
 
         {/* Validation Warnings Labels at Footer */}
         {isTooShort && (
-          <p className="text-center text-xs font-medium text-slate-500">
+          <p className="text-center text-xs font-mono text-[#4A5568]">
             💡 {workingLanguage === 'pl' 
               ? `Aby rozpocząć analizę, wpisz prompt o długości przynajmniej ` 
               : `To start the analysis, enter a prompt of at least `}
-            <strong className="text-slate-700">{MIN_PROMPT_CHARS} {workingLanguage === 'pl' ? 'znaków' : 'characters'}</strong> 
+            <strong className="text-[#94A3B8] font-bold">{MIN_PROMPT_CHARS} {workingLanguage === 'pl' ? 'znaków' : 'characters'}</strong> 
             {workingLanguage === 'pl' ? ` (obecnie: ${inputPrompt.length}).` : ` (currently: ${inputPrompt.length}).`}
           </p>
         )}
         {isBlocked && (
-          <p className="text-center text-xs font-semibold text-red-600 animate-pulse">
+          <p className="text-center text-xs font-semibold text-[#F87171] animate-pulse">
             ⚠️ {workingLanguage === 'pl' 
               ? 'Ostrzeżenie: Wykryto wrażliwe dane. Usuń klucze API lub poufne teksty, aby odblokować przycisk audytu.'
               : 'Warning: Sensitive data detected. Remove API keys or credentials to unlock the audit button.'}

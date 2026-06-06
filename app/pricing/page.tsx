@@ -65,7 +65,7 @@ export default async function PricingPage() {
         {/* Beta Notice Banner - Minimized & Inside Main */}
         {!stripeEnabled && (
           <div className="mt-6 mb-2 flex items-center justify-center gap-2 text-xs text-[#4A5568] font-mono">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#F97316]"></span>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#F97316] shrink-0"></span>
             Beta — płatności tymczasowo niedostępne. Dostępna symulacja Pro po zalogowaniu.
           </div>
         )}
@@ -125,7 +125,7 @@ export default async function PricingPage() {
             <div className="mt-8 pt-4">
               <Link
                 href="/analyze"
-                className="block text-center w-full rounded-lg border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#22223A] text-[#94A3B8] font-semibold py-3.5 text-sm active:scale-[0.98] transition-all cursor-pointer"
+                className="block text-center w-full rounded-lg border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#22223A] text-[#94A3B8] font-semibold py-3.5 text-sm transition-all"
               >
                 Rozpocznij za darmo
               </Link>
@@ -133,7 +133,7 @@ export default async function PricingPage() {
           </div>
 
           {/* Pro Plan */}
-          <div className="rounded-xl border border-[#A78BFA]/40 bg-[#13131A] p-8 flex flex-col justify-between hover:shadow-violet-glow transition duration-300 relative glow-violet">
+          <div className="rounded-xl border border-[#A78BFA]/40 bg-[#13131A] p-8 flex flex-col justify-between transition duration-300 relative glow-violet">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full gradient-btn px-4 py-1 text-[10px] font-black text-white uppercase tracking-widest">
               Najpopularniejszy
             </div>

@@ -5,61 +5,33 @@
 @tailwind utilities;
 
 :root {
-  /* Backgrounds */
   --bg-base:        #0C0C10;
   --bg-surface:     #13131A;
   --bg-elevated:    #1C1C27;
-  --bg-overlay:     #22223000;
-
-  /* Borders */
   --border-subtle:  #1E1E2E;
   --border-default: #2A2A3A;
   --border-strong:  #3A3A52;
-
-  /* Text */
   --text-primary:   #E2E8F0;
   --text-secondary: #94A3B8;
   --text-muted:     #4A5568;
-  --text-inverse:   #0C0C10;
-
-  /* Brand / Accent */
   --violet:         #A78BFA;
   --violet-dim:     #7C3AED;
   --violet-glow:    rgba(167, 139, 250, 0.15);
   --emerald:        #6EE7B7;
-  --emerald-dim:    #059669;
-
-  /* Semantic */
   --score-amber:    #F59E0B;
-  --score-emerald:  #6EE7B7;
-  --score-indigo:   #818CF8;
-  --score-red:      #F87171;
-  --warning:        #F97316;
   --error:          #F87171;
-  --success:        #6EE7B7;
-
-  /* Tailwind CSS variable bridge */
+  --warning:        #F97316;
   --background:     12 12 16;
   --foreground:     226 232 240;
   --muted:          28 28 39;
   --card:           19 19 26;
   --border:         42 42 58;
-  --primary:        167 139 250;
-  --primary-foreground: 12 12 16;
-  --secondary:      28 28 39;
-  --secondary-foreground: 148 163 184;
-  --accent:         34 34 52;
-  --accent-foreground: 167 139 250;
   --ring:           167 139 250;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
-html {
-  color-scheme: dark;
-}
+html { color-scheme: dark; }
 
 body {
   margin: 0;
@@ -70,13 +42,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Dot-grid background texture — subtle, precision instrument feel */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: radial-gradient(circle, rgba(167, 139, 250, 0.06) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(167, 139, 250, 0.055) 1px, transparent 1px);
   background-size: 24px 24px;
   pointer-events: none;
 }
@@ -86,71 +57,39 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+a { color: inherit; text-decoration: none; }
+
+.font-mono, .font-prompt {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* Monospace — used for prompts, scores, metrics */
-.font-mono,
-.font-prompt {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
-}
-
-/* ── Glass panel — dark variant ── */
 .glass-panel {
-  background: rgba(19, 19, 26, 0.8);
+  background: rgba(19, 19, 26, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-default);
 }
 
-/* ── Violet glow — for primary actions and score cards ── */
 .glow-violet {
   box-shadow: 0 0 0 1px var(--border-default),
               0 0 40px -8px var(--violet-glow),
-              0 4px 24px -4px rgba(0, 0, 0, 0.4);
+              0 4px 24px -4px rgba(0,0,0,0.4);
 }
 
-/* ── Score glow — amber for metric highlight ── */
-.glow-score {
-  box-shadow: 0 0 32px -8px rgba(245, 158, 11, 0.25),
-              0 0 0 1px rgba(245, 158, 11, 0.15);
-}
-
-/* ── Primary gradient button ── */
 .gradient-btn {
   background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 50%, #5B21B6 100%);
-  box-shadow: 0 4px 14px 0 rgba(124, 58, 237, 0.35),
-              inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow: 0 4px 14px 0 rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
   transition: all 0.18s ease;
 }
-
 .gradient-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px 0 rgba(124, 58, 237, 0.5),
-              inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: 0 6px 20px 0 rgba(124,58,237,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
 }
-
 .gradient-btn:active {
   transform: translateY(0px);
-  box-shadow: 0 2px 8px 0 rgba(124, 58, 237, 0.3);
+  box-shadow: 0 2px 8px 0 rgba(124,58,237,0.3);
 }
 
-/* ── Surface card ── */
-.surface-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  border-radius: 12px;
-}
-
-.surface-card-elevated {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
-}
-
-/* ── Gradient text — violet ── */
 .gradient-text {
   background: linear-gradient(135deg, #A78BFA 0%, #C4B5FD 50%, #818CF8 100%);
   -webkit-background-clip: text;
@@ -158,53 +97,6 @@ a {
   background-clip: text;
 }
 
-/* ── Blob animations (adapted for dark bg) ── */
-@keyframes float-blob-1 {
-  0%   { transform: translate(0px, 0px) scale(1); }
-  33%  { transform: translate(40px, -60px) scale(1.12); }
-  66%  { transform: translate(-30px, 30px) scale(0.92); }
-  100% { transform: translate(0px, 0px) scale(1); }
-}
-
-@keyframes float-blob-2 {
-  0%   { transform: translate(0px, 0px) scale(1); }
-  33%  { transform: translate(-40px, 50px) scale(0.92); }
-  66%  { transform: translate(50px, -30px) scale(1.12); }
-  100% { transform: translate(0px, 0px) scale(1); }
-}
-
-.animate-blob-1 { animation: float-blob-1 20s infinite ease-in-out; }
-.animate-blob-2 { animation: float-blob-2 26s infinite ease-in-out; }
-
-/* ── Fade-in-up ── */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in-up {
-  opacity: 0;
-  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* ── Counter-up keyframe (score animation) ── */
-@keyframes scoreReveal {
-  from { opacity: 0; transform: translateY(8px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.animate-score {
-  animation: scoreReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* ── Animation delays ── */
-.animation-delay-100 { animation-delay: 100ms; }
-.animation-delay-200 { animation-delay: 200ms; }
-.animation-delay-300 { animation-delay: 300ms; }
-.animation-delay-400 { animation-delay: 400ms; }
-.animation-delay-500 { animation-delay: 500ms; }
-
-/* ── Prompt textarea dark style ── */
 .prompt-textarea {
   background: var(--bg-base) !important;
   color: var(--text-primary) !important;
@@ -214,20 +106,17 @@ a {
   border: 1px solid var(--border-default) !important;
   caret-color: var(--violet) !important;
 }
-
 .prompt-textarea:focus {
   border-color: var(--violet-dim) !important;
   box-shadow: 0 0 0 3px var(--violet-glow) !important;
   outline: none !important;
 }
-
 .prompt-textarea::placeholder {
   color: var(--text-muted) !important;
   font-family: 'Plus Jakarta Sans', sans-serif !important;
   font-style: italic;
 }
 
-/* ── Select dark style ── */
 .select-dark {
   appearance: none;
   -webkit-appearance: none;
@@ -239,24 +128,50 @@ a {
   background-position: right 14px center !important;
   padding-right: 40px !important;
 }
-
 .select-dark:focus {
   border-color: var(--violet-dim) !important;
   box-shadow: 0 0 0 3px var(--violet-glow) !important;
   outline: none !important;
 }
-
 .select-dark option {
   background: var(--bg-elevated);
   color: var(--text-primary);
 }
 
-/* ── Details accordion dark ── */
+@keyframes float-blob-1 {
+  0%   { transform: translate(0,0) scale(1); }
+  33%  { transform: translate(40px,-60px) scale(1.12); }
+  66%  { transform: translate(-30px,30px) scale(0.92); }
+  100% { transform: translate(0,0) scale(1); }
+}
+@keyframes float-blob-2 {
+  0%   { transform: translate(0,0) scale(1); }
+  33%  { transform: translate(-40px,50px) scale(0.92); }
+  66%  { transform: translate(50px,-30px) scale(1.12); }
+  100% { transform: translate(0,0) scale(1); }
+}
+.animate-blob-1 { animation: float-blob-1 20s infinite ease-in-out; }
+.animate-blob-2 { animation: float-blob-2 26s infinite ease-in-out; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+
 details[open] summary ~ * {
   animation: fadeInUp 0.2s ease-out forwards;
 }
 
-/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
