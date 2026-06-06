@@ -18,9 +18,9 @@ const PLAN_LABELS: Record<PlanSlug, string> = {
 }
 
 const PLAN_BADGE_CLASSES: Record<PlanSlug, string> = {
-  anonymous: 'bg-slate-100 text-slate-600 border-slate-200',
-  free: 'bg-slate-100 text-slate-700 border-slate-200',
-  pro: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  anonymous: 'bg-[#1C1C27] text-[#4A5568] border-[#2A2A3A]',
+  free: 'bg-[#1C1C27] text-[#94A3B8] border-[#2A2A3A]',
+  pro: 'bg-[#A78BFA]/10 text-[#A78BFA] border-[#A78BFA]/30',
 }
 
 /**
@@ -45,10 +45,10 @@ export function UsageMeter({
   const isBlocked = usagePct >= 100
 
   const barColor = isBlocked
-    ? 'bg-gradient-to-r from-rose-500 to-red-600'
+    ? 'bg-gradient-to-r from-[#F87171] to-[#DC2626]'
     : isWarning
-    ? 'bg-gradient-to-r from-amber-400 to-amber-500'
-    : 'bg-gradient-to-r from-indigo-500 to-violet-600'
+    ? 'bg-gradient-to-r from-[#F59E0B] to-[#D97706]'
+    : 'bg-gradient-to-r from-[#7C3AED] to-[#A78BFA]'
 
   const content = (
     <div className="space-y-4">
@@ -56,12 +56,12 @@ export function UsageMeter({
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <span
-            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest ${PLAN_BADGE_CLASSES[planSlug]}`}
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold uppercase tracking-widest ${PLAN_BADGE_CLASSES[planSlug]}`}
           >
             {PLAN_LABELS[planSlug]}
           </span>
           {planSlug === 'pro' && isSimulatedPro && (
-            <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-amber-700">
+            <span className="inline-flex items-center rounded-full border border-[#F59E0B]/30 bg-[#F59E0B]/10 px-2 py-0.5 text-xs font-bold uppercase tracking-widest text-[#F59E0B]">
               Beta Symulacja
             </span>
           )}
@@ -70,10 +70,10 @@ export function UsageMeter({
         <span
           className={`text-xs font-bold tabular-nums ${
             isBlocked
-              ? 'text-rose-600'
+              ? 'text-[#F87171]'
               : isWarning
-              ? 'text-amber-600'
-              : 'text-slate-500'
+              ? 'text-[#F59E0B]'
+              : 'text-[#4A5568]'
           }`}
         >
           {monthlyCount} / {monthlyLimit} analiz
@@ -81,7 +81,7 @@ export function UsageMeter({
       </div>
 
       {/* Progress bar */}
-      <div className="h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
+      <div className="h-2 w-full rounded-full bg-[#1C1C27] border border-[#2A2A3A] overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ease-out ${barColor}`}
           style={{ width: `${usagePct}%` }}
@@ -94,18 +94,18 @@ export function UsageMeter({
       </div>
 
       {/* Status labels */}
-      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
-        <span>Pozostało: <strong className={isBlocked ? 'text-rose-600' : isWarning ? 'text-amber-600' : 'text-slate-700'}>{remaining}</strong></span>
+      <div className="flex items-center justify-between text-xs font-semibold text-[#4A5568]">
+        <span>Pozostało: <strong className={isBlocked ? 'text-[#F87171]' : isWarning ? 'text-[#F59E0B]' : 'text-[#E2E8F0]'}>{remaining}</strong></span>
         <span>{usagePct}% wykorzystane</span>
       </div>
 
       {/* Warning banner */}
       {isWarning && !isBlocked && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2 text-xs font-semibold text-amber-800 flex items-center gap-2">
+        <div className="rounded-lg border border-[#F59E0B]/25 bg-[#F59E0B]/6 px-3 py-2 text-xs font-semibold text-[#F59E0B] flex items-center gap-2">
           <span>⚠️</span>
           <span>
             Zbliżasz się do limitu miesięcznego ({remaining} pozostało).{' '}
-            <Link href="/pricing" className="underline underline-offset-2 hover:text-amber-900 transition">
+            <Link href="/pricing" className="underline underline-offset-2 hover:text-[#F59E0B] transition text-[#F59E0B]">
               Sprawdź plan Pro
             </Link>
           </span>
@@ -114,7 +114,7 @@ export function UsageMeter({
 
       {/* Blocked banner */}
       {isBlocked && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50/60 px-3 py-2.5 text-xs text-rose-800 flex flex-col gap-2">
+        <div className="rounded-lg border border-[#F87171]/25 bg-[#F87171]/6 px-3 py-2.5 text-xs text-[#F87171] flex flex-col gap-2">
           <p className="font-bold">
             🚫 Osiągnięto miesięczny limit analiz ({monthlyLimit}/{monthlyLimit}).
           </p>
@@ -123,14 +123,14 @@ export function UsageMeter({
             odnawia się 1. dnia każdego miesiąca (UTC). Przejdź na Pro, aby uzyskać do{' '}
             <strong>500 analiz</strong> miesięcznie.{' '}
             {planSlug !== 'pro' && (
-              <span className="italic text-rose-700">
+              <span className="italic text-[#F87171]/70">
                 (Zakup Pro jest niedostępny w becie — płatności Stripe zostaną aktywowane wkrótce.)
               </span>
             )}
           </p>
           <Link
             href="/pricing"
-            className="self-start inline-flex items-center rounded-lg bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-[11px] font-bold text-white transition active:scale-95"
+            className="self-start inline-flex items-center rounded-lg gradient-btn px-3 py-1.5 text-xs font-bold text-white transition active:scale-95"
           >
             Zobacz plany →
           </Link>
@@ -144,7 +144,7 @@ export function UsageMeter({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-0">
+    <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5">
       {content}
     </div>
   )

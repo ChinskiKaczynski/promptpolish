@@ -75,36 +75,36 @@ export default async function AccountPage() {
       <main className="flex-grow mx-auto w-full max-w-4xl px-6 py-10 space-y-8">
         
         {/* Profile Card */}
-        <div className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#4A5568]">
                 Panel użytkownika
               </p>
 
-              <h2 className="mt-1.5 text-2xl font-extrabold tracking-tight text-slate-900">
+              <h2 className="mt-1.5 text-2xl font-bold tracking-tight text-[#E2E8F0] font-heading">
                 Witaj, {profile?.display_name || profile?.email || 'Użytkowniku'}!
               </h2>
 
-              <p className="mt-1 text-xs text-slate-500">{profile?.email}</p>
+              <p className="mt-1 text-xs text-[#4A5568]">{profile?.email}</p>
             </div>
 
             <div className="flex items-center gap-3">
               {planSlug === 'free' ? (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2 text-center">
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400 block">
+                <div className="rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-2 text-center">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-[#4A5568] block">
                     Twój plan
                   </span>
-                  <span className="mt-0.5 text-xs font-black text-slate-600 uppercase tracking-wide block">
+                  <span className="mt-0.5 text-xs font-bold text-[#94A3B8] uppercase tracking-wide block">
                     Free
                   </span>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-2 text-center shadow-sm">
-                  <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-500 block">
+                <div className="rounded-lg border border-[#A78BFA]/20 bg-[#A78BFA]/10 px-4 py-2 text-center">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-[#A78BFA] block">
                     Twój plan
                   </span>
-                  <span className="mt-0.5 text-xs font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent uppercase tracking-wide block">
+                  <span className="mt-0.5 text-xs font-bold text-[#A78BFA] uppercase tracking-wide block">
                     Pro
                   </span>
                 </div>
@@ -114,9 +114,9 @@ export default async function AccountPage() {
         </div>
 
         {/* Usage Stats Card */}
-        <div className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md space-y-6">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8 space-y-6">
           <div>
-            <h3 className="text-lg font-bold tracking-tight text-slate-900">
+            <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">
               Statystyki użycia i limity
             </h3>
             <p className="mt-1 text-xs text-[#4A5568] font-medium">
@@ -134,13 +134,13 @@ export default async function AccountPage() {
         </div>
 
         {/* Billing Status UI Section */}
-        <div className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md">
-          <h3 className="text-base font-bold tracking-tight text-slate-900 border-b border-slate-100 pb-4">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8">
+          <h3 className="text-base font-bold tracking-tight text-[#E2E8F0] font-heading border-b border-[#1E1E2E] pb-4">
             Subskrypcja i rozliczenia
           </h3>
 
           {!stripeEnabled && (
-            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/40 p-4 text-xs text-amber-800 leading-relaxed font-semibold">
+            <div className="mt-4 rounded-lg border border-[#F59E0B]/25 bg-[#F59E0B]/6 p-4 text-xs text-[#F59E0B] leading-relaxed font-semibold">
               <strong>Beta Info:</strong> Bramka płatności Stripe jest obecnie wyłączona (STRIPE_ENABLED=false). Cennik i funkcje konta Pro są symulowane.
             </div>
           )}
@@ -149,8 +149,8 @@ export default async function AccountPage() {
             /* Stripe Subscription Details */
             <div className="mt-6 space-y-6">
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                <div className="rounded-lg border border-[#2A2A3A] bg-[#0C0C10] p-4">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#4A5568] block">
                     Status subskrypcji
                   </span>
 
@@ -158,37 +158,37 @@ export default async function AccountPage() {
                     {subscription.status === 'active' || subscription.status === 'trialing' ? (
                       subscription.cancel_at_period_end ? (
                         <>
-                          <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                          <span className="text-xs font-bold text-amber-600">
+                          <span className="h-2 w-2 rounded-full bg-[#F59E0B] animate-pulse" />
+                          <span className="text-xs font-bold text-[#F59E0B]">
                             Aktywna anulowana
                           </span>
                         </>
                       ) : (
                         <>
-                          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-xs font-bold text-emerald-600">
+                          <span className="h-2 w-2 rounded-full bg-[#6EE7B7] animate-pulse" />
+                          <span className="text-xs font-bold text-[#6EE7B7]">
                             Aktywna
                           </span>
                         </>
                       )
                     ) : subscription.status === 'past_due' ? (
                       <>
-                        <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                        <span className="text-xs font-bold text-amber-600">
+                        <span className="h-2 w-2 rounded-full bg-[#F59E0B] animate-pulse" />
+                        <span className="text-xs font-bold text-[#F59E0B]">
                           Zaległa płatność
                         </span>
                       </>
                     ) : subscription.status === 'unpaid' ? (
                       <>
-                        <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-                        <span className="text-xs font-bold text-rose-600">
+                        <span className="h-2 w-2 rounded-full bg-[#F87171] animate-pulse" />
+                        <span className="text-xs font-bold text-[#F87171]">
                           Nieopłacona
                         </span>
                       </>
                     ) : (
                       <>
-                        <span className="h-2 w-2 rounded-full bg-slate-400" />
-                        <span className="text-xs font-bold text-slate-500">
+                        <span className="h-2 w-2 rounded-full bg-[#4A5568]" />
+                        <span className="text-xs font-bold text-[#4A5568]">
                           Wygasła ({subscription.status})
                         </span>
                       </>
@@ -196,30 +196,30 @@ export default async function AccountPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                <div className="rounded-lg border border-[#2A2A3A] bg-[#0C0C10] p-4">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#4A5568] block">
                     Okres rozliczeniowy
                   </span>
-                  <span className="mt-2 text-xs font-bold text-slate-700 block">
+                  <span className="mt-2 text-xs font-bold text-[#94A3B8] block">
                     {new Date(subscription.current_period_start).toLocaleDateString('pl-PL')} –{' '}
                     {new Date(subscription.current_period_end).toLocaleDateString('pl-PL')}
                   </span>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                <div className="rounded-lg border border-[#2A2A3A] bg-[#0C0C10] p-4">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#4A5568] block">
                     {subscription.cancel_at_period_end
                       ? 'Wygaśnięcie subskrypcji'
                       : 'Następna płatność'}
                   </span>
-                  <span className="mt-2 text-xs font-bold text-slate-700 block">
+                  <span className="mt-2 text-xs font-bold text-[#94A3B8] block">
                     {new Date(subscription.current_period_end).toLocaleDateString('pl-PL')}
                   </span>
                 </div>
               </div>
 
               {subscription.cancel_at_period_end && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4 text-xs text-amber-800 leading-relaxed font-semibold">
+                <div className="rounded-lg border border-[#F59E0B]/25 bg-[#F59E0B]/6 p-4 text-xs text-[#F59E0B] leading-relaxed font-semibold">
                   <strong>Uwaga:</strong> Twoja subskrypcja została anulowana i wygaśnie dnia{' '}
                   <strong>
                     {new Date(subscription.current_period_end).toLocaleDateString('pl-PL')}
@@ -230,7 +230,7 @@ export default async function AccountPage() {
               )}
 
               {subscription.status === 'past_due' && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4 text-xs text-amber-800 leading-relaxed font-semibold">
+                <div className="rounded-lg border border-[#F59E0B]/25 bg-[#F59E0B]/6 p-4 text-xs text-[#F59E0B] leading-relaxed font-semibold">
                   <strong>Zaległość w płatności:</strong> Nie udało się pobrać opłaty za kolejny
                   okres rozliczeniowy. Karta zostanie obciążona ponownie przez Stripe. Utrzymujemy
                   Twój dostęp do funkcji Pro przez okres przejściowy. Zaktualizuj dane płatnicze,
@@ -239,15 +239,15 @@ export default async function AccountPage() {
               )}
 
               {subscription.status === 'unpaid' && (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50/40 p-4 text-xs text-rose-800 leading-relaxed font-semibold">
+                <div className="rounded-lg border border-[#F87171]/25 bg-[#F87171]/6 p-4 text-xs text-[#F87171] leading-relaxed font-semibold">
                   <strong>Dostęp zawieszony:</strong> Twoje konto Pro zostało zawieszone z powodu
                   braku pomyślnej płatności. Zaktualizuj dane płatnicze w portalu Stripe poniżej,
                   aby odzyskać dostęp do Pro.
                 </div>
               )}
 
-              <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <p className="text-xs text-slate-500 font-semibold">
+              <div className="pt-4 border-t border-[#1E1E2E] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <p className="text-xs text-[#4A5568] font-semibold">
                   Zarządzaj kartami płatniczymi, sprawdzaj faktury VAT lub anuluj/odnów
                   subskrypcję w bezpiecznym panelu Stripe Customer Portal.
                 </p>
@@ -261,24 +261,24 @@ export default async function AccountPage() {
             <div className="mt-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
-                  <p className="text-xs sm:text-sm font-bold text-slate-800">
+                  <span className="inline-flex h-2 w-2 rounded-full bg-[#A78BFA] animate-pulse" />
+                  <p className="text-xs sm:text-sm font-bold text-[#E2E8F0] font-heading">
                     Dostęp Pro aktywny (Beta)
                   </p>
                 </div>
 
-                <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
+                <p className="text-xs text-[#94A3B8] max-w-xl leading-relaxed">
                   Korzystasz z dostępu Pro w ramach zamkniętych testów beta. Płatności Stripe
                   zostaną aktywowane wkrótce — do tego czasu wszystkie funkcje Pro są dostępne
                   bez opłat.
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-2 text-center shadow-sm shrink-0">
-                <span className="text-[8px] font-bold uppercase tracking-widest text-indigo-500 block">
+              <div className="rounded-lg border border-[#A78BFA]/20 bg-[#A78BFA]/10 px-4 py-2 text-center shrink-0">
+                <span className="text-xs font-semibold uppercase tracking-widest text-[#A78BFA] block">
                   Status
                 </span>
-                <span className="mt-0.5 text-xs font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent uppercase tracking-wide block">
+                <span className="mt-0.5 text-xs font-bold text-[#A78BFA] uppercase tracking-wide block">
                   Beta Pro
                 </span>
               </div>
@@ -288,13 +288,13 @@ export default async function AccountPage() {
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex h-2 w-2 rounded-full bg-slate-300" />
-                  <p className="text-xs sm:text-sm font-bold text-slate-800">
+                  <span className="inline-flex h-2 w-2 rounded-full bg-[#4A5568]" />
+                  <p className="text-xs sm:text-sm font-bold text-[#E2E8F0] font-heading">
                     Korzystasz z bezpłatnego planu Free
                   </p>
                 </div>
 
-                <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
+                <p className="text-xs text-[#94A3B8] max-w-xl leading-relaxed">
                   Twój limit to 20 analiz miesięcznie bez możliwości eksportu do PDF/Markdown
                   oraz zbiorczego audytu promptów. Odblokuj pełne możliwości platformy,
                   przechodząc na plan Pro.
@@ -303,7 +303,7 @@ export default async function AccountPage() {
 
               <Link
                 href="/pricing"
-                className="inline-flex items-center justify-center rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer shrink-0 font-sans"
+                className="inline-flex items-center justify-center rounded-lg gradient-btn px-5 py-2.5 text-xs font-bold text-white transition active:scale-95 cursor-pointer shrink-0 font-sans"
               >
                 Pokaż cennik
               </Link>
@@ -312,23 +312,23 @@ export default async function AccountPage() {
         </div>
 
         {/* Saved Library Shortcut Card */}
-        <div className="rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="space-y-1.5">
-            <h3 className="text-lg font-bold tracking-tight text-slate-900">
+            <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">
               Twoja historia analiz
             </h3>
-            <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
+            <p className="text-xs text-[#94A3B8] max-w-xl leading-relaxed">
               Zarządzaj swoją biblioteką ulepszonych promptów, filtruj, wyszukuj, oznaczaj jako ulubione lub usuwaj stare raporty.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <span className="rounded-full bg-slate-100 border border-slate-200/50 px-3 py-1 text-xs font-bold text-slate-600">
+            <span className="rounded-full bg-[#1C1C27] border border-[#2A2A3A] px-3 py-1 text-xs font-semibold text-[#94A3B8]">
               Zapisane: {history.length}
             </span>
             <Link
               href="/history"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 hover:bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition active:scale-95 cursor-pointer shrink-0 font-sans"
+              className="inline-flex items-center justify-center rounded-lg border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#22223A] px-5 py-2.5 text-xs font-bold text-[#E2E8F0] transition active:scale-95 cursor-pointer shrink-0 font-sans"
             >
               Przejdź do historii
             </Link>

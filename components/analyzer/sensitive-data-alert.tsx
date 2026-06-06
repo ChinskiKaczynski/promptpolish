@@ -9,15 +9,15 @@ export function SensitiveDataAlert({ detection, workingLanguage }: SensitiveData
   if (detection.riskLevel === 'none') return null
 
   return (
-    <div className={`rounded-2xl border p-4 sm:p-5 text-xs flex gap-3.5 transition-all shadow-sm ${
-      detection.riskLevel === 'high' ? 'border-red-200 bg-red-50/50 text-red-950 animate-shake' :
-      detection.riskLevel === 'medium' ? 'border-amber-200 bg-amber-50/50 text-amber-950' :
-      'border-slate-200 bg-slate-50/60 text-slate-800'
+    <div className={`rounded-xl border p-4 sm:p-5 text-xs flex gap-3.5 transition-all ${
+      detection.riskLevel === 'high' ? 'border-[#F87171]/40 bg-[#F87171]/8 text-[#F87171] animate-shake' :
+      detection.riskLevel === 'medium' ? 'border-[#F97316]/30 bg-[#F97316]/6 text-[#F97316]' :
+      'border-[#2A2A3A] bg-[#13131A] text-[#94A3B8]'
     }`}>
-      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-        detection.riskLevel === 'high' ? 'bg-red-100 text-red-700' :
-        detection.riskLevel === 'medium' ? 'bg-amber-100 text-amber-700' :
-        'bg-slate-100 text-slate-600'
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+        detection.riskLevel === 'high' ? 'bg-[#F87171]/10 text-[#F87171]' :
+        detection.riskLevel === 'medium' ? 'bg-[#F97316]/10 text-[#F97316]' :
+        'bg-[#2A2A3A] text-[#94A3B8]'
       }`}>
         {detection.riskLevel === 'high' ? (
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -41,7 +41,7 @@ export function SensitiveDataAlert({ detection, workingLanguage }: SensitiveData
             ? (workingLanguage === 'pl' ? 'Ostrzeżenie: Potencjalne dane poufne' : 'Warning: Potential Secrets Found') :
            (workingLanguage === 'pl' ? 'Informacja: Zidentyfikowano dane kontaktowe' : 'Notice: Contact Identifiers Identified')}
         </p>
-        <p className="mt-1 text-slate-600 leading-relaxed break-words">
+        <p className="mt-1 leading-relaxed break-words">
           {detection.riskLevel === 'high' 
             ? (workingLanguage === 'pl' ? 'Nasz skaner preflight zidentyfikował wzorce krytycznych danych wrażliwych (np. kluczy API lub haseł). Aby odblokować audyt, usuń je ze swojego promptu:' : 'Our safety preflight scan identified high-risk secret patterns. To unlock the audit button, please remove them from your prompt:') :
            detection.riskLevel === 'medium' 
@@ -50,18 +50,18 @@ export function SensitiveDataAlert({ detection, workingLanguage }: SensitiveData
         </p>
         <ul className="mt-3.5 space-y-2.5">
           {detection.findings.map((finding, idx) => (
-            <li key={`${finding.type}-${idx}`} className="rounded-xl border border-white/50 bg-white/40 p-3 flex flex-col gap-1.5 shadow-sm">
+            <li key={`${finding.type}-${idx}`} className="rounded-lg border border-[#2A2A3A] bg-[#1C1C27] p-3 flex flex-col gap-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
-                  finding.riskLevel === 'high' ? 'bg-red-100 text-red-800' :
-                  finding.riskLevel === 'medium' ? 'bg-amber-100 text-amber-800' :
-                  'bg-slate-100 text-slate-800'
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-black uppercase tracking-wider ${
+                  finding.riskLevel === 'high' ? 'bg-[#F87171]/15 text-[#F87171]' :
+                  finding.riskLevel === 'medium' ? 'bg-[#F97316]/15 text-[#F97316]' :
+                  'bg-[#2A2A3A] text-[#94A3B8]'
                 }`}>
                   {finding.riskLevel === 'high' ? (workingLanguage === 'pl' ? 'Krytyczne' : 'Critical') : finding.riskLevel === 'medium' ? (workingLanguage === 'pl' ? 'Ostrzeżenie' : 'Warning') : 'Info'}
                 </span>
-                <span className="font-mono text-xs font-bold text-slate-700 break-all">{finding.redactedValue}</span>
+                <span className="font-mono text-xs font-bold text-[#E2E8F0] break-all">{finding.redactedValue}</span>
               </div>
-              <p className="text-[11px] text-slate-600 leading-normal font-medium">{finding.message}</p>
+              <p className="text-xs text-[#94A3B8] leading-normal font-medium">{finding.message}</p>
             </li>
           ))}
         </ul>

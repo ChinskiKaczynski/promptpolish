@@ -67,12 +67,12 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-100/50">
+    <div className="w-full max-w-md rounded-xl border border-[#2A2A3A] bg-[#13131A] p-8">
       <div className="text-center">
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-bold tracking-tight text-[#E2E8F0] font-heading">
           {isSignUp ? 'Utwórz bezpłatne konto' : 'Zaloguj się do PromptPolish'}
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-[#94A3B8]">
           {isSignUp
             ? 'Zapisuj historię swoich promptów i uzyskaj dostęp do Pro planu.'
             : 'Zarządzaj swoimi ulepszonymi promptami i historią audytów.'}
@@ -80,11 +80,11 @@ export function LoginForm() {
       </div>
 
       {/* Toggle Tabs */}
-      <div className="mt-6 flex rounded-xl bg-slate-100 p-1">
+      <div className="mt-6 flex rounded-lg bg-[#0C0C10] border border-[#2A2A3A] p-1">
         <button
           type="button"
-          className={`flex-1 rounded-lg py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
-            !isSignUp ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+          className={`flex-1 rounded-md py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
+            !isSignUp ? 'bg-[#1C1C27] text-[#E2E8F0] border border-[#3A3A52]' : 'text-[#4A5568] hover:text-[#94A3B8]'
           }`}
           onClick={() => {
             setIsSignUp(false)
@@ -96,8 +96,8 @@ export function LoginForm() {
         </button>
         <button
           type="button"
-          className={`flex-1 rounded-lg py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
-            isSignUp ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
+          className={`flex-1 rounded-md py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
+            isSignUp ? 'bg-[#1C1C27] text-[#E2E8F0] border border-[#3A3A52]' : 'text-[#4A5568] hover:text-[#94A3B8]'
           }`}
           onClick={() => {
             setIsSignUp(true)
@@ -118,7 +118,7 @@ export function LoginForm() {
       <form onSubmit={handleAuth} className="mt-6 space-y-4">
         {isSignUp && (
           <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="displayName">
+            <label className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]" htmlFor="displayName">
               Imię / Nazwa użytkownika
             </label>
             <input
@@ -127,13 +127,13 @@ export function LoginForm() {
               placeholder="np. Jan Kowalski"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
+              className="mt-1.5 w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-3 text-sm text-[#E2E8F0] placeholder:text-[#4A5568] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#A78BFA]/20 focus:outline-none transition-all"
             />
           </div>
         )}
 
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="email">
+          <label className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]" htmlFor="email">
             Adres e-mail
           </label>
           <input
@@ -143,12 +143,12 @@ export function LoginForm() {
             placeholder="twoj@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
+            className="mt-1.5 w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-3 text-sm text-[#E2E8F0] placeholder:text-[#4A5568] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#A78BFA]/20 focus:outline-none transition-all"
           />
         </div>
 
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="password">
+          <label className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]" htmlFor="password">
             Hasło
           </label>
           <input
@@ -159,18 +159,18 @@ export function LoginForm() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none transition-all"
+            className="mt-1.5 w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-3 text-sm text-[#E2E8F0] placeholder:text-[#4A5568] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#A78BFA]/20 focus:outline-none transition-all"
           />
         </div>
 
         {errorMsg && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-medium text-red-700 animate-in fade-in duration-200">
+          <div className="rounded-lg border border-[#F87171]/30 bg-[#F87171]/8 p-4 text-xs font-medium text-[#F87171]">
             {errorMsg}
           </div>
         )}
 
         {successMsg && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-medium text-emerald-700 leading-relaxed animate-in fade-in duration-200">
+          <div className="rounded-lg border border-[#6EE7B7]/30 bg-[#6EE7B7]/8 p-4 text-xs font-medium text-[#6EE7B7] leading-relaxed">
             {successMsg}
           </div>
         )}
@@ -178,7 +178,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-2 w-full inline-flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:shadow-indigo-200 transition-all active:scale-95 cursor-pointer"
+          className="mt-2 w-full inline-flex items-center justify-center rounded-lg gradient-btn disabled:opacity-40 disabled:transform-none py-3.5 text-center text-sm font-semibold text-white transition-all active:scale-95 cursor-pointer"
         >
           {loading ? (
             <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
