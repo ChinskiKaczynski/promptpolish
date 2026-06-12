@@ -102,7 +102,7 @@ graph TD
 ### 1. Database Table Initialization (Technical Blocker)
 *   **Risk:** The production hosted Supabase instance does not contain the tables `prompt_analyses`, `usage_events`, or `feedback_events` in its active schema cache.
 *   **Impact:** Any attempt to perform server-side writes in production will crash.
-*   **Mitigation:** Run the initial migration (`db/migrations/0001_init.sql`) and seed files against the remote Supabase database.
+*   **Mitigation:** Run the baseline and corrective migrations (`supabase/migrations/`) and seed files against the remote Supabase database.
 
 ### 2. Unconfigured Production Credentials (Technical Blocker)
 *   **Risk:** Production environment variables for `OPENROUTER_API_KEY`, `SUPABASE_SECRET_KEY`, and `COOKIE_SIGNING_SECRET` are currently unmapped or blank.
@@ -138,7 +138,7 @@ Based on these findings, we recommend the **"continue MVP"** pathway, keeping th
 ```
 
 ### Action Checklist
-- [ ] **Apply Migrations**: Connect to the remote hosted Supabase and run `db/migrations/0001_init.sql` and `db/seed/model_profiles.sql` to initialize the tables.
+- [ ] **Apply Migrations**: Connect to the remote hosted Supabase and run all migrations in `supabase/migrations/` and the seed file `supabase/seed.sql` to initialize the tables.
 - [ ] **Deploy Env Variables**: Add secure credentials for the OpenRouter API, admin Supabase, cron secrets, and cookie signing in Vercel.
 - [ ] **Launch Free MVP**: Turn off mock result mode (`NEXT_PUBLIC_ENABLE_MOCK_RESULT=false`) and deploy the app to public beta testers.
 - [ ] **Gather Telemetry**: Monitor the Supabase SQL editor using our dashboard queries to track form completion, copy rate (>30%), and repeat visits.

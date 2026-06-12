@@ -35,11 +35,11 @@ Follow these steps to initialize your preview database environment:
 1. **Create Preview Database**: Initialize a new project on your Supabase Dashboard (choose a region close to your Vercel hosting server, e.g., Frankfurt/Warsaw for EU).
 2. **Execute Database Schemas (Migrations)**:
    * Open the **SQL Editor** on your Supabase dashboard.
-   * Open the migration file: [**`db/migrations/0001_init.sql`**](file:///d:/AI/promptpolish/db/migrations/0001_init.sql).
-   * Copy the entire SQL content, paste it into the editor, and click **Run** to provision the database tables, views, and schemas.
+   * Open the migration files: [**`supabase/migrations/20260603200000_baseline_private_beta.sql`**](file:///d:/AI/promptpolish/supabase/migrations/20260603200000_baseline_private_beta.sql) and [**`supabase/migrations/20260612200000_corrective_privileges.sql`**](file:///d:/AI/promptpolish/supabase/migrations/20260612200000_corrective_privileges.sql).
+   * Copy the SQL contents, paste them into the editor, and click **Run** to provision the database tables, views, schemas, and secure permissions.
 3. **Execute Configuration Data (Seeding)**:
    * Open a new SQL Editor tab.
-   * Open the seeding file: [**`db/seed/model_profiles.sql`**](file:///d:/AI/promptpolish/db/seed/model_profiles.sql).
+   * Open the seeding file: [**`supabase/seed.sql`**](file:///d:/AI/promptpolish/supabase/seed.sql).
    * Copy the seed contents, paste into the editor, and click **Run** to register the initial MVP model profiles (`general-llm`, `openrouter-deepseek-v4-flash`).
 
 ---

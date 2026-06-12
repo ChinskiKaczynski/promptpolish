@@ -135,7 +135,7 @@ The following items are unresolved dependencies that block the active writing of
 
 | # | Unknown / Risk | Impact | Action Required |
 |:-:| :--- | :--- | :--- |
-| **1** | **Unapplied Database Migrations** | Remote database has no tables (`prompt_analyses`, `usage_events`, etc.). | Run `db/migrations/0001_init.sql` against remote Supabase. |
+| **1** | **Unapplied Database Migrations** | Remote database has no tables (`prompt_analyses`, `usage_events`, etc.). | Run `supabase/migrations/` files against remote Supabase. |
 | **2** | **No Live Environment Credentials** | MVP is currently locked in mock-result mode. We cannot verify real API costs or usage patterns. | Provision live Gemini API keys, Supabase credentials, and cookie secrets in Vercel. |
 | **3** | **Absence of Supabase Auth** | The application is currently 100% anonymous. We cannot map Stripe customers to users. | Complete Stage 1 of the roadmap (Supabase Auth and User Profile foundation). |
 | **4** | **Unconfirmed Legal Drafts** | Privacy Policy and Terms of Service are placeholders, exposing the merchant to compliance risks in the EU. | Perform formal legal review, remove draft warnings, and execute sub-processor DPAs. |

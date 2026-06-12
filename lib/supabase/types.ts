@@ -352,7 +352,23 @@ export interface Database {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      search_user_prompt_history: {
+        Args: {
+          p_user_id: string | null
+          p_owner_anonymous_id: string
+          p_search_term: string
+          p_lang?: string
+          p_profile?: string
+          p_task_type?: string
+          p_is_favorite?: boolean | null
+          p_sort_by?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: Record<string, unknown>[]
+      }
+    }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }

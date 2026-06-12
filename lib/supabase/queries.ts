@@ -1,5 +1,4 @@
 import 'server-only'
-import { getSupabaseServerClient } from './server'
 import { getSupabaseAdminClient } from './admin'
 import { createShareToken } from '../result-access/share-token'
 import type { Database, ModelProfileRow, PromptAnalysisRow, UsageEventRow, FeedbackEventRow, UserProfileRow } from './types'
@@ -17,11 +16,22 @@ export type SharedPromptAnalysis = Pick<
   | 'created_at'
 >
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function validateUuid(id: string, name: string): void {
+  if (!UUID_REGEX.test(id)) {
+    throw new Error(`Invalid UUID format for ${name}: "${id}"`)
+  }
+}
+
 /**
  * Fetches a model profile matching the slug.
  */
 export async function getModelProfileBySlug(slug: string): Promise<ModelProfileRow | null> {
-  const supabase = getSupabaseServerClient()
+  if (typeof slug !== 'string' || !slug.trim()) {
+    throw new Error('Invalid slug parameter.')
+  }
+  const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('model_profiles')
     .select('*')
@@ -30,7 +40,7 @@ export async function getModelProfileBySlug(slug: string): Promise<ModelProfileR
 
   if (error) {
     console.error('Error fetching model profile by slug:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
   return data ? (data as unknown as ModelProfileRow) : null
 }
@@ -41,6 +51,11 @@ export async function getModelProfileBySlug(slug: string): Promise<ModelProfileR
 export async function createPromptAnalysis(
   analysis: Database['public']['Tables']['prompt_analyses']['Insert']
 ): Promise<PromptAnalysisRow | null> {
+  validateUuid(analysis.owner_anonymous_id, 'owner_anonymous_id')
+  if (analysis.user_id) {
+    validateUuid(analysis.user_id, 'user_id')
+  }
+
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('prompt_analyses')
@@ -50,7 +65,7 @@ export async function createPromptAnalysis(
 
   if (error) {
     console.error('Error creating prompt analysis:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
   return data ? (data as unknown as PromptAnalysisRow) : null
 }
@@ -64,24 +79,37 @@ export async function getPromptAnalysisForOwner(
   ownerAnonymousId: string,
   userId?: string
 ): Promise<PromptAnalysisRow | null> {
+  validateUuid(id, 'id')
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
+  }
+
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from('prompt_analyses')
     .select('*')
     .eq('id', id)
     .is('deleted_at', null)
-    .maybeSingle()
 
-  if (error || !data) {
-    if (error) {
-      console.error('Error fetching prompt analysis for owner:', serializeDbError(error))
-    }
-    return null
+  if (userId) {
+    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+  } else {
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
   }
+
+  const { data, error } = await query.maybeSingle()
+
+  if (error) {
+    console.error('Error fetching prompt analysis for owner:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
+
+  if (!data) return null
 
   const analysis = data as unknown as PromptAnalysisRow
 
-  // Ownership verification logic
+  // Defensive double-check in JS
   if (analysis.user_id) {
     if (analysis.user_id !== userId) {
       return null // Access Denied
@@ -103,6 +131,9 @@ export async function linkAnonymousAnalyses(
   ownerAnonymousId: string,
   userId: string
 ): Promise<boolean> {
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  validateUuid(userId, 'userId')
+
   const supabase = getSupabaseAdminClient()
   const { error } = await supabase
     .from('prompt_analyses')
@@ -112,7 +143,7 @@ export async function linkAnonymousAnalyses(
 
   if (error) {
     console.error('Error linking anonymous analyses:', serializeDbError(error))
-    return false
+    throw new Error(`Database error: ${error.message}`)
   }
   return true
 }
@@ -131,55 +162,40 @@ export async function getPromptAnalysesForUser(
     taskType?: string
     isFavorite?: boolean
     sortBy?: 'newest' | 'oldest' | 'highest_score' | 'lowest_score'
+    limit?: number
+    offset?: number
   }
 ): Promise<PromptAnalysisRow[]> {
+  const parsedUserId = userId && userId.trim() !== '' ? userId : null
+
+  if (parsedUserId) {
+    validateUuid(parsedUserId, 'userId')
+  }
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+
   const supabase = getSupabaseAdminClient()
-  let query = supabase
-    .from('prompt_analyses')
-    .select('*')
-    .is('deleted_at', null)
-    .or(`user_id.eq.${userId},owner_anonymous_id.eq.${ownerAnonymousId}`)
 
-  if (filters?.lang && filters.lang !== 'all') {
-    query = query.eq('working_language', filters.lang)
-  }
-  if (filters?.profile && filters.profile !== 'all') {
-    query = query.eq('selected_profile_slug', filters.profile)
-  }
-  if (filters?.taskType && filters.taskType !== 'all') {
-    query = query.eq('task_type', filters.taskType)
-  }
-  if (filters?.isFavorite) {
-    query = query.eq('is_favorite', true)
-  }
-  if (filters?.search) {
-    query = query.or(`input_prompt.ilike.%${filters.search}%,title.ilike.%${filters.search}%`)
-  }
-
-  let orderField = 'created_at'
-  let ascending = false
-
-  if (filters?.sortBy === 'oldest') {
-    orderField = 'created_at'
-    ascending = true
-  } else if (filters?.sortBy === 'highest_score') {
-    orderField = 'overall_score'
-    ascending = false
-  } else if (filters?.sortBy === 'lowest_score') {
-    orderField = 'overall_score'
-    ascending = true
-  }
-
-  const { data, error } = await query.order(orderField, { ascending })
+  const { data, error } = await supabase.rpc('search_user_prompt_history', {
+    p_user_id: parsedUserId,
+    p_owner_anonymous_id: ownerAnonymousId,
+    p_search_term: filters?.search || '',
+    p_lang: filters?.lang || 'all',
+    p_profile: filters?.profile || 'all',
+    p_task_type: filters?.taskType || 'all',
+    p_is_favorite: filters?.isFavorite ?? null,
+    p_sort_by: filters?.sortBy || 'newest',
+    p_limit: filters?.limit ?? 100,
+    p_offset: filters?.offset ?? 0
+  })
 
   if (error) {
-    console.error('Error fetching prompt analyses for user:', serializeDbError(error))
-    return []
+    console.error('Error fetching prompt analyses for user via RPC:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
   }
 
   const rows = (data ?? []) as unknown as PromptAnalysisRow[]
 
-  // Post-filter to prevent cross-user leakage on shared owner_anonymous_id session
+  // Defensive post-filter to prevent cross-user leakage on shared owner_anonymous_id session
   return rows.filter(row => {
     if (row.user_id) {
       return row.user_id === userId
@@ -192,6 +208,7 @@ export async function getPromptAnalysesForUser(
  * Retrieves the user profile from the database matching the userId.
  */
 export async function getUserProfile(userId: string): Promise<UserProfileRow | null> {
+  validateUuid(userId, 'userId')
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('user_profiles')
@@ -201,7 +218,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileRow | n
 
   if (error) {
     console.error('Error fetching user profile:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
   return data ? (data as unknown as UserProfileRow) : null
 }
@@ -216,6 +233,7 @@ export async function getUserProfile(userId: string): Promise<UserProfileRow | n
 export async function createUserProfile(
   profile: Database['public']['Tables']['user_profiles']['Insert']
 ): Promise<UserProfileRow | null> {
+  validateUuid(profile.user_id, 'user_id')
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('user_profiles')
@@ -227,7 +245,7 @@ export async function createUserProfile(
 
   if (error) {
     console.error('Error creating user profile:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
   return data ? (data as unknown as UserProfileRow) : null
 }
@@ -245,6 +263,7 @@ export async function ensureUserProfile(profile: {
   email: string
   display_name?: string | null
 }): Promise<UserProfileRow | null> {
+  validateUuid(profile.user_id, 'user_id')
   const supabase = getSupabaseAdminClient()
   const existing = await getUserProfile(profile.user_id)
 
@@ -271,7 +290,7 @@ export async function ensureUserProfile(profile: {
 
     if (error) {
       console.error('Error ensuring existing user profile:', serializeDbError(error))
-      return null
+      throw new Error(`Database error: ${error.message}`)
     }
 
     return data ? (data as unknown as UserProfileRow) : null
@@ -291,7 +310,7 @@ export async function ensureUserProfile(profile: {
 
   if (error) {
     console.error('Error creating initial user profile:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
 
   return data ? (data as unknown as UserProfileRow) : null
@@ -309,6 +328,7 @@ export async function setUserPlanSlug(profile: {
   display_name?: string | null
   plan_slug: 'free' | 'pro'
 }): Promise<UserProfileRow | null> {
+  validateUuid(profile.user_id, 'user_id')
   const supabase = getSupabaseAdminClient()
   const existing = await getUserProfile(profile.user_id)
 
@@ -340,7 +360,7 @@ export async function setUserPlanSlug(profile: {
 
   if (error) {
     console.error('Error setting user plan slug:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
 
   const row = data ? (data as unknown as UserProfileRow) : null
@@ -372,7 +392,7 @@ export async function getSharedPromptAnalysis(
 
   if (error) {
     console.error('Error fetching shared prompt analysis:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
 
   if (!data) return null
@@ -397,6 +417,10 @@ export async function getSharedPromptAnalysis(
 export async function createUsageEvent(
   event: Database['public']['Tables']['usage_events']['Insert']
 ): Promise<UsageEventRow | null> {
+  validateUuid(event.owner_anonymous_id, 'owner_anonymous_id')
+  if (event.user_id) {
+    validateUuid(event.user_id, 'user_id')
+  }
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('usage_events')
@@ -406,7 +430,7 @@ export async function createUsageEvent(
 
   if (error) {
     console.error('Error creating usage event:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
   return data ? (data as unknown as UsageEventRow) : null
 }
@@ -417,6 +441,7 @@ export async function createUsageEvent(
 export async function createFeedbackEvent(
   event: Database['public']['Tables']['feedback_events']['Insert']
 ): Promise<FeedbackEventRow | null> {
+  validateUuid(event.analysis_id, 'analysis_id')
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('feedback_events')
@@ -426,7 +451,7 @@ export async function createFeedbackEvent(
 
   if (error) {
     console.error('Error creating feedback event:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
   return data ? (data as unknown as FeedbackEventRow) : null
 }
@@ -438,6 +463,8 @@ export async function createCopyEvent(
   ownerAnonymousId: string,
   analysisId: string
 ): Promise<UsageEventRow | null> {
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  validateUuid(analysisId, 'analysisId')
   return createUsageEvent({
     owner_anonymous_id: ownerAnonymousId,
     event_type: 'copy',
@@ -454,27 +481,34 @@ export async function createShareLink(
   ownerAnonymousId: string,
   userId?: string
 ): Promise<string | null> {
-  const analysis = await getPromptAnalysisForOwner(analysisId, ownerAnonymousId, userId)
-  if (!analysis) {
-    return null
+  validateUuid(analysisId, 'analysisId')
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
   }
 
   const shareToken = createShareToken()
   const supabase = getSupabaseAdminClient()
-
-  const { data, error } = await supabase
+  let query = supabase
     .from('prompt_analyses')
     .update({
       is_share_enabled: true,
       share_token: shareToken
     })
     .eq('id', analysisId)
-    .select('share_token')
-    .maybeSingle()
+    .is('deleted_at', null)
+
+  if (userId) {
+    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+  } else {
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { data, error } = await query.select('share_token').maybeSingle()
 
   if (error) {
     console.error('Error creating share link:', serializeDbError(error))
-    return null
+    throw new Error(`Database error: ${error.message}`)
   }
 
   const typedData = data as unknown as { share_token: string | null } | null
@@ -494,30 +528,35 @@ export async function disableShareLink(
   ownerAnonymousId: string,
   userId?: string
 ): Promise<boolean> {
-  const analysis = await getPromptAnalysisForOwner(analysisId, ownerAnonymousId, userId)
-  if (!analysis) {
-    return false
+  validateUuid(analysisId, 'analysisId')
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
   }
 
   const supabase = getSupabaseAdminClient()
-
-  const { data, error } = await supabase
+  let query = supabase
     .from('prompt_analyses')
     .update({
       is_share_enabled: false,
       share_token: null
     })
     .eq('id', analysisId)
-    .select('id')
-    .maybeSingle()
+
+  if (userId) {
+    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+  } else {
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { data, error } = await query.select('id').maybeSingle()
 
   if (error) {
     console.error('Error disabling share link:', serializeDbError(error))
-    return false
+    throw new Error(`Database error: ${error.message}`)
   }
 
   const typedData = data as unknown as { id: string } | null
-  // typedData is null when the WHERE clause matched 0 rows (non-owner or wrong id)
   return typedData !== null
 }
 
@@ -526,6 +565,7 @@ export async function disableShareLink(
  * in the current UTC calendar day.
  */
 export async function getUsageCountToday(ownerAnonymousId: string): Promise<number> {
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   const supabase = getSupabaseAdminClient()
   const startOfDay = new Date()
   startOfDay.setUTCHours(0, 0, 0, 0)
@@ -540,7 +580,7 @@ export async function getUsageCountToday(ownerAnonymousId: string): Promise<numb
 
   if (error) {
     console.error('Error counting usage events:', serializeDbError(error))
-    return 0
+    throw new Error(`Database error: ${error.message}`)
   }
   return count ?? 0
 }
@@ -552,6 +592,10 @@ export async function getUsageCountTodayForUser(
   ownerAnonymousId: string,
   userId?: string | null
 ): Promise<number> {
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
+  }
   const supabase = getSupabaseAdminClient()
   const startOfDay = new Date()
   startOfDay.setUTCHours(0, 0, 0, 0)
@@ -572,7 +616,7 @@ export async function getUsageCountTodayForUser(
 
   if (error) {
     console.error('Error counting usage events today for user:', serializeDbError(error))
-    return 0
+    throw new Error(`Database error: ${error.message}`)
   }
   return count ?? 0
 }
@@ -584,6 +628,10 @@ export async function getUsageCountThisMonthForUser(
   ownerAnonymousId: string,
   userId?: string | null
 ): Promise<number> {
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
+  }
   const supabase = getSupabaseAdminClient()
   const startOfMonth = new Date()
   startOfMonth.setUTCDate(1)
@@ -606,11 +654,10 @@ export async function getUsageCountThisMonthForUser(
 
   if (error) {
     console.error('Error counting usage events this month for user:', serializeDbError(error))
-    return 0
+    throw new Error(`Database error: ${error.message}`)
   }
   return count ?? 0
 }
-
 
 /**
  * Soft deletes a prompt analysis by updating deleted_at = now().
@@ -621,24 +668,33 @@ export async function softDeleteAnalysis(
   ownerAnonymousId: string,
   userId?: string
 ): Promise<boolean> {
-  const record = await getPromptAnalysisForOwner(id, ownerAnonymousId, userId)
-  if (!record) return false
+  validateUuid(id, 'id')
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
+  }
 
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from('prompt_analyses')
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', id)
-    .select('id')
-    .maybeSingle()
+
+  if (userId) {
+    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+  } else {
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { data, error } = await query.select('id').maybeSingle()
+
+  if (error) {
+    console.error('Error soft deleting analysis:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
 
   const typedData = data as unknown as { id: string } | null
-
-  if (error || !typedData) {
-    console.error('Error soft deleting analysis:', serializeDbError(error))
-    return false
-  }
-  return true
+  return typedData !== null
 }
 
 /**
@@ -651,24 +707,31 @@ export async function toggleFavoriteAnalysis(
   userId: string | undefined,
   isFavorite: boolean
 ): Promise<boolean> {
-  const record = await getPromptAnalysisForOwner(id, ownerAnonymousId, userId)
-  if (!record) return false
+  validateUuid(id, 'id')
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
+  }
 
   const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
+  let query = supabase
     .from('prompt_analyses')
     .update({ is_favorite: isFavorite })
     .eq('id', id)
-    .select('id')
-    .maybeSingle()
+
+  if (userId) {
+    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+  } else {
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { data, error } = await query.select('id').maybeSingle()
+
+  if (error) {
+    console.error('Error toggling favorite analysis:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
 
   const typedData = data as unknown as { id: string } | null
-
-  if (error || !typedData) {
-    console.error('Error toggling favorite analysis:', serializeDbError(error))
-    return false
-  }
-  return true
+  return typedData !== null
 }
-
-

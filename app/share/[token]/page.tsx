@@ -5,6 +5,8 @@ import type { AnalysisResult } from '@/lib/ai/schemas'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ token: string }>
 }

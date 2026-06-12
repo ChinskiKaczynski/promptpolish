@@ -28,6 +28,9 @@ vi.mock('@/lib/result-access/share-token', () => ({
   createShareToken: vi.fn(() => 'mocked-32-char-share-token-xyz-123')
 }))
 
+const MOCK_ANALYSIS_ID = '11111111-1111-1111-1111-111111111111'
+const MOCK_OWNER_ID = '22222222-2222-2222-2222-222222222222'
+
 describe('Supabase Data Access Layer - Mocked Integration', () => {
   const mockSingle = vi.fn()
   const mockMaybeSingle = vi.fn()
@@ -49,10 +52,8 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-
-    
     ;(getSupabaseAdminClient as ReturnType<typeof vi.fn>).mockReturnValue(mockSupabaseClient)
-// Setup standard builder pattern chain
+    // Setup standard builder pattern chain
     const builder: Record<string, unknown> & {
       eq: typeof mockEq
       is: typeof mockIs
@@ -105,15 +106,14 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
         error: { message: 'Database error' }
       })
 
-      const profile = await getModelProfileBySlug('general-llm')
-      expect(profile).toBeNull()
+      await expect(getModelProfileBySlug('general-llm')).rejects.toThrow('Database error')
     })
   })
 
   describe('createPromptAnalysis', () => {
     it('creates a new prompt analysis and returns the row', async () => {
       const mockInput = {
-        owner_anonymous_id: 'anonymous-owner-uuid',
+        owner_anonymous_id: MOCK_OWNER_ID,
         input_prompt: 'Test prompt',
         working_language: 'en' as const,
         selected_profile_slug: 'general-llm',
@@ -130,12 +130,12 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
       }
 
       mockSingle.mockResolvedValue({
-        data: { id: 'analysis-uuid', ...mockInput },
+        data: { id: MOCK_ANALYSIS_ID, ...mockInput },
         error: null
       })
 
       const result = await createPromptAnalysis(mockInput as unknown as Parameters<typeof createPromptAnalysis>[0])
-      expect(result).toEqual({ id: 'analysis-uuid', ...mockInput })
+      expect(result).toEqual({ id: MOCK_ANALYSIS_ID, ...mockInput })
       expect(mockSupabaseClient.from).toHaveBeenCalledWith('prompt_analyses')
       expect(mockInsert).toHaveBeenCalledWith(mockInput)
     })
@@ -144,8 +144,8 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
   describe('getPromptAnalysisForOwner', () => {
     it('returns private prompt analysis when owner anonymous ID matches and user_id is null', async () => {
       const mockRecord = {
-        id: 'analysis-uuid',
-        owner_anonymous_id: 'owner-123',
+        id: MOCK_ANALYSIS_ID,
+        owner_anonymous_id: MOCK_OWNER_ID,
         user_id: null,
         input_prompt: 'Secret prompt'
       }
@@ -155,15 +155,15 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
         error: null
       })
 
-      const result = await getPromptAnalysisForOwner('analysis-uuid', 'owner-123')
+      const result = await getPromptAnalysisForOwner(MOCK_ANALYSIS_ID, MOCK_OWNER_ID)
       expect(result).toEqual(mockRecord)
-      expect(mockEq).toHaveBeenCalledWith('id', 'analysis-uuid')
+      expect(mockEq).toHaveBeenCalledWith('id', MOCK_ANALYSIS_ID)
     })
 
     it('returns null when owner anonymous ID does not match and user_id is null', async () => {
       const mockRecord = {
-        id: 'analysis-uuid',
-        owner_anonymous_id: 'other-owner',
+        id: MOCK_ANALYSIS_ID,
+        owner_anonymous_id: '33333333-3333-3333-3333-333333333333',
         user_id: null,
         input_prompt: 'Secret prompt'
       }
@@ -173,7 +173,7 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
         error: null
       })
 
-      const result = await getPromptAnalysisForOwner('analysis-uuid', 'owner-123')
+      const result = await getPromptAnalysisForOwner(MOCK_ANALYSIS_ID, MOCK_OWNER_ID)
       expect(result).toBeNull()
     })
   })
@@ -198,7 +198,7 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
       })
 
       const result = await getSharedPromptAnalysis('valid-token')
-      
+
       // Verification: Should return scrubbed payload (excluding is_share_enabled or private IDs)
       expect(result).toEqual({
         input_prompt: 'My raw prompt',
@@ -210,7 +210,7 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
         improved_prompt: 'My polished prompt',
         created_at: '2026-05-23T12:00:00Z'
       })
-      
+
       expect(mockEq).toHaveBeenCalledWith('share_token', 'valid-token')
       expect(mockEq).toHaveBeenCalledWith('is_share_enabled', true)
     })
@@ -229,89 +229,81 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
   describe('createUsageEvent & createFeedbackEvent', () => {
     it('creates usage event', async () => {
       const mockEvent = {
-        owner_anonymous_id: 'owner-123',
+        owner_anonymous_id: MOCK_OWNER_ID,
         event_type: 'copy',
-        metadata_json: { analysis_id: 'uuid' }
+        metadata_json: { analysis_id: MOCK_ANALYSIS_ID }
       }
 
-      mockSingle.mockResolvedValue({ data: { id: 'event-uuid', ...mockEvent }, error: null })
+      mockSingle.mockResolvedValue({ data: { id: '00000000-0000-0000-0000-000000000000', ...mockEvent }, error: null })
       const result = await createUsageEvent(mockEvent as unknown as Parameters<typeof createUsageEvent>[0])
-      expect(result).toEqual({ id: 'event-uuid', ...mockEvent })
+      expect(result).toEqual({ id: '00000000-0000-0000-0000-000000000000', ...mockEvent })
     })
 
     it('creates copy event via telemetry helper', async () => {
       mockSingle.mockResolvedValue({
         data: {
-          id: 'event-uuid',
-          owner_anonymous_id: 'owner-123',
+          id: '00000000-0000-0000-0000-000000000000',
+          owner_anonymous_id: MOCK_OWNER_ID,
           event_type: 'copy',
-          metadata_json: { analysis_id: 'analysis-123' }
+          metadata_json: { analysis_id: MOCK_ANALYSIS_ID }
         },
         error: null
       })
 
-      const result = await createCopyEvent('owner-123', 'analysis-123')
+      const result = await createCopyEvent(MOCK_OWNER_ID, MOCK_ANALYSIS_ID)
       expect(result).toBeDefined()
       expect(result?.event_type).toBe('copy')
     })
 
     it('creates feedback event', async () => {
       const mockFeedback = {
-        analysis_id: 'analysis-uuid',
+        analysis_id: MOCK_ANALYSIS_ID,
         rating: 'up' as const,
         comment: 'Nice output'
       }
 
-      mockSingle.mockResolvedValue({ data: { id: 'feedback-uuid', ...mockFeedback }, error: null })
+      mockSingle.mockResolvedValue({ data: { id: 'efefefef-efef-efef-efef-efefefefefef', ...mockFeedback }, error: null })
       const result = await createFeedbackEvent(mockFeedback as unknown as Parameters<typeof createFeedbackEvent>[0])
-      expect(result).toEqual({ id: 'feedback-uuid', ...mockFeedback })
+      expect(result).toEqual({ id: 'efefefef-efef-efef-efef-efefefefefef', ...mockFeedback })
     })
   })
 
   describe('createShareLink & disableShareLink', () => {
     it('enables sharing by generating share token and updating row', async () => {
       mockMaybeSingle.mockResolvedValueOnce({
-        data: { id: 'analysis-uuid', owner_anonymous_id: 'owner-123', user_id: null },
-        error: null
-      })
-      mockMaybeSingle.mockResolvedValueOnce({
         data: { share_token: 'mocked-32-char-share-token-xyz-123' },
         error: null
       })
 
-      const token = await createShareLink('analysis-uuid', 'owner-123')
+      const token = await createShareLink(MOCK_ANALYSIS_ID, MOCK_OWNER_ID)
       expect(token).toBe('mocked-32-char-share-token-xyz-123')
       expect(mockUpdate).toHaveBeenCalledWith({
         is_share_enabled: true,
         share_token: 'mocked-32-char-share-token-xyz-123'
       })
-      expect(mockEq).toHaveBeenCalledWith('id', 'analysis-uuid')
+      expect(mockEq).toHaveBeenCalledWith('id', MOCK_ANALYSIS_ID)
     })
 
     it('disables public share by setting is_share_enabled=false and clearing token', async () => {
       mockMaybeSingle.mockResolvedValueOnce({
-        data: { id: 'analysis-uuid', owner_anonymous_id: 'owner-123', user_id: null },
-        error: null
-      })
-      mockMaybeSingle.mockResolvedValueOnce({
-        data: { id: 'analysis-uuid' },
+        data: { id: MOCK_ANALYSIS_ID },
         error: null
       })
 
-      const success = await disableShareLink('analysis-uuid', 'owner-123')
+      const success = await disableShareLink(MOCK_ANALYSIS_ID, MOCK_OWNER_ID)
       expect(success).toBe(true)
       expect(mockUpdate).toHaveBeenCalledWith({
         is_share_enabled: false,
         share_token: null
       })
-      expect(mockEq).toHaveBeenCalledWith('id', 'analysis-uuid')
+      expect(mockEq).toHaveBeenCalledWith('id', MOCK_ANALYSIS_ID)
     })
   })
 
   describe('deleted_at blocking checks', () => {
     it('ensures getPromptAnalysisForOwner queries with is("deleted_at", null)', async () => {
       mockMaybeSingle.mockResolvedValue({ data: null, error: null })
-      await getPromptAnalysisForOwner('analysis-uuid', 'owner-123')
+      await getPromptAnalysisForOwner(MOCK_ANALYSIS_ID, MOCK_OWNER_ID)
       expect(mockIs).toHaveBeenCalledWith('deleted_at', null)
     })
 
@@ -322,8 +314,3 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
     })
   })
 })
-
-
-
-
-

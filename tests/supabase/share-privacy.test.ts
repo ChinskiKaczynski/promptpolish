@@ -6,6 +6,7 @@ import { getSharedPromptAnalysis, disableShareLink } from '@/lib/supabase/querie
 import { getSupabaseServerClient } from '@/lib/supabase/server'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 
+// Mock getSupabaseServerClient and getSupabaseAdminClient
 vi.mock('@/lib/supabase/server', () => ({
   getSupabaseServerClient: vi.fn()
 }))
@@ -13,40 +14,18 @@ vi.mock('@/lib/supabase/admin', () => ({
   getSupabaseAdminClient: vi.fn()
 }))
 
+const MOCK_ANALYSIS_ID = '11111111-1111-1111-1111-111111111111'
+const MOCK_OWNER_ID = '22222222-2222-2222-2222-222222222222'
+
 /**
  * Privacy snapshot tests for the public share data access layer.
- *
- * These tests assert the EXACT shape returned by getSharedPromptAnalysis,
- * ensuring that internal, sensitive, or owner-identifying fields are
- * never present in the public payload — regardless of what the DB returns.
- *
- * Forbidden fields (must NEVER appear in the public payload):
- *   id                         — internal UUID; guessable → private result exposure
- *   owner_anonymous_id         — identifies the owner session
- *   user_id                    — reserved future auth field
- *   sensitive_data_findings_json — may contain redacted secrets
- *   model_id_used              — internal provider detail
- *   provider_used              — internal provider detail
- *   analysis_schema_version    — internal versioning
- *   scoring_version            — internal versioning
- *   model_profile_version      — internal versioning
- *   prompt_template_version    — internal versioning
- *   share_token                — would allow reconstructing the URL from payload
- *   is_share_enabled           — internal flag
- *   task_goal                  — optional private user input
- *   task_type                  — optional private user input
- *   expected_output_format     — optional private user input
- *   constraints                — optional private user input
- *   expires_at                 — internal expiry field
  */
 
-// Simulates the full PromptAnalysisRow — used to test that forbidden fields
-// DO NOT leak even if somehow returned (defence-in-depth injection test)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const FULL_DB_ROW = {
   // --- FORBIDDEN fields (should never appear in public payload) ---
-  id: 'internal-private-uuid-1234',
-  owner_anonymous_id: 'owner-session-abc',
+  id: MOCK_ANALYSIS_ID,
+  owner_anonymous_id: MOCK_OWNER_ID,
   user_id: null,
   sensitive_data_findings_json: [{ type: 'api_key', riskLevel: 'high', redactedValue: 'sk-***' }],
   model_id_used: 'gemini-2.0-flash',
@@ -73,15 +52,6 @@ const FULL_DB_ROW = {
   created_at: '2026-05-23T12:00:00Z'
 }
 
-/**
- * Simulates what the real Supabase DB actually returns for the explicit SELECT column list
- * in getSharedPromptAnalysis. The DB enforces column projection at the wire level;
- * the JS mock cannot do this, so we manually replicate what Supabase would return.
- *
- * Columns selected by the query:
- *   input_prompt, working_language, selected_profile_slug, overall_score, score_level,
- *   analysis_json, improved_prompt, created_at, is_share_enabled
- */
 const DB_RETURNED_ROW = {
   input_prompt: 'Summarize this contract',
   working_language: 'en',
@@ -91,7 +61,7 @@ const DB_RETURNED_ROW = {
   analysis_json: { overall_summary: 'Decent prompt', criteria_scores: [] },
   improved_prompt: 'Please summarize the following contract in bullet points...',
   created_at: '2026-05-23T12:00:00Z',
-  is_share_enabled: true  // present in DB response; stripped by destructure in getSharedPromptAnalysis
+  is_share_enabled: true
 }
 
 const ALLOWED_FIELDS = [
@@ -103,27 +73,6 @@ const ALLOWED_FIELDS = [
   'analysis_json',
   'improved_prompt',
   'created_at'
-] as const
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const FORBIDDEN_FIELDS = [
-  'id',
-  'owner_anonymous_id',
-  'user_id',
-  'sensitive_data_findings_json',
-  'model_id_used',
-  'provider_used',
-  'analysis_schema_version',
-  'scoring_version',
-  'model_profile_version',
-  'prompt_template_version',
-  'share_token',
-  'is_share_enabled',
-  'task_goal',
-  'task_type',
-  'expected_output_format',
-  'constraints',
-  'expires_at'
 ] as const
 
 describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
@@ -165,23 +114,17 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
   })
 
   it('queries ONLY the safe public columns in the SELECT — primary DB-level privacy guard', async () => {
-    // The SELECT column list is the primary mechanism preventing forbidden field exposure.
-    // Verify that getSharedPromptAnalysis calls .select() with exactly the allowed columns
-    // and does NOT select forbidden fields like id, owner_anonymous_id, sensitive_data_findings_json, etc.
     mockMaybeSingle.mockResolvedValue({ data: DB_RETURNED_ROW, error: null })
 
     await getSharedPromptAnalysis('valid-token')
 
-    // Verify select was called with the explicit safe column list
     expect(mockSelect).toHaveBeenCalledOnce()
     const selectArg: string = vi.mocked(mockSelect).mock.calls[0][0]
 
-    // Assert allowed fields ARE in the SELECT
     for (const field of ALLOWED_FIELDS) {
       expect(selectArg, `Expected "${field}" to be in SELECT`).toContain(field)
     }
 
-    // Assert forbidden identifiers are NOT in the SELECT
     const criticalForbidden = [
       'owner_anonymous_id',
       'sensitive_data_findings_json',
@@ -195,7 +138,6 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
   })
 
   it('strips is_share_enabled from the JS output (JS-layer scrub)', async () => {
-    // is_share_enabled IS selected (needed for the .eq filter) but stripped by destructure
     mockMaybeSingle.mockResolvedValue({ data: DB_RETURNED_ROW, error: null })
 
     const result = await getSharedPromptAnalysis('valid-token')
@@ -204,8 +146,6 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
   })
 
   it('returns exactly the expected safe payload shape — no extra keys', async () => {
-    // Use DB_RETURNED_ROW: mirrors what Supabase actually returns for the explicit SELECT.
-    // getSharedPromptAnalysis must strip is_share_enabled and return only the 8 safe fields.
     mockMaybeSingle.mockResolvedValue({ data: DB_RETURNED_ROW, error: null })
 
     const result = await getSharedPromptAnalysis('valid-token')
@@ -221,12 +161,10 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
       created_at: '2026-05-23T12:00:00Z'
     })
 
-    // Strict key count check: only the 8 allowed fields, nothing more
     expect(Object.keys(result!)).toHaveLength(ALLOWED_FIELDS.length)
   })
 
   it('returns null for a disabled share token (is_share_enabled = false)', async () => {
-    // DB returns null because the .eq('is_share_enabled', true) filter excludes it
     mockMaybeSingle.mockResolvedValue({ data: null, error: null })
 
     const result = await getSharedPromptAnalysis('disabled-token')
@@ -276,45 +214,40 @@ describe('disableShareLink — Ownership Verification', () => {
     mockEq.mockReturnValue(builder)
     mockIs.mockReturnValue(builder)
     mockSelect.mockReturnValue(builder)
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null })
 
     vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
     vi.mocked(getSupabaseAdminClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseAdminClient>)
   })
 
   it('returns true when the owned row is successfully updated', async () => {
-    // 1. mock getPromptAnalysisForOwner resolve
-    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid', owner_anonymous_id: 'owner-123', user_id: null }, error: null })
-    // 2. mock update resolve
-    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid' }, error: null })
+    mockMaybeSingle.mockResolvedValue({ data: { id: MOCK_ANALYSIS_ID }, error: null })
 
-    const result = await disableShareLink('analysis-uuid', 'owner-123')
+    const result = await disableShareLink(MOCK_ANALYSIS_ID, MOCK_OWNER_ID)
     expect(result).toBe(true)
   })
 
   it('returns false when no row matches (non-owner or wrong analysis_id)', async () => {
-    // 1. mock getPromptAnalysisForOwner resolve with wrong owner -> returns null
-    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid', owner_anonymous_id: 'other-owner', user_id: null }, error: null })
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null })
 
-    const result = await disableShareLink('analysis-uuid', 'owner-123')
+    const result = await disableShareLink(MOCK_ANALYSIS_ID, MOCK_OWNER_ID)
     expect(result).toBe(false)
   })
 
   it('enforces ownership checks and performs the correct update', async () => {
-    // 1. mock getPromptAnalysisForOwner resolve
-    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid', owner_anonymous_id: 'owner-123', user_id: null }, error: null })
-    // 2. mock update resolve
-    mockMaybeSingle.mockResolvedValueOnce({ data: { id: 'analysis-uuid' }, error: null })
+    mockMaybeSingle.mockResolvedValue({ data: { id: MOCK_ANALYSIS_ID }, error: null })
 
-    await disableShareLink('analysis-uuid', 'owner-123')
+    await disableShareLink(MOCK_ANALYSIS_ID, MOCK_OWNER_ID)
 
-    expect(mockEq).toHaveBeenCalledWith('id', 'analysis-uuid')
+    expect(mockEq).toHaveBeenCalledWith('id', MOCK_ANALYSIS_ID)
     expect(mockUpdate).toHaveBeenCalledWith({ is_share_enabled: false, share_token: null })
   })
 
-  it('returns false and logs error on database failure', async () => {
-    mockMaybeSingle.mockResolvedValueOnce({ data: null, error: { message: 'DB timeout' } })
+  it('throws custom database error on database failure', async () => {
+    mockMaybeSingle.mockResolvedValue({ data: null, error: { message: 'DB timeout' } })
 
-    const result = await disableShareLink('analysis-uuid', 'owner-123')
-    expect(result).toBe(false)
+    await expect(
+      disableShareLink(MOCK_ANALYSIS_ID, MOCK_OWNER_ID)
+    ).rejects.toThrow('Database error: DB timeout')
   })
 })

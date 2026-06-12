@@ -348,10 +348,6 @@ ALTER TABLE ONLY "public"."user_profiles"
 
 
 
-CREATE POLICY "allow_public_read_model_profiles" ON "public"."model_profiles" FOR SELECT USING (true);
-
-
-
 CREATE POLICY "block_client_write_stripe_customer" ON "public"."stripe_customers" USING (false) WITH CHECK (false);
 
 
@@ -381,13 +377,6 @@ ALTER TABLE "public"."usage_events" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."user_profiles" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "users_read_own_stripe_customer" ON "public"."stripe_customers" FOR SELECT TO "authenticated" USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "users_read_own_subscription" ON "public"."subscriptions" FOR SELECT TO "authenticated" USING (("auth"."uid"() = "user_id"));
-
-
 
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
@@ -400,9 +389,7 @@ GRANT ALL ON TABLE "public"."feedback_events" TO "service_role";
 
 
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."model_profiles" TO "anon";
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."model_profiles" TO "authenticated";
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."model_profiles" TO "service_role";
+GRANT ALL ON TABLE "public"."model_profiles" TO "service_role";
 
 
 
@@ -441,8 +428,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUN
 
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLES TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLES TO "service_role";
 
 
