@@ -143,7 +143,7 @@ describe('Supabase Authentication & History Linking Integration', () => {
         p_task_type: 'all',
         p_is_favorite: null,
         p_sort_by: 'newest',
-        p_limit: 100,
+        p_limit: 20,
         p_offset: 0
       })
     })

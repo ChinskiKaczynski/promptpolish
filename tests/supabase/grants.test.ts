@@ -52,7 +52,7 @@ describe('Supabase Database Permission Grants - Static SQL Migration Analysis', 
     expect(sql).toContain("SET search_path = ''")
 
     // Check that executing privileges are explicitly revoked and granted to service_role with exact signature
-    const signature = 'public.search_user_prompt_history(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER)'
+    const signature = 'public.search_user_prompt_history(UUID, UUID, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER)'
     expect(sql).toContain(`REVOKE EXECUTE ON FUNCTION ${signature} FROM PUBLIC;`)
     expect(sql).toContain(`REVOKE EXECUTE ON FUNCTION ${signature} FROM "anon";`)
     expect(sql).toContain(`REVOKE EXECUTE ON FUNCTION ${signature} FROM "authenticated";`)

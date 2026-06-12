@@ -356,7 +356,7 @@ export interface Database {
       search_user_prompt_history: {
         Args: {
           p_user_id: string | null
-          p_owner_anonymous_id: string
+          p_owner_anonymous_id: string | null
           p_search_term: string
           p_lang?: string
           p_profile?: string

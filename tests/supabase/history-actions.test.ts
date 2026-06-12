@@ -166,7 +166,7 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
         p_task_type: 'all',
         p_is_favorite: null,
         p_sort_by: 'newest',
-        p_limit: 100,
+        p_limit: 20,
         p_offset: 0
       })
     })
@@ -244,6 +244,125 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
           p_search_term: term
         }))
       }
+    })
+
+    describe('defensive pagination clamping', () => {
+      it('clamps limit to 1 when limit is -1', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, MOCK_OWNER_ID, { limit: -1 })
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_limit: 1
+        }))
+      })
+
+      it('clamps limit to 1 when limit is 0', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, MOCK_OWNER_ID, { limit: 0 })
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_limit: 1
+        }))
+      })
+
+      it('retains limit of 1 when limit is 1', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, MOCK_OWNER_ID, { limit: 1 })
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_limit: 1
+        }))
+      })
+
+      it('retains limit of 100 when limit is 100', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, MOCK_OWNER_ID, { limit: 100 })
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_limit: 100
+        }))
+      })
+
+      it('clamps limit to 100 when limit is 101', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, MOCK_OWNER_ID, { limit: 101 })
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_limit: 100
+        }))
+      })
+
+      it('clamps offset to 0 when offset is negative', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, MOCK_OWNER_ID, { offset: -5 })
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_offset: 0
+        }))
+      })
+    })
+
+    describe('sort parameter validation and strict allowlist', () => {
+      it('uses safe default newest if sort value is unknown', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, MOCK_OWNER_ID, {
+          sortBy: 'unknown_sort_value' as unknown as 'newest'
+        })
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_sort_by: 'newest'
+        }))
+      })
+    })
+
+    describe('ownership identification and security policies', () => {
+      it('throws error if both user ID and anonymous ID are missing/empty', async () => {
+        await expect(
+          getPromptAnalysesForUser('', '')
+        ).rejects.toThrow('Ownership identity missing: either userId or ownerAnonymousId must be provided')
+      })
+
+      it('supports authenticated identity only, calling RPC with null anonymous ID', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, '')
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_user_id: MOCK_USER_ID,
+          p_owner_anonymous_id: null
+        }))
+      })
+
+      it('supports anonymous identity only, calling RPC with null user ID', async () => {
+        await getPromptAnalysesForUser('', MOCK_OWNER_ID)
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_user_id: null,
+          p_owner_anonymous_id: MOCK_OWNER_ID
+        }))
+      })
+
+      it('supports linked authenticated and anonymous identities, calling RPC with both UUIDs', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, MOCK_OWNER_ID)
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_user_id: MOCK_USER_ID,
+          p_owner_anonymous_id: MOCK_OWNER_ID
+        }))
+      })
+    })
+
+    describe('PostgreSQL real-database UUID/null compatibility regression tests', () => {
+      it('authenticated-only call passes p_owner_anonymous_id: null (never empty string)', async () => {
+        await getPromptAnalysesForUser(MOCK_USER_ID, '')
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_user_id: MOCK_USER_ID,
+          p_owner_anonymous_id: null
+        }))
+
+        const lastCallArgs = mockRpc.mock.calls[mockRpc.mock.calls.length - 1][1] as Record<string, unknown>
+        expect(lastCallArgs['p_owner_anonymous_id']).not.toBe('')
+      })
+
+      it('anonymous-only call passes p_user_id: null (never empty string)', async () => {
+        await getPromptAnalysesForUser('', MOCK_OWNER_ID)
+        expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
+          p_user_id: null,
+          p_owner_anonymous_id: MOCK_OWNER_ID
+        }))
+
+        const lastCallArgs = mockRpc.mock.calls[mockRpc.mock.calls.length - 1][1] as Record<string, unknown>
+        expect(lastCallArgs['p_user_id']).not.toBe('')
+      })
+
+      it('both identities missing are rejected before the RPC call', async () => {
+        mockRpc.mockClear()
+        await expect(
+          getPromptAnalysesForUser('', '')
+        ).rejects.toThrow('Ownership identity missing')
+        expect(mockRpc).not.toHaveBeenCalled()
+      })
     })
   })
 })

@@ -25,7 +25,7 @@ DROP POLICY IF EXISTS "users_read_own_subscription" ON "public"."subscriptions";
 -- 5. Define parameterized RPC for secure, sanitised history search
 CREATE OR REPLACE FUNCTION public.search_user_prompt_history(
   p_user_id UUID,
-  p_owner_anonymous_id TEXT,
+  p_owner_anonymous_id UUID,
   p_search_term TEXT,
   p_lang TEXT DEFAULT 'all',
   p_profile TEXT DEFAULT 'all',
@@ -45,6 +45,12 @@ DECLARE
   v_limit INTEGER;
   v_offset INTEGER;
 BEGIN
+  -- Ownership validation checks
+  -- Both IDs missing check
+  IF p_user_id IS NULL AND p_owner_anonymous_id IS NULL THEN
+    RAISE EXCEPTION 'Ownership identity missing: either p_user_id or p_owner_anonymous_id must be provided';
+  END IF;
+
   IF p_search_term IS NOT NULL AND p_search_term <> '' THEN
     v_search_escaped := REPLACE(p_search_term, '\', '\\');
     v_search_escaped := REPLACE(v_search_escaped, '%', '\%');
@@ -54,8 +60,9 @@ BEGIN
     v_search_escaped := NULL;
   END IF;
 
-  v_limit := LEAST(COALESCE(p_limit, 100), 100);
-  v_offset := COALESCE(p_offset, 0);
+  -- Clamp SQL pagination defensively
+  v_limit := GREATEST(1, LEAST(COALESCE(p_limit, 20), 100));
+  v_offset := GREATEST(0, COALESCE(p_offset, 0));
 
   RETURN QUERY
   SELECT *
@@ -64,7 +71,7 @@ BEGIN
     AND (
       (p_user_id IS NOT NULL AND user_id = p_user_id)
       OR
-      (user_id IS NULL AND owner_anonymous_id = p_owner_anonymous_id)
+      (user_id IS NULL AND owner_anonymous_id = p_owner_anonymous_id::TEXT)
     )
     AND (
       p_lang = 'all' OR working_language = p_lang
@@ -96,7 +103,7 @@ END;
 $$;
 
 -- Revoke default public execution rights and grant only to the server side service_role
-REVOKE EXECUTE ON FUNCTION public.search_user_prompt_history(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER) FROM PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.search_user_prompt_history(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER) FROM "anon";
-REVOKE EXECUTE ON FUNCTION public.search_user_prompt_history(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER) FROM "authenticated";
-GRANT EXECUTE ON FUNCTION public.search_user_prompt_history(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER) TO "service_role";
+REVOKE EXECUTE ON FUNCTION public.search_user_prompt_history(UUID, UUID, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.search_user_prompt_history(UUID, UUID, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER) FROM "anon";
+REVOKE EXECUTE ON FUNCTION public.search_user_prompt_history(UUID, UUID, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER) FROM "authenticated";
+GRANT EXECUTE ON FUNCTION public.search_user_prompt_history(UUID, UUID, TEXT, TEXT, TEXT, TEXT, BOOLEAN, TEXT, INTEGER, INTEGER) TO "service_role";

@@ -153,8 +153,8 @@ export async function linkAnonymousAnalyses(
  * belonging to either their authenticated user_id or their current anonymous cookie.
  */
 export async function getPromptAnalysesForUser(
-  userId: string,
-  ownerAnonymousId: string,
+  userId: string | null | undefined,
+  ownerAnonymousId: string | null | undefined,
   filters?: {
     search?: string
     lang?: string
@@ -167,25 +167,47 @@ export async function getPromptAnalysesForUser(
   }
 ): Promise<PromptAnalysisRow[]> {
   const parsedUserId = userId && userId.trim() !== '' ? userId : null
+  const parsedOwnerAnonymousId = ownerAnonymousId && ownerAnonymousId.trim() !== '' ? ownerAnonymousId : null
+
+  if (!parsedUserId && !parsedOwnerAnonymousId) {
+    throw new Error('Ownership identity missing: either userId or ownerAnonymousId must be provided')
+  }
 
   if (parsedUserId) {
     validateUuid(parsedUserId, 'userId')
   }
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+
+  if (parsedOwnerAnonymousId) {
+    validateUuid(parsedOwnerAnonymousId, 'ownerAnonymousId')
+  } else if (!parsedUserId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
+  }
+
+  // Verify the sort parameter uses a strict allowlist
+  const allowedSorts = ['newest', 'oldest', 'highest_score', 'lowest_score'] as const
+  const sortBy = filters?.sortBy && allowedSorts.includes(filters.sortBy)
+    ? filters.sortBy
+    : 'newest'
+
+  // Clamp pagination boundaries defensively
+  const rawLimit = filters?.limit ?? 20
+  const limit = Math.max(1, Math.min(rawLimit, 100))
+  const rawOffset = filters?.offset ?? 0
+  const offset = Math.max(0, rawOffset)
 
   const supabase = getSupabaseAdminClient()
 
   const { data, error } = await supabase.rpc('search_user_prompt_history', {
     p_user_id: parsedUserId,
-    p_owner_anonymous_id: ownerAnonymousId,
+    p_owner_anonymous_id: parsedOwnerAnonymousId ?? null,
     p_search_term: filters?.search || '',
     p_lang: filters?.lang || 'all',
     p_profile: filters?.profile || 'all',
     p_task_type: filters?.taskType || 'all',
     p_is_favorite: filters?.isFavorite ?? null,
-    p_sort_by: filters?.sortBy || 'newest',
-    p_limit: filters?.limit ?? 100,
-    p_offset: filters?.offset ?? 0
+    p_sort_by: sortBy,
+    p_limit: limit,
+    p_offset: offset
   })
 
   if (error) {
@@ -198,9 +220,9 @@ export async function getPromptAnalysesForUser(
   // Defensive post-filter to prevent cross-user leakage on shared owner_anonymous_id session
   return rows.filter(row => {
     if (row.user_id) {
-      return row.user_id === userId
+      return parsedUserId ? row.user_id === parsedUserId : false
     }
-    return row.owner_anonymous_id === ownerAnonymousId
+    return parsedOwnerAnonymousId ? row.owner_anonymous_id === parsedOwnerAnonymousId : false
   })
 }
 
