@@ -58,16 +58,16 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
   if (!analysisId) return null
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+    <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8 flex flex-col justify-between">
       <div>
-        <h3 className="text-base font-bold text-slate-900">Czy ten audyt był pomocny?</h3>
-        <p className="mt-1 text-xs text-slate-500">Twój feedback pozwala nam stale ulepszać filtry inżynierii promptów.</p>
+        <h3 className="text-base font-bold text-[#E2E8F0]">Czy ten audyt był pomocny?</h3>
+        <p className="mt-1 text-xs text-[#4A5568]">Twój feedback pozwala nam stale ulepszać filtry inżynierii promptów.</p>
       </div>
 
       <div className="mt-6 space-y-3">
         {feedbackSubmitted ? (
-          <div className="inline-flex items-center gap-2 rounded-2xl bg-emerald-50 border border-emerald-100 px-4 py-3 text-xs font-bold text-emerald-700">
-            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="inline-flex items-center gap-2 rounded-lg bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 px-4 py-3 text-xs font-bold text-[#6EE7B7]">
+            <svg className="h-4 w-4 shrink-0 text-[#6EE7B7]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Dziękujemy za przesłanie opinii!</span>
@@ -80,10 +80,10 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
                 onClick={() => handleFeedbackVote('up')}
                 disabled={feedbackLoading}
                 aria-pressed={feedbackVote === 'up'}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-3 text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 cursor-pointer ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border py-3 text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 cursor-pointer ${
                   feedbackVote === 'up'
-                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                    ? 'border-[#6EE7B7]/30 bg-[#6EE7B7]/10 text-[#6EE7B7]'
+                    : 'border-[#2A2A3A] bg-[#1C1C27] text-[#4A5568] hover:text-[#94A3B8] hover:border-[#3A3A52]'
                 }`}
               >
                 <span className="text-base">👍</span>
@@ -94,10 +94,10 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
                 onClick={() => handleFeedbackVote('down')}
                 disabled={feedbackLoading}
                 aria-pressed={feedbackVote === 'down'}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border py-3 text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 cursor-pointer ${
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg border py-3 text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 cursor-pointer ${
                   feedbackVote === 'down'
-                    ? 'border-rose-300 bg-rose-50 text-rose-700'
-                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                    ? 'border-[#F87171]/30 bg-[#F87171]/10 text-[#F87171]'
+                    : 'border-[#2A2A3A] bg-[#1C1C27] text-[#4A5568] hover:text-[#94A3B8] hover:border-[#3A3A52]'
                 }`}
               >
                 <span className="text-base">👎</span>
@@ -107,7 +107,7 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
 
             {feedbackVote === 'down' && (
               <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                <label htmlFor="feedback-comment" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <label htmlFor="feedback-comment" className="text-xs font-bold uppercase tracking-wider text-[#4A5568]">
                   Co poszło nie tak? (opcjonalne, maks. 500 znaków)
                 </label>
                 <textarea
@@ -117,13 +117,13 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
                   maxLength={500}
                   rows={3}
                   placeholder="Opisz co mogło być lepsze..."
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-700 placeholder-slate-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none transition-colors"
+                  className="w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-2.5 font-sans text-sm text-[#E2E8F0] placeholder-[#4A5568] focus:border-[#A78BFA]/40 focus:outline-none resize-none transition-colors"
                 />
                 <button
                   id="feedback-submit-btn"
                   onClick={handleSubmitFeedback}
                   disabled={feedbackLoading}
-                  className="w-full rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white hover:bg-slate-800 active:scale-[0.98] disabled:opacity-60 transition-all cursor-pointer"
+                  className="w-full rounded-lg gradient-btn px-4 py-2.5 text-xs font-semibold text-white active:scale-[0.98] disabled:opacity-60 transition-all cursor-pointer"
                 >
                   {feedbackLoading ? 'Wysyłanie...' : 'Wyślij opinię'}
                 </button>
@@ -131,7 +131,7 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
             )}
 
             {feedbackError && (
-              <p className="text-xs font-medium text-rose-600">⚠️ {feedbackError}</p>
+              <p className="text-xs font-medium text-[#F87171]">⚠️ {feedbackError}</p>
             )}
           </>
         )}

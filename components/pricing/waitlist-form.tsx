@@ -37,12 +37,12 @@ export function WaitlistForm({ initialEmail = '', lang = 'pl' }: WaitlistFormPro
 
   if (isSubmitted) {
     return (
-      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-center animate-in fade-in zoom-in-95 duration-300">
+      <div className="rounded-lg border border-[#6EE7B7]/20 bg-[#6EE7B7]/5 p-4 text-center animate-in fade-in zoom-in-95 duration-300">
         <span className="text-2xl">🎉</span>
-        <h4 className="mt-2 text-sm font-bold text-emerald-400">
+        <h4 className="mt-2 text-sm font-bold text-[#6EE7B7]">
           {lang === 'pl' ? 'Zapisano pomyślnie!' : 'Successfully joined!'}
         </h4>
-        <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+        <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed">
           {lang === 'pl'
             ? 'Dziękujemy! Otrzymasz powiadomienie, gdy tylko plan Pro wystartuje.'
             : 'Thank you! We will notify you as soon as the Pro tier launches.'}
@@ -68,12 +68,12 @@ export function WaitlistForm({ initialEmail = '', lang = 'pl' }: WaitlistFormPro
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
-          className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-xs text-white placeholder-slate-500 transition focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+          className="w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-2.5 text-xs text-[#E2E8F0] placeholder-[#4A5568] transition focus:border-[#A78BFA]/40 focus:outline-none disabled:opacity-50"
         />
       </div>
 
       {error && (
-        <p className="text-[11px] font-medium text-rose-500 animate-pulse">
+        <p className="text-xs font-medium text-[#F87171] animate-pulse">
           ⚠️ {error}
         </p>
       )}
@@ -81,7 +81,7 @@ export function WaitlistForm({ initialEmail = '', lang = 'pl' }: WaitlistFormPro
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full text-center rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold py-2.5 text-xs active:scale-[0.98] shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
+        className="w-full text-center rounded-lg gradient-btn text-white font-bold py-2.5 text-xs active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5"
       >
         {isLoading ? (
           <>

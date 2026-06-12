@@ -39,7 +39,7 @@ export function LoaderBackdrop({
           />
         </div>
         
-        <div className="mt-3 flex justify-between w-80 text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest px-1">
+        <div className="mt-3 flex justify-between w-80 text-xs font-mono font-bold text-[#94A3B8] uppercase tracking-widest px-1">
           <span>{workingLanguage === 'pl' ? `Krok ${currentStepIndex + 1} z ${loadingSteps.length}` : `Step ${currentStepIndex + 1} of ${loadingSteps.length}`}</span>
           <span className="text-[#A78BFA] animate-pulse">{progressPct}%</span>
         </div>
@@ -58,7 +58,7 @@ export function LoaderBackdrop({
                   'text-[#4A5568]'
                 }`}
               >
-                <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] shrink-0 border transition-all duration-300 ${
+                <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[11px] font-mono shrink-0 border transition-all duration-300 ${
                   isCompleted ? 'border-[#A78BFA] bg-[#A78BFA]/20 text-[#A78BFA]' :
                   isActive ? 'border-[#A78BFA] bg-[#7C3AED] animate-pulse text-white font-bold shadow-md shadow-[#A78BFA]/40' :
                   'border-[#2A2A3A] text-[#4A5568]'

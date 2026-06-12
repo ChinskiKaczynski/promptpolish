@@ -51,9 +51,9 @@ export default async function AnalyzePage() {
 
       <main className="flex-1 mx-auto w-full max-w-4xl px-6 py-10">
         <div className="mb-8">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">PromptPolish</p>
+          <p className="text-xs font-mono font-medium uppercase tracking-[0.2em] text-[#A78BFA]">PromptPolish</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">Przeanalizuj prompt</h1>
-          <p className="mt-3 text-slate-600 text-sm">
+          <p className="mt-2 text-sm text-[#94A3B8]">
             Wprowadź treść swojej instrukcji, zdefiniuj opcjonalny cel i rozpocznij audyt jakości promptu.
           </p>
         </div>

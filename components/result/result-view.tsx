@@ -131,7 +131,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           
           <div className="flex items-center justify-between gap-6 relative z-10">
             <div className="space-y-2">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-[#4A5568]">Ogólna Ocena Jakości</p>
+              <p className="text-xs font-mono font-bold uppercase tracking-[0.15em] text-[#4A5568]">Ogólna Ocena Jakości</p>
               <h2 className={`text-2xl font-bold tracking-tight font-heading ${scoreMeta.text}`}>{scoreMeta.label}</h2>
               <p className="text-xs leading-relaxed text-[#94A3B8] max-w-[240px]">{scoreMeta.desc}</p>
             </div>
@@ -161,7 +161,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-2xl font-black text-[#E2E8F0] font-mono leading-none">{result.overallScore}</span>
-                <span className="text-[9px] font-mono font-bold text-[#4A5568] mt-1">/ 100</span>
+                <span className="text-xs font-mono font-bold text-[#4A5568] mt-1">/ 100</span>
               </div>
             </div>
           </div>
@@ -208,7 +208,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         <div className="space-y-8 animate-fade-in-up animation-delay-200">
           
           {/* Overall Summary Card */}
-          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 shadow-md">
+          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
             <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading mb-4">Podsumowanie audytu</h3>
             <div className="relative">
               <p className="text-xs sm:text-sm leading-relaxed text-[#94A3B8] pl-2">
@@ -218,7 +218,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           </section>
 
           {/* Top Weaknesses Section */}
-          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 shadow-md">
+          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -231,7 +231,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             <div className="grid gap-3">
               {result.top_weaknesses.map((weakness, i) => (
                 <div key={i} className="flex items-start gap-3 rounded-xl bg-[#1C1C27] p-4 border border-[#2A2A3A] hover:bg-[#222230] transition-colors">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-500/10 text-[10px] font-black text-rose-400 border border-rose-500/20">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F87171]/10 text-xs font-black text-[#F87171] border border-[#F87171]/20">
                     {i + 1}
                   </span>
                   <p className="text-xs font-semibold text-[#94A3B8] leading-relaxed">{weakness}</p>
@@ -241,7 +241,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           </section>
 
           {/* Improvement Plan Section */}
-          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 shadow-md">
+          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
             <div className="flex items-center gap-2.5 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -254,7 +254,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             <div className="space-y-3.5">
               {result.improvement_plan.map((step, i) => (
                 <div key={i} className="flex items-start gap-3 p-1">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#A78BFA]/10 text-[10px] font-black text-[#A78BFA] border border-[#A78BFA]/20">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#A78BFA]/10 text-xs font-black text-[#A78BFA] border border-[#A78BFA]/20">
                     {i + 1}
                   </div>
                   <p className="text-xs font-bold text-[#94A3B8] mt-0.5 leading-relaxed">{step}</p>
@@ -266,13 +266,13 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Right Side: Criteria Breakdown with Native Details/Summary */}
-        <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 shadow-md animate-fade-in-up animation-delay-300">
+        <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 animate-fade-in-up animation-delay-300">
           <div className="flex items-center justify-between border-b border-[#2A2A3A]/30 pb-4 mb-4">
             <div>
               <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">Kryteria szczegółowe</h3>
               <p className="text-[11px] text-[#4A5568] mt-0.5 font-medium">Kliknij kryterium, aby zobaczyć wyjaśnienie</p>
             </div>
-            <span className="rounded-full bg-[#A78BFA]/10 border border-[#A78BFA]/20 px-2.5 py-0.5 text-[9px] font-bold text-[#A78BFA] uppercase tracking-wider">
+            <span className="rounded-full bg-[#A78BFA]/10 border border-[#A78BFA]/20 px-2.5 py-0.5 text-xs font-bold text-[#A78BFA] uppercase tracking-wider">
               10 Parametrów
             </span>
           </div>
@@ -334,11 +334,11 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   <div className="mt-3.5 transition-all duration-300">
                     <div className="rounded-xl bg-[#1C1C27] border border-[#2A2A3A] p-4 space-y-3">
                       <div>
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-[#4A5568]">Analiza słabości:</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#4A5568]">Analiza słabości:</p>
                         <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed font-semibold">{item.rationale}</p>
                       </div>
                       <div className="border-t border-[#2A2A3A] pt-2.5">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-[#A78BFA]">Rekomendowane ulepszenie:</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">Rekomendowane ulepszenie:</p>
                         <p className="mt-1 text-xs text-[#A78BFA] font-bold leading-relaxed">{item.improvement_suggestion}</p>
                       </div>
                     </div>
@@ -391,7 +391,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 animate-fade-in-up animation-delay-500">
         
         {/* Change Explanations */}
-        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 shadow-sm space-y-3.5">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-3.5">
           <div className="flex items-center gap-2.5 text-[#A78BFA]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -404,7 +404,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Model Fit Notes */}
-        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 shadow-sm space-y-3.5">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-3.5">
           <div className="flex items-center gap-2.5 text-[#A78BFA]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -417,7 +417,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Uncertainty Warnings */}
-        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 shadow-sm space-y-3.5">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-3.5">
           <div className="flex items-center gap-2.5 text-[#F59E0B]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -430,7 +430,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Safety Notes */}
-        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 shadow-sm space-y-3.5">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-3.5">
           <div className="flex items-center gap-2.5 text-[#F87171]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
