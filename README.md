@@ -68,11 +68,13 @@ Przed implementacją AI providera wykonaj zadanie z `MISSIONS_FOR_ANTIGRAVITY.md
 
 ### Plan Limits (Beta)
 
-| Plan | Monthly Analyses | Daily Abuse Limit | Max Prompt Chars | Markdown Export | PDF Export | Batch Audit |
-|---|---|---|---|---|---|---|
-| **Anonymous** | 10 | 3 (env: `ANONYMOUS_DAILY_LIMIT`) | 12,000 | ✗ | ✗ | ✗ |
-| **Free** | 20 | 5 | 12,000 | ✗ | ✗ | ✗ |
-| **Pro** | 500 | 100 | 24,000 | ✓ | ✓ | ✓ |
+| Plan | Monthly Analyses | Daily Abuse Limit | Max Prompt Chars | Markdown Export | TXT Export | PDF Export | Share | Batch Audit |
+|---|---|---|---|---|---|---|---|---|
+| **Anonymous** | 10 | 3 (env: `ANONYMOUS_DAILY_LIMIT`) | 12,000 | ✓ | ✓ | ✗ | ✓ | ✗ |
+| **Free** | 20 | 5 | 12,000 | ✓ | ✓ | ✗ | ✓ | ✗ |
+| **Pro** | 500 | 100 | 24,000 | ✓ | ✓ | ✓ | ✓ | ✗ |
+
+> Batch Audit is **not available in MVP scope** for any plan. Source of truth: `lib/plans/config.ts`.
 
 > Monthly limits are counted via `analysis_completed` events in UTC. They reset on the 1st of each month.
 

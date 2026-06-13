@@ -11,20 +11,33 @@ Deploy these variables in your **Vercel Preview Environment** settings. Do **NOT
 | Variable Name | Required Scope | Type / Validation | Description / Default Behavior |
 | :--- | :---: | :---: | :--- |
 | **`APP_URL`** | All | `string (URL)` | Root URL of the deployment. Defaults to `http://localhost:3000`. |
-| **`COOKIE_SIGNING_SECRET`** | Server | `string` | Cryptographic secret for signing session cookies. Crucial to prevent session hijacking. |
-| **`OPENROUTER_API_KEY`** | Server | `string` | Live OpenRouter API Key. |
+| **`OPENROUTER_API_KEY`** | Server | `string` | Live OpenRouter API Key. Required in production. |
 | **`OPENROUTER_MODEL_ID`** | Server | `string` | Target model ID. Defaults to `deepseek/deepseek-v4-flash`. |
-| **`SUPABASE_SECRET_KEY`** | Server | `string` | Secret Service Role API key for Supabase admin queries. |
+| **`SUPABASE_SECRET_KEY`** | Server | `string` | Service-role key for Supabase admin queries. Never prefix with `NEXT_PUBLIC_`. Required in production. |
 | **`NEXT_PUBLIC_SUPABASE_URL`** | Client/Server | `string (URL)` | Supabase Project API URL. |
-| **`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`** | Client/Server | `string` | Supabase Anon Publishable Key. |
+| **`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`** | Client/Server | `string` | Supabase Anon/Publishable Key (formerly `NEXT_PUBLIC_SUPABASE_ANON_KEY`). |
 | **`ANONYMOUS_DAILY_LIMIT`** | Server | `number (Integer)` | Daily limit of prompt audits allowed per anonymous ID. Defaults to `3`. |
-| **`MAX_PROMPT_CHARS`** | Server | `number (Integer)` | Upper character limit on inputs. Defaults to `12000`. |
+| **`MAX_PROMPT_CHARS`** | Server | `number (Integer)` | Upper character limit on inputs. Defaults to `12000` (plan-specific enforcement done server-side). |
 | **`MIN_PROMPT_CHARS`** | Server | `number (Integer)` | Lower character limit on inputs. Defaults to `20`. |
-| **`SENSITIVE_DATA_BLOCK_HIGH_RISK`** | Server | `boolean` | Activates hard blocker for high-risk keys on preflight. Defaults to `true`. |
-| **`RETENTION_ANONYMOUS_ANALYSIS_DAYS`** | Server | `number (Integer)` | Days to keep unshared analyses in the DB. Defaults to `30`. |
+| **`SENSITIVE_DATA_BLOCK_HIGH_RISK`** | Server | `"true"\|"false"` | Activates hard blocker for high-risk keys on preflight. Defaults to `"true"`. **Must be exact string `"true"` or `"false"` — never empty string.** |
+| **`RETENTION_ANONYMOUS_ANALYSIS_DAYS`** | Server | `number (Integer)` | Days to keep unshared anonymous analyses in the DB. Defaults to `30`. |
 | **`RETENTION_USAGE_EVENT_DAYS`** | Server | `number (Integer)` | Days to keep telemetry log rows in the DB. Defaults to `90`. |
 | **`RETENTION_FEEDBACK_EVENT_DAYS`** | Server | `number (Integer)` | Days to keep feedback opinion rows in the DB. Defaults to `180`. |
 | **`CRON_SECRET`** | Server | `string` | Authorization Bearer token required for trigger-cleanup CRON jobs. |
+| **`RATE_LIMIT_HMAC_SECRET`** | Server | `string` | HMAC-SHA256 secret used to pseudonymize IP addresses for rate limiting. Required in production. |
+| **`AI_PROVIDER_TIMEOUT_MS`** | Server | `number (Integer)` | Milliseconds before an AI provider request is aborted. Defaults to `30000`. Min `1000`, max `60000`. |
+| **`STRIPE_ENABLED`** | Server | `"true"\|"false"` | Enables Stripe billing. **`"false"` is the safe default.** Must be exact string — never coerced from empty. |
+| **`STRIPE_SECRET_KEY`** | Server | `string` | Stripe secret key. Required when `STRIPE_ENABLED=true`. Never prefix with `NEXT_PUBLIC_`. |
+| **`STRIPE_WEBHOOK_SECRET`** | Server | `string` | Stripe webhook signing secret (`whsec_...`). Required when `STRIPE_ENABLED=true`. |
+| **`STRIPE_PRICE_ID_PRO`** | Server | `string` | Stripe Price ID for the Pro subscription. Required when `STRIPE_ENABLED=true`. |
+| **`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`** | Client | `string` | Stripe publishable key (safe for client). |
+| **`ADMIN_EMAILS`** | Server | `string` | Comma-separated admin email addresses that can call simulate-pro in production. |
+
+> [!IMPORTANT]
+> **Boolean Variables**: `STRIPE_ENABLED` and `SENSITIVE_DATA_BLOCK_HIGH_RISK` use strict `"true"` / `"false"` string parsing — **not** `z.coerce.boolean()`. An empty string or omitted value is treated as `undefined` and falls back to the declared default. Never set these to non-string values.
+>
+> **Safe Default**: `STRIPE_ENABLED=false` is the safe default. Do not set to `true` in production until all legal, tax, and DPA blockers are resolved.
+
 
 ---
 
