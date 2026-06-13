@@ -82,7 +82,14 @@ import {
   getUsageCountThisMonthForUser,
   createUsageEvent,
   softDeleteAnalysis,
-  toggleFavoriteAnalysis
+  toggleFavoriteAnalysis,
+  getPromptAnalysesForUser,
+  createShareLink,
+  disableShareLink,
+  createFeedbackEvent,
+  getRecentEventsCount,
+  getRecentFeedbackCount,
+  getUsageCountTodayForUser
 } from '@/lib/supabase/queries'
 
 describe('Identity & Cookie Security Integration Suite', () => {
@@ -214,10 +221,22 @@ describe('Identity & Cookie Security Integration Suite', () => {
     await expect(
       toggleFavoriteAnalysis('11111111-1111-1111-1111-111111111111', '', '99999999-9999-9999-9999-999999999999', true)
     ).rejects.toThrow('Invalid UUID format for ownerAnonymousId: ""')
+
+    await expect(
+      getPromptAnalysesForUser('99999999-9999-9999-9999-999999999999', '')
+    ).rejects.toThrow('Invalid UUID format for ownerAnonymousId: ""')
+
+    await expect(
+      createShareLink('11111111-1111-1111-1111-111111111111', '')
+    ).rejects.toThrow('Invalid UUID format for ownerAnonymousId: ""')
+
+    await expect(
+      disableShareLink('11111111-1111-1111-1111-111111111111', '')
+    ).rejects.toThrow('Invalid UUID format for ownerAnonymousId: ""')
   })
 
-  // 8. no usage event is saved with an empty owner ID
-  it('8. createUsageEvent rejects empty owner_anonymous_id', async () => {
+  // 8. createUsageEvent rejects empty or system sentinel owner_anonymous_id
+  it('8. createUsageEvent rejects empty or system sentinel owner_anonymous_id', async () => {
     await expect(
       createUsageEvent({
         owner_anonymous_id: '',
@@ -225,6 +244,77 @@ describe('Identity & Cookie Security Integration Suite', () => {
         metadata_json: {}
       })
     ).rejects.toThrow('Invalid UUID format for owner_anonymous_id: ""')
+
+    await expect(
+      createUsageEvent({
+        owner_anonymous_id: 'stripe_webhook',
+        event_type: 'test_event',
+        metadata_json: {}
+      })
+    ).rejects.toThrow('Invalid UUID format for owner_anonymous_id: "stripe_webhook"')
+
+    await expect(
+      createUsageEvent({
+        owner_anonymous_id: 'system_webhook',
+        event_type: 'test_event',
+        metadata_json: {}
+      })
+    ).rejects.toThrow('Invalid UUID format for owner_anonymous_id: "system_webhook"')
+  })
+
+  // 8b. fail-closed authorization regression tests
+  it('8b. all queries throw authorization errors when both identities are missing/null', async () => {
+    const targetId = '11111111-1111-1111-1111-111111111111'
+
+    await expect(
+      getPromptAnalysisForOwner(targetId, null, undefined)
+    ).rejects.toThrow('Anonymous access requires a valid owner UUID')
+
+    await expect(
+      getPromptAnalysesForUser(null, null)
+    ).rejects.toThrow('Ownership identity missing')
+
+    await expect(
+      createShareLink(targetId, null, undefined)
+    ).rejects.toThrow('Anonymous access requires a valid owner UUID')
+
+    await expect(
+      disableShareLink(targetId, null, undefined)
+    ).rejects.toThrow('Anonymous access requires a valid owner UUID')
+
+    await expect(
+      softDeleteAnalysis(targetId, null, undefined)
+    ).rejects.toThrow('Anonymous access requires a valid owner UUID')
+
+    await expect(
+      toggleFavoriteAnalysis(targetId, null, undefined, true)
+    ).rejects.toThrow('Anonymous access requires a valid owner UUID')
+
+    await expect(
+      createFeedbackEvent({
+        analysis_id: targetId,
+        rating: 'up',
+        comment: null,
+        user_id: null,
+        owner_anonymous_id: null
+      })
+    ).rejects.toThrow('Ownership identity missing')
+
+    await expect(
+      getRecentEventsCount(null, null, 60)
+    ).rejects.toThrow('Anonymous access requires a valid owner UUID')
+
+    await expect(
+      getRecentFeedbackCount(null, null, 60)
+    ).rejects.toThrow('Anonymous access requires a valid owner UUID')
+
+    await expect(
+      getUsageCountTodayForUser(null, null)
+    ).rejects.toThrow('Anonymous access requires a valid owner UUID')
+
+    await expect(
+      getUsageCountThisMonthForUser(null, null)
+    ).rejects.toThrow('Anonymous access requires a valid owner UUID')
   })
 
   // 9. Supabase SSR cookies are preserved when setting the anonymous cookie

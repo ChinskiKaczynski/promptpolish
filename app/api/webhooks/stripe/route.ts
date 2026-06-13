@@ -9,7 +9,6 @@ import {
   completeCheckoutAttempt
 } from '@/lib/supabase/billing'
 import { recordStripeWebhookFailure } from '@/lib/monitoring/observability'
-import { createUsageEvent } from '@/lib/supabase/queries'
 
 function resolvePlanSlug(priceId: string, status: string, proPriceId: string): string {
   const isProPrice = priceId === proPriceId
@@ -174,28 +173,6 @@ export async function POST(request: Request) {
           if (!saved) {
             throw new Error('Database write failed inside saveSubscription.')
           }
-
-          if (subscription.status === 'active') {
-            await createUsageEvent({
-              owner_anonymous_id: 'stripe_webhook',
-              user_id: userId,
-              event_type: 'subscription_activated',
-              metadata_json: { plan_slug: planSlug, status: subscription.status }
-            })
-            await createUsageEvent({
-              owner_anonymous_id: 'stripe_webhook',
-              user_id: userId,
-              event_type: 'checkout_completed',
-              metadata_json: { plan_slug: planSlug, status: subscription.status }
-            })
-          }
-        } else {
-          await createUsageEvent({
-            owner_anonymous_id: 'stripe_webhook',
-            user_id: userId,
-            event_type: 'checkout_completed',
-            metadata_json: { plan_slug: 'free', status: 'completed' }
-          })
         }
 
         // Mark checkout attempt completed
@@ -299,28 +276,6 @@ export async function POST(request: Request) {
         if (!saved) {
           throw new Error('Database write failed inside saveSubscription.')
         }
-
-        if (subscription.status === 'active') {
-          await createUsageEvent({
-            owner_anonymous_id: 'stripe_webhook',
-            user_id: userId,
-            event_type: 'subscription_activated',
-            metadata_json: { plan_slug: planSlug, status: subscription.status }
-          })
-          await createUsageEvent({
-            owner_anonymous_id: 'stripe_webhook',
-            user_id: userId,
-            event_type: 'checkout_completed',
-            metadata_json: { plan_slug: planSlug, status: subscription.status }
-          })
-        } else if (subscription.status === 'past_due') {
-          await createUsageEvent({
-            owner_anonymous_id: 'stripe_webhook',
-            user_id: userId,
-            event_type: 'subscription_past_due',
-            metadata_json: { plan_slug: planSlug, status: subscription.status }
-          })
-        }
         break
       }
 
@@ -333,32 +288,14 @@ export async function POST(request: Request) {
           })
           return new NextResponse('Missing subscription ID', { status: 400 })
         }
-
-        const userId = customerId ? await getUserIdByStripeCustomerId(customerId) : null
-
         const ok = await cancelSubscriptionInDatabase(subscriptionId, stripeCreated, eventId)
         if (!ok) {
           throw new Error('Database write failed inside cancelSubscriptionInDatabase.')
         }
-
-        await createUsageEvent({
-          owner_anonymous_id: 'stripe_webhook',
-          user_id: userId,
-          event_type: 'subscription_canceled',
-          metadata_json: { plan_slug: 'free', status: 'canceled' }
-        })
         break
       }
 
       case 'invoice.payment_failed': {
-        const userId = customerId ? await getUserIdByStripeCustomerId(customerId) : null
-
-        await createUsageEvent({
-          owner_anonymous_id: 'stripe_webhook',
-          user_id: userId,
-          event_type: 'checkout_failed',
-          metadata_json: { plan_slug: 'pro', status: 'unpaid' }
-        })
         break
       }
     }

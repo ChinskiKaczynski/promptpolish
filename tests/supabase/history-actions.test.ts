@@ -304,12 +304,12 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
     describe('ownership identification and security policies', () => {
       it('throws error if both user ID and anonymous ID are missing/empty', async () => {
         await expect(
-          getPromptAnalysesForUser('', '')
+          getPromptAnalysesForUser(null, null)
         ).rejects.toThrow('Ownership identity missing: either userId or ownerAnonymousId must be provided')
       })
 
       it('supports authenticated identity only, calling RPC with null anonymous ID', async () => {
-        await getPromptAnalysesForUser(MOCK_USER_ID, '')
+        await getPromptAnalysesForUser(MOCK_USER_ID, null)
         expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
           p_user_id: MOCK_USER_ID,
           p_owner_anonymous_id: null
@@ -317,7 +317,7 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
       })
 
       it('supports anonymous identity only, calling RPC with null user ID', async () => {
-        await getPromptAnalysesForUser('', MOCK_OWNER_ID)
+        await getPromptAnalysesForUser(null, MOCK_OWNER_ID)
         expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
           p_user_id: null,
           p_owner_anonymous_id: MOCK_OWNER_ID
@@ -335,7 +335,7 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
 
     describe('PostgreSQL real-database UUID/null compatibility regression tests', () => {
       it('authenticated-only call passes p_owner_anonymous_id: null (never empty string)', async () => {
-        await getPromptAnalysesForUser(MOCK_USER_ID, '')
+        await getPromptAnalysesForUser(MOCK_USER_ID, null)
         expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
           p_user_id: MOCK_USER_ID,
           p_owner_anonymous_id: null
@@ -346,7 +346,7 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
       })
 
       it('anonymous-only call passes p_user_id: null (never empty string)', async () => {
-        await getPromptAnalysesForUser('', MOCK_OWNER_ID)
+        await getPromptAnalysesForUser(null, MOCK_OWNER_ID)
         expect(mockRpc).toHaveBeenLastCalledWith('search_user_prompt_history', expect.objectContaining({
           p_user_id: null,
           p_owner_anonymous_id: MOCK_OWNER_ID
@@ -359,7 +359,7 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
       it('both identities missing are rejected before the RPC call', async () => {
         mockRpc.mockClear()
         await expect(
-          getPromptAnalysesForUser('', '')
+          getPromptAnalysesForUser(null, null)
         ).rejects.toThrow('Ownership identity missing')
         expect(mockRpc).not.toHaveBeenCalled()
       })

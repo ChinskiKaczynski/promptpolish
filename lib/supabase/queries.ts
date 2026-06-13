@@ -96,7 +96,8 @@ export async function getPromptAnalysisForOwner(
     .is('deleted_at', null)
 
   if (userId) {
-    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    const hasValidAnonId = ownerAnonymousId !== undefined && ownerAnonymousId !== null && UUID_REGEX.test(ownerAnonymousId)
+    if (hasValidAnonId) {
       query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
     } else {
       query = query.eq('user_id', userId)
@@ -173,8 +174,15 @@ export async function getPromptAnalysesForUser(
     offset?: number
   }
 ): Promise<PromptAnalysisRow[]> {
-  const parsedUserId = userId && userId.trim() !== '' ? userId : null
-  const parsedOwnerAnonymousId = ownerAnonymousId && ownerAnonymousId.trim() !== '' ? ownerAnonymousId : null
+  if (userId === '') {
+    throw new Error('Invalid UUID format for userId: ""')
+  }
+  if (ownerAnonymousId === '') {
+    throw new Error('Invalid UUID format for ownerAnonymousId: ""')
+  }
+
+  const parsedUserId = userId || null
+  const parsedOwnerAnonymousId = ownerAnonymousId || null
 
   if (!parsedUserId && !parsedOwnerAnonymousId) {
     throw new Error('Ownership identity missing: either userId or ownerAnonymousId must be provided')
@@ -225,11 +233,12 @@ export async function getPromptAnalysesForUser(
   const rows = (data ?? []) as unknown as PromptAnalysisRow[]
 
   // Defensive post-filter to prevent cross-user leakage on shared owner_anonymous_id session
+  const hasValidAnonId = parsedOwnerAnonymousId !== null && UUID_REGEX.test(parsedOwnerAnonymousId)
   return rows.filter(row => {
     if (row.user_id) {
       return parsedUserId ? row.user_id === parsedUserId : false
     }
-    return parsedOwnerAnonymousId ? row.owner_anonymous_id === parsedOwnerAnonymousId : false
+    return hasValidAnonId ? row.owner_anonymous_id === parsedOwnerAnonymousId : false
   })
 }
 
@@ -476,6 +485,11 @@ export async function createFeedbackEvent(
   if (event.user_id) {
     validateUuid(event.user_id, 'user_id')
   }
+  if (event.owner_anonymous_id !== undefined && event.owner_anonymous_id !== null) {
+    validateUuid(event.owner_anonymous_id, 'owner_anonymous_id')
+  } else if (!event.user_id) {
+    throw new Error('Ownership identity missing: either user_id or owner_anonymous_id must be provided')
+  }
 
   const supabase = getSupabaseAdminClient()
 
@@ -579,7 +593,8 @@ export async function createShareLink(
     .is('deleted_at', null)
 
   if (userId) {
-    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    const hasValidAnonId = ownerAnonymousId !== undefined && ownerAnonymousId !== null && UUID_REGEX.test(ownerAnonymousId)
+    if (hasValidAnonId) {
       query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
     } else {
       query = query.eq('user_id', userId)
@@ -632,7 +647,8 @@ export async function disableShareLink(
     .eq('id', analysisId)
 
   if (userId) {
-    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    const hasValidAnonId = ownerAnonymousId !== undefined && ownerAnonymousId !== null && UUID_REGEX.test(ownerAnonymousId)
+    if (hasValidAnonId) {
       query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
     } else {
       query = query.eq('user_id', userId)
@@ -794,7 +810,8 @@ export async function softDeleteAnalysis(
     .eq('id', id)
 
   if (userId) {
-    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    const hasValidAnonId = ownerAnonymousId !== undefined && ownerAnonymousId !== null && UUID_REGEX.test(ownerAnonymousId)
+    if (hasValidAnonId) {
       query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
     } else {
       query = query.eq('user_id', userId)
@@ -841,7 +858,8 @@ export async function toggleFavoriteAnalysis(
     .eq('id', id)
 
   if (userId) {
-    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    const hasValidAnonId = ownerAnonymousId !== undefined && ownerAnonymousId !== null && UUID_REGEX.test(ownerAnonymousId)
+    if (hasValidAnonId) {
       query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
     } else {
       query = query.eq('user_id', userId)

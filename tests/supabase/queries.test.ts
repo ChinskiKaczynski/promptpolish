@@ -262,7 +262,8 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
       const mockFeedback = {
         analysis_id: MOCK_ANALYSIS_ID,
         rating: 'up' as const,
-        comment: 'Nice output'
+        comment: 'Nice output',
+        owner_anonymous_id: MOCK_OWNER_ID
       }
 
       mockSingle.mockResolvedValue({ data: { id: 'efefefef-efef-efef-efef-efefefefefef', ...mockFeedback }, error: null })

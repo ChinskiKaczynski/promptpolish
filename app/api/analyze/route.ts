@@ -43,7 +43,7 @@ const analyzeRequestSchema = z.object({
 export async function POST(request: Request) {
   let selectedProfileSlug: string | undefined
   let workingLanguage: 'pl' | 'en' | undefined
-  let ownerAnonymousId = ''
+  let ownerAnonymousId: string | null = null
   let userId: string | null = null
   let ipHash: string | null = null
   let userAgentHash: string | null = null
