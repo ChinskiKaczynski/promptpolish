@@ -1774,6 +1774,82 @@ describe('Stripe Billing Foundation API Suite', () => {
         status: 'processed'
       })
     })
+
+    it('11. returns 200 billing_disabled when STRIPE_ENABLED is false without calling signature check or database mutations', async () => {
+      const originalStripeEnabled = process.env.STRIPE_ENABLED
+      process.env.STRIPE_ENABLED = 'false'
+      try {
+        const response = await webhookHandler(makeRequestWithHeader('{}'))
+        expect(response.status).toBe(200)
+        const text = await response.text()
+        expect(text).toBe('billing_disabled')
+
+        // Assert that zero DB/Stripe side effects are called
+        expect(claimWebhookEvent).not.toHaveBeenCalled()
+        expect(saveSubscription).not.toHaveBeenCalled()
+        expect(cancelSubscriptionInDatabase).not.toHaveBeenCalled()
+        expect(updateWebhookEventStatus).not.toHaveBeenCalled()
+      } finally {
+        process.env.STRIPE_ENABLED = originalStripeEnabled
+      }
+    })
+
+    it('12. returns 200 ignored for unsupported event type', async () => {
+      const mockEvent = {
+        type: 'charge.refunded',
+        id: 'evt_unsupported_test',
+        data: { object: {} }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.ignored).toBe(true)
+      expect(updateWebhookEventStatus).toHaveBeenCalledWith({
+        event_id: 'evt_unsupported_test',
+        status: 'ignored'
+      })
+    })
+
+    it('13. returns 500 retryable when saveSubscription throws error', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_save_fail',
+        data: {
+          object: {
+            id: 'sub_save_fail',
+            customer: 'cus_save_fail',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_save_fail')
+      vi.mocked(saveSubscription).mockRejectedValueOnce(new Error('DB connection reset'))
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(500)
+      const text = await response.text()
+      expect(text).toBe('Webhook processing error')
+      expect(updateWebhookEventStatus).toHaveBeenCalledWith({
+        event_id: 'evt_save_fail',
+        status: 'failed_retryable',
+        failure_message: 'DB connection reset'
+      })
+    })
+
+    it('14. returns 400 when body is malformed JSON', async () => {
+      mockStripeInstances.webhooks.constructEvent.mockImplementation(() => {
+        throw new Error('Unexpected token { in JSON at position 1')
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader('{ malformed json }', 't=123,v1=sig'))
+      expect(response.status).toBe(400)
+      const text = await response.text()
+      expect(text).toBe('Webhook signature verification failed')
+    })
   })
 })
 

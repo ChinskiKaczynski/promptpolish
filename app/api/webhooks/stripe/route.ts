@@ -19,7 +19,10 @@ function resolvePlanSlug(priceId: string, status: string, proPriceId: string): s
 
 export async function POST(request: Request) {
   if (process.env.STRIPE_ENABLED !== 'true') {
-    return new NextResponse('Stripe webhook disabled', { status: 200 })
+    // Billing is intentionally disabled in this environment.
+    // Acknowledge the event with 200 OK so Stripe does not repeatedly retry the webhook,
+    // but discard it immediately without performing any signature verification, DB mutations, or logging.
+    return new NextResponse('billing_disabled', { status: 200 })
   }
 
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY

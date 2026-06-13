@@ -4,6 +4,15 @@ import { createServerClient } from '@supabase/ssr'
 import { verifyAndExtractId, signId } from '@/lib/identity/anonymous'
 
 export async function middleware(request: NextRequest) {
+  // Defense-in-depth: immediately bypass middleware for M2M endpoints
+  const { pathname } = request.nextUrl
+  if (
+    pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/cron')
+  ) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -89,7 +98,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - api/webhooks (machine-to-machine webhook endpoints)
+     * - api/cron (scheduled cron job endpoints)
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/webhooks|api/cron).*)',
   ],
 }
