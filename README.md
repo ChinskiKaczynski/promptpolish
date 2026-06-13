@@ -31,9 +31,7 @@ pnpm build
 
 ## Ważne
 
-Ten starter nie zawiera prawdziwych sekretów, prawdziwego klienta Gemini ani pełnej integracji Supabase. Ma być bezpiecznym punktem startowym do pracy etapami w Antigravity.
-
-Przed implementacją AI providera wykonaj zadanie z `MISSIONS_FOR_ANTIGRAVITY.md`: check dokumentacji Gemini, changelog i smoke test structured output. Zapisz decyzję w `docs/gemini-integration-decision.md`.
+Projekt integruje się z OpenRouter API (korzystając z modelu `deepseek/deepseek-v4-flash` za pośrednictwem Vercel AI SDK) oraz bazą danych Supabase. Do uruchomienia i przetestowania aplikacji wymagane jest skonfigurowanie kluczy dostępowych w pliku `.env.local`. Decyzje architektoniczne i szczegóły wdrożenia znajdują się w pliku [docs/decision-log.md](file:///d:/AI/promptpolish/docs/decision-log.md).
 
 ## Funkcjonalności V1 Beta (User History & Account)
 

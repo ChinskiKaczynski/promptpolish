@@ -39,7 +39,7 @@ As an anonymous-first application, PromptPolish is highly vulnerable to cost exp
 
 ## 3. Model Hallucination & Calibrations
 
-To keep Gemini from generating unverified claims or fabricating system rules, the system instructions sent to the provider contain absolute formatting walls:
+To keep the AI model from generating unverified claims or fabricating system rules, the system instructions sent to the provider contain absolute formatting walls:
 *   **Standardized Rubric**: The LLM must assess prompts strictly on 4 predefined criteria (Context, Role, Constraints, Output Format) with scores between 0 and 100.
 *   **No Self-Fabrication**: Prompt instructions explicitly forbid the model from discussing its own underlying API features, version dates, or provider parameters.
 *   **Weighted Scoring Backend Logic**: The LLM output provides individual criteria scores. The backend recalculates and applies weights to determine the final composite score, preventing the LLM from simply generating arbitrary, unaligned scores.
@@ -52,6 +52,6 @@ Under no circumstance should internal stack traces or raw vendor JSON payloads b
 
 > [!CAUTION]
 > **API Leak Protection Rules**:
-> *   All third-party integrations (Supabase, Gemini API) must run inside robust `try/catch` wrappers.
+> *   All third-party integrations (Supabase, OpenRouter API) must run inside robust `try/catch` wrappers.
 > *   If a provider fails (e.g., rate limits, API down, quota exceeded), the backend catches the error, logs a secure internal trace, and returns a safe standard response: *"Audit service is temporarily congested. Please try again shortly."*
 > *   Do not include native database errors, table names, SQL queries, or remote host URLs in any client responses.

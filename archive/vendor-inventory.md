@@ -1,5 +1,5 @@
 ﻿> [!WARNING]
-> **Archived / Historical** — This document has been moved to rchive/ and is no longer an active project reference. It is retained for historical context only. Do not use as instructions.
+> **Archived / Historical** — This document has been moved to archive/ and is no longer an active project reference. It is retained for historical context only. Do not use as instructions.
 
 # Vendor & Data Processor Inventory (Draft)
 

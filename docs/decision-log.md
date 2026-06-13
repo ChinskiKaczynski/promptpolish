@@ -55,7 +55,7 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Reason**: Respect user sharing intent and keep public shared links active while adhering to the privacy-committed lifetime limits for other telemetry and unshared items. Exposing a secure endpoint with a `CRON_SECRET` bearer check allows standard, serverless scheduling via Vercel Crons.
 *   **Alternatives Considered**: Cascading deletion for shared records (which would break links in 30 days) or full anonymization (wiping values of columns instead of dropping rows).
 *   **Risk & Mitigation**: Unauthorized route trigger causing data deletion. **Mitigation**: Standardized authorization checks against the server-exclusive `CRON_SECRET` environment variable and introduced a parameter-activated `dryRun` mode for safe previews.
-*   **Sources & Docs**: `docs/retention-policy.md` and standard Vercel Cron practices.
+*   **Sources & Docs**: `archive/retention-policy.md` and standard Vercel Cron practices.
 *   **Revisit When**: Scalability demands or additional shared link features require dedicated pagination/archival states.
 
 ### 6. Paid SaaS Readiness Assessment & Go/No-Go Decision (2026-05-23)
@@ -63,7 +63,7 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Reason**: The remote hosted Supabase tables are not migrated, no live Gemini API keys or cookie secrets are configured in production environment variables, and we have zero actual user telemetry. Initiating user authentication or billing code at this stage directly violates the core roadmap rule: *"do not add auth, billing, pricing, or Stripe before MVP value validation."*
 *   **Alternatives Considered**: Proceeding directly with Stage 1 (Supabase Auth & User profiles) in parallel with launching the MVP.
 *   **Risk & Mitigation**: Delayed monetization. **Mitigation**: Launching the free anonymous MVP requires negligible operational costs (~$0.000315/run), builds an initial organic user base, and provides the essential metrics (e.g. >30% copy rate and repeat usage) to define high-converting premium pricing tiers.
-*   **Sources & Docs**: `docs/paid-readiness-report.md` and `paid-saas-roadmap_v1.1.md`.
+*   **Sources & Docs**: `archive/paid-readiness-report.md` and `archive/v1.1-auth-history-plan.md`.
 *   **Revisit When**: Upon completing 50–100 real anonymous analyses and verifying a positive copy rate (>30%) and repeat usage signals.
 
 ### 7. Stripe Billing & Subscription Plan Implementation Decision (2026-05-24)
@@ -71,7 +71,7 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Reason**: Minimizes technical proration overhead and database layout complexity. Eliminates fraud and trial abuse by relying on the robust, anonymous free tier as a permanent, zero-friction trial. Ensures security by verifying entitlements strictly on the server side and isolating Stripe secrets from client bundles.
 *   **Alternatives Considered**: Credit packages (rejected due to user transactional friction), dual monthly/annual billing (rejected for launch velocity), and a 7-day credit-card-required trial (rejected to prevent check-out abandonment).
 *   **Risk & Mitigation**: Webhook timeouts (mitigated by quick DB writes and immediate 200 OK responses within 3 seconds), Vercel serverless request constraints (mitigated by parsing the raw body via `req.text()` for signature checks), and legal/VAT compliance (mitigated by proposing Stripe Tax and deferring production rollout until formal legal/tax reviews are complete).
-*   **Sources & Docs**: `docs/billing-decision.md`, Context7 documentation for `/websites/stripe`, `/supabase/supabase`, `/websites/vercel`.
+*   **Sources & Docs**: `archive/billing-decision.md`, Context7 documentation for `/websites/stripe`, `/supabase/supabase`, `/websites/vercel`.
 *   **Revisit When**: Upon successful integration of Supabase Auth (Stage 1 of SaaS Roadmap) and acquisition of stable premium waitlist telemetry.
 
 ### 8. Migration to OpenRouter and DeepSeek v4 Flash (2026-05-24)
@@ -79,7 +79,7 @@ Revisit When: [Conditions under which we should reconsider this choice]
 *   **Reason**: DeepSeek v4 Flash provides exceptional cost-to-performance efficiency and outstanding capabilities in understanding PL/EN prompt calibrations while maintaining low response latency.
 *   **Alternatives Considered**: Direct Google Gemini API integration (decommissioned due to target model preferences).
 *   **Risk & Mitigation**: Remote provider latency or key rotation requirements. **Mitigation**: Standardized key rotation processes documented in SOP-01, and dynamic model profile resolution through database configs.
-*   **Sources & Docs**: `@openrouter/ai-sdk-provider` documentation and `docs/openrouter-integration-decision.md`.
+*   **Sources & Docs**: `@openrouter/ai-sdk-provider` documentation and `archive/openrouter-integration-decision.md`.
 
 
 
