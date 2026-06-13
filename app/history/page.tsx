@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
@@ -11,6 +12,14 @@ const HistoryFilters = nextDynamic(() => import('@/components/history/history-fi
 const HistoryClientActions = nextDynamic(() => import('@/components/history/history-client-actions').then((mod) => mod.HistoryClientActions))
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Historia Analiz — PromptPolish',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 interface HistoryPageProps {
   searchParams: Promise<{
@@ -135,7 +144,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
           <h1 className="text-3xl font-bold tracking-tight text-[#E2E8F0] font-heading">
             Historia analiz
           </h1>
-          <p className="text-xs sm:text-sm text-[#4A5568] font-medium">
+          <p className="text-xs sm:text-sm text-[#8290A2] font-medium">
             Przeszukuj swoje analizy, filtruj wyniki inżynieryjne i zarządzaj swoimi ulubionymi promptami.
           </p>
         </div>
@@ -180,7 +189,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                 </svg>
               </div>
               <h4 className="mt-4 text-base font-bold text-[#E2E8F0] font-heading">Nie masz jeszcze zapisanych analiz</h4>
-              <p className="mt-2 text-sm text-[#4A5568] max-w-sm mx-auto">
+              <p className="mt-2 text-sm text-[#8290A2] max-w-sm mx-auto">
                 Nie znaleziono żadnych zapytań spełniających obecne filtry. Przejdź do analizatora, aby dodać nowy prompt.
               </p>
               <div className="mt-6">
@@ -224,14 +233,14 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                             {analysis.audit_mode}
                           </span>
                         )}
-                        <span className="text-xs font-semibold text-[#4A5568]">{date}</span>
+                        <span className="text-xs font-semibold text-[#8290A2]">{date}</span>
                       </div>
 
                       <h3 className="mt-3 text-sm font-bold text-[#E2E8F0] font-heading truncate">
                         {analysis.title || `Audyt Promptu #${history.length - index}`}
                       </h3>
 
-                      <p className="mt-1 text-xs text-[#4A5568] leading-relaxed truncate max-w-xl">
+                      <p className="mt-1 text-xs text-[#8290A2] leading-relaxed truncate max-w-xl">
                         {scrubSensitiveData(
                           analysis.input_prompt.length > 120
                             ? analysis.input_prompt.slice(0, 120) + '...'
@@ -243,7 +252,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                     <div className="flex items-center gap-4 shrink-0 justify-between sm:justify-end border-t sm:border-t-0 border-[#1E1E2E] pt-3 sm:pt-0">
                       {/* Score Indicator */}
                       <div className="text-left sm:text-right pr-4">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-[#4A5568] block">Wynik</span>
+                        <span className="text-xs font-semibold uppercase tracking-wider text-[#8290A2] block">Wynik</span>
                         <span
                           className={`mt-0.5 text-base font-black tracking-tight block ${
                             analysis.overall_score >= 80

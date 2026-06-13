@@ -17,6 +17,7 @@ export function ShareSettings({
   const [shareToken, setShareToken] = useState<string | null>(shareTokenInitially)
   const [isShareLinkCopied, setIsShareLinkCopied] = useState(false)
   const [shareError, setShareError] = useState<string | null>(null)
+  const [isPending, setIsPending] = useState(false)
 
   const shareUrl = typeof window !== 'undefined' && shareToken
     ? `${window.location.origin}/share/${shareToken}`
@@ -40,8 +41,9 @@ export function ShareSettings({
   }, [isShareLinkCopied])
 
   const handleToggleShare = async () => {
-    if (!analysisId) return
+    if (!analysisId || isPending) return
     setShareError(null)
+    setIsPending(true)
     const targetState = !isShareEnabled
 
     try {
@@ -77,6 +79,8 @@ export function ShareSettings({
       const errorObject = err instanceof Error ? err : new Error(String(err))
       console.error(errorObject)
       setShareError(errorObject.message)
+    } finally {
+      setIsPending(false)
     }
   }
 
@@ -87,7 +91,7 @@ export function ShareSettings({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-base font-bold text-[#E2E8F0]">Udostępnij raport</h3>
-          <p className="mt-1 text-xs text-[#4A5568]">
+          <p className="mt-1 text-xs text-[#8290A2]">
             Stwórz publiczny link. Domyślnie wyłączone (prywatny). Każdy z linkiem zobaczy treść promptu i raport.
           </p>
         </div>
@@ -95,7 +99,11 @@ export function ShareSettings({
         {/* Toggle Switch */}
         <button
           onClick={handleToggleShare}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+          role="switch"
+          aria-checked={isShareEnabled}
+          aria-label="Udostępnij raport publicznie"
+          disabled={isPending}
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
             isShareEnabled ? 'bg-[#7C3AED]' : 'bg-[#2A2A3A]'
           }`}
         >
@@ -109,14 +117,15 @@ export function ShareSettings({
 
       <div className="mt-6">
         {shareError && (
-          <p className="text-xs font-semibold text-[#F87171] mb-2">⚠️ {shareError}</p>
+          <p role="alert" className="text-xs font-semibold text-[#F87171] mb-2">⚠️ {shareError}</p>
         )}
 
         {isShareEnabled && shareToken ? (
           <div className="space-y-2.5 animate-fadeIn">
-            <label className="text-xs font-bold uppercase tracking-wider text-[#94A3B8] block">Publiczny adres URL:</label>
+            <label htmlFor="share-url-input" className="text-xs font-bold uppercase tracking-wider text-[#94A3B8] block">Publiczny adres URL:</label>
             <div className="flex gap-2">
               <input
+                id="share-url-input"
                 type="text"
                 readOnly
                 value={shareUrl}
@@ -143,7 +152,7 @@ export function ShareSettings({
           </div>
         ) : (
           <div className="rounded-lg border border-dashed border-[#2A2A3A] p-4 text-center">
-            <span className="text-xs font-medium text-[#4A5568]">
+            <span className="text-xs font-medium text-[#8290A2]">
               Włącz przełącznik, aby wygenerować link udostępniania.
             </span>
           </div>

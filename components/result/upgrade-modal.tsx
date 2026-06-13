@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 
 interface UpgradeModalProps {
@@ -9,16 +10,34 @@ interface UpgradeModalProps {
 }
 
 export function UpgradeModal({ isOpen, onClose, featureName }: UpgradeModalProps) {
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/80 backdrop-blur-md transition-all duration-300">
+    <div 
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="upgrade-modal-title"
+      aria-describedby="upgrade-modal-desc"
+      className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/80 backdrop-blur-md transition-all duration-300"
+    >
       <div className="relative w-full max-w-md rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 rounded-xl border border-[#2A2A3A] bg-[#0C0C10] p-2 text-[#4A5568] hover:text-[#E2E8F0] transition cursor-pointer"
+          aria-label="Zamknij okno"
+          className="absolute right-6 top-6 rounded-xl border border-[#2A2A3A] bg-[#0C0C10] p-2 text-[#8290A2] hover:text-[#E2E8F0] transition cursor-pointer"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -35,10 +54,10 @@ export function UpgradeModal({ isOpen, onClose, featureName }: UpgradeModalProps
         {/* Text */}
         <div className="mt-6 text-center space-y-2">
           <span className="text-xs font-mono font-bold uppercase tracking-widest text-[#A78BFA]">Funkcja Premium Pro</span>
-          <h3 className="text-xl font-extrabold tracking-tight text-[#E2E8F0] font-heading">
+          <h3 id="upgrade-modal-title" className="text-xl font-extrabold tracking-tight text-[#E2E8F0] font-heading">
             Odblokuj {featureName}
           </h3>
-          <p className="text-xs leading-relaxed text-[#94A3B8] px-2">
+          <p id="upgrade-modal-desc" className="text-xs leading-relaxed text-[#94A3B8] px-2">
             Ta funkcja jest zarezerwowana dla subskrybentów planu **Pro**. Podnieś jakość swojej pracy dzięki rozszerzonym narzędziom inżynierii promptów.
           </p>
         </div>
@@ -51,7 +70,7 @@ export function UpgradeModal({ isOpen, onClose, featureName }: UpgradeModalProps
           </div>
           <div className="flex items-center gap-3 text-xs">
             <span className="text-[#A78BFA] text-sm font-bold">✓</span>
-            <span className="text-[#94A3B8]">Zwiększony limit do 500 analiz miesięcznie</span>
+            <span className="text-[#94A3B8]">Zwiększony limit do 500 analyses miesięcznie</span>
           </div>
           <div className="flex items-center gap-3 text-xs">
             <span className="text-[#A78BFA] text-sm font-bold">✓</span>

@@ -1,5 +1,14 @@
+import type { Metadata } from 'next'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
+
+export const metadata: Metadata = {
+  title: 'Regulamin (Draft) — PromptPolish',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default function TermsPage() {
   return (

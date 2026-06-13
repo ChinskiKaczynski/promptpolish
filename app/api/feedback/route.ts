@@ -5,27 +5,12 @@ import { getAuthUser } from '@/lib/identity/auth'
 import {
   getPromptAnalysisForOwner,
   createFeedbackEvent,
-  createUsageEvent
+  createUsageEvent,
+  getRecentFeedbackCount
 } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
 
 export const dynamic = 'force-dynamic'
-
-/**
- * POST /api/feedback
- *
- * Saves a thumbs-up/down rating (and optional short comment) for a prompt analysis.
- *
- * Ownership rule: the caller must own the analysis (verified via signed cookie
- * against the `owner_anonymous_id` column). Non-owners and share-link viewers
- * receive 403. Feedback on shared /share/[token] views is intentionally disabled
- * in the UI (mode="share" hides the feedback block) and enforced here.
- *
- * Privacy:
- * - Only analysis_id, rating, and comment are stored.
- * - No IP address, user-agent, or prompt content is collected.
- * - Comment is capped at 500 characters server-side.
- */
 
 const feedbackSchema = z.object({
   analysis_id: z.string().uuid('analysis_id must be a valid UUID'),
@@ -77,11 +62,25 @@ export async function POST(request: Request) {
       )
     }
 
-    // 3. Verify ownership — non-owners and share viewers cannot submit feedback
+    const userId = user?.id || null
+
+    // 3. Rate limiting check (max 10 feedbacks per 60 seconds per identity)
+    const recentCount = await getRecentFeedbackCount(ownerAnonymousId || '', userId, 60)
+    if (recentCount >= 10) {
+      return NextResponse.json(
+        {
+          error: 'rate_limit_exceeded',
+          message: 'Too many requests. Please try again later.'
+        },
+        { status: 429 }
+      )
+    }
+
+    // 4. Verify ownership — non-owners and share viewers cannot submit feedback
     const ownedRecord = await getPromptAnalysisForOwner(
       analysis_id,
       ownerAnonymousId || '',
-      user?.id
+      userId || undefined
     )
 
     if (!ownedRecord) {
@@ -94,11 +93,13 @@ export async function POST(request: Request) {
       )
     }
 
-    // 4. Persist feedback event
+    // 5. Persist/upsert feedback event with correct identity values
     const saved = await createFeedbackEvent({
       analysis_id,
       rating,
-      comment: comment ?? null
+      comment: comment ?? null,
+      user_id: userId,
+      owner_anonymous_id: ownerAnonymousId || null
     })
 
     if (!saved) {
@@ -114,7 +115,7 @@ export async function POST(request: Request) {
     // Telemetry: record feedback_submitted event
     await createUsageEvent({
       owner_anonymous_id: ownerAnonymousId || '',
-      user_id: ownedRecord.user_id,
+      user_id: userId,
       event_type: 'feedback_submitted',
       metadata_json: {
         analysis_id,

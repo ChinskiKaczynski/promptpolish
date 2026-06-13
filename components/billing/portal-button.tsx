@@ -49,8 +49,8 @@ export function PortalButton({ lang = 'pl' }: PortalButtonProps) {
       >
         {isLoading ? (
           <>
-            <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#4A5568] border-t-transparent" />
-            <span className="text-[#4A5568]">{lang === 'pl' ? 'Ładowanie portalu...' : 'Loading portal...'}</span>
+            <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#8290A2] border-t-transparent" />
+            <span className="text-[#8290A2]">{lang === 'pl' ? 'Ładowanie portalu...' : 'Loading portal...'}</span>
           </>
         ) : (
           <span>{lang === 'pl' ? 'Zarządzaj subskrypcją i rozliczeniami' : 'Manage subscription & billing'}</span>

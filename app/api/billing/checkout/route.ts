@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { getAuthUser } from '@/lib/identity/auth'
-import { getStripeCustomer, saveStripeCustomer } from '@/lib/supabase/billing'
+import { 
+  getStripeCustomer, 
+  saveStripeCustomer, 
+  getSubscriptionByUserId,
+  claimCheckoutAttempt,
+  updateCheckoutAttemptStatus
+} from '@/lib/supabase/billing'
 import { checkProductionEnv } from '@/lib/env/server'
 import { createUsageEvent } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 
-export async function POST(request?: Request) {
+export async function POST() {
   try {
-    // Explicitly ignore request payload to prevent client-chosen price ID overrides
-    if (request) {
-      // noop
-    }
 
     if (process.env.STRIPE_ENABLED !== 'true') {
       return NextResponse.json(
@@ -69,16 +71,57 @@ export async function POST(request?: Request) {
     const customerRow = await getStripeCustomer(user.id)
     let stripeCustomerId = customerRow?.stripe_customer_id || null
 
+    // Detect existing active-equivalent subscription
+    const existingSub = await getSubscriptionByUserId(user.id)
+    if (existingSub) {
+      const isTrialing = existingSub.status === 'trialing'
+      const isPastDue = existingSub.status === 'past_due'
+      const isCanceledFuture = existingSub.status === 'canceled' && existingSub.cancel_at_period_end && new Date(existingSub.current_period_end) > new Date()
+      const isActive = existingSub.status === 'active'
+
+      if (isActive || isTrialing || isPastDue || isCanceledFuture) {
+        // Return existing-subscription/billing-portal flow
+        if (stripeCustomerId) {
+          try {
+            const portalSession = await stripe.billingPortal.sessions.create({
+              customer: stripeCustomerId,
+              return_url: `${appUrl}/pricing`
+            })
+            return NextResponse.json({
+              status: 'existing_subscription',
+              portalUrl: portalSession.url
+            })
+          } catch (portalErr) {
+            console.error('Failed to create portal session for existing subscription:', portalErr)
+          }
+        }
+        return NextResponse.json(
+          {
+            error: 'active_subscription_exists',
+            message: 'Posiadasz już aktywną subskrypcję. Możesz nią zarządzać w panelu klienta.'
+          },
+          { status: 400 }
+        )
+      }
+    }
+
     if (!stripeCustomerId) {
       try {
         const customer = await stripe.customers.create({
           email: user.email || '',
           metadata: { userId: user.id }
+        }, {
+          idempotencyKey: `stripe-customer-creation-${user.id}`
         })
         stripeCustomerId = customer.id
-        await saveStripeCustomer(user.id, stripeCustomerId)
+        
+        // Persist and verify customer mapping in the local database before starting checkout
+        const saved = await saveStripeCustomer(user.id, stripeCustomerId)
+        if (!saved) {
+          throw new Error('Failed to save Stripe customer mapping to local database.')
+        }
       } catch (err) {
-        console.error('Failed to create Stripe customer:', err)
+        console.error('Failed to create or save Stripe customer:', err)
         return NextResponse.json(
           {
             error: 'stripe_error',
@@ -89,22 +132,110 @@ export async function POST(request?: Request) {
       }
     }
 
-    // Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer: stripeCustomerId,
-      line_items: [
-        {
-          price: stripePriceId,
-          quantity: 1
-        }
-      ],
-      success_url: `${appUrl}/pricing?session_id={CHECKOUT_SESSION_ID}&upgrade=success`,
-      cancel_url: `${appUrl}/pricing?upgrade=cancel`
+    // Claim or retrieve a server-side checkout attempt to deduplicate Checkout Sessions
+    const claimAttempt = await claimCheckoutAttempt({
+      user_id: user.id,
+      price_id: stripePriceId,
+      stripe_customer_id: stripeCustomerId
     })
 
-    if (!session.url) {
-      throw new Error('Stripe failed to return a valid Checkout redirect URL.')
+    if (!claimAttempt) {
+      return NextResponse.json(
+        {
+          error: 'internal_error',
+          message: 'Wystąpił błąd przy inicjowaniu płatności. Spróbuj ponownie.'
+        },
+        { status: 500 }
+      )
+    }
+
+    if (claimAttempt.status === 'checkout_in_progress') {
+      return NextResponse.json(
+        {
+          error: 'checkout_in_progress',
+          message: 'Inna transakcja jest w toku. Spróbuj ponownie za chwilę.'
+        },
+        { status: 409 }
+      )
+    }
+
+    if (claimAttempt.status === 'ready' && claimAttempt.stripe_checkout_session_id) {
+      try {
+        const existingSession = await stripe.checkout.sessions.retrieve(claimAttempt.stripe_checkout_session_id)
+        if (existingSession && existingSession.url && existingSession.status === 'open') {
+          return NextResponse.json({ checkoutUrl: existingSession.url })
+        } else {
+          // If expired or completed on Stripe side, mark it appropriately in the DB and fall through
+          await updateCheckoutAttemptStatus({
+            attempt_id: claimAttempt.attempt_id,
+            status: existingSession.status === 'complete' ? 'completed' : 'expired'
+          })
+        }
+      } catch (err) {
+        console.warn('Failed to retrieve existing session from Stripe, marking as expired:', err)
+        await updateCheckoutAttemptStatus({
+          attempt_id: claimAttempt.attempt_id,
+          status: 'expired'
+        })
+      }
+    }
+
+    // Re-verify checkout status after potential status updates
+    const finalClaim = claimAttempt.status === 'ready' ? await claimCheckoutAttempt({
+      user_id: user.id,
+      price_id: stripePriceId,
+      stripe_customer_id: stripeCustomerId
+    }) : claimAttempt;
+
+    if (!finalClaim || finalClaim.status === 'checkout_in_progress') {
+      return NextResponse.json(
+        {
+          error: 'checkout_in_progress',
+          message: 'Inna transakcja jest w toku. Spróbuj ponownie za chwilę.'
+        },
+        { status: 409 }
+      )
+    }
+
+    let session: Stripe.Checkout.Session
+    try {
+      const sessionOpts: Stripe.Checkout.SessionCreateParams = {
+        mode: 'subscription',
+        customer: stripeCustomerId,
+        line_items: [
+          {
+            price: stripePriceId,
+            quantity: 1
+          }
+        ],
+        success_url: `${appUrl}/pricing?session_id={CHECKOUT_SESSION_ID}&upgrade=success`,
+        cancel_url: `${appUrl}/pricing?upgrade=cancel`
+      }
+
+      // Stripe Session Idempotency Key is derived strictly from the server-controlled attempt ID
+      session = await stripe.checkout.sessions.create(sessionOpts, {
+        idempotencyKey: `checkout-session-${finalClaim.attempt_id}`
+      })
+
+      if (!session.url) {
+        throw new Error('Stripe failed to return a valid Checkout redirect URL.')
+      }
+
+      // Mark the attempt as ready
+      await updateCheckoutAttemptStatus({
+        attempt_id: finalClaim.attempt_id,
+        status: 'ready',
+        session_id: session.id
+      })
+
+    } catch (err) {
+      // Release or fail the attempt in DB so user can retry
+      await updateCheckoutAttemptStatus({
+        attempt_id: finalClaim.attempt_id,
+        status: 'failed',
+        failure_code: err instanceof Error ? err.message : String(err)
+      })
+      throw err
     }
 
     // Resolve owner anonymous id for telemetry

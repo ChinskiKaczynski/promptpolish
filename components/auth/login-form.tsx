@@ -84,7 +84,7 @@ export function LoginForm() {
         <button
           type="button"
           className={`flex-1 rounded-md py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
-            !isSignUp ? 'bg-[#1C1C27] text-[#E2E8F0] border border-[#3A3A52]' : 'text-[#4A5568] hover:text-[#94A3B8]'
+            !isSignUp ? 'bg-[#1C1C27] text-[#E2E8F0] border border-[#3A3A52]' : 'text-[#8290A2] hover:text-[#94A3B8]'
           }`}
           onClick={() => {
             setIsSignUp(false)
@@ -97,7 +97,7 @@ export function LoginForm() {
         <button
           type="button"
           className={`flex-1 rounded-md py-2.5 text-center text-xs font-bold transition-all cursor-pointer ${
-            isSignUp ? 'bg-[#1C1C27] text-[#E2E8F0] border border-[#3A3A52]' : 'text-[#4A5568] hover:text-[#94A3B8]'
+            isSignUp ? 'bg-[#1C1C27] text-[#E2E8F0] border border-[#3A3A52]' : 'text-[#8290A2] hover:text-[#94A3B8]'
           }`}
           onClick={() => {
             setIsSignUp(true)
@@ -127,7 +127,7 @@ export function LoginForm() {
               placeholder="np. Jan Kowalski"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-1.5 w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-3 text-sm text-[#E2E8F0] placeholder:text-[#4A5568] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#A78BFA]/20 focus:outline-none transition-all"
+              className="mt-1.5 w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-3 text-sm text-[#E2E8F0] placeholder:text-[#8290A2] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#A78BFA]/20 focus:outline-none transition-all"
             />
           </div>
         )}
@@ -143,7 +143,7 @@ export function LoginForm() {
             placeholder="twoj@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-3 text-sm text-[#E2E8F0] placeholder:text-[#4A5568] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#A78BFA]/20 focus:outline-none transition-all"
+            className="mt-1.5 w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-3 text-sm text-[#E2E8F0] placeholder:text-[#8290A2] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#A78BFA]/20 focus:outline-none transition-all"
           />
         </div>
 
@@ -159,18 +159,18 @@ export function LoginForm() {
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-3 text-sm text-[#E2E8F0] placeholder:text-[#4A5568] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#A78BFA]/20 focus:outline-none transition-all"
+            className="mt-1.5 w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-3 text-sm text-[#E2E8F0] placeholder:text-[#8290A2] focus:border-[#7C3AED] focus:ring-2 focus:ring-[#A78BFA]/20 focus:outline-none transition-all"
           />
         </div>
 
         {errorMsg && (
-          <div className="rounded-lg border border-[#F87171]/30 bg-[#F87171]/8 p-4 text-xs font-medium text-[#F87171]">
+          <div role="alert" className="rounded-lg border border-[#F87171]/30 bg-[#F87171]/8 p-4 text-xs font-medium text-[#F87171]">
             {errorMsg}
           </div>
         )}
 
         {successMsg && (
-          <div className="rounded-lg border border-[#6EE7B7]/30 bg-[#6EE7B7]/8 p-4 text-xs font-medium text-[#6EE7B7] leading-relaxed">
+          <div role="status" aria-live="polite" className="rounded-lg border border-[#6EE7B7]/30 bg-[#6EE7B7]/8 p-4 text-xs font-medium text-[#6EE7B7] leading-relaxed">
             {successMsg}
           </div>
         )}

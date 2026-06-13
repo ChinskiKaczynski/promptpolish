@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getAuthUser } from '@/lib/identity/auth'
@@ -17,6 +18,14 @@ import { PLAN_LIMITS } from '@/lib/plans/config'
 import { UsageMeter } from '@/components/plans/usage-meter'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Konto — PromptPolish',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default async function AccountPage() {
   // 1. Resolve secure server-side authenticated user session.
@@ -78,7 +87,7 @@ export default async function AccountPage() {
         <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#4A5568]">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#8290A2]">
                 Panel użytkownika
               </p>
 
@@ -86,13 +95,13 @@ export default async function AccountPage() {
                 Witaj, {profile?.display_name || profile?.email || 'Użytkowniku'}!
               </h2>
 
-              <p className="mt-1 text-xs text-[#4A5568]">{profile?.email}</p>
+              <p className="mt-1 text-xs text-[#8290A2]">{profile?.email}</p>
             </div>
 
             <div className="flex items-center gap-3">
               {planSlug === 'free' ? (
                 <div className="rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-2 text-center">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-[#4A5568] block">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-[#8290A2] block">
                     Twój plan
                   </span>
                   <span className="mt-0.5 text-xs font-bold text-[#94A3B8] uppercase tracking-wide block">
@@ -119,7 +128,7 @@ export default async function AccountPage() {
             <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">
               Statystyki użycia i limity
             </h3>
-            <p className="mt-1 text-xs text-[#4A5568] font-medium">
+            <p className="mt-1 text-xs text-[#8290A2] font-medium">
               Podsumowanie przeprowadzonych analiz w bieżącym miesiącu UTC.
             </p>
           </div>
@@ -150,7 +159,7 @@ export default async function AccountPage() {
             <div className="mt-6 space-y-6">
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="rounded-lg border border-[#2A2A3A] bg-[#0C0C10] p-4">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#4A5568] block">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#8290A2] block">
                     Status subskrypcji
                   </span>
 
@@ -187,8 +196,8 @@ export default async function AccountPage() {
                       </>
                     ) : (
                       <>
-                        <span className="h-2 w-2 rounded-full bg-[#4A5568]" />
-                        <span className="text-xs font-bold text-[#4A5568]">
+                        <span className="h-2 w-2 rounded-full bg-[#8290A2]" />
+                        <span className="text-xs font-bold text-[#8290A2]">
                           Wygasła ({subscription.status})
                         </span>
                       </>
@@ -197,7 +206,7 @@ export default async function AccountPage() {
                 </div>
 
                 <div className="rounded-lg border border-[#2A2A3A] bg-[#0C0C10] p-4">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#4A5568] block">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#8290A2] block">
                     Okres rozliczeniowy
                   </span>
                   <span className="mt-2 text-xs font-bold text-[#94A3B8] block">
@@ -207,7 +216,7 @@ export default async function AccountPage() {
                 </div>
 
                 <div className="rounded-lg border border-[#2A2A3A] bg-[#0C0C10] p-4">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#4A5568] block">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#8290A2] block">
                     {subscription.cancel_at_period_end
                       ? 'Wygaśnięcie subskrypcji'
                       : 'Następna płatność'}
@@ -247,7 +256,7 @@ export default async function AccountPage() {
               )}
 
               <div className="pt-4 border-t border-[#1E1E2E] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <p className="text-xs text-[#4A5568] font-semibold">
+                <p className="text-xs text-[#8290A2] font-semibold">
                   Zarządzaj kartami płatniczymi, sprawdzaj faktury VAT lub anuluj/odnów
                   subskrypcję w bezpiecznym panelu Stripe Customer Portal.
                 </p>
@@ -288,7 +297,7 @@ export default async function AccountPage() {
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex h-2 w-2 rounded-full bg-[#4A5568]" />
+                  <span className="inline-flex h-2 w-2 rounded-full bg-[#8290A2]" />
                   <p className="text-xs sm:text-sm font-bold text-[#E2E8F0] font-heading">
                     Korzystasz z bezpłatnego planu Free
                   </p>

@@ -53,6 +53,14 @@ function extractSecretValue(match: string, ruleId: string): string {
   if (ruleId === 'bearer-token') {
     return match.replace(/^Bearer\s+/i, '').trim()
   }
+  if (ruleId === 'database-url') {
+    // Extract everything after the :// and before the @ (the password)
+    const matches = match.match(/:\/\/([^:]+):([^@]+)@/)
+    if (matches && matches[2]) {
+      return matches[2].trim()
+    }
+    return match.trim()
+  }
   return match.trim()
 }
 
@@ -66,6 +74,10 @@ export function redactSecret(value: string, ruleId?: string): string {
 
   if (ruleId === 'private-key-block') {
     return '-----BEGIN PRIVATE KEY----- … -----END PRIVATE KEY-----'
+  }
+
+  if (ruleId === 'database-url') {
+    return value.replace(/(:\/\/[^:]+:)[^@]+(@)/, '$1[redacted]$2')
   }
 
   const secretValue = extractSecretValue(value, ruleId)
@@ -151,4 +163,59 @@ function dedupeFindings(findings: SensitiveDataFinding[]): SensitiveDataFinding[
     seen.add(key)
     return true
   })
+}
+
+export type ScanFieldsResult = {
+  riskLevel: SensitiveRiskLevel
+  findings: (SensitiveDataFinding & { field: string })[]
+  redactedValues: Record<string, string>
+}
+
+/**
+ * Scans every user-controlled string field on the server before AI provider or DB write.
+ */
+export function scanRequestFields(
+  fields: Record<string, string | null | undefined>,
+  config?: DetectionConfig
+): ScanFieldsResult {
+  let overallRisk: SensitiveRiskLevel = 'none'
+  const allFindings: (SensitiveDataFinding & { field: string })[] = []
+  const redactedValues: Record<string, string> = {}
+
+  for (const [fieldName, value] of Object.entries(fields)) {
+    if (!value || typeof value !== 'string') {
+      redactedValues[fieldName] = value || ''
+      continue
+    }
+
+    const detection = detectSensitiveData(value, config)
+    
+    const findingsWithField = detection.findings.map(finding => ({
+      ...finding,
+      field: fieldName
+    }))
+    
+    allFindings.push(...findingsWithField)
+
+    if (riskRank[detection.riskLevel] > riskRank[overallRisk]) {
+      overallRisk = detection.riskLevel
+    }
+
+    // Redact high-risk matches in the field value for telemetry/previews
+    let redactedVal = value
+    for (const finding of detection.findings) {
+      if (finding.riskLevel === 'high') {
+        // Redact the whole matched pattern in the preview
+        redactedVal = '[redacted due to high risk sensitive data]'
+        break
+      }
+    }
+    redactedValues[fieldName] = redactedVal
+  }
+
+  return {
+    riskLevel: overallRisk,
+    findings: allFindings,
+    redactedValues
+  }
 }

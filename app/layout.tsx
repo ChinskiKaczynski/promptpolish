@@ -1,6 +1,28 @@
 import type { Metadata } from 'next'
+import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import dynamic from 'next/dynamic'
 import './globals.css'
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+})
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-plus-jakarta',
+  display: 'swap',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '700'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
+})
 
 const AuthListener = dynamic(() => import('@/components/auth/auth-listener').then((mod) => mod.AuthListener))
 
@@ -39,7 +61,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pl">
+    <html lang="pl" className={`${spaceGrotesk.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased relative">
         <div className="fixed inset-0 pointer-events-none overflow-hidden -z-50 select-none">
           <div className="absolute top-[8%] left-[15%] w-[500px] h-[500px] rounded-full bg-violet-900/20 blur-[140px] animate-blob-1" />

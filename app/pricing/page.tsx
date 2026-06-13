@@ -64,7 +64,7 @@ export default async function PricingPage() {
 
         {/* Beta Notice Banner - Minimized & Inside Main */}
         {!stripeEnabled && (
-          <div className="mt-6 mb-2 flex items-center justify-center gap-2 text-xs text-[#4A5568] font-mono">
+          <div className="mt-6 mb-2 flex items-center justify-center gap-2 text-xs text-[#8290A2] font-mono">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#F97316] shrink-0"></span>
             Beta — płatności tymczasowo niedostępne. Dostępna symulacja Pro po zalogowaniu.
           </div>
@@ -78,7 +78,7 @@ export default async function PricingPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-bold text-[#E2E8F0] font-heading">{freeLimits.name}</h3>
-                  <p className="mt-2 text-xs text-[#4A5568]">Dla hobbystów i osób testujących narzędzie.</p>
+                  <p className="mt-2 text-xs text-[#8290A2]">Dla hobbystów i osób testujących narzędzie.</p>
                 </div>
                 {(!profile || profile.plan_slug === 'free') && (
                   <span className="rounded-full bg-[#1C1C27] border border-[#2A2A3A] px-3 py-1 text-[10px] font-black text-[#A78BFA] uppercase tracking-wider">
@@ -88,11 +88,11 @@ export default async function PricingPage() {
               </div>
               <div className="mt-6 flex items-baseline">
                 <span className="text-4xl font-extrabold font-mono text-[#E2E8F0]">0 PLN</span>
-                <span className="ml-1.5 text-xs font-bold text-[#4A5568]">/ na zawsze</span>
+                <span className="ml-1.5 text-xs font-bold text-[#8290A2]">/ na zawsze</span>
               </div>
 
               <div className="mt-8 border-t border-[#2A2A3A]/50 pt-6 space-y-4">
-                <p className="text-xs font-bold uppercase tracking-widest text-[#4A5568]">Co zawiera plan Free:</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#8290A2]">Co zawiera plan Free:</p>
                 <ul className="space-y-3.5">
                   <li className="flex items-center gap-2.5">
                     <span className="text-[#6EE7B7] font-bold">✓</span>
@@ -112,11 +112,11 @@ export default async function PricingPage() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <span className="text-[#2A2A3A] font-bold">✗</span>
-                    <span className="text-sm text-[#4A5568]">Eksport do PDF (Pro)</span>
+                    <span className="text-sm text-[#8290A2]">Eksport do PDF (Pro)</span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <span className="text-[#2A2A3A] font-bold">✗</span>
-                    <span className="text-sm text-[#4A5568]">Zbiorczy audyt (Batch Audit) wielu promptów</span>
+                    <span className="text-sm text-[#8290A2]">Zbiorczy audyt (Batch Audit) wielu promptów</span>
                   </li>
                 </ul>
               </div>
@@ -142,7 +142,7 @@ export default async function PricingPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-bold text-[#E2E8F0] font-heading">{proLimits.name} Tier</h3>
-                  <p className="mt-2 text-xs text-[#4A5568]">Dla zaawansowanych twórców i profesjonalistów.</p>
+                  <p className="mt-2 text-xs text-[#8290A2]">Dla zaawansowanych twórców i profesjonalistów.</p>
                 </div>
                 {profile?.plan_slug === 'pro' && (
                   <span className="rounded-full bg-[#1C1C27] border border-[#A78BFA]/30 px-3 py-1 text-[10px] font-black text-[#A78BFA] uppercase tracking-wider">
@@ -212,7 +212,7 @@ export default async function PricingPage() {
                   >
                     Zaloguj się, aby odblokować Pro
                   </Link>
-                  <p className="text-[10px] text-[#4A5568] text-center leading-relaxed">
+                  <p className="text-[10px] text-[#8290A2] text-center leading-relaxed">
                     Konta są darmowe i bezpieczne.
                   </p>
                 </div>
@@ -220,7 +220,7 @@ export default async function PricingPage() {
 
               {/* Developer Simulation Gate */}
               <div className="border-t border-[#2A2A3A]/50 pt-3">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-[#4A5568] text-center mb-2">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[#8290A2] text-center mb-2">
                   Tryb Deweloperski / Testy Integracyjne
                 </p>
                 {user ? (

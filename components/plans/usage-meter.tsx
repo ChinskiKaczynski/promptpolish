@@ -18,7 +18,7 @@ const PLAN_LABELS: Record<PlanSlug, string> = {
 }
 
 const PLAN_BADGE_CLASSES: Record<PlanSlug, string> = {
-  anonymous: 'bg-[#1C1C27] text-[#4A5568] border-[#2A2A3A]',
+  anonymous: 'bg-[#1C1C27] text-[#8290A2] border-[#2A2A3A]',
   free: 'bg-[#1C1C27] text-[#94A3B8] border-[#2A2A3A]',
   pro: 'bg-[#A78BFA]/10 text-[#A78BFA] border-[#A78BFA]/30',
 }
@@ -73,7 +73,7 @@ export function UsageMeter({
               ? 'text-[#F87171]'
               : isWarning
               ? 'text-[#F59E0B]'
-              : 'text-[#4A5568]'
+              : 'text-[#8290A2]'
           }`}
         >
           {monthlyCount} / {monthlyLimit} analiz
@@ -94,7 +94,7 @@ export function UsageMeter({
       </div>
 
       {/* Status labels */}
-      <div className="flex items-center justify-between text-xs font-semibold text-[#4A5568]">
+      <div className="flex items-center justify-between text-xs font-semibold text-[#8290A2]">
         <span>Pozostało: <strong className={isBlocked ? 'text-[#F87171]' : isWarning ? 'text-[#F59E0B]' : 'text-[#E2E8F0]'}>{remaining}</strong></span>
         <span>{usagePct}% wykorzystane</span>
       </div>

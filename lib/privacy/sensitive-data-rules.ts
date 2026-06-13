@@ -45,6 +45,13 @@ export const sensitiveDataRules: SensitiveDataRule[] = [
     message: 'Wykryto poufny klucz API powiązany z dostawcą AI (AI Provider API Key).'
   },
   {
+    id: 'database-url',
+    type: 'database_url',
+    riskLevel: 'high',
+    pattern: /\b(?:postgresql|postgres|mongodb|mysql|redis):\/\/[A-Za-z0-9_.-]+:[A-Za-z0-9_.~%+-]+@[A-Za-z0-9_.-]+(?::\d+)?\/[A-Za-z0-9_.-]*\b/i,
+    message: 'Wykryto dane uwierzytelniające bazy danych w formacie URL (Database URL).'
+  },
+  {
     id: 'password-assignment',
     type: 'password_assignment',
     riskLevel: 'medium',

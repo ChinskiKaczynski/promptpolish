@@ -129,11 +129,22 @@ export function normalizeProviderError(error: unknown): ProviderError {
         statusCode !== undefined &&
         (statusCode === 429 || statusCode === 408 || (statusCode >= 500 && statusCode < 600))
       const userMessage = isTransient ? highVolumeMessage : generalErrorMessage
+      
+      let errorCode = 'provider_error'
+      if (statusCode === 429) {
+        errorCode = 'provider_rate_limit'
+      } else if (statusCode === 401 || statusCode === 403) {
+        errorCode = 'provider_authentication_error'
+      } else if (statusCode === 408 || (statusCode && statusCode >= 500)) {
+        errorCode = 'provider_unavailable'
+      }
+
       return new ProviderError(
         error.message,
         userMessage,
         error,
-        statusCode
+        statusCode,
+        errorCode
       )
     }
 
@@ -142,7 +153,9 @@ export function normalizeProviderError(error: unknown): ProviderError {
       return new ProviderError(
         `Failed to generate structured object: ${error.message}`,
         generalErrorMessage,
-        error
+        error,
+        undefined,
+        'malformed_provider_output'
       )
     }
 
@@ -155,17 +168,28 @@ export function normalizeProviderError(error: unknown): ProviderError {
       lowerMessage.includes('429') ||
       lowerMessage.includes('econnrefused')
     ) {
+      let errorCode = 'provider_unavailable'
+      if (lowerMessage.includes('429')) {
+        errorCode = 'provider_rate_limit'
+      } else if (lowerMessage.includes('timeout')) {
+        errorCode = 'provider_timeout'
+      }
+
       return new ProviderError(
         error.message,
         highVolumeMessage,
-        error
+        error,
+        undefined,
+        errorCode
       )
     }
 
     return new ProviderError(
       error.message,
       generalErrorMessage,
-      error
+      error,
+      undefined,
+      'provider_unavailable'
     )
   }
 
@@ -173,6 +197,8 @@ export function normalizeProviderError(error: unknown): ProviderError {
   return new ProviderError(
     'Unknown AI provider error',
     generalErrorMessage,
-    error
+    error,
+    undefined,
+    'provider_unavailable'
   )
 }

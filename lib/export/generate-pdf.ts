@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import type { PromptAnalysisRow } from '@/lib/supabase/types'
 import type { AnalysisResult } from '@/lib/ai/schemas'
+import { NOTO_SANS_REGULAR_BASE64 } from './fonts/noto-sans-regular'
 
 const TRANSLATIONS = {
   pl: {
@@ -104,19 +105,28 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
     format: 'a4'
   })
 
+  // Embed NotoSans Regular (OFL license) for Unicode support (Polish diacritics: ą ć ę ł ń ó ś ź ż)
+  doc.addFileToVFS('NotoSans-Regular.ttf', NOTO_SANS_REGULAR_BASE64)
+  doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'normal')
+  doc.addFont('NotoSans-Regular.ttf', 'NotoSans', 'bold') // reuse same TTF; bold fallback
+
   let currentY = 20
   const margin = 20
   const printWidth = 170 // 210 - 20 - 20
 
+  // Set default font to NotoSans for all text
+  doc.setFont('NotoSans', 'normal')
+
+
   // 1. Document Title
-  doc.setFont('helvetica', 'bold')
+  doc.setFont('NotoSans', 'bold')
   doc.setFontSize(20)
   doc.setTextColor(15, 23, 42) // Slate 900
   doc.text(t.title, margin, currentY)
   currentY += 10
 
   // 2. Metadata details
-  doc.setFont('helvetica', 'normal')
+  doc.setFont('NotoSans', 'normal')
   doc.setFontSize(9)
   doc.setTextColor(100, 116, 139) // Slate 500
   
@@ -141,30 +151,30 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
   doc.setFillColor(241, 245, 249) // Slate 100
   doc.roundedRect(margin, currentY, printWidth, 22, 3, 3, 'F')
   
-  doc.setFont('helvetica', 'bold')
+  doc.setFont('NotoSans', 'bold')
   doc.setFontSize(10)
   doc.setTextColor(71, 85, 105) // Slate 600
   doc.text(t.score.toUpperCase(), margin + 6, currentY + 7)
   
-  doc.setFont('helvetica', 'bold')
+  doc.setFont('NotoSans', 'bold')
   doc.setFontSize(22)
   doc.setTextColor(79, 70, 229) // Indigo 600
   doc.text(`${record.overall_score}`, margin + 6, currentY + 16)
   
-  doc.setFont('helvetica', 'normal')
+  doc.setFont('NotoSans', 'normal')
   doc.setFontSize(10)
   doc.setTextColor(100, 116, 139) // Slate 500
   doc.text(`/ 100  (${scoreLabel})`, margin + 20, currentY + 15)
   currentY += 30
 
   // 4. Audit Summary
-  doc.setFont('helvetica', 'bold')
+  doc.setFont('NotoSans', 'bold')
   doc.setFontSize(13)
   doc.setTextColor(15, 23, 42)
   doc.text(t.summary, margin, currentY)
   currentY += 7
 
-  doc.setFont('helvetica', 'normal')
+  doc.setFont('NotoSans', 'normal')
   doc.setFontSize(10)
   doc.setTextColor(51, 65, 85)
   const summaryLines = doc.splitTextToSize(analysis.overall_summary, printWidth)
@@ -183,7 +193,7 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
     doc.addPage()
     currentY = 20
   }
-  doc.setFont('helvetica', 'bold')
+  doc.setFont('NotoSans', 'bold')
   doc.setFontSize(13)
   doc.setTextColor(15, 23, 42)
   doc.text(t.weaknesses, margin, currentY)
@@ -191,7 +201,7 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
 
   analysis.top_weaknesses.forEach((w, i) => {
     const text = `${i + 1}. ${w}`
-    doc.setFont('helvetica', 'normal')
+    doc.setFont('NotoSans', 'normal')
     doc.setFontSize(10)
     doc.setTextColor(51, 65, 85)
     const lines = doc.splitTextToSize(text, printWidth - 5)
@@ -212,7 +222,7 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
     doc.addPage()
     currentY = 20
   }
-  doc.setFont('helvetica', 'bold')
+  doc.setFont('NotoSans', 'bold')
   doc.setFontSize(13)
   doc.setTextColor(15, 23, 42)
   doc.text(t.plan, margin, currentY)
@@ -220,7 +230,7 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
 
   analysis.improvement_plan.forEach((step, i) => {
     const text = `${i + 1}. ${step}`
-    doc.setFont('helvetica', 'normal')
+    doc.setFont('NotoSans', 'normal')
     doc.setFontSize(10)
     doc.setTextColor(51, 65, 85)
     const lines = doc.splitTextToSize(text, printWidth - 5)
@@ -241,14 +251,14 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
     doc.addPage()
     currentY = 20
   }
-  doc.setFont('helvetica', 'bold')
+  doc.setFont('NotoSans', 'bold')
   doc.setFontSize(13)
   doc.setTextColor(15, 23, 42)
   doc.text(t.improvedPrompt, margin, currentY)
   currentY += 7
 
   const promptLines = record.improved_prompt.split('\n')
-  doc.setFont('courier', 'normal')
+  doc.setFont('NotoSans', 'normal')
   doc.setFontSize(9.5)
   doc.setTextColor(15, 23, 42)
 
@@ -289,7 +299,7 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
     doc.addPage()
     currentY = 20
   }
-  doc.setFont('helvetica', 'bold')
+  doc.setFont('NotoSans', 'bold')
   doc.setFontSize(13)
   doc.setTextColor(15, 23, 42)
   doc.text(t.criteria, margin, currentY)
@@ -303,13 +313,13 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
       currentY = 20
     }
     
-    doc.setFont('helvetica', 'bold')
+    doc.setFont('NotoSans', 'bold')
     doc.setFontSize(11)
     doc.setTextColor(15, 23, 42)
     doc.text(`${criterionName} (${item.raw_score_0_10} / 10)`, margin, currentY)
     currentY += 5
     
-    doc.setFont('helvetica', 'normal')
+    doc.setFont('NotoSans', 'normal')
     doc.setFontSize(9.5)
     doc.setTextColor(71, 85, 105)
     
@@ -357,7 +367,7 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
       currentY = 20
     }
     
-    doc.setFont('helvetica', 'bold')
+    doc.setFont('NotoSans', 'bold')
     doc.setFontSize(13)
     doc.setTextColor(15, 23, 42)
     doc.text(t.additionalNotes, margin, currentY)
@@ -371,14 +381,14 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
         currentY = 20
       }
       
-      doc.setFont('helvetica', 'bold')
+      doc.setFont('NotoSans', 'bold')
       doc.setFontSize(10.5)
       doc.setTextColor(71, 85, 105)
       doc.text(sec.title, margin, currentY)
       currentY += 5
       
       sec.notes.forEach((note) => {
-        doc.setFont('helvetica', 'normal')
+        doc.setFont('NotoSans', 'normal')
         doc.setFontSize(9.5)
         doc.setTextColor(100, 116, 139)
         const noteText = `- ${note}`
@@ -407,7 +417,7 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
   doc.line(margin, currentY, margin + printWidth, currentY)
   currentY += 6
   
-  doc.setFont('helvetica', 'italic')
+  doc.setFont('NotoSans', 'normal')
   doc.setFontSize(8.5)
   doc.setTextColor(148, 163, 184)
   const disclaimerLines = doc.splitTextToSize(t.disclaimer, printWidth)

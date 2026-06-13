@@ -68,7 +68,7 @@ export function WaitlistForm({ initialEmail = '', lang = 'pl' }: WaitlistFormPro
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
-          className="w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-2.5 text-xs text-[#E2E8F0] placeholder-[#4A5568] transition focus:border-[#A78BFA]/40 focus:outline-none disabled:opacity-50"
+          className="w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-2.5 text-xs text-[#E2E8F0] placeholder-[#8290A2] transition focus:border-[#A78BFA]/40 focus:outline-none disabled:opacity-50"
         />
       </div>
 

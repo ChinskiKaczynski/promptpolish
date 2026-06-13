@@ -53,7 +53,6 @@ const FULL_DB_ROW = {
 }
 
 const DB_RETURNED_ROW = {
-  input_prompt: 'Summarize this contract',
   working_language: 'en',
   selected_profile_slug: 'openrouter-deepseek-v4-flash',
   overall_score: 78,
@@ -65,7 +64,6 @@ const DB_RETURNED_ROW = {
 }
 
 const ALLOWED_FIELDS = [
-  'input_prompt',
   'working_language',
   'selected_profile_slug',
   'overall_score',
@@ -151,7 +149,6 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
     const result = await getSharedPromptAnalysis('valid-token')
 
     expect(result).toEqual({
-      input_prompt: 'Summarize this contract',
       working_language: 'en',
       selected_profile_slug: 'openrouter-deepseek-v4-flash',
       overall_score: 78,

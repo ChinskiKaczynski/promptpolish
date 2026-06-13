@@ -4,7 +4,6 @@ import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { createShareLink, createUsageEvent } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
-import { getPlanSlugForUser, canShare } from '@/lib/plans/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,7 +39,7 @@ export async function POST(request: Request) {
 
     const { analysis_id } = parsed.data
 
-    // 2. Check Pro subscription entitlement for sharing
+    // 1. Resolve owner identity server-side. Never trust client-supplied identity.
     const user = await getAuthUser()
     const ownerAnonymousId = await getOwnerIdFromCookies()
 
@@ -54,18 +53,12 @@ export async function POST(request: Request) {
       )
     }
 
-    const planSlug = await getPlanSlugForUser(user?.id || null)
-    if (!canShare(planSlug)) {
-      return NextResponse.json(
-        {
-          error: 'forbidden',
-          message: 'Sharing results requires a Pro subscription.'
-        },
-        { status: 403 }
-      )
-    }
+    // 2. Per product contract, ALL plans (anonymous, free, pro) can create share links.
+    //    No plan-based entitlement check is performed — canShare() returns true for all plans.
+    //    Ownership is verified atomically at DB level in createShareLink.
 
-    // 3. Enable sharing and generate cryptographically secure share token
+    // 3. Enable sharing and generate cryptographically secure share token.
+    //    createShareLink verifies ownership and that deleted_at IS NULL before updating.
     const shareToken = await createShareLink(analysis_id, ownerAnonymousId || '', user?.id)
     if (!shareToken) {
       return NextResponse.json(
@@ -77,7 +70,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // 3. Save telemetry log event
+    // 4. Save telemetry log event
     await createUsageEvent({
       owner_anonymous_id: ownerAnonymousId || '',
       user_id: user?.id || null,

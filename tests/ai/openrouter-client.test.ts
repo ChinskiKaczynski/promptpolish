@@ -1,4 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+
+vi.mock('ai', async (importOriginal) => {
+  const original = await importOriginal<typeof import('ai')>()
+  return {
+    ...original,
+    generateText: vi.fn().mockResolvedValue({
+      output: {},
+      usage: { promptTokens: 10, completionTokens: 10 }
+    })
+  }
+})
+
 import { executeOpenRouterAnalysis } from '@/lib/ai/openrouter-client'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { normalizeProviderError, ProviderError, isNestedTimeout } from '@/lib/ai/provider-errors'
@@ -214,6 +226,56 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       expect(normalized.errorCode).toBe('provider_timeout')
       expect(normalized.statusCode).toBe(200)
       expect(normalized.message).toContain('PROVIDER_TIMEOUT')
+    })
+  })
+
+  describe('executeOpenRouterAnalysis with DB Profiles', () => {
+    beforeEach(() => {
+      process.env.OPENROUTER_API_KEY = 'mock-api-key'
+    })
+
+    it('passes capabilities parameters from dbProfile to generateText', async () => {
+      const dbProfile = {
+        id: 'p1',
+        slug: 'openrouter-deepseek-v4-flash',
+        display_name: 'Test Profile',
+        provider: 'openrouter',
+        model_family: 'deepseek',
+        profile_type: 'provider_model',
+        source_type: 'internal',
+        verification_status: 'verified',
+        confidence_level: 'high',
+        capabilities_json: {
+          model_id: 'custom-model-123',
+          temperature: 0.8,
+          max_tokens: 1500,
+          reasoning: true
+        },
+        profile_version: '1.0.0',
+        created_at: '',
+        updated_at: ''
+      } as unknown as ModelProfileRow
+
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockClear()
+
+      await executeOpenRouterAnalysis('sys instruction', 'user prompt', {
+        dbProfile
+      })
+
+      expect(generateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          temperature: 0.8,
+          maxOutputTokens: 1500,
+          prompt: 'user prompt',
+          system: 'sys instruction',
+          providerMetadata: expect.objectContaining({
+            openrouter: expect.objectContaining({
+              reasoning: true
+            })
+          })
+        })
+      )
     })
   })
 })

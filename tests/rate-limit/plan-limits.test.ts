@@ -18,25 +18,25 @@ import type { UserProfileRow } from '@/lib/supabase/types'
 describe('Plan Entitlements Logic', () => {
   it('has correct static limits configured', () => {
     expect(PLAN_LIMITS.free.monthlyAnalyses).toBe(20)
-    expect(PLAN_LIMITS.free.dailyAbuseLimit).toBe(5)
-    expect(PLAN_LIMITS.free.exportMarkdown).toBe(false)
+    expect(PLAN_LIMITS.free.dailyAnalyses).toBe(5)
+    expect(PLAN_LIMITS.free.exportMarkdown).toBe(true)
     expect(PLAN_LIMITS.free.exportPdf).toBe(false)
     
     expect(PLAN_LIMITS.pro.monthlyAnalyses).toBe(500)
-    expect(PLAN_LIMITS.pro.dailyAbuseLimit).toBe(100)
+    expect(PLAN_LIMITS.pro.dailyAnalyses).toBe(100)
     expect(PLAN_LIMITS.pro.exportMarkdown).toBe(true)
     expect(PLAN_LIMITS.pro.exportPdf).toBe(true)
   })
 
   it('correctly returns export and batch entitlements', () => {
-    expect(canExportMarkdown('free')).toBe(false)
+    expect(canExportMarkdown('free')).toBe(true)
     expect(canExportMarkdown('pro')).toBe(true)
 
     expect(canExportPdf('free')).toBe(false)
     expect(canExportPdf('pro')).toBe(true)
 
     expect(canUseBatchAudit('free')).toBe(false)
-    expect(canUseBatchAudit('pro')).toBe(true)
+    expect(canUseBatchAudit('pro')).toBe(false) // batchAudit is false in MVP
   })
 
   describe('canAnalyzePrompt', () => {
@@ -140,13 +140,11 @@ describe('getPlanSlugForUser — STRIPE_ENABLED behaviour', () => {
 
   it('STRIPE_ENABLED=false + profile missing → returns "free" without crashing (no PGRST205)', async () => {
     process.env.STRIPE_ENABLED = 'false'
-    // Simulate what happens if subscriptions table is absent — getUserProfile still works, subscriptions are never queried
     vi.mocked(getUserProfile).mockResolvedValue(null)
 
     const result = await getPlanSlugForUser('user-789')
 
     expect(result).toBe('free')
-    // No call to getSubscriptionByUserId — it is never imported/called from config.ts
     expect(getUserProfile).toHaveBeenCalledOnce()
   })
 
@@ -183,7 +181,6 @@ describe('getPlanSlugForUser — STRIPE_ENABLED behaviour', () => {
   })
 
   it('simulate-pro: profile updated to pro → getPlanSlugForUser returns "pro"', async () => {
-    // After simulate-pro runs, user_profiles.plan_slug is 'pro'
     process.env.STRIPE_ENABLED = 'false'
     vi.mocked(getUserProfile).mockResolvedValue({
       user_id: 'admin-user',
@@ -197,10 +194,7 @@ describe('getPlanSlugForUser — STRIPE_ENABLED behaviour', () => {
     const plan = await getPlanSlugForUser('admin-user')
 
     expect(plan).toBe('pro')
-    // Confirm canExportMarkdown correctly returns true for this simulated pro user
     expect(canExportMarkdown(plan)).toBe(true)
     expect(canExportPdf(plan)).toBe(true)
   })
 })
-
-

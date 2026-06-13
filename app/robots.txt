@@ -1,7 +1,13 @@
 User-agent: *
 Disallow: /result/
+Disallow: /share/
+Disallow: /account
+Disallow: /history
+Disallow: /privacy
+Disallow: /terms
+Disallow: /admin
 Disallow: /api/
 Allow: /
 
 # Host
-Host: http://localhost:3000
+Host: https://promptpolish.com

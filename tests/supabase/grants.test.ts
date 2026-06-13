@@ -58,4 +58,57 @@ describe('Supabase Database Permission Grants - Static SQL Migration Analysis', 
     expect(sql).toContain(`REVOKE EXECUTE ON FUNCTION ${signature} FROM "authenticated";`)
     expect(sql).toContain(`GRANT EXECUTE ON FUNCTION ${signature} TO "service_role";`)
   })
+
+  it('ensures usage_reservations migration 20260612210000_usage_reservations.sql revokes privileges and configures the RPCs', () => {
+    const file = path.join(migrationsDir, '20260612210000_usage_reservations.sql')
+    expect(fs.existsSync(file), 'Usage reservations migration must exist').toBe(true)
+
+    const sql = fs.readFileSync(file, 'utf-8')
+
+    // Check table level revokes/grants
+    expect(sql).toContain('REVOKE ALL PRIVILEGES ON TABLE public.usage_reservations FROM "anon", "authenticated";')
+    expect(sql).toContain('GRANT ALL ON TABLE public.usage_reservations TO "service_role";')
+
+    // Check RPC configuration and SECURITY DEFINER
+    const rpcs = [
+      'public.acquire_usage_reservation',
+      'public.complete_usage_reservation',
+      'public.release_usage_reservation'
+    ]
+
+    for (const rpc of rpcs) {
+      expect(sql).toContain(`CREATE OR REPLACE FUNCTION ${rpc}`)
+      expect(sql).toContain('SECURITY DEFINER')
+      expect(sql).toContain("SET search_path = ''")
+    }
+
+    // Check revokes/grants for acquire_usage_reservation
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION public.acquire_usage_reservation(UUID, TEXT, UUID) FROM PUBLIC;')
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION public.acquire_usage_reservation(UUID, TEXT, UUID) FROM "anon";')
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION public.acquire_usage_reservation(UUID, TEXT, UUID) FROM "authenticated";')
+    expect(sql).toContain('GRANT EXECUTE ON FUNCTION public.acquire_usage_reservation(UUID, TEXT, UUID) TO "service_role";')
+
+    // Check revokes/grants for complete_usage_reservation
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION public.complete_usage_reservation(UUID) FROM PUBLIC;')
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION public.complete_usage_reservation(UUID) FROM "anon";')
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION public.complete_usage_reservation(UUID) FROM "authenticated";')
+    expect(sql).toContain('GRANT EXECUTE ON FUNCTION public.complete_usage_reservation(UUID) TO "service_role";')
+
+    // Check revokes/grants for release_usage_reservation
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION public.release_usage_reservation(UUID) FROM PUBLIC;')
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION public.release_usage_reservation(UUID) FROM "anon";')
+    expect(sql).toContain('REVOKE EXECUTE ON FUNCTION public.release_usage_reservation(UUID) FROM "authenticated";')
+    expect(sql).toContain('GRANT EXECUTE ON FUNCTION public.release_usage_reservation(UUID) TO "service_role";')
+  })
+
+  it('ensures feedback_integrity migration 20260612220000_feedback_integrity.sql revokes direct client access to feedback_events', () => {
+    const file = path.join(migrationsDir, '20260612220000_feedback_integrity.sql')
+    expect(fs.existsSync(file), 'Feedback integrity migration must exist').toBe(true)
+
+    const sql = fs.readFileSync(file, 'utf-8')
+
+    // Check table level revokes/grants for feedback_events
+    expect(sql).toContain('REVOKE ALL PRIVILEGES ON TABLE public.feedback_events FROM "anon", "authenticated";')
+    expect(sql).toContain('GRANT ALL ON TABLE public.feedback_events TO "service_role";')
+  })
 })

@@ -18,12 +18,12 @@ export function MonthlyLimitBanner({
   if (!isMonthlyLimitReached) return null
 
   return (
-    <div className="relative rounded-xl border border-[#A78BFA]/30 bg-[#13131A] p-6">
+    <div role="status" aria-live="polite" className="relative rounded-xl border border-[#A78BFA]/30 bg-[#13131A] p-6">
       {/* Dismiss Button */}
       <button
         type="button"
         onClick={() => setIsMonthlyLimitReached(false)}
-        className="absolute right-4 top-4 text-[#4A5568] hover:text-[#E2E8F0] transition p-1 cursor-pointer"
+        className="absolute right-4 top-4 text-[#8290A2] hover:text-[#E2E8F0] transition p-1 cursor-pointer"
         aria-label="Close warning"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -56,7 +56,7 @@ export function MonthlyLimitBanner({
             <button
               type="button"
               onClick={() => setIsMonthlyLimitReached(false)}
-              className="rounded-lg border border-[#2A2A3A] bg-[#1C1C27] px-4 py-2 text-xs font-bold text-[#4A5568] hover:text-[#E2E8F0] transition active:scale-95 cursor-pointer"
+              className="rounded-lg border border-[#2A2A3A] bg-[#1C1C27] px-4 py-2 text-xs font-bold text-[#8290A2] hover:text-[#E2E8F0] transition active:scale-95 cursor-pointer"
             >
               {workingLanguage === 'pl' ? 'Wróć do audytu' : 'Dismiss'}
             </button>

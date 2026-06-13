@@ -13,13 +13,14 @@ vi.mock('@/lib/identity/auth', () => ({
 vi.mock('@/lib/supabase/queries', () => ({
   getPromptAnalysisForOwner: vi.fn(),
   createFeedbackEvent: vi.fn(),
-  createUsageEvent: vi.fn()
+  createUsageEvent: vi.fn(),
+  getRecentFeedbackCount: vi.fn()
 }))
 
 import { POST } from '@/app/api/feedback/route'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
-import { getPromptAnalysisForOwner, createFeedbackEvent } from '@/lib/supabase/queries'
+import { getPromptAnalysisForOwner, createFeedbackEvent, getRecentFeedbackCount } from '@/lib/supabase/queries'
 import type { PromptAnalysisRow, FeedbackEventRow } from '@/lib/supabase/types'
 import type { User } from '@supabase/supabase-js'
 
@@ -45,6 +46,7 @@ describe('POST /api/feedback', () => {
     vi.mocked(getAuthUser).mockResolvedValue(null)
     vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(mockRecord)
     vi.mocked(createFeedbackEvent).mockResolvedValue(mockFeedback)
+    vi.mocked(getRecentFeedbackCount).mockResolvedValue(0)
   })
 
   describe('Validation', () => {
@@ -195,6 +197,19 @@ describe('POST /api/feedback', () => {
 
       expect(response.status).toBe(500)
       expect(data.error).toBe('database_error')
+    })
+  })
+
+  describe('Rate Limiting', () => {
+    it('returns 429 when feedback rate limit is exceeded', async () => {
+      vi.mocked(getRecentFeedbackCount).mockResolvedValue(10)
+
+      const response = await POST(makeRequest(validPayload))
+      const data = await response.json()
+
+      expect(response.status).toBe(429)
+      expect(data.error).toBe('rate_limit_exceeded')
+      expect(createFeedbackEvent).not.toHaveBeenCalled()
     })
   })
 })

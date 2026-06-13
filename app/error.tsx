@@ -31,7 +31,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
             <h1 className="text-2xl font-black tracking-tight text-[#E2E8F0] font-heading">
               Coś poszło nie tak
             </h1>
-            <p className="text-xs uppercase tracking-wider font-bold text-[#4A5568]">
+            <p className="text-xs uppercase tracking-wider font-bold text-[#8290A2]">
               An unexpected error occurred
             </p>
           </div>
@@ -40,7 +40,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
             <p>
               Przepraszamy. Wystąpił niespodziewany błąd aplikacji. Ze względów bezpieczeństwa szczegóły błędu nie są wyświetlane.
             </p>
-            <p className="border-t border-[#2A2A3A] pt-3 text-xs italic text-[#4A5568]">
+            <p className="border-t border-[#2A2A3A] pt-3 text-xs italic text-[#8290A2]">
               We apologize. An unexpected application error occurred. For security reasons, the system does not leak error details.
             </p>
           </div>
@@ -49,7 +49,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
         {/* Diagnostic Code (digest) */}
         {error.digest && (
           <div className="rounded-lg bg-[#0C0C10] border border-[#2A2A3A] p-2.5">
-            <span className="font-mono text-xs font-bold text-[#4A5568] uppercase tracking-wider block">
+            <span className="font-mono text-xs font-bold text-[#8290A2] uppercase tracking-wider block">
               Kod diagnostyczny / Diagnostic ID
             </span>
             <span className="font-mono text-xs font-semibold text-[#94A3B8] select-all">

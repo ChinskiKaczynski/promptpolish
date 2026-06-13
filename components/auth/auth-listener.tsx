@@ -14,21 +14,15 @@ export function AuthListener() {
   useEffect(() => {
     if (!supabaseClient) return
 
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (session?.access_token) {
-          try {
-            await fetch('/api/auth/session', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ accessToken: session.access_token })
-            })
-            router.refresh()
-          } catch (err) {
-            console.error('Failed to sync auth session server-side:', err)
-          }
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(async (event) => {
+      if (event === 'SIGNED_IN') {
+        try {
+          await fetch('/api/auth/session', {
+            method: 'POST'
+          })
+          router.refresh()
+        } catch (err) {
+          console.error('Failed to sync auth session server-side:', err)
         }
       } else if (event === 'SIGNED_OUT') {
         try {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { detectSensitiveData } from '@/lib/privacy/sensitive-data-detector'
+import { detectSensitiveData, scanRequestFields } from '@/lib/privacy/sensitive-data-detector'
 
 describe('detectSensitiveData - Security Preflights', () => {
 
@@ -148,4 +148,35 @@ MIIEowIBAAKCAQEA0yGz7V+abc123xyz
     expect(result.findings.length).toBe(0)
   })
 
+  it('detects database URLs (database_url)', () => {
+    const rawSecret = 'postgresql://postgres:secret-password123@localhost:5432/mydb'
+    const result = detectSensitiveData(rawSecret)
+    
+    expect(result.riskLevel).toBe('high')
+    expect(result.findings.length).toBe(1)
+    const finding = result.findings[0]!
+    expect(finding.type).toBe('database_url')
+    expect(finding.redactedValue).toBe('postgresql://postgres:[redacted]@localhost:5432/mydb')
+  })
+
+  it('scans multiple request fields and aggregates findings', () => {
+    const fields = {
+      input_prompt: 'Napisz artykuł na bloga.',
+      task_goal: 'database connection: postgresql://postgres:p@localhost/db',
+      constraints: 'Bearer token1234567890abcdefg'
+    }
+
+    const result = scanRequestFields(fields)
+
+    expect(result.riskLevel).toBe('high')
+    expect(result.findings.length).toBe(3)
+    
+    const goalFinding = result.findings.find(f => f.field === 'task_goal')!
+    expect(goalFinding).toBeDefined()
+    expect(goalFinding.type).toBe('database_url')
+    
+    const constraintsFinding = result.findings.find(f => f.field === 'constraints')!
+    expect(constraintsFinding).toBeDefined()
+    expect(constraintsFinding.type).toBe('bearer_token')
+  })
 })

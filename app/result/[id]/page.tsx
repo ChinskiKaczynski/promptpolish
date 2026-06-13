@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPromptAnalysisForOwner, getUserProfile } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
@@ -6,6 +7,14 @@ import { ResultView } from '@/components/result/result-view'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
+
+export const metadata: Metadata = {
+  title: 'Raport Audytu — PromptPolish',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -48,7 +57,9 @@ export default async function PrivateResultPage({ params }: PageProps) {
     improved_prompt: record.improved_prompt,
     id: record.id,
     isShareEnabled: record.is_share_enabled,
-    shareToken: record.share_token
+    shareToken: record.share_token,
+    selected_profile_slug: record.selected_profile_slug,
+    working_language: record.working_language
   }
 
   return (

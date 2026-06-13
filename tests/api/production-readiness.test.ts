@@ -58,6 +58,7 @@ describe('Production Readiness Env Safeguards', () => {
     env.STRIPE_SECRET_KEY = 'sk_test_key'
     env.STRIPE_WEBHOOK_SECRET = 'whsec_key'
     env.STRIPE_PRICE_ID_PRO = 'price_pro'
+    env.RATE_LIMIT_HMAC_SECRET = 'test-hmac-secret-key'
 
     const result = checkProductionEnv()
     expect(result.valid).toBe(true)

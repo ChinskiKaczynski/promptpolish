@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { AnalysisResult } from '@/lib/ai/schemas'
+import { mvpModelProfiles } from '@/lib/ai/model-profiles'
 import nextDynamic from 'next/dynamic'
 
 const CopyButton = nextDynamic(() => import('./copy-button').then((mod) => mod.CopyButton))
@@ -16,6 +17,8 @@ type ResultViewProps = {
     id?: string;
     isShareEnabled?: boolean;
     shareToken?: string | null;
+    selected_profile_slug?: string;
+    working_language?: string;
   }
   mode: 'private' | 'share' | 'public'
   planSlug?: 'free' | 'pro'
@@ -126,19 +129,19 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       {/* Main Score & Warning Cards Layout */}
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr] animate-fade-in-up animation-delay-100">
         {/* Score Display Card */}
-        <div className={`relative flex flex-col justify-between overflow-hidden rounded-xl border p-6 sm:p-7 shadow-surface transition-all ${scoreMeta.bg} ${scoreMeta.border}`}>
+        <div className={`relative flex flex-col justify-between overflow-hidden rounded-xl border p-6 sm:p-7 shadow-lg transition-all ${scoreMeta.bg} ${scoreMeta.border}`}>
           <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-[#A78BFA]/5 opacity-30 blur-2xl pointer-events-none" />
           
           <div className="flex items-center justify-between gap-6 relative z-10">
             <div className="space-y-2">
-              <p className="text-xs font-mono font-bold uppercase tracking-[0.15em] text-[#4A5568]">Ogólna Ocena Jakości</p>
+              <p className="text-xs font-mono font-bold uppercase tracking-[0.15em] text-[#8290A2]">Ogólna Ocena Jakości</p>
               <h2 className={`text-2xl font-bold tracking-tight font-heading ${scoreMeta.text}`}>{scoreMeta.label}</h2>
               <p className="text-xs leading-relaxed text-[#94A3B8] max-w-[240px]">{scoreMeta.desc}</p>
             </div>
             
             {/* SVG Circular Progress Meter */}
             <div className="relative h-24 w-24 shrink-0 rounded-full bg-[#1C1C27] flex items-center justify-center border border-[#2A2A3A]">
-              <svg className="h-22 w-22 -rotate-90">
+              <svg className="h-[88px] w-[88px] -rotate-90">
                 <circle
                   cx="44"
                   cy="44"
@@ -161,44 +164,72 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-2xl font-black text-[#E2E8F0] font-mono leading-none">{result.overallScore}</span>
-                <span className="text-xs font-mono font-bold text-[#4A5568] mt-1">/ 100</span>
+                <span className="text-xs font-mono font-bold text-[#8290A2] mt-1">/ 100</span>
               </div>
             </div>
           </div>
 
           <div className="mt-6 border-t border-[#2A2A3A]/50 pt-4 relative z-10">
-            <div className="flex items-center justify-between text-[11px] font-mono text-[#4A5568]">
-              <span>Wersja algorytmu: <strong className="font-semibold text-[#6EE7B7]/70">1.0.0</strong></span>
-              <span className="font-semibold text-[#6EE7B7]/70">Szybki audyt anonimowy</span>
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#8290A2]">
+              <span>Wersja algorytmu: <strong className="font-semibold text-[#6EE7B7]/70">{result.analysis_schema_version || '1.0.0'}</strong></span>
+              <span className="font-semibold text-[#6EE7B7]/70">
+                {planSlug === 'pro'
+                  ? 'Profesjonalny audyt Pro'
+                  : mode === 'share'
+                  ? 'Udostępniony audyt Free'
+                  : 'Szybki audyt bezpłatny'}
+              </span>
             </div>
           </div>
         </div>
 
         {/* Dynamic Model Profile Info Area */}
-        <div className="flex flex-col justify-between rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1C1C27] text-[#A78BFA] border border-[#2A2A3A] shrink-0">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+        {(() => {
+          const profile = mvpModelProfiles.find(p => p.slug === result.selected_profile_slug)
+          const isStaleOrUnverified = !profile || profile.verificationStatus !== 'verified'
+          
+          return (
+            <div className="flex flex-col justify-between rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1C1C27] text-[#A78BFA] border border-[#2A2A3A] shrink-0">
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xs font-bold text-[#94A3B8] uppercase tracking-widest">
+                    PROFIL AUDYTU: {profile ? profile.displayName.toUpperCase() : 'UNIWERSALNY'}
+                  </h3>
+                </div>
+                
+                <div className="space-y-3">
+                  <p className="text-xs leading-relaxed text-[#94A3B8]">
+                    {profile?.slug === 'openrouter-deepseek-v4-flash'
+                      ? 'Analiza ocenia prompt pod kątem zaawansowanego modelu DeepSeek v4 Flash, weryfikując precyzję, jasność i instrukcje warunkowe.'
+                      : 'Analiza ocenia prompt według ogólnych, uniwersalnych zasad przejrzystości, kontekstu i struktury dla LLM.'}
+                  </p>
+                  
+                  {isStaleOrUnverified && (
+                    <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 flex gap-2 text-amber-500" role="alert">
+                      <span className="text-sm leading-none mt-0.5" aria-hidden="true">⚠️</span>
+                      <div className="text-[11px] leading-relaxed font-semibold">
+                        <p className="font-bold uppercase tracking-wide">Dane profilu niezweryfikowane (Stale/Unverified Data)</p>
+                        <p className="mt-0.5 opacity-90">Parametry techniczne i możliwości tego profilu mogą być nieaktualne.</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="rounded-lg border border-[#F59E0B]/20 bg-[#F59E0B]/5 p-3.5 flex gap-3">
+                    <span className="text-lg" aria-hidden="true">💡</span>
+                    <p className="text-[11px] leading-relaxed text-[#F59E0B]/80 font-medium">
+                      Ten audyt ma charakter pomocniczy. Przed użyciem promptu w krytycznym procesie zweryfikuj wynik samodzielnie.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xs font-bold text-[#94A3B8] uppercase tracking-widest">PROFIL AUDYTU: UNIWERSALNY</h3>
             </div>
-            
-            <div className="space-y-3">
-              <p className="text-xs leading-relaxed text-[#94A3B8]">
-                Analiza ocenia prompt według uniwersalnych zasad: jasności celu, kontekstu, struktury, ograniczeń, formatu wyniku i bezpieczeństwa.
-              </p>
-              <div className="rounded-lg border border-[#F59E0B]/20 bg-[#F59E0B]/5 p-3.5 flex gap-3">
-                <span className="text-lg">💡</span>
-                <p className="text-[11px] leading-relaxed text-[#F59E0B]/80 font-medium">
-                  Ten audyt ma charakter ogólny. Przed użyciem promptu w krytycznym procesie zweryfikuj wynik samodzielnie.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+          )
+        })()}
       </div>
 
       {/* Main Two-Column Breakdown Dashboard */}
@@ -270,7 +301,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           <div className="flex items-center justify-between border-b border-[#2A2A3A]/30 pb-4 mb-4">
             <div>
               <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">Kryteria szczegółowe</h3>
-              <p className="text-[11px] text-[#4A5568] mt-0.5 font-medium">Kliknij kryterium, aby zobaczyć wyjaśnienie</p>
+              <p className="text-[11px] text-[#8290A2] mt-0.5 font-medium">Kliknij kryterium, aby zobaczyć wyjaśnienie</p>
             </div>
             <span className="rounded-full bg-[#A78BFA]/10 border border-[#A78BFA]/20 px-2.5 py-0.5 text-xs font-bold text-[#A78BFA] uppercase tracking-wider">
               10 Parametrów
@@ -318,7 +349,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                     </div>
                     
                     {/* Expand/Collapse Chevron */}
-                    <div className="shrink-0 p-1 text-[#4A5568]">
+                    <div className="shrink-0 p-1 text-[#8290A2]">
                       <svg
                         className="h-5 w-5 transition-transform duration-300 group-open:rotate-180 group-open:text-[#A78BFA]"
                         fill="none"
@@ -334,7 +365,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   <div className="mt-3.5 transition-all duration-300">
                     <div className="rounded-xl bg-[#1C1C27] border border-[#2A2A3A] p-4 space-y-3">
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-[#4A5568]">Analiza słabości:</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#8290A2]">Analiza słabości:</p>
                         <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed font-semibold">{item.rationale}</p>
                       </div>
                       <div className="border-t border-[#2A2A3A] pt-2.5">
@@ -375,7 +406,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           <pre className="whitespace-pre-wrap break-words font-mono w-full">
             {promptLines.map((line, i) => (
               <div key={i} className="flex items-start hover:bg-[#A78BFA]/5 transition-colors duration-150 rounded py-0.5 px-1">
-                <span className="select-none w-8 text-right text-[#4A5568] shrink-0 pr-3 border-r border-[#2A2A3A]/40 font-mono">
+                <span className="select-none w-8 text-right text-[#8290A2] shrink-0 pr-3 border-r border-[#2A2A3A]/40 font-mono">
                   {i + 1}
                 </span>
                 <code className="pl-4 whitespace-pre-wrap break-words font-mono text-[#E2E8F0] flex-1 block">

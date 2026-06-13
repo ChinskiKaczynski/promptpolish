@@ -20,7 +20,7 @@ export default function NotFound() {
             <h1 className="text-3xl font-black tracking-tight text-[#E2E8F0] font-heading">
               Nie odnaleziono strony
             </h1>
-            <p className="text-xs uppercase tracking-wider font-bold text-[#4A5568]">
+            <p className="text-xs uppercase tracking-wider font-bold text-[#8290A2]">
               Page or Result Not Found
             </p>
           </div>
@@ -29,7 +29,7 @@ export default function NotFound() {
             <p>
               Szukana strona, token udostępniania lub analiza nie istnieje, została usunięta lub upłynął okres jej przechowywania.
             </p>
-            <p className="border-t border-[#2A2A3A] pt-3 text-xs italic text-[#4A5568]">
+            <p className="border-t border-[#2A2A3A] pt-3 text-xs italic text-[#8290A2]">
               The page, share token, or prompt analysis you are looking for does not exist, was deleted, or has expired.
             </p>
           </div>

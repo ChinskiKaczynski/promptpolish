@@ -6,7 +6,8 @@ const stripeMocks = vi.hoisted(() => {
   return {
     checkout: {
       sessions: {
-        create: vi.fn()
+        create: vi.fn(),
+        retrieve: vi.fn()
       }
     },
     billingPortal: {
@@ -50,7 +51,12 @@ vi.mock('@/lib/supabase/billing', () => ({
   getUserIdByStripeCustomerId: vi.fn(),
   getSubscriptionByUserId: vi.fn(),
   saveSubscription: vi.fn(),
-  cancelSubscriptionInDatabase: vi.fn()
+  cancelSubscriptionInDatabase: vi.fn(),
+  claimWebhookEvent: vi.fn(),
+  updateWebhookEventStatus: vi.fn(),
+  claimCheckoutAttempt: vi.fn(),
+  updateCheckoutAttemptStatus: vi.fn(),
+  completeCheckoutAttempt: vi.fn()
 }))
 
 vi.mock('@/lib/supabase/queries', () => ({
@@ -73,9 +79,34 @@ import { POST as checkoutHandler } from '@/app/api/billing/checkout/route'
 import { POST as portalHandler } from '@/app/api/billing/portal/route'
 import { POST as webhookHandler } from '@/app/api/webhooks/stripe/route'
 import { getAuthUser } from '@/lib/identity/auth'
-import { getStripeCustomer, saveStripeCustomer, getUserIdByStripeCustomerId, saveSubscription, cancelSubscriptionInDatabase } from '@/lib/supabase/billing'
+import { 
+  getStripeCustomer, 
+  saveStripeCustomer, 
+  getUserIdByStripeCustomerId, 
+  getSubscriptionByUserId, 
+  saveSubscription, 
+  cancelSubscriptionInDatabase, 
+  claimWebhookEvent, 
+  updateWebhookEventStatus,
+  claimCheckoutAttempt,
+  updateCheckoutAttemptStatus,
+  completeCheckoutAttempt
+} from '@/lib/supabase/billing'
 import { setUserPlanSlug } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
+
+const makeRequestWithHeader = (bodyStr: string, signatureValue?: string) => {
+  const headers = new Headers()
+  headers.set('Content-Type', 'application/json')
+  if (signatureValue) {
+    headers.set('stripe-signature', signatureValue)
+  }
+  return new Request('http://localhost/api/webhooks/stripe', {
+    method: 'POST',
+    headers,
+    body: bodyStr
+  })
+}
 
 describe('Stripe Billing Foundation API Suite', () => {
   const originalEnv = { ...process.env }
@@ -116,6 +147,8 @@ describe('Stripe Billing Foundation API Suite', () => {
         current_period_start: insertData.current_period_start,
         current_period_end: insertData.current_period_end,
         cancel_at_period_end: insertData.cancel_at_period_end || false,
+        last_event_created: insertData.last_event_created || null,
+        last_event_id: insertData.last_event_id || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -131,6 +164,55 @@ describe('Stripe Billing Foundation API Suite', () => {
         plan_slug: 'free'
       })
       return true
+    })
+
+    // Default webhook inbox mocks — most tests use claim=process, update=success
+    vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+    vi.mocked(updateWebhookEventStatus).mockResolvedValue(true)
+
+    // Default: no existing active subscription for checkout tests
+    vi.mocked(getSubscriptionByUserId).mockResolvedValue(null)
+
+    // Default: saveStripeCustomer succeeds
+    vi.mocked(saveStripeCustomer).mockResolvedValue({ user_id: 'mock-user-id', stripe_customer_id: 'mock-customer-id', created_at: '', updated_at: '' })
+
+    // Default checkout attempt mocks
+    vi.mocked(claimCheckoutAttempt).mockResolvedValue({
+      status: 'create_new',
+      attempt_id: 'mock-attempt-uuid',
+      stripe_checkout_session_id: null
+    })
+    vi.mocked(updateCheckoutAttemptStatus).mockResolvedValue(true)
+    vi.mocked(completeCheckoutAttempt).mockResolvedValue(true)
+
+    // Dynamic fallback mock for stripe.subscriptions.retrieve to keep existing tests compatible
+    mockStripeInstances.subscriptions.retrieve.mockImplementation(async (subId) => {
+      const lastCallResult = mockStripeInstances.webhooks.constructEvent.mock.results.slice(-1)[0]
+      const construction = lastCallResult?.value
+      const status = construction?.data?.object?.status || 'active'
+      const priceId = construction?.data?.object?.items?.data?.[0]?.price?.id || 'price_1234_pro'
+      const customer = construction?.data?.object?.customer || 'cus_test_123'
+      const cancel_at_period_end = construction?.data?.object?.cancel_at_period_end || false
+      const current_period_start = construction?.data?.object?.current_period_start || 1700000000
+      const current_period_end = construction?.data?.object?.current_period_end || 1703000000
+
+      return {
+        id: subId,
+        customer,
+        status,
+        current_period_start,
+        current_period_end,
+        cancel_at_period_end,
+        items: {
+          data: [
+            {
+              price: {
+                id: priceId
+              }
+            }
+          ]
+        }
+      }
     })
   })
 
@@ -198,18 +280,26 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(response.status).toBe(200)
       expect(data.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_test')
 
-      expect(mockStripeInstances.customers.create).toHaveBeenCalledWith({
-        email: 'test@promptpolish.com',
-        metadata: { userId: 'user_uuid_1' }
-      })
+      expect(mockStripeInstances.customers.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'test@promptpolish.com',
+          metadata: { userId: 'user_uuid_1' }
+        }),
+        expect.objectContaining({
+          idempotencyKey: 'stripe-customer-creation-user_uuid_1'
+        })
+      )
       expect(saveStripeCustomer).toHaveBeenCalledWith('user_uuid_1', 'cus_new_123')
-      expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith({
-        mode: 'subscription',
-        customer: 'cus_new_123',
-        line_items: [{ price: 'price_1234_pro', quantity: 1 }],
-        success_url: 'http://localhost:3000/pricing?session_id={CHECKOUT_SESSION_ID}&upgrade=success',
-        cancel_url: 'http://localhost:3000/pricing?upgrade=cancel'
-      })
+      expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mode: 'subscription',
+          customer: 'cus_new_123',
+          line_items: [{ price: 'price_1234_pro', quantity: 1 }],
+          success_url: 'http://localhost:3000/pricing?session_id={CHECKOUT_SESSION_ID}&upgrade=success',
+          cancel_url: 'http://localhost:3000/pricing?upgrade=cancel'
+        }),
+        expect.any(Object)
+      )
     })
 
     it('uses existing Stripe Customer ID if mapping already exists in database', async () => {
@@ -237,8 +327,115 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           customer: 'cus_existing_999'
+        }),
+        expect.any(Object)
+      )
+    })
+
+    it('blocks checkout and returns 502 if saving customer mapping to database fails', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({
+        id: 'user_uuid_fail',
+        email: 'fail@promptpolish.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: ''
+      })
+      vi.mocked(getStripeCustomer).mockResolvedValue(null)
+      mockStripeInstances.customers.create.mockResolvedValue({ id: 'cus_fail_123' })
+      vi.mocked(saveStripeCustomer).mockResolvedValue(null) // Mock DB save failure
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(502)
+      expect(data.error).toBe('stripe_error')
+      expect(mockStripeInstances.checkout.sessions.create).not.toHaveBeenCalled()
+    })
+
+    it('blocks checkout and returns portal URL if user has an existing active subscription', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({
+        id: 'user_uuid_active_sub',
+        email: 'active@promptpolish.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: ''
+      })
+      vi.mocked(getStripeCustomer).mockResolvedValue({
+        user_id: 'user_uuid_active_sub',
+        stripe_customer_id: 'cus_active_sub',
+        created_at: '',
+        updated_at: ''
+      })
+      vi.mocked(getSubscriptionByUserId).mockResolvedValue({
+        id: 'sub_123',
+        user_id: 'user_uuid_active_sub',
+        stripe_customer_id: 'cus_active_sub',
+        stripe_subscription_id: 'sub_active_123',
+        stripe_price_id: 'price_1234_pro',
+        plan_slug: 'pro',
+        status: 'active',
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 86400000).toISOString(),
+        cancel_at_period_end: false,
+        last_event_created: null,
+        last_event_id: null,
+        created_at: '',
+        updated_at: ''
+      })
+      mockStripeInstances.billingPortal.sessions.create.mockResolvedValue({ url: 'https://billing.stripe.com/portal/cs_active' })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.status).toBe('existing_subscription')
+      expect(data.portalUrl).toBe('https://billing.stripe.com/portal/cs_active')
+      expect(mockStripeInstances.checkout.sessions.create).not.toHaveBeenCalled()
+    })
+
+    it('uses server-side attempt ID to derive the Stripe Checkout Session idempotency key', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({
+        id: 'user_uuid_idempotent',
+        email: 'idempotent@promptpolish.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: ''
+      })
+      vi.mocked(getStripeCustomer).mockResolvedValue(null)
+      mockStripeInstances.customers.create.mockResolvedValue({ id: 'cus_idempotent' })
+      vi.mocked(saveStripeCustomer).mockResolvedValue({
+        user_id: 'user_uuid_idempotent',
+        stripe_customer_id: 'cus_idempotent',
+        created_at: '',
+        updated_at: ''
+      })
+      vi.mocked(getSubscriptionByUserId).mockResolvedValue(null)
+      vi.mocked(claimCheckoutAttempt).mockResolvedValue({
+        status: 'create_new',
+        attempt_id: 'attempt-uuid-777',
+        stripe_checkout_session_id: null
+      })
+      mockStripeInstances.checkout.sessions.create.mockResolvedValue({ id: 'cs_test_777', url: 'https://checkout.stripe.com/pay/cs_test_777' })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_test_777')
+      expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          idempotencyKey: 'checkout-session-attempt-uuid-777'
         })
       )
+      expect(updateCheckoutAttemptStatus).toHaveBeenCalledWith({
+        attempt_id: 'attempt-uuid-777',
+        status: 'ready',
+        session_id: 'cs_test_777'
+      })
     })
   })
 
@@ -299,18 +496,6 @@ describe('Stripe Billing Foundation API Suite', () => {
   })
 
   describe('POST /api/webhooks/stripe (Stripe Webhooks)', () => {
-    const makeRequestWithHeader = (bodyStr: string, signatureValue?: string) => {
-      const headers = new Headers()
-      headers.set('Content-Type', 'application/json')
-      if (signatureValue) {
-        headers.set('stripe-signature', signatureValue)
-      }
-      return new Request('http://localhost/api/webhooks/stripe', {
-        method: 'POST',
-        headers,
-        body: bodyStr
-      })
-    }
 
     it('returns 400 Bad Request if stripe-signature header is missing', async () => {
       const response = await webhookHandler(makeRequestWithHeader('{}'))
@@ -362,7 +547,7 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(response.status).toBe(200)
 
       expect(getUserIdByStripeCustomerId).toHaveBeenCalledWith('cus_test_123')
-      expect(saveSubscription).toHaveBeenCalledWith({
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
         user_id: 'user_mapped_uuid',
         stripe_customer_id: 'cus_test_123',
         stripe_subscription_id: 'sub_test_123',
@@ -372,7 +557,7 @@ describe('Stripe Billing Foundation API Suite', () => {
         current_period_start: new Date(1700000000 * 1000).toISOString(),
         current_period_end: new Date(1703000000 * 1000).toISOString(),
         cancel_at_period_end: false
-      })
+      }))
     })
 
     it('processes customer.subscription.deleted and cancels subscription tier', async () => {
@@ -402,7 +587,7 @@ describe('Stripe Billing Foundation API Suite', () => {
       const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
       expect(response.status).toBe(200)
 
-      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith('sub_test_456')
+      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith('sub_test_456', expect.any(String), 'evt_test_2')
     })
 
     it('processes customer.subscription.updated with active status', async () => {
@@ -560,7 +745,7 @@ describe('Stripe Billing Foundation API Suite', () => {
 
       expect(getUserIdByStripeCustomerId).toHaveBeenCalledWith('cus_test_123')
       expect(mockStripeInstances.subscriptions.retrieve).toHaveBeenCalledWith('sub_test_123')
-      expect(saveSubscription).toHaveBeenCalledWith({
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
         user_id: 'user_mapped_uuid_checkout',
         stripe_customer_id: 'cus_test_123',
         stripe_subscription_id: 'sub_test_123',
@@ -570,7 +755,7 @@ describe('Stripe Billing Foundation API Suite', () => {
         current_period_start: new Date(1700000000 * 1000).toISOString(),
         current_period_end: new Date(1703000000 * 1000).toISOString(),
         cancel_at_period_end: false
-      })
+      }))
     })
 
     it('duplicate webhook delivery is safe because subscription upsert is stable', async () => {
@@ -644,7 +829,8 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           line_items: [{ price: 'price_1234_pro', quantity: 1 }]
-        })
+        }),
+        expect.any(Object)
       )
     })
 
@@ -724,7 +910,7 @@ describe('Stripe Billing Foundation API Suite', () => {
 
       const response1 = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEventDeleted), 't=123,v1=sig'))
       expect(response1.status).toBe(200)
-      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith('sub_deleted_test')
+      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith('sub_deleted_test', expect.any(String), 'evt_deleted_entitlement_test')
 
       // Proves that cancelSubscriptionInDatabase resolved status 'canceled' to plan_slug 'free' on the profile
       expect(setUserPlanSlug).toHaveBeenCalledWith(
@@ -829,4 +1015,765 @@ describe('Stripe Billing Foundation API Suite', () => {
       )
     })
   })
+
+  // ─────────────────────────────────────────────────────────
+  // Webhook Inbox: Deduplication
+  // ─────────────────────────────────────────────────────────
+  describe('Webhook Inbox — Event Deduplication', () => {
+    const dedupEvent = {
+      type: 'customer.subscription.created',
+      id: 'evt_dedup_001',
+      data: {
+        object: {
+          id: 'sub_dedup_001',
+          customer: 'cus_dedup_001',
+          status: 'active',
+          current_period_start: 1700000000,
+          current_period_end: 1703000000,
+          cancel_at_period_end: false,
+          items: { data: [{ price: { id: 'price_1234_pro' } }] }
+        }
+      }
+    }
+
+    it('returns 200 without calling saveSubscription when event is already processed', async () => {
+      // Simulate inbox saying the event was already handled
+      vi.mocked(claimWebhookEvent).mockResolvedValue('duplicate_success')
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(dedupEvent)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(dedupEvent), 't=111,v1=sig'))
+
+      expect(response.status).toBe(200)
+      expect(saveSubscription).not.toHaveBeenCalled()
+      // We should not attempt to update the status of an already-done event
+      expect(updateWebhookEventStatus).not.toHaveBeenCalled()
+    })
+
+    it('calls saveSubscription and marks event done when claim returns process', async () => {
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_dedup_uuid')
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(dedupEvent)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(dedupEvent), 't=111,v1=sig'))
+
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'user_dedup_uuid',
+        status: 'active',
+        plan_slug: 'pro'
+      }))
+      expect(updateWebhookEventStatus).toHaveBeenCalledWith({
+        event_id: 'evt_dedup_001',
+        status: 'processed'
+      })
+    })
+
+    it('returns 200 and marks event ignored for unsupported event types', async () => {
+      const unknownEvent = { type: 'payment_method.attached', id: 'evt_unknown_001', data: { object: {} } }
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(unknownEvent)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(unknownEvent), 't=111,v1=sig'))
+
+      expect(response.status).toBe(200)
+      expect(saveSubscription).not.toHaveBeenCalled()
+      expect(updateWebhookEventStatus).toHaveBeenCalledWith({
+        event_id: 'evt_unknown_001',
+        status: 'ignored'
+      })
+    })
+  })
+
+  // ─────────────────────────────────────────────────────────
+  // Webhook Inbox: Out-of-Order Events
+  // ─────────────────────────────────────────────────────────
+  describe('Webhook Inbox — Out-of-Order Event Protection', () => {
+    const makeSubEvent = (
+      type: string,
+      evtId: string,
+      subId: string,
+      status: string,
+      createdTs: number
+    ) => ({
+      type,
+      id: evtId,
+      created: createdTs,
+      data: {
+        object: {
+          id: subId,
+          customer: 'cus_ooo_test',
+          status,
+          current_period_start: 1700000000,
+          current_period_end: 1703000000,
+          cancel_at_period_end: false,
+          items: { data: [{ price: { id: 'price_1234_pro' } }] }
+        }
+      }
+    })
+
+    it('saves subscription when no existing record exists (first event)', async () => {
+      // saveSubscription itself handles "no prior record" path via upsert logic
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_ooo_uuid')
+
+      const evt = makeSubEvent('customer.subscription.created', 'evt_ooo_001', 'sub_ooo_001', 'active', 1700000100)
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(evt)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(evt), 't=222,v1=sig'))
+
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'active',
+        last_event_id: 'evt_ooo_001',
+        last_event_created: new Date(1700000100 * 1000).toISOString()
+      }))
+    })
+
+    it('saveSubscription is called with last_event_id and last_event_created for ordering', async () => {
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_ooo_uuid2')
+
+      const evt = makeSubEvent('customer.subscription.updated', 'evt_ooo_002', 'sub_ooo_002', 'past_due', 1700000200)
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(evt)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(evt), 't=222,v1=sig'))
+
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        last_event_id: 'evt_ooo_002',
+        last_event_created: new Date(1700000200 * 1000).toISOString()
+      }))
+    })
+
+    it('returns 200 and marks stale when saveSubscription throws StaleEventError', async () => {
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_ooo_uuid3')
+      // Simulate saveSubscription detecting an out-of-order (stale) event and throwing
+      vi.mocked(saveSubscription).mockRejectedValueOnce(
+        Object.assign(new Error('Stale event skipped'), { code: 'STALE_EVENT' })
+      )
+
+      const evt = makeSubEvent('customer.subscription.updated', 'evt_ooo_003', 'sub_ooo_003', 'canceled', 1699000000)
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(evt)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(evt), 't=222,v1=sig'))
+
+      // Stale events must not trigger a 5xx (would cause Stripe to retry forever)
+      expect(response.status).toBe(200)
+      expect(updateWebhookEventStatus).toHaveBeenCalledWith(expect.objectContaining({
+        event_id: 'evt_ooo_003',
+        status: 'ignored'
+      }))
+    })
+  })
+
+  // ─────────────────────────────────────────────────────────
+  // Webhook Inbox: Failed-Write / Retry Behavior
+  // ─────────────────────────────────────────────────────────
+  describe('Webhook Inbox — Failed-Write and Retry Behavior', () => {
+    const retryEvent = {
+      type: 'customer.subscription.updated',
+      id: 'evt_retry_001',
+      created: 1700005000,
+      data: {
+        object: {
+          id: 'sub_retry_001',
+          customer: 'cus_retry_001',
+          status: 'active',
+          current_period_start: 1700000000,
+          current_period_end: 1703000000,
+          cancel_at_period_end: false,
+          items: { data: [{ price: { id: 'price_1234_pro' } }] }
+        }
+      }
+    }
+
+    it('returns 500 when saveSubscription throws a transient DB error (Stripe will retry)', async () => {
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_retry_uuid')
+      vi.mocked(saveSubscription).mockRejectedValueOnce(
+        Object.assign(new Error('Connection timeout'), { code: 'DB_TRANSIENT' })
+      )
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(retryEvent)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(retryEvent), 't=333,v1=sig'))
+
+      // Must be 5xx so Stripe schedules a retry
+      expect(response.status).toBe(500)
+      // Status should be updated to failed_retryable so the inbox won't block re-processing
+      expect(updateWebhookEventStatus).toHaveBeenCalledWith(expect.objectContaining({
+        event_id: 'evt_retry_001',
+        status: 'failed_retryable',
+        failure_message: 'Connection timeout'
+      }))
+    })
+
+    it('returns 500 when claimWebhookEvent itself fails — returns 500 to force Stripe retry', async () => {
+      vi.mocked(claimWebhookEvent).mockRejectedValueOnce(new Error('DB connection lost'))
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(retryEvent)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(retryEvent), 't=333,v1=sig'))
+
+      expect(response.status).toBe(500)
+      // saveSubscription must never be called if we couldn't claim the event
+      expect(saveSubscription).not.toHaveBeenCalled()
+    })
+
+    it('returns 200 after successful retry when event was previously failed_retryable', async () => {
+      // On retry Stripe sends the same event again; claim returns 'process' again because
+      // the inbox status was 'failed_retryable' (not 'processed')
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_retry_uuid')
+      // This time the DB write succeeds
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(retryEvent)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(retryEvent), 't=444,v1=sig'))
+
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'user_retry_uuid',
+        status: 'active'
+      }))
+      expect(updateWebhookEventStatus).toHaveBeenCalledWith({
+        event_id: 'evt_retry_001',
+        status: 'processed'
+      })
+    })
+  })
+
+  // ─────────────────────────────────────────────────────────
+  // Webhook Inbox: Invoice Event Compatibility (payment_failed)
+  // ─────────────────────────────────────────────────────────
+  describe('Webhook Inbox — Invoice Event Compatibility', () => {
+    const makeInvoiceEvent = (subVal: string | Record<string, unknown> | null) => ({
+      type: 'invoice.payment_failed',
+      id: 'evt_invoice_fail_111',
+      data: {
+        object: {
+          id: 'in_123',
+          customer: 'cus_invoice_123',
+          subscription: subVal
+        }
+      }
+    })
+
+    it('handles subscription as string', async () => {
+      const evt = makeInvoiceEvent('sub_from_string')
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(evt)
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_invoice_1')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(evt), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(claimWebhookEvent).toHaveBeenCalledWith(expect.objectContaining({
+        subscription_id: 'sub_from_string',
+        customer_id: 'cus_invoice_123'
+      }))
+    })
+
+    it('handles subscription as expanded object', async () => {
+      const evt = makeInvoiceEvent({ id: 'sub_from_expanded_obj', object: 'subscription' })
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(evt)
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_invoice_2')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(evt), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(claimWebhookEvent).toHaveBeenCalledWith(expect.objectContaining({
+        subscription_id: 'sub_from_expanded_obj',
+        customer_id: 'cus_invoice_123'
+      }))
+    })
+
+    it('handles missing or null subscription', async () => {
+      const evt = makeInvoiceEvent(null)
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(evt)
+      vi.mocked(claimWebhookEvent).mockResolvedValue('process')
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_invoice_3')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(evt), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(claimWebhookEvent).toHaveBeenCalledWith(expect.objectContaining({
+        subscription_id: null,
+        customer_id: 'cus_invoice_123'
+      }))
+    })
+  })
+
+  // ─────────────────────────────────────────────────────────
+  // Checkout Attempts Lifecycle & Concurrency Deduplication
+  // ─────────────────────────────────────────────────────────
+  describe('Checkout Attempt Lifecycle & Concurrency', () => {
+    beforeEach(() => {
+      vi.mocked(getAuthUser).mockResolvedValue({
+        id: 'user_attempt_1',
+        email: 'attempt1@promptpolish.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: ''
+      })
+      vi.mocked(getStripeCustomer).mockResolvedValue({
+        user_id: 'user_attempt_1',
+        stripe_customer_id: 'cus_attempt_1',
+        created_at: '',
+        updated_at: ''
+      })
+      mockStripeInstances.checkout.sessions.create.mockResolvedValue({ id: 'cs_attempt_123', url: 'https://checkout.stripe.com/pay/cs_attempt_123' })
+    })
+
+    it('blocks concurrent checkout requests when one is already in progress', async () => {
+      // Simulate database claiming an in-progress attempt for a parallel request
+      vi.mocked(claimCheckoutAttempt).mockResolvedValue({
+        status: 'checkout_in_progress',
+        attempt_id: 'attempt-in-progress-uuid',
+        stripe_checkout_session_id: null
+      })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(409)
+      expect(data.error).toBe('checkout_in_progress')
+      expect(mockStripeInstances.checkout.sessions.create).not.toHaveBeenCalled()
+    })
+
+    it('returns existing session URL if checkout attempt is ready', async () => {
+      vi.mocked(claimCheckoutAttempt).mockResolvedValue({
+        status: 'ready',
+        attempt_id: 'attempt-ready-uuid',
+        stripe_checkout_session_id: 'cs_existing_999'
+      })
+
+      mockStripeInstances.checkout.sessions.retrieve.mockResolvedValue({
+        id: 'cs_existing_999',
+        url: 'https://checkout.stripe.com/pay/cs_existing_999',
+        status: 'open'
+      })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_existing_999')
+      expect(mockStripeInstances.checkout.sessions.create).not.toHaveBeenCalled()
+      expect(mockStripeInstances.checkout.sessions.retrieve).toHaveBeenCalledWith('cs_existing_999')
+    })
+
+    it('permits creating a new session if the existing session has expired', async () => {
+      vi.mocked(claimCheckoutAttempt)
+        .mockResolvedValueOnce({
+          status: 'ready',
+          attempt_id: 'attempt-expired-uuid',
+          stripe_checkout_session_id: 'cs_expired_888'
+        })
+        .mockResolvedValueOnce({
+          status: 'create_new',
+          attempt_id: 'attempt-fresh-uuid',
+          stripe_checkout_session_id: null
+        })
+
+      mockStripeInstances.checkout.sessions.retrieve.mockResolvedValue({
+        id: 'cs_expired_888',
+        url: 'https://checkout.stripe.com/pay/cs_expired_888',
+        status: 'expired'
+      })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_attempt_123')
+      expect(updateCheckoutAttemptStatus).toHaveBeenCalledWith({
+        attempt_id: 'attempt-expired-uuid',
+        status: 'expired'
+      })
+      expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          idempotencyKey: 'checkout-session-attempt-fresh-uuid'
+        })
+      )
+    })
+
+    it('releases/fails the checkout attempt record in DB when Stripe session creation throws', async () => {
+      vi.mocked(claimCheckoutAttempt).mockResolvedValue({
+        status: 'create_new',
+        attempt_id: 'attempt-fail-uuid',
+        stripe_checkout_session_id: null
+      })
+
+      mockStripeInstances.checkout.sessions.create.mockRejectedValueOnce(new Error('Stripe price inactive'))
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(data.error).toBe('internal_error')
+      expect(updateCheckoutAttemptStatus).toHaveBeenLastCalledWith({
+        attempt_id: 'attempt-fail-uuid',
+        status: 'failed',
+        failure_code: 'Stripe price inactive'
+      })
+    })
+
+    it('active subscription prevents checkout attempt creation', async () => {
+      // Setup active subscription
+      vi.mocked(getSubscriptionByUserId).mockResolvedValue({
+        id: 'sub_active_777',
+        user_id: 'user_attempt_1',
+        stripe_customer_id: 'cus_attempt_1',
+        stripe_subscription_id: 'sub_active_777',
+        stripe_price_id: 'price_pro_123',
+        plan_slug: 'pro',
+        status: 'active',
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 86400000).toISOString(),
+        cancel_at_period_end: false,
+        last_event_created: null,
+        last_event_id: null,
+        created_at: '',
+        updated_at: ''
+      })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      // Should return portal redirect or block immediately without calling claimCheckoutAttempt
+      expect(data.status).toBe('existing_subscription')
+      expect(claimCheckoutAttempt).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('Required Corrective Webhook Handling Tests', () => {
+    it('1. active payload + Stripe retrieve returns past_due -> persist past_due', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_t1',
+        data: {
+          object: {
+            id: 'sub_t1',
+            customer: 'cus_t1',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_t1')
+
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_t1',
+        customer: 'cus_t1',
+        status: 'past_due',
+        current_period_start: 1700000000,
+        current_period_end: 1703000000,
+        cancel_at_period_end: false,
+        items: { data: [{ price: { id: 'price_1234_pro' } }] }
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'past_due',
+        plan_slug: 'pro'
+      }))
+    })
+
+    it('2. past_due payload + Stripe retrieve returns active -> persist active', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_t2',
+        data: {
+          object: {
+            id: 'sub_t2',
+            customer: 'cus_t2',
+            status: 'past_due',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_t2')
+
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_t2',
+        customer: 'cus_t2',
+        status: 'active',
+        current_period_start: 1700000000,
+        current_period_end: 1703000000,
+        cancel_at_period_end: false,
+        items: { data: [{ price: { id: 'price_1234_pro' } }] }
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'active',
+        plan_slug: 'pro'
+      }))
+    })
+
+    it('3. active payload + Stripe retrieve returns unpaid -> persist unpaid/free', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_t3',
+        data: {
+          object: {
+            id: 'sub_t3',
+            customer: 'cus_t3',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_t3')
+
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_t3',
+        customer: 'cus_t3',
+        status: 'unpaid',
+        current_period_start: 1700000000,
+        current_period_end: 1703000000,
+        cancel_at_period_end: false,
+        items: { data: [{ price: { id: 'price_1234_pro' } }] }
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'unpaid',
+        plan_slug: 'free'
+      }))
+    })
+
+    it('4. unpaid payload + Stripe retrieve returns active -> persist active/Pro', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_t4',
+        data: {
+          object: {
+            id: 'sub_t4',
+            customer: 'cus_t4',
+            status: 'unpaid',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_t4')
+
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_t4',
+        customer: 'cus_t4',
+        status: 'active',
+        current_period_start: 1700000000,
+        current_period_end: 1703000000,
+        cancel_at_period_end: false,
+        items: { data: [{ price: { id: 'price_1234_pro' } }] }
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'active',
+        plan_slug: 'pro'
+      }))
+    })
+
+    it('5. created and updated share the same timestamp but different event IDs -> event-ID lexical order has no effect', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_lexical_smaller',
+        created: 1700000000,
+        data: {
+          object: {
+            id: 'sub_lexical',
+            customer: 'cus_lexical',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_lexical')
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_lexical',
+        customer: 'cus_lexical',
+        status: 'active',
+        current_period_start: 1700000000,
+        current_period_end: 1703000000,
+        cancel_at_period_end: false,
+        items: { data: [{ price: { id: 'price_1234_pro' } }] }
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        last_event_id: 'evt_lexical_smaller',
+        last_event_created: new Date(1700000000 * 1000).toISOString()
+      }))
+    })
+
+    it('6. deleted event followed by same-timestamp active update -> remains canceled/free', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_active_same_time',
+        created: 1700000000,
+        data: {
+          object: {
+            id: 'sub_deleted_first',
+            customer: 'cus_del',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_del')
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_deleted_first',
+        customer: 'cus_del',
+        status: 'active',
+        current_period_start: 1700000000,
+        current_period_end: 1703000000,
+        cancel_at_period_end: false,
+        items: { data: [{ price: { id: 'price_1234_pro' } }] }
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        last_event_id: 'evt_active_same_time',
+        last_event_created: new Date(1700000000 * 1000).toISOString()
+      }))
+    })
+
+    it('7. active update followed by same-timestamp deleted -> becomes canceled/free', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.deleted',
+        id: 'evt_del_same_time',
+        created: 1700000000,
+        data: {
+          object: {
+            id: 'sub_active_first',
+            customer: 'cus_del',
+            status: 'canceled',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith(
+        'sub_active_first',
+        new Date(1700000000 * 1000).toISOString(),
+        'evt_del_same_time'
+      )
+    })
+
+    it('8. exact duplicate event ID remains idempotent', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_duplicate_id',
+        data: {
+          object: {
+            id: 'sub_dup',
+            customer: 'cus_dup',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_dup')
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_dup',
+        customer: 'cus_dup',
+        status: 'active',
+        current_period_start: 1700000000,
+        current_period_end: 1703000000,
+        cancel_at_period_end: false,
+        items: { data: [{ price: { id: 'price_1234_pro' } }] }
+      })
+
+      vi.mocked(claimWebhookEvent).mockResolvedValueOnce('process')
+      const res1 = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(res1.status).toBe(200)
+
+      vi.mocked(claimWebhookEvent).mockResolvedValueOnce('duplicate_success')
+      const res2 = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(res2.status).toBe(200)
+      const data2 = await res2.json()
+      expect(data2.duplicate).toBe(true)
+    })
+
+    it('9. Stripe retrieve failure -> inbox failed_retryable and non-2xx', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_retrieve_fail_api',
+        data: {
+          object: {
+            id: 'sub_retrieve_fail_api',
+            customer: 'cus_fail',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_fail')
+
+      const stripeError = new Error('Stripe API unavailable')
+      Object.assign(stripeError, { type: 'StripeConnectionError', statusCode: 502 })
+      mockStripeInstances.subscriptions.retrieve.mockRejectedValue(stripeError)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(503)
+
+      expect(updateWebhookEventStatus).toHaveBeenCalledWith(expect.objectContaining({
+        event_id: 'evt_retrieve_fail_api',
+        status: 'failed_retryable',
+        failure_message: expect.stringContaining('Stripe retrieve failed')
+      }))
+    })
+
+    it('10. Stripe retrieve returns missing/deleted subscription -> safe canceled/free behavior', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_retrieve_missing_api',
+        data: {
+          object: {
+            id: 'sub_missing_api',
+            customer: 'cus_missing',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_missing')
+
+      const stripeError = new Error('No such subscription')
+      Object.assign(stripeError, { code: 'resource_missing', statusCode: 404 })
+      mockStripeInstances.subscriptions.retrieve.mockRejectedValue(stripeError)
+
+      vi.mocked(cancelSubscriptionInDatabase).mockResolvedValue(true)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith('sub_missing_api', expect.any(String), 'evt_retrieve_missing_api')
+      expect(updateWebhookEventStatus).toHaveBeenCalledWith({
+        event_id: 'evt_retrieve_missing_api',
+        status: 'processed'
+      })
+    })
+  })
 })
+

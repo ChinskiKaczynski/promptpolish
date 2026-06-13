@@ -7,13 +7,15 @@ vi.mock('@/lib/identity/anonymous', () => ({
 }))
 
 vi.mock('@/lib/supabase/queries', () => ({
-  createUsageEvent: vi.fn()
+  createUsageEvent: vi.fn(),
+  getPromptAnalysisForOwner: vi.fn(),
+  getRecentEventsCount: vi.fn()
 }))
 
 import { POST } from '@/app/api/events/route'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
-import { createUsageEvent } from '@/lib/supabase/queries'
-import type { UsageEventRow } from '@/lib/supabase/types'
+import { createUsageEvent, getPromptAnalysisForOwner, getRecentEventsCount } from '@/lib/supabase/queries'
+import type { UsageEventRow, PromptAnalysisRow } from '@/lib/supabase/types'
 
 const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
 const OWNER_ID = 'owner-anon-uuid'
@@ -31,6 +33,8 @@ describe('POST /api/events', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(getOwnerIdFromCookies).mockResolvedValue(OWNER_ID)
+    vi.mocked(getRecentEventsCount).mockResolvedValue(0)
+    vi.mocked(getPromptAnalysisForOwner).mockResolvedValue({ id: ANALYSIS_ID, owner_anonymous_id: OWNER_ID, user_id: null } as unknown as PromptAnalysisRow)
     vi.mocked(createUsageEvent).mockResolvedValue({
       id: 'evt-uuid',
       owner_anonymous_id: OWNER_ID,
@@ -95,6 +99,30 @@ describe('POST /api/events', () => {
       const callArgs = vi.mocked(createUsageEvent).mock.calls[0][0]
       expect(callArgs.metadata_json).not.toHaveProperty('prompt')
       expect(callArgs.metadata_json).not.toHaveProperty('improved_prompt')
+    })
+  })
+
+  describe('Rate Limiting & Ownership Hardening', () => {
+    it('returns 403 Forbidden when trying to submit event for non-owned analysis', async () => {
+      vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(null) // Mock non-owned analysis
+
+      const response = await POST(makeRequest(validPayload))
+      const data = await response.json()
+
+      expect(response.status).toBe(403)
+      expect(data.error).toBe('forbidden')
+      expect(createUsageEvent).not.toHaveBeenCalled()
+    })
+
+    it('returns 429 Too Many Requests when events rate limit is exceeded', async () => {
+      vi.mocked(getRecentEventsCount).mockResolvedValue(30) // Exceeded
+
+      const response = await POST(makeRequest({ event_type: 'upgrade_cta_clicked' }))
+      const data = await response.json()
+
+      expect(response.status).toBe(429)
+      expect(data.error).toBe('rate_limit_exceeded')
+      expect(createUsageEvent).not.toHaveBeenCalled()
     })
   })
 })

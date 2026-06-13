@@ -3,18 +3,25 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 // 1. Mock server-only since it doesn't resolve in Node/Vitest
 vi.mock('server-only', () => ({}))
 
-// 2. Mock individual layers to control execution flows
 vi.mock('@/lib/identity/anonymous', () => ({
   resolveOrCreateOwnerId: vi.fn()
 }))
 
+vi.mock('@/lib/identity/auth', () => ({
+  getAuthUser: vi.fn()
+}))
+
+// 2. Mock individual layers to control execution flows
 vi.mock('@/lib/supabase/queries', () => ({
   getModelProfileBySlug: vi.fn(),
   createPromptAnalysis: vi.fn(),
   createUsageEvent: vi.fn(),
   getUserProfile: vi.fn(),
   getUsageCountTodayForUser: vi.fn(),
-  getUsageCountThisMonthForUser: vi.fn()
+  getUsageCountThisMonthForUser: vi.fn(),
+  acquireReservation: vi.fn(),
+  completeReservation: vi.fn(),
+  releaseReservation: vi.fn()
 }))
 
 
@@ -25,19 +32,23 @@ vi.mock('@/lib/ai/analyze-prompt', () => ({
 // Import dependencies and route handler
 import { POST } from '@/app/api/analyze/route'
 import { resolveOrCreateOwnerId } from '@/lib/identity/anonymous'
+import { getAuthUser } from '@/lib/identity/auth'
 import {
   getModelProfileBySlug,
   createPromptAnalysis,
   createUsageEvent,
   getUserProfile,
   getUsageCountTodayForUser,
-  getUsageCountThisMonthForUser
+  getUsageCountThisMonthForUser,
+  acquireReservation,
+  completeReservation,
+  releaseReservation
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
-import { serverEnv } from '@/lib/env/server'
-import type { ModelProfileRow, PromptAnalysisRow } from '@/lib/supabase/types'
+import type { ModelProfileRow, PromptAnalysisRow, UserProfileRow } from '@/lib/supabase/types'
 import type { AnalysisServiceResult } from '@/lib/ai/analyze-prompt'
+import type { User } from '@supabase/supabase-js'
 
 
 describe('POST /api/analyze API Route Handler', () => {
@@ -46,10 +57,14 @@ describe('POST /api/analyze API Route Handler', () => {
 
     // Default mock implementation setup
     vi.mocked(resolveOrCreateOwnerId).mockResolvedValue({ id: 'mocked-owner-id', isNew: false })
+    vi.mocked(getAuthUser).mockResolvedValue(null)
     vi.mocked(getUserProfile).mockResolvedValue(null)
     vi.mocked(getUsageCountTodayForUser).mockResolvedValue(0)
     vi.mocked(getUsageCountThisMonthForUser).mockResolvedValue(0)
     vi.mocked(createUsageEvent).mockResolvedValue(null)
+    vi.mocked(acquireReservation).mockResolvedValue('success:reserved')
+    vi.mocked(completeReservation).mockResolvedValue(true)
+    vi.mocked(releaseReservation).mockResolvedValue(true)
 
     vi.mocked(getModelProfileBySlug).mockResolvedValue({
       id: 'profile-uuid',
@@ -97,7 +112,7 @@ describe('POST /api/analyze API Route Handler', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('invalid_input')
+      expect(data.error).toBe('validation_error')
     })
 
     it('returns 400 Bad Request when mandatory fields are missing', async () => {
@@ -106,7 +121,7 @@ describe('POST /api/analyze API Route Handler', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('invalid_input')
+      expect(data.error).toBe('validation_error')
     })
 
     it('returns 400 Bad Request when input prompt is below MIN_PROMPT_CHARS (20) and logs analysis_failed', async () => {
@@ -118,7 +133,7 @@ describe('POST /api/analyze API Route Handler', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('invalid_input')
+      expect(data.error).toBe('validation_error')
       expect(data.message).toContain('za krótki')
 
       expect(createUsageEvent).toHaveBeenCalledWith(
@@ -131,8 +146,8 @@ describe('POST /api/analyze API Route Handler', () => {
       )
     })
 
-    it('returns 413 Payload Too Large when input prompt exceeds MAX_PROMPT_CHARS (12000) and logs analysis_failed', async () => {
-      const longPrompt = 'a'.repeat(serverEnv.MAX_PROMPT_CHARS + 1)
+    it('returns 400 Bad Request when input prompt exceeds Anonymous plan limit (12000) and logs analysis_failed', async () => {
+      const longPrompt = 'a'.repeat(12001)
       const payload = {
         ...validPayload,
         input_prompt: longPrompt
@@ -140,15 +155,85 @@ describe('POST /api/analyze API Route Handler', () => {
       const response = await POST(makeRequest(payload))
       const data = await response.json()
 
-      expect(response.status).toBe(413)
-      expect(data.error).toBe('prompt_too_long')
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('validation_error')
+      expect(data.plan).toBe('anonymous')
+      expect(data.maxPromptChars).toBe(12000)
       expect(data.message).toContain('Przekroczono maksymalną długość')
 
       expect(createUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           event_type: 'analysis_failed',
           metadata_json: expect.objectContaining({
-            error_code: 'PROMPT_TOO_LONG'
+            error_code: 'PROMPT_TOO_LONG',
+            plan_slug: 'anonymous',
+            max_chars: 12000
+          })
+        })
+      )
+    })
+
+    it('allows input prompt up to 24000 characters for Pro plan user', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({ id: 'pro-user-uuid', email: 'pro@test.com' } as unknown as User)
+      vi.mocked(getUserProfile).mockResolvedValue({ plan_slug: 'pro' } as unknown as UserProfileRow)
+      vi.mocked(analyzePrompt).mockResolvedValue({
+        analysis: {
+          overall_summary: 'Prompt jest poprawny.',
+          detected_task_type: 'General',
+          criteria_scores: [
+            { criterion: 'goal_clarity', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'None' }
+          ],
+          top_weaknesses: [],
+          improvement_plan: [],
+          improved_prompt: 'Improved polished prompt',
+          change_explanations: ['Explanations']
+        },
+        scores: {
+          overallScore: 85,
+          scoreLevel: 'strong'
+        }
+      } as unknown as AnalysisServiceResult)
+      vi.mocked(createPromptAnalysis).mockResolvedValue({
+        id: 'new-analysis-uuid',
+        overall_score: 85,
+        score_level: 'strong',
+        improved_prompt: 'Improved polished prompt'
+      } as unknown as PromptAnalysisRow)
+
+      const longPrompt = 'a'.repeat(24000)
+      const payload = {
+        ...validPayload,
+        input_prompt: longPrompt
+      }
+      const response = await POST(makeRequest(payload))
+      expect(response.status).toBe(200)
+    })
+
+    it('returns 400 Bad Request when input prompt exceeds Pro plan limit (24000) for Pro user', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({ id: 'pro-user-uuid', email: 'pro@test.com' } as unknown as User)
+      vi.mocked(getUserProfile).mockResolvedValue({ plan_slug: 'pro' } as unknown as UserProfileRow)
+
+      const longPrompt = 'a'.repeat(24001)
+      const payload = {
+        ...validPayload,
+        input_prompt: longPrompt
+      }
+      const response = await POST(makeRequest(payload))
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('validation_error')
+      expect(data.plan).toBe('pro')
+      expect(data.maxPromptChars).toBe(24000)
+      expect(data.message).toContain('Przekroczono maksymalną długość')
+
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: 'analysis_failed',
+          metadata_json: expect.objectContaining({
+            error_code: 'PROMPT_TOO_LONG',
+            plan_slug: 'pro',
+            max_chars: 24000
           })
         })
       )
@@ -158,16 +243,17 @@ describe('POST /api/analyze API Route Handler', () => {
   describe('Sensitive Data Mitigation Preflight', () => {
     it('blocks high-risk sensitive data, records blocked usage event, and returns 422 without saving prompt', async () => {
       // Prompt containing OpenAI API key pattern which flags high-risk
+      const rawSecret = 'sk-abcdefghijklmnop1234567890abcdefghijklmnop'
       const sensitivePayload = {
         ...validPayload,
-        input_prompt: 'Mój tajny klucz to: sk-abcdefghijklmnop1234567890abcdefghijklmnop'
+        input_prompt: `Mój tajny klucz to: ${rawSecret}`
       }
 
       const response = await POST(makeRequest(sensitivePayload))
       const data = await response.json()
 
       expect(response.status).toBe(422)
-      expect(data.error).toBe('high_risk_sensitive_data_detected')
+      expect(data.error).toBe('sensitive_data_detected')
       expect(data.findings).toBeDefined()
       expect(data.findings.length).toBeGreaterThan(0)
 
@@ -187,6 +273,12 @@ describe('POST /api/analyze API Route Handler', () => {
         })
       )
 
+      // Assert raw secret did not leak into usage event metadata
+      const call = vi.mocked(createUsageEvent).mock.calls.find(c => c[0].event_type === 'sensitive_data_blocked')
+      expect(call).toBeDefined()
+      const metadataStr = JSON.stringify(call![0].metadata_json)
+      expect(metadataStr).not.toContain(rawSecret)
+
       // Verification: Check usage_event was stored with 'analysis_failed' type
       expect(createUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -202,32 +294,105 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(analyzePrompt).not.toHaveBeenCalled()
       expect(createPromptAnalysis).not.toHaveBeenCalled()
     })
+
+    it('blocks request when bearer token is present in task_goal', async () => {
+      const rawSecret = 'ya29.a0AfH6SMDIu123456789abcdefghijklmnopqrstuvwxyz'
+      const payload = {
+        ...validPayload,
+        task_goal: `My token is Bearer ${rawSecret}`
+      }
+      const response = await POST(makeRequest(payload))
+      expect(response.status).toBe(422)
+      expect(analyzePrompt).not.toHaveBeenCalled()
+      expect(createPromptAnalysis).not.toHaveBeenCalled()
+
+      const call = vi.mocked(createUsageEvent).mock.calls.find(c => c[0].event_type === 'sensitive_data_blocked')
+      expect(call).toBeDefined()
+      expect(JSON.stringify(call![0].metadata_json)).not.toContain(rawSecret)
+    })
+
+    it('blocks request when JWT token is present in task_type', async () => {
+      const rawSecret = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+      const payload = {
+        ...validPayload,
+        task_type: rawSecret
+      }
+      const response = await POST(makeRequest(payload))
+      expect(response.status).toBe(422)
+      expect(analyzePrompt).not.toHaveBeenCalled()
+      expect(createPromptAnalysis).not.toHaveBeenCalled()
+
+      const call = vi.mocked(createUsageEvent).mock.calls.find(c => c[0].event_type === 'sensitive_data_blocked')
+      expect(call).toBeDefined()
+      expect(JSON.stringify(call![0].metadata_json)).not.toContain(rawSecret)
+    })
+
+    it('blocks request when private key block is present in expected_output_format', async () => {
+      const rawSecret = '-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0yGz7V+abc123xyz\n-----END RSA PRIVATE KEY-----'
+      const payload = {
+        ...validPayload,
+        expected_output_format: rawSecret
+      }
+      const response = await POST(makeRequest(payload))
+      expect(response.status).toBe(422)
+      expect(analyzePrompt).not.toHaveBeenCalled()
+      expect(createPromptAnalysis).not.toHaveBeenCalled()
+
+      const call = vi.mocked(createUsageEvent).mock.calls.find(c => c[0].event_type === 'sensitive_data_blocked')
+      expect(call).toBeDefined()
+      expect(JSON.stringify(call![0].metadata_json)).not.toContain('MIIEowIBAAKCAQEA0yGz7V+abc123xyz')
+    })
+
+    it('blocks request when database URL is present in constraints', async () => {
+      const rawSecret = 'postgresql://postgres:secret-password123@localhost:5432/mydb'
+      const payload = {
+        ...validPayload,
+        constraints: rawSecret
+      }
+      const response = await POST(makeRequest(payload))
+      expect(response.status).toBe(422)
+      expect(analyzePrompt).not.toHaveBeenCalled()
+      expect(createPromptAnalysis).not.toHaveBeenCalled()
+
+      const call = vi.mocked(createUsageEvent).mock.calls.find(c => c[0].event_type === 'sensitive_data_blocked')
+      expect(call).toBeDefined()
+      expect(JSON.stringify(call![0].metadata_json)).not.toContain('secret-password123')
+    })
   })
 
   describe('Usage Rate Limits Check', () => {
     it('returns 429 Too Many Requests when daily limits are reached and saves a limit_reached event', async () => {
-      vi.mocked(getUsageCountTodayForUser).mockResolvedValue(5) // Free plan daily limit is 5
+      vi.mocked(acquireReservation).mockResolvedValue('daily_limit_reached')
 
       const response = await POST(makeRequest(validPayload))
       const data = await response.json()
 
       expect(response.status).toBe(429)
-      expect(data.error).toBe('limit_reached')
+      expect(data.error).toBe('entitlement_error')
       expect(data.message).toContain('Przekroczono dzienny limit')
       expect(analyzePrompt).not.toHaveBeenCalled()
-
-      expect(getUsageCountTodayForUser).toHaveBeenCalledWith('mocked-owner-id', null)
     })
 
     it('returns 402 Payment Required when monthly limits are reached', async () => {
-      vi.mocked(getUsageCountThisMonthForUser).mockResolvedValue(20) // Free plan monthly limit is 20
+      vi.mocked(acquireReservation).mockResolvedValue('monthly_limit_reached')
 
       const response = await POST(makeRequest(validPayload))
       const data = await response.json()
 
       expect(response.status).toBe(402)
-      expect(data.error).toBe('monthly_limit_reached')
+      expect(data.error).toBe('entitlement_error')
       expect(data.message).toContain('Przekroczono miesięczny limit')
+      expect(analyzePrompt).not.toHaveBeenCalled()
+    })
+
+    it('fails closed and returns 500 when database count/reservation acquisition fails', async () => {
+      vi.mocked(acquireReservation).mockRejectedValue(new Error('Database deadlock or connection error'))
+
+      const response = await POST(makeRequest(validPayload))
+      const data = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(data.error).toBe('temporary_service_error')
       expect(analyzePrompt).not.toHaveBeenCalled()
     })
   })
@@ -257,12 +422,31 @@ describe('POST /api/analyze API Route Handler', () => {
   })
 
   describe('Provider Failures & Error Mapping', () => {
-    it('maps transient provider rate limits (429) to 503 Service Unavailable', async () => {
+    it('maps transient provider rate limits (429) to 429 Too Many Requests', async () => {
       const error = new ProviderError(
         'Throttled',
         'Our prompt analysis engine is currently handling high volume.',
         null,
-        429
+        429,
+        'provider_rate_limit'
+      )
+      vi.mocked(analyzePrompt).mockRejectedValue(error)
+
+      const response = await POST(makeRequest(validPayload))
+      const data = await response.json()
+
+      expect(response.status).toBe(429)
+      expect(data.error).toBe('provider_rate_limit')
+      expect(data.message).toBe(error.userMessage)
+    })
+
+    it('maps provider unavailable failures (503) to 503 Service Unavailable', async () => {
+      const error = new ProviderError(
+        'Bad Request',
+        'Our prompt analysis engine encountered an error.',
+        null,
+        503,
+        'provider_unavailable'
       )
       vi.mocked(analyzePrompt).mockRejectedValue(error)
 
@@ -271,23 +455,6 @@ describe('POST /api/analyze API Route Handler', () => {
 
       expect(response.status).toBe(503)
       expect(data.error).toBe('provider_unavailable')
-      expect(data.message).toBe(error.userMessage)
-    })
-
-    it('maps non-transient provider failures (400) to 502 Bad Gateway', async () => {
-      const error = new ProviderError(
-        'Bad Request',
-        'Our prompt analysis engine encountered an error.',
-        null,
-        400
-      )
-      vi.mocked(analyzePrompt).mockRejectedValue(error)
-
-      const response = await POST(makeRequest(validPayload))
-      const data = await response.json()
-
-      expect(response.status).toBe(502)
-      expect(data.error).toBe('provider_error')
       expect(data.message).toBe(error.userMessage)
     })
 

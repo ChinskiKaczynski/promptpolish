@@ -1,20 +1,32 @@
 import 'server-only'
 import { z } from 'zod'
 
+const strictBool = z.preprocess((val) => {
+  if (val === undefined || val === '') return undefined
+  if (typeof val === 'boolean') return val
+  if (typeof val === 'string') {
+    const trimmed = val.trim().toLowerCase()
+    if (trimmed === 'true') return true
+    if (trimmed === 'false') return false
+    throw new Error(`Invalid boolean string: "${val}"`)
+  }
+  throw new Error(`Invalid boolean type: ${typeof val}`)
+}, z.boolean().optional())
+
 export const serverEnvSchema = z.object({
   APP_URL: z.string().url().default('http://localhost:3000'),
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_MODEL_ID: z.string().default('deepseek/deepseek-v4-flash'),
   OPENROUTER_SITE_URL: z.string().optional(),
   OPENROUTER_APP_NAME: z.string().optional(),
-  AI_MOCK_MODE: z.coerce.boolean().default(false),
+  AI_MOCK_MODE: strictBool.default(false),
   SUPABASE_SECRET_KEY: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   ANONYMOUS_DAILY_LIMIT: z.coerce.number().int().positive().default(3),
   MAX_PROMPT_CHARS: z.coerce.number().int().positive().default(12000),
   MIN_PROMPT_CHARS: z.coerce.number().int().positive().default(20),
-  SENSITIVE_DATA_BLOCK_HIGH_RISK: z.coerce.boolean().default(true),
+  SENSITIVE_DATA_BLOCK_HIGH_RISK: strictBool.default(true),
   RETENTION_ANONYMOUS_ANALYSIS_DAYS: z.coerce.number().int().positive().default(30),
   RETENTION_USAGE_EVENT_DAYS: z.coerce.number().int().positive().default(90),
   RETENTION_FEEDBACK_EVENT_DAYS: z.coerce.number().int().positive().default(180),
@@ -23,11 +35,31 @@ export const serverEnvSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_ID_PRO: z.string().optional(),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
-  STRIPE_ENABLED: z.coerce.boolean().default(false),
-  ADMIN_EMAILS: z.string().optional()
+  STRIPE_ENABLED: strictBool.default(false),
+  ADMIN_EMAILS: z.string().optional(),
+  RATE_LIMIT_HMAC_SECRET: z.string().optional(),
+  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(30000)
 })
 
-export const serverEnv = serverEnvSchema.parse(process.env)
+let parsedEnv: z.infer<typeof serverEnvSchema>
+try {
+  parsedEnv = serverEnvSchema.parse(process.env)
+} catch (err) {
+  const message = err instanceof Error ? err.message : String(err)
+  if (err instanceof z.ZodError) {
+    const sanitizedIssues = err.issues.map((issue) => ({
+      path: issue.path.join('.'),
+      code: issue.code,
+      message: issue.message
+    }))
+    console.error('Environment validation failed:', JSON.stringify(sanitizedIssues))
+  } else {
+    console.error('Environment validation failed:', message)
+  }
+  throw new Error('Environment validation failed. Some keys may be invalid or missing.')
+}
+
+export const serverEnv = parsedEnv
 
 /**
  * Checks if all critical environment variables required for production are present.
@@ -60,6 +92,9 @@ export function checkProductionEnv() {
       if (!process.env.STRIPE_PRICE_ID_PRO) {
         missing.push('STRIPE_PRICE_ID_PRO')
       }
+    }
+    if (!process.env.RATE_LIMIT_HMAC_SECRET) {
+      missing.push('RATE_LIMIT_HMAC_SECRET')
     }
     if (missing.length > 0) {
       return {

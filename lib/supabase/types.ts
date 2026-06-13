@@ -81,6 +81,8 @@ export interface FeedbackEventRow {
   analysis_id: string
   rating: 'up' | 'down'
   comment: string | null
+  user_id: string | null
+  owner_anonymous_id: string | null
   created_at: string
 }
 
@@ -111,6 +113,8 @@ export interface SubscriptionRow {
   current_period_start: string
   current_period_end: string
   cancel_at_period_end: boolean
+  last_event_created: string | null
+  last_event_id: string | null
   created_at: string
   updated_at: string
 }
@@ -291,6 +295,8 @@ export interface Database {
           analysis_id: string
           rating: 'up' | 'down'
           comment?: string | null
+          user_id?: string | null
+          owner_anonymous_id?: string | null
           created_at?: string
         }
         Update: {
@@ -298,7 +304,57 @@ export interface Database {
           analysis_id?: string
           rating?: 'up' | 'down'
           comment?: string | null
+          user_id?: string | null
+          owner_anonymous_id?: string | null
           created_at?: string
+        }
+        Relationships: []
+      }
+      usage_reservations: {
+        Row: Record<string, unknown>
+        Insert: {
+          id: string
+          owner_anonymous_id: string
+          user_id?: string | null
+          status: 'reserved' | 'completed' | 'released'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          owner_anonymous_id?: string
+          user_id?: string | null
+          status?: 'reserved' | 'completed' | 'released'
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      billing_checkout_attempts: {
+        Row: Record<string, unknown>
+        Insert: {
+          id?: string
+          user_id: string
+          price_id: string
+          stripe_customer_id: string
+          stripe_checkout_session_id?: string | null
+          status: 'creating' | 'ready' | 'completed' | 'failed' | 'expired'
+          expires_at: string
+          created_at?: string
+          updated_at?: string
+          failure_code?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          price_id?: string
+          stripe_customer_id?: string
+          stripe_checkout_session_id?: string | null
+          status?: 'creating' | 'ready' | 'completed' | 'failed' | 'expired'
+          expires_at?: string
+          created_at?: string
+          updated_at?: string
+          failure_code?: string | null
         }
         Relationships: []
       }
@@ -331,6 +387,8 @@ export interface Database {
           current_period_start: string
           current_period_end: string
           cancel_at_period_end?: boolean
+          last_event_created?: string | null
+          last_event_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -345,6 +403,8 @@ export interface Database {
           current_period_start?: string
           current_period_end?: string
           cancel_at_period_end?: boolean
+          last_event_created?: string | null
+          last_event_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -353,6 +413,36 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+      acquire_usage_reservation: {
+        Args: {
+          p_reservation_id: string
+          p_owner_anonymous_id: string
+          p_user_id: string | null
+        }
+        Returns: string
+      }
+      complete_usage_reservation: {
+        Args: {
+          p_reservation_id: string
+        }
+        Returns: boolean
+      }
+      release_usage_reservation: {
+        Args: {
+          p_reservation_id: string
+        }
+        Returns: boolean
+      }
+      upsert_feedback_event: {
+        Args: {
+          p_analysis_id: string
+          p_rating: string
+          p_comment: string | null
+          p_user_id: string | null
+          p_owner_anonymous_id: string
+        }
+        Returns: Record<string, unknown>[]
+      }
       search_user_prompt_history: {
         Args: {
           p_user_id: string | null
@@ -368,6 +458,41 @@ export interface Database {
         }
         Returns: Record<string, unknown>[]
       }
+      claim_stripe_webhook_event: {
+        Args: {
+          p_event_id: string
+          p_event_type: string
+          p_stripe_created: string
+          p_customer_id: string | null
+          p_subscription_id: string | null
+        }
+        Returns: string
+      }
+      update_stripe_webhook_event_status: {
+        Args: {
+          p_event_id: string
+          p_status: string
+          p_failure_message: string | null
+        }
+        Returns: boolean
+      }
+      claim_checkout_attempt: {
+        Args: {
+          p_user_id: string
+          p_price_id: string
+          p_stripe_customer_id: string
+        }
+        Returns: unknown
+      }
+      update_checkout_attempt_status: {
+        Args: {
+          p_attempt_id: string
+          p_status: string
+          p_session_id?: string | null
+          p_failure_code?: string | null
+        }
+        Returns: boolean
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
@@ -381,3 +506,4 @@ export type FeedbackEventInsert = Database['public']['Tables']['feedback_events'
 export type UserProfileInsert = Database['public']['Tables']['user_profiles']['Insert']
 export type StripeCustomerInsert = Database['public']['Tables']['stripe_customers']['Insert']
 export type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert']
+export type UsageReservationInsert = Database['public']['Tables']['usage_reservations']['Insert']

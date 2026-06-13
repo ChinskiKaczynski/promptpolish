@@ -4,6 +4,8 @@ import { analysisResultSchema, type AnalysisResult } from './schemas'
 import { normalizeProviderError, ProviderError, isNestedTimeout } from './provider-errors'
 import { getOwnerConfiguredModelId } from './model-catalog'
 
+import type { ModelProfileRow } from '@/lib/supabase/types'
+
 export interface OpenRouterClientOptions {
   mockMode?: boolean
   mockResponse?: AnalysisResult
@@ -16,6 +18,7 @@ export interface OpenRouterClientOptions {
    * request after this many ms.  Defaults to no timeout when omitted.
    */
   timeoutMs?: number
+  dbProfile?: ModelProfileRow | null
 }
 
 export interface OpenRouterAnalysisResponse {
@@ -37,7 +40,7 @@ export async function executeOpenRouterAnalysis(
   userPrompt: string,
   options: OpenRouterClientOptions = {}
 ): Promise<OpenRouterAnalysisResponse> {
-  const { mockMode = false, mockResponse, temperature = 0.1, abortSignal, timeoutMs } = options
+  const { mockMode = false, mockResponse, temperature, abortSignal, timeoutMs, dbProfile } = options
 
   // 1. Check and return Mock response if mock mode is active
   if (mockMode || mockResponse) {
@@ -68,8 +71,11 @@ export async function executeOpenRouterAnalysis(
     )
   }
 
-  // 3. Resolve model ID and additional metadata headers from environment variables
-  const modelId = getOwnerConfiguredModelId()
+  // 3. Resolve model ID and additional metadata headers from environment variables / dbProfile
+  const capabilities = (dbProfile?.capabilities_json || {}) as Record<string, unknown>
+  const modelId = (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
+  const effectiveTemperature = capabilities.temperature !== undefined ? (capabilities.temperature as number) : (temperature ?? 0.1)
+  const maxTokens = capabilities.max_tokens !== undefined ? (capabilities.max_tokens as number) : 4000
   const siteUrl = process.env.OPENROUTER_SITE_URL
   const appName = process.env.OPENROUTER_APP_NAME
 
@@ -96,15 +102,24 @@ export async function executeOpenRouterAnalysis(
       },
     })
 
+    const providerMetadata: Record<string, unknown> = {}
+    if (capabilities.reasoning !== undefined) {
+      providerMetadata.openrouter = {
+        reasoning: capabilities.reasoning
+      }
+    }
+
     const { output, usage } = await generateText({
       model: openrouter.chat(modelId),
       system: systemInstruction,
       prompt: userPrompt,
-      temperature,
+      temperature: effectiveTemperature,
+      maxOutputTokens: maxTokens,
       abortSignal: effectiveSignal,
       output: Output.object({
         schema: analysisResultSchema
-      })
+      }),
+      ...(Object.keys(providerMetadata).length > 0 ? { providerMetadata } : {})
     })
 
     const rawUsage = usage as { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined

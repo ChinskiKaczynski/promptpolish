@@ -16,7 +16,7 @@ export function LoaderBackdrop({
   const progressPct = Math.round(((currentStepIndex + 1) / loadingSteps.length) * 100)
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0C0C10]/95 backdrop-blur-md transition-all duration-300">
+    <div role="status" aria-live="polite" aria-busy="true" className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0C0C10]/95 backdrop-blur-md transition-all duration-300">
       <div className="relative flex flex-col items-center max-w-md px-6 text-center">
         
         {/* Spinning gradient ring */}
@@ -43,7 +43,7 @@ export function LoaderBackdrop({
           <span>{workingLanguage === 'pl' ? `Krok ${currentStepIndex + 1} z ${loadingSteps.length}` : `Step ${currentStepIndex + 1} of ${loadingSteps.length}`}</span>
           <span className="text-[#A78BFA] animate-pulse">{progressPct}%</span>
         </div>
-
+ 
         {/* Visual Engineering Checkpoints List */}
         <div className="mt-8 text-left space-y-3 w-80 max-w-full border-t border-[#2A2A3A] pt-6">
           {loadingSteps.map((step, idx) => {
@@ -55,13 +55,13 @@ export function LoaderBackdrop({
                 className={`flex items-center gap-3 text-xs transition-all duration-300 ${
                   isCompleted ? 'text-[#A78BFA]/80 opacity-60' :
                   isActive ? 'text-white font-bold scale-[1.02] translate-x-1' :
-                  'text-[#4A5568]'
+                  'text-[#8290A2]'
                 }`}
               >
                 <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[11px] font-mono shrink-0 border transition-all duration-300 ${
                   isCompleted ? 'border-[#A78BFA] bg-[#A78BFA]/20 text-[#A78BFA]' :
                   isActive ? 'border-[#A78BFA] bg-[#7C3AED] animate-pulse text-white font-bold shadow-md shadow-[#A78BFA]/40' :
-                  'border-[#2A2A3A] text-[#4A5568]'
+                  'border-[#2A2A3A] text-[#8290A2]'
                 }`}>
                   {isCompleted ? '✓' : idx + 1}
                 </div>

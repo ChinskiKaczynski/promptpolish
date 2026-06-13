@@ -26,11 +26,37 @@ describe('Global Security Headers Configuration', () => {
     expect(headerKeys).toContain('Strict-Transport-Security')
     expect(headerKeys).toContain('Content-Security-Policy')
 
+    // Validate X-Content-Type-Options value
+    const xcto = globalHeaders.find((h: { key: string }) => h.key === 'X-Content-Type-Options')
+    expect(xcto?.value).toBe('nosniff')
+
+    // Validate Referrer-Policy
+    const refPolicy = globalHeaders.find((h: { key: string }) => h.key === 'Referrer-Policy')
+    expect(refPolicy?.value).toBe('strict-origin-when-cross-origin')
+
+    // Validate HSTS presence
+    const hsts = globalHeaders.find((h: { key: string }) => h.key === 'Strict-Transport-Security')
+    expect(hsts?.value).toContain('max-age=')
+    expect(hsts?.value).toContain('includeSubDomains')
+
     // Validate frame-ancestors block
     const csp = globalHeaders.find((h: { key: string }) => h.key === 'Content-Security-Policy')
     expect(csp).toBeDefined()
     expect(csp?.value).toContain("default-src 'self'")
     expect(csp?.value).toContain("frame-ancestors 'none'")
+    expect(csp?.value).toContain("base-uri 'self'")
+    expect(csp?.value).toContain("form-action 'self'")
+
+    // Validate no broad wildcard for scripts or frames
+    expect(csp?.value).not.toContain("script-src *")
+    expect(csp?.value).not.toContain("frame-src *")
+
+    // script-src must include 'unsafe-inline' (required for Next.js Turbopack inline bootstrap scripts)
+    // See: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
+    // A nonce-based CSP would be the ideal long-term solution, but requires custom middleware.
+    // For this MVP, 'unsafe-inline' is the documented workaround.
+    expect(csp?.value).toContain("'unsafe-inline'")
+    expect(csp?.value).toContain("script-src")
 
     // Validate framing protection
     const xframe = globalHeaders.find((h: { key: string }) => h.key === 'X-Frame-Options')
@@ -39,5 +65,11 @@ describe('Global Security Headers Configuration', () => {
     // Validate XSS protection
     const xss = globalHeaders.find((h: { key: string }) => h.key === 'X-XSS-Protection')
     expect(xss?.value).toBe('1; mode=block')
+
+    // Validate Permissions-Policy restricts sensitive hardware
+    const perm = globalHeaders.find((h: { key: string }) => h.key === 'Permissions-Policy')
+    expect(perm?.value).toContain('camera=()')
+    expect(perm?.value).toContain('microphone=()')
+    expect(perm?.value).toContain('geolocation=()')
   })
 })

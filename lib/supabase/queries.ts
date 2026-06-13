@@ -6,7 +6,6 @@ import { serializeDbError } from './error-serializer'
 
 export type SharedPromptAnalysis = Pick<
   PromptAnalysisRow,
-  | 'input_prompt'
   | 'working_language'
   | 'selected_profile_slug'
   | 'overall_score'
@@ -406,7 +405,7 @@ export async function getSharedPromptAnalysis(
   const supabase = getSupabaseAdminClient()
   const { data, error } = await supabase
     .from('prompt_analyses')
-    .select('input_prompt, working_language, selected_profile_slug, overall_score, score_level, analysis_json, improved_prompt, created_at, is_share_enabled')
+    .select('working_language, selected_profile_slug, overall_score, score_level, analysis_json, improved_prompt, created_at, is_share_enabled')
     .eq('share_token', shareToken)
     .eq('is_share_enabled', true)
     .is('deleted_at', null)
@@ -420,9 +419,10 @@ export async function getSharedPromptAnalysis(
   if (!data) return null
 
   // Build scrubbed object manually from generic row to avoid destructuring unconstrained Record<string, unknown>
+  // input_prompt is intentionally excluded from the public share payload.
+  // The public share page does not display the original prompt text.
   const row = data as unknown as PromptAnalysisRow
   return {
-    input_prompt: row.input_prompt,
     working_language: row.working_language,
     selected_profile_slug: row.selected_profile_slug,
     overall_score: row.overall_score,
@@ -458,24 +458,70 @@ export async function createUsageEvent(
 }
 
 /**
- * Saves feedback for a prompt analysis.
+ * Saves or updates feedback for a prompt analysis.
+ * Enforces at most one feedback record per analysis and identity.
  */
 export async function createFeedbackEvent(
   event: Database['public']['Tables']['feedback_events']['Insert']
 ): Promise<FeedbackEventRow | null> {
   validateUuid(event.analysis_id, 'analysis_id')
-  const supabase = getSupabaseAdminClient()
-  const { data, error } = await supabase
-    .from('feedback_events')
-    .insert(event)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error creating feedback event:', serializeDbError(error))
-    throw new Error(`Database error: ${error.message}`)
+  if (event.user_id) {
+    validateUuid(event.user_id, 'user_id')
   }
-  return data ? (data as unknown as FeedbackEventRow) : null
+
+  const supabase = getSupabaseAdminClient()
+
+  // 1. Check if a feedback record already exists for this identity and analysis
+  let query = supabase
+    .from('feedback_events')
+    .select('id')
+    .eq('analysis_id', event.analysis_id)
+
+  if (event.user_id) {
+    query = query.eq('user_id', event.user_id)
+  } else if (event.owner_anonymous_id) {
+    query = query.eq('owner_anonymous_id', event.owner_anonymous_id).is('user_id', null)
+  }
+
+  let existingId: string | null = null
+  if (event.user_id || event.owner_anonymous_id) {
+    const { data, error } = await query.maybeSingle()
+    if (error) {
+      console.error('Error checking existing feedback event:', serializeDbError(error))
+      throw new Error(`Database error: ${error.message}`)
+    }
+    if (data) {
+      existingId = (data as { id: string }).id
+    }
+  }
+
+  let dbResult
+  if (existingId) {
+    // Update existing
+    dbResult = await supabase
+      .from('feedback_events')
+      .update({
+        rating: event.rating,
+        comment: event.comment ?? null
+      })
+      .eq('id', existingId)
+      .select()
+      .single()
+  } else {
+    // Insert new
+    dbResult = await supabase
+      .from('feedback_events')
+      .insert(event)
+      .select()
+      .single()
+  }
+
+  if (dbResult.error) {
+    console.error('Error saving feedback event:', serializeDbError(dbResult.error))
+    throw new Error(`Database error: ${dbResult.error.message}`)
+  }
+
+  return dbResult.data ? (dbResult.data as unknown as FeedbackEventRow) : null
 }
 
 /**
@@ -621,11 +667,11 @@ export async function getUsageCountTodayForUser(
   const supabase = getSupabaseAdminClient()
   const startOfDay = new Date()
   startOfDay.setUTCHours(0, 0, 0, 0)
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
 
   let query = supabase
-    .from('usage_events')
-    .select('id', { count: 'exact' })
-    .eq('event_type', 'analysis_completed')
+    .from('usage_reservations')
+    .select('id, status, created_at')
     .gte('created_at', startOfDay.toISOString())
 
   if (userId) {
@@ -634,13 +680,18 @@ export async function getUsageCountTodayForUser(
     query = query.eq('owner_anonymous_id', ownerAnonymousId)
   }
 
-  const { count, error } = await query
+  const { data, error } = await query
 
   if (error) {
     console.error('Error counting usage events today for user:', serializeDbError(error))
     throw new Error(`Database error: ${error.message}`)
   }
-  return count ?? 0
+
+  const count = (data as unknown as { status: string; created_at: string }[] ?? []).filter((row) => {
+    return row.status === 'completed' || (row.status === 'reserved' && new Date(row.created_at) >= fiveMinutesAgo)
+  }).length
+
+  return count
 }
 
 /**
@@ -658,12 +709,11 @@ export async function getUsageCountThisMonthForUser(
   const startOfMonth = new Date()
   startOfMonth.setUTCDate(1)
   startOfMonth.setUTCHours(0, 0, 0, 0)
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000)
 
   let query = supabase
-    .from('usage_events')
-    .select('id', { count: 'exact' })
-    .limit(1)
-    .eq('event_type', 'analysis_completed')
+    .from('usage_reservations')
+    .select('id, status, created_at')
     .gte('created_at', startOfMonth.toISOString())
 
   if (userId) {
@@ -672,13 +722,18 @@ export async function getUsageCountThisMonthForUser(
     query = query.eq('owner_anonymous_id', ownerAnonymousId)
   }
 
-  const { count, error } = await query
+  const { data, error } = await query
 
   if (error) {
     console.error('Error counting usage events this month for user:', serializeDbError(error))
     throw new Error(`Database error: ${error.message}`)
   }
-  return count ?? 0
+
+  const count = (data as unknown as { status: string; created_at: string }[] ?? []).filter((row) => {
+    return row.status === 'completed' || (row.status === 'reserved' && new Date(row.created_at) >= fiveMinutesAgo)
+  }).length
+
+  return count
 }
 
 /**
@@ -756,4 +811,143 @@ export async function toggleFavoriteAnalysis(
 
   const typedData = data as unknown as { id: string } | null
   return typedData !== null
+}
+
+/**
+ * Counts usage events recorded for an identity in the last N seconds.
+ */
+export async function getRecentEventsCount(
+  ownerAnonymousId: string,
+  userId: string | null,
+  seconds: number
+): Promise<number> {
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
+  }
+
+  const supabase = getSupabaseAdminClient()
+  const cutoff = new Date(Date.now() - seconds * 1000)
+
+  let query = supabase
+    .from('usage_events')
+    .select('id', { count: 'exact' })
+    .gte('created_at', cutoff.toISOString())
+
+  if (userId) {
+    query = query.eq('user_id', userId)
+  } else {
+    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { count, error } = await query
+
+  if (error) {
+    console.error('Error counting recent events:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
+  return count ?? 0
+}
+
+/**
+ * Atomically acquires a usage reservation in the database, checking plan limits.
+ * Returns a status string: 'success:reserved', 'success:completed', 'daily_limit_reached', or 'monthly_limit_reached'.
+ */
+export async function acquireReservation(
+  reservationId: string,
+  ownerAnonymousId: string,
+  userId: string | null
+): Promise<string> {
+  validateUuid(reservationId, 'reservationId')
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
+  }
+
+  const supabase = getSupabaseAdminClient()
+  const { data, error } = await supabase.rpc('acquire_usage_reservation', {
+    p_reservation_id: reservationId,
+    p_owner_anonymous_id: ownerAnonymousId,
+    p_user_id: userId
+  })
+
+  if (error) {
+    console.error('Error acquiring usage reservation:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
+
+  return data as string
+}
+
+/**
+ * Completes a usage reservation (status = 'completed').
+ */
+export async function completeReservation(reservationId: string): Promise<boolean> {
+  validateUuid(reservationId, 'reservationId')
+  const supabase = getSupabaseAdminClient()
+  const { data, error } = await supabase.rpc('complete_usage_reservation', {
+    p_reservation_id: reservationId
+  })
+
+  if (error) {
+    console.error('Error completing usage reservation:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
+
+  return !!data
+}
+
+/**
+ * Releases/cancels a usage reservation (status = 'released').
+ */
+export async function releaseReservation(reservationId: string): Promise<boolean> {
+  validateUuid(reservationId, 'reservationId')
+  const supabase = getSupabaseAdminClient()
+  const { data, error } = await supabase.rpc('release_usage_reservation', {
+    p_reservation_id: reservationId
+  })
+
+  if (error) {
+    console.error('Error releasing usage reservation:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
+
+  return !!data
+}
+
+/**
+ * Counts feedback_submitted events recorded for an identity in the last N seconds.
+ */
+export async function getRecentFeedbackCount(
+  ownerAnonymousId: string,
+  userId: string | null,
+  seconds: number
+): Promise<number> {
+  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  if (userId) {
+    validateUuid(userId, 'userId')
+  }
+
+  const supabase = getSupabaseAdminClient()
+  const cutoff = new Date(Date.now() - seconds * 1000)
+
+  let query = supabase
+    .from('usage_events')
+    .select('id', { count: 'exact' })
+    .eq('event_type', 'feedback_submitted')
+    .gte('created_at', cutoff.toISOString())
+
+  if (userId) {
+    query = query.eq('user_id', userId)
+  } else {
+    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+  }
+
+  const { count, error } = await query
+
+  if (error) {
+    console.error('Error counting recent feedback events:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
+  return count ?? 0
 }

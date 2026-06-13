@@ -18,10 +18,10 @@ export function AppFooter({ theme }: AppFooterProps = {}) {
           </div>
           <span className="text-sm font-bold text-[#E2E8F0] font-heading">PromptPolish</span>
         </div>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-[#4A5568]">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-[#8290A2]">
           <Link className="hover:text-[#A78BFA] transition-colors" href="/privacy">Polityka prywatności</Link>
           <Link className="hover:text-[#A78BFA] transition-colors" href="/terms">Regulamin</Link>
-          <span className="text-[#4A5568]">© {new Date().getFullYear()} PromptPolish</span>
+          <span className="text-[#8290A2]">© {new Date().getFullYear()} PromptPolish</span>
         </div>
       </div>
     </footer>

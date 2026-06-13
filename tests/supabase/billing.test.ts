@@ -63,6 +63,7 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
     })
     mockUpdate.mockReturnValue(builder)
     mockEq.mockReturnValue(builder)
+    mockMaybeSingle.mockResolvedValue({ data: null, error: null })
 
     vi.mocked(getSupabaseAdminClient).mockReturnValue(mockSupabaseAdmin as unknown as ReturnType<typeof getSupabaseAdminClient>)
 
@@ -211,6 +212,148 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
           plan_slug: 'free'
         })
       )
+    })
+  })
+
+  describe('Same-Timestamp Event Ordering Safety', () => {
+    const mockInputBase = {
+      user_id: 'user-uuid-123',
+      stripe_customer_id: 'cus_test_123',
+      stripe_subscription_id: 'sub_test_123',
+      stripe_price_id: 'price_pro_123',
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date().toISOString(),
+      cancel_at_period_end: false,
+      last_event_created: '2026-06-12T20:00:00.000Z',
+      last_event_id: 'evt_second_1'
+    }
+
+    it('5. created and updated share the same timestamp but different event IDs -> event-ID lexical order has no effect (proceeds)', async () => {
+      // Existing in DB has a lexically larger event ID (evt_second_2)
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          stripe_subscription_id: 'sub_test_123',
+          status: 'active',
+          last_event_created: '2026-06-12T20:00:00.000Z',
+          last_event_id: 'evt_second_2'
+        },
+        error: null
+      })
+      mockSingle.mockResolvedValue({ data: {}, error: null })
+
+      // Call saveSubscription with a lexically smaller event ID (evt_second_1) at the same timestamp
+      await saveSubscription({
+        ...mockInputBase,
+        plan_slug: 'pro',
+        status: 'past_due',
+        last_event_created: '2026-06-12T20:00:00.000Z',
+        last_event_id: 'evt_second_1'
+      })
+
+      // Since lexical comparison is removed, the update proceeds
+      expect(mockUpsert).toHaveBeenCalled()
+    })
+
+    it('6. deleted event followed by same-timestamp active update -> remains canceled/free', async () => {
+      // Existing in DB is canceled
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          stripe_subscription_id: 'sub_test_123',
+          status: 'canceled',
+          last_event_created: '2026-06-12T20:00:00.000Z',
+          last_event_id: 'evt_second_1'
+        },
+        error: null
+      })
+
+      // Call saveSubscription with active status at same timestamp
+      const result = await saveSubscription({
+        ...mockInputBase,
+        plan_slug: 'pro',
+        status: 'active',
+        last_event_created: '2026-06-12T20:00:00.000Z',
+        last_event_id: 'evt_second_2'
+      })
+
+      expect(mockUpsert).not.toHaveBeenCalled()
+      expect(result?.status).toBe('canceled')
+    })
+
+    it('7. active update followed by same-timestamp deleted -> becomes canceled/free', async () => {
+      // Existing in DB is active
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          user_id: 'user-uuid-123',
+          stripe_subscription_id: 'sub_test_123',
+          status: 'active',
+          last_event_created: '2026-06-12T20:00:00.000Z',
+          last_event_id: 'evt_second_1'
+        },
+        error: null
+      })
+      mockSingle.mockResolvedValue({ data: {}, error: null })
+
+      // Call cancelSubscriptionInDatabase with same timestamp
+      const result = await cancelSubscriptionInDatabase(
+        'sub_test_123',
+        '2026-06-12T20:00:00.000Z',
+        'evt_second_2'
+      )
+
+      expect(result).toBe(true)
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'canceled'
+        })
+      )
+    })
+
+    it('8. exact duplicate event ID remains idempotent (update skipped)', async () => {
+      // Existing active
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          stripe_subscription_id: 'sub_test_123',
+          status: 'active',
+          last_event_created: '2026-06-12T20:00:00.000Z',
+          last_event_id: 'evt_second_1'
+        },
+        error: null
+      })
+
+      // Call saveSubscription with identical timestamp and eventId (duplicate delivery)
+      const result = await saveSubscription({
+        ...mockInputBase,
+        plan_slug: 'pro',
+        status: 'active',
+        last_event_created: '2026-06-12T20:00:00.000Z',
+        last_event_id: 'evt_second_1'
+      })
+
+      expect(mockUpsert).not.toHaveBeenCalled()
+      expect(result?.status).toBe('active')
+    })
+
+    it('8b. exact duplicate event ID remains idempotent for cancel (cancel skipped)', async () => {
+      // Existing canceled
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          user_id: 'user-uuid-123',
+          stripe_subscription_id: 'sub_test_123',
+          status: 'canceled',
+          last_event_created: '2026-06-12T20:00:00.000Z',
+          last_event_id: 'evt_second_1'
+        },
+        error: null
+      })
+
+      const result = await cancelSubscriptionInDatabase(
+        'sub_test_123',
+        '2026-06-12T20:00:00.000Z',
+        'evt_second_1'
+      )
+
+      expect(result).toBe(true)
+      expect(mockUpdate).not.toHaveBeenCalled()
     })
   })
 })

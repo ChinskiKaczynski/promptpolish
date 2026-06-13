@@ -26,12 +26,12 @@ export default async function HomePage() {
                 </div>
                 
                 <h1 className="mt-8 text-4xl font-extrabold tracking-tight text-[#E2E8F0] font-heading sm:text-5xl lg:text-6xl leading-[1.1]">
-                  Audit. Refine.<br />
-                  Elevate <span className="gradient-text">every prompt.</span>
+                  Audytuj. Ulepszaj.<br />
+                  Podnoś jakość <span className="gradient-text">każdego promptu.</span>
                 </h1>
                 
                 <p className="mt-6 text-base leading-relaxed text-[#94A3B8] max-w-xl">
-                  PromptPolish analyzes your prompts, scores what matters, and gives you actionable improvements to get better results from any AI model.
+                  PromptPolish analizuje Twoje prompty, ocenia kluczowe parametry i dostarcza gotowe do wdrożenia usprawnienia, aby uzyskać lepsze wyniki z dowolnego modelu AI.
                 </p>
 
                 <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -39,8 +39,8 @@ export default async function HomePage() {
                     className="inline-flex items-center justify-center rounded-lg gradient-btn px-7 py-4 text-center text-sm font-bold text-white active:scale-95 transition-all cursor-pointer" 
                     href="/analyze"
                   >
-                    Start for free
-                    <svg className="ml-2 h-4 w-4 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    Rozpocznij bezpłatnie
+                    <svg className="ml-2 h-4 w-4 stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                   </Link>
@@ -48,7 +48,7 @@ export default async function HomePage() {
                     className="inline-flex items-center justify-center rounded-lg border border-[#2A2A3A] bg-[#13131A] hover:bg-[#1C1C27] hover:border-[#3A3A52] px-7 py-4 text-center text-sm font-semibold text-[#94A3B8] active:scale-95 transition-all" 
                     href="#features"
                   >
-                    <svg className="mr-2 h-4 w-4 text-[#4A5568]" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="mr-2 h-4 w-4 text-[#8290A2]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                     Zobacz możliwości
@@ -59,37 +59,37 @@ export default async function HomePage() {
                 <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-[#2A2A3A]">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1C1C27] border border-[#2A2A3A] text-[#A78BFA]">
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-[#E2E8F0]">Better outputs</h4>
-                      <p className="text-[11px] text-[#4A5568]">Higher quality results</p>
+                      <h4 className="text-xs font-bold text-[#E2E8F0]">Lepsze wyniki</h4>
+                      <p className="text-[11px] text-[#8290A2]">Wyższa jakość odpowiedzi</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1C1C27] border border-[#2A2A3A] text-[#A78BFA]">
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-[#E2E8F0]">Save time</h4>
-                      <p className="text-[11px] text-[#4A5568]">Iterate with confidence</p>
+                      <h4 className="text-xs font-bold text-[#E2E8F0]">Oszczędność czasu</h4>
+                      <p className="text-[11px] text-[#8290A2]">Iteruj z pewnością</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1C1C27] border border-[#2A2A3A] text-[#A78BFA]">
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a2 2 0 002 2h3a1 1 0 011 1v3a2 2 0 002 2 2 2 0 010 4 2 2 0 00-2 2v3a1 1 0 01-1 1h-3a2 2 0 00-2-2 2 2 0 01-4 0 2 2 0 00-2 2H4a1 1 0 01-1-1v-3a2 2 0 00-2-2 2 2 0 010-4 2 2 0 002-2V7a1 1 0 011-1h3a2 2 0 002-2V4z" />
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-[#E2E8F0]">Works anywhere</h4>
-                      <p className="text-[11px] text-[#4A5568]">LLMs, apps, APIs</p>
+                      <h4 className="text-xs font-bold text-[#E2E8F0]">Działa wszędzie</h4>
+                      <p className="text-[11px] text-[#8290A2]">Modele LLM, aplikacje, API</p>
                     </div>
                   </div>
                 </div>
@@ -115,26 +115,26 @@ export default async function HomePage() {
                       {/* New Audit button */}
                       <div className="mt-6">
                         <div className="rounded-md bg-[#A78BFA]/10 text-[#A78BFA] border border-[#A78BFA]/20 py-1.5 px-3 text-[10px] font-bold flex items-center gap-1.5 cursor-pointer">
-                          <span>+</span> New Audit
+                          <span>+</span> Nowy audyt
                         </div>
                       </div>
 
                       {/* Nav list */}
                       <nav className="mt-5 space-y-1">
-                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#4A5568]">
-                          <span>📊</span> Dashboard
+                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#8290A2]">
+                          <span>📊</span> Dashboard (Wkrótce)
                         </div>
-                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#4A5568]">
-                          <span>🕒</span> History
+                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#8290A2]">
+                          <span>🕒</span> Historia
                         </div>
-                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#4A5568]">
-                          <span>📚</span> Prompt Library
+                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#8290A2]">
+                          <span>📚</span> Biblioteka (Wkrótce)
                         </div>
-                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#4A5568]">
-                          <span>📋</span> Templates
+                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#8290A2]">
+                          <span>📋</span> Szablony (Wkrótce)
                         </div>
-                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#4A5568]">
-                          <span>⚙️</span> Settings
+                        <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[10px] font-semibold text-[#8290A2]">
+                          <span>⚙️</span> Ustawienia (Wkrótce)
                         </div>
                       </nav>
                     </div>
@@ -142,14 +142,14 @@ export default async function HomePage() {
                     {/* Usage billing meter at bottom of sidebar */}
                     <div className="rounded-lg border border-[#2A2A3A] p-2.5 space-y-2 bg-[#1C1C27]">
                       <div className="flex items-center justify-between text-[9px] font-bold text-[#94A3B8]">
-                        <span>Pro Plan</span>
+                        <span>Plan Pro</span>
                       </div>
-                      <p className="text-[8px] text-[#4A5568]">Resets in 12 days</p>
+                      <p className="text-[8px] text-[#8290A2]">Reset za 12 dni</p>
                       <div className="h-1.5 w-full rounded-full bg-[#2A2A3A] overflow-hidden">
                         <div className="h-full bg-[#A78BFA] rounded-full" style={{ width: '49%' }} />
                       </div>
                       <div className="flex items-center justify-between text-[8px] font-bold text-[#94A3B8]">
-                        <span>2,489 / 5,000</span>
+                        <span>248 / 500</span>
                       </div>
                     </div>
                   </div>
@@ -160,13 +160,13 @@ export default async function HomePage() {
                     {/* Mockup header */}
                     <div className="flex items-center justify-between border-b border-[#2A2A3A] pb-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#E2E8F0]">Audit result</span>
+                        <span className="text-xs font-bold text-[#E2E8F0]">Wynik audytu</span>
                         <span className="inline-flex items-center rounded-full bg-[#6EE7B7]/10 px-2 py-0.5 text-[8px] font-bold text-[#6EE7B7] border border-[#6EE7B7]/20">
-                          Excellent potential
+                          Doskonały potencjał
                         </span>
                       </div>
-                      <button className="rounded-lg border border-[#2A2A3A] px-2 py-1 text-[9px] font-bold text-[#94A3B8] flex items-center gap-1 hover:bg-[#1C1C27]">
-                        <span>🔗</span> Share
+                      <button className="rounded-lg border border-[#2A2A3A] px-2 py-1 text-[9px] font-bold text-[#94A3B8] flex items-center gap-1 hover:bg-[#1C1C27]" aria-label="Udostępnij raport">
+                        <span>🔗</span> Udostępnij
                       </button>
                     </div>
 
@@ -176,17 +176,17 @@ export default async function HomePage() {
                       <div className="relative h-18 w-18 flex flex-col items-center justify-center rounded-full border-[5px] border-[#A78BFA] border-t-[#2A2A3A] -rotate-45 shrink-0">
                         <div className="rotate-45 flex flex-col items-center">
                           <span className="text-lg font-black text-[#E2E8F0] leading-none">82</span>
-                          <span className="text-[8px] font-bold text-[#4A5568] mt-0.5">/100</span>
+                          <span className="text-[8px] font-bold text-[#8290A2] mt-0.5">/100</span>
                         </div>
                       </div>
 
                       {/* Breakdown Bars */}
                       <div className="space-y-1.5">
-                        <span className="text-[8px] font-bold uppercase tracking-wider text-[#4A5568] block">Score breakdown</span>
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-[#8290A2] block">Szczegóły punktacji</span>
                         
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-[8px]">
-                            <span className="font-semibold text-[#94A3B8]">Clarity</span>
+                            <span className="font-semibold text-[#94A3B8]">Jasność</span>
                             <span className="font-bold text-[#E2E8F0]">85</span>
                           </div>
                           <div className="h-1 w-full bg-[#1C1C27] rounded-full overflow-hidden border border-[#2A2A3A]/20">
@@ -196,7 +196,7 @@ export default async function HomePage() {
 
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-[8px]">
-                            <span className="font-semibold text-[#94A3B8]">Specificity</span>
+                            <span className="font-semibold text-[#94A3B8]">Precyzja</span>
                             <span className="font-bold text-[#E2E8F0]">90</span>
                           </div>
                           <div className="h-1 w-full bg-[#1C1C27] rounded-full overflow-hidden border border-[#2A2A3A]/20">
@@ -206,7 +206,7 @@ export default async function HomePage() {
 
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-[8px]">
-                            <span className="font-semibold text-[#94A3B8]">Context</span>
+                            <span className="font-semibold text-[#94A3B8]">Kontekst</span>
                             <span className="font-bold text-[#E2E8F0]">75</span>
                           </div>
                           <div className="h-1 w-full bg-[#1C1C27] rounded-full overflow-hidden border border-[#2A2A3A]/20">
@@ -220,33 +220,33 @@ export default async function HomePage() {
                     <div className="mt-3.5 grid grid-cols-2 gap-3">
                       <div className="rounded-lg border border-[#2A2A3A] bg-[#13131A] p-2.5 flex flex-col justify-between h-28">
                         <div>
-                          <span className="text-[8px] font-bold text-[#4A5568] uppercase tracking-wider">Original prompt</span>
-                          <p className="mt-1 text-[9px] text-[#94A3B8] leading-normal font-medium">Write a blog post about AI</p>
+                          <span className="text-[8px] font-bold text-[#8290A2] uppercase tracking-wider">Oryginalny prompt</span>
+                          <p className="mt-1 text-[9px] text-[#94A3B8] leading-normal font-medium">Napisz post na bloga o AI</p>
                         </div>
-                        <span className="text-[8px] text-[#4A5568] font-medium">6 tokens</span>
+                        <span className="text-[8px] text-[#8290A2] font-medium">6 tokenów</span>
                       </div>
 
                       <div className="rounded-lg border border-[#A78BFA]/20 bg-[#13131A] p-2.5 flex flex-col justify-between h-28 relative">
                         <button className="absolute top-2.5 right-2.5 rounded border border-[#2A2A3A] bg-[#1C1C27] px-1.5 py-0.5 text-[8px] font-semibold text-[#94A3B8] hover:bg-[#1C1C27]">
-                          Copy
+                          Kopiuj
                         </button>
                         <div>
-                          <span className="text-[8px] font-bold text-[#4A5568] uppercase tracking-wider">Polished prompt</span>
-                          <p className="mt-1 text-[9px] text-[#94A3B8] leading-normal font-semibold">Write a 1,000-word blog post about the impact of generative AI...</p>
+                          <span className="text-[8px] font-bold text-[#8290A2] uppercase tracking-wider">Poprawiony prompt</span>
+                          <p className="mt-1 text-[9px] text-[#94A3B8] leading-normal font-semibold">Napisz post na blogu o długości 1000 słów o wpływie generatywnej sztucznej inteligencji...</p>
                         </div>
                         <div className="flex items-center justify-between mt-1 border-t border-[#2A2A3A] pt-1.5">
-                          <span className="text-[8px] text-[#4A5568] font-medium">42 tokens</span>
-                          <span className="text-[8px] font-bold text-[#6EE7B7] bg-[#6EE7B7]/10 px-1 rounded border border-[#6EE7B7]/20">+6 improvements</span>
+                          <span className="text-[8px] text-[#8290A2] font-medium">42 tokeny</span>
+                          <span className="text-[8px] font-bold text-[#6EE7B7] bg-[#6EE7B7]/10 px-1 rounded border border-[#6EE7B7]/20">+6 ulepszeń</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Top Improvements */}
                     <div className="mt-3">
-                      <span className="text-[8px] font-bold uppercase tracking-wider text-[#4A5568] block mb-1.5">Top improvements</span>
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-[#8290A2] block mb-1.5">Kluczowe poprawki</span>
                       <div className="flex flex-wrap gap-1.5">
-                        {['Add context', 'Increase specificity', 'Add constraints', 'Improve structure', 'Clarify audience'].map((tag) => (
-                          <span key={tag} className="rounded-full bg-[#1C1C27] border border-[#2A2A3A] px-2 py-0.5 text-[8px] font-semibold text-[#4A5568]">
+                        {['Dodaj kontekst', 'Zwiększ precyzję', 'Dodaj ograniczenia', 'Popraw strukturę', 'Określ odbiorcę'].map((tag) => (
+                          <span key={tag} className="rounded-full bg-[#1C1C27] border border-[#2A2A3A] px-2 py-0.5 text-[8px] font-semibold text-[#8290A2]">
                             {tag}
                           </span>
                         ))}
@@ -289,7 +289,7 @@ export default async function HomePage() {
         {/* Benefits Section */}
         <section id="features" className="mx-auto max-w-6xl px-6 py-20">
           <div className="text-center">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#A78BFA]">Everything you need to craft better prompts</h2>
+            <h2 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#A78BFA]">Wszystko, czego potrzebujesz do tworzenia lepszych promptów</h2>
             <p className="mt-3 text-3xl font-bold tracking-tight text-[#E2E8F0] font-heading sm:text-4xl">
               Co zyskujesz dzięki PromptPolish?
             </p>
@@ -301,49 +301,49 @@ export default async function HomePage() {
           <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             <article className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] hover:bg-[#1C1C27] transition-all duration-200">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#A78BFA]/10 border border-[#A78BFA]/20 text-[#A78BFA] mb-5">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
                 </svg>
               </div>
-              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Deep Prompt Audits</h3>
+              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Głęboki audyt promptów</h3>
               <p className="mt-2.5 text-sm leading-relaxed text-[#94A3B8]">
-                Multi-dimensional scoring across clarity, specificity, context, and more. Koniec z zgadywaniem.
+                Wielwymiarowa ocena pod kątem jasności, precyzji, kontekstu i innych parametrów. Koniec ze zgadywaniem.
               </p>
             </article>
 
             <article className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] hover:bg-[#1C1C27] transition-all duration-200">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 text-[#6EE7B7] mb-5">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Smart Suggestions</h3>
+              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Inteligentne sugestie</h3>
               <p className="mt-2.5 text-sm leading-relaxed text-[#94A3B8]">
-                Actionable, AI-powered improvements tailored to your goals. Zdefiniowane luki i rekomendacje zmian.
+                Gotowe do wdrożenia usprawnienia dostosowane do Twoich celów. Precyzyjnie wskazane luki i zalecenia.
               </p>
             </article>
 
             <article className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] hover:bg-[#1C1C27] transition-all duration-200">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#A78BFA]/10 border border-[#A78BFA]/20 text-[#A78BFA] mb-5">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
-              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Prompt Library</h3>
+              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Biblioteka promptów (Wkrótce)</h3>
               <p className="mt-2.5 text-sm leading-relaxed text-[#94A3B8]">
-                Organize, version, and reuse your best prompts across projects. Wszystko w jednym bezpiecznym miejscu.
+                Organizuj, wersjonuj i używaj ponownie swoich najlepszych promptów. Wszystko w jednym bezpiecznym miejscu.
               </p>
             </article>
 
             <article className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] hover:bg-[#1C1C27] transition-all duration-200">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 text-[#6EE7B7] mb-5">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2" />
                 </svg>
               </div>
-              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Track & Improve</h3>
+              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Śledź i udoskonalaj (Wkrótce)</h3>
               <p className="mt-2.5 text-sm leading-relaxed text-[#94A3B8]">
-                Monitor performance over time and continuously level up your prompts. Twoje promptowanie rośnie razem z nami.
+                Monitoruj jakość w czasie i stale podnoś poprawność instrukcji. Rozwijaj swoje kompetencje razem z nami.
               </p>
             </article>
           </div>
@@ -354,12 +354,12 @@ export default async function HomePage() {
           <div className="mx-auto max-w-4xl grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
             {[
               { value: '100%', label: 'Anonimowy — bez rejestracji' },
-              { value: '4 filary', label: 'Inżynierii promptów w każdym audycie' },
+              { value: '10 kryteriów', label: 'Inżynierii promptów w każdym audycie' },
               { value: '0 PLN', label: 'Podstawowy dostęp na zawsze' },
             ].map((stat) => (
               <div key={stat.label}>
                 <p className="text-2xl font-bold font-mono text-[#A78BFA]">{stat.value}</p>
-                <p className="mt-1 text-xs text-[#4A5568] leading-snug">{stat.label}</p>
+                <p className="mt-1 text-xs text-[#8290A2] leading-snug">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -399,7 +399,7 @@ export default async function HomePage() {
               ].map((user, i) => (
                 <div key={i} className="flex flex-col rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] transition-all duration-200">
                   <h3 className="text-sm font-bold text-[#E2E8F0] font-heading">{user.role}</h3>
-                  <p className="mt-2.5 text-[11px] leading-relaxed text-[#4A5568] flex-grow">{user.benefit}</p>
+                  <p className="mt-2.5 text-[11px] leading-relaxed text-[#8290A2] flex-grow">{user.benefit}</p>
                 </div>
               ))}
             </div>
@@ -433,7 +433,7 @@ export default async function HomePage() {
               {
                 num: '03',
                 title: 'Audyt jakości promptu',
-                desc: 'Model analizuje instrukcję pod kątem 4 fundamentalnych filarów inżynierii promptów.'
+                desc: 'Model analizuje instrukcję pod kątem 10 kluczowych kryteriów inżynierii promptów.'
               },
               {
                 num: '04',

@@ -1,4 +1,4 @@
-import { mvpModelProfiles } from './model-profiles'
+import { mvpModelProfiles, type ModelProfile } from './model-profiles'
 import {
   analysisSystemInstruction,
   constructRepairPrompt,
@@ -13,6 +13,8 @@ import {
 import { calculateScore, type CalculatedScore } from '@/lib/scoring/calculate-score'
 import { type AnalysisResult } from './schemas'
 
+import type { ModelProfileRow } from '@/lib/supabase/types'
+
 export interface AnalyzePromptParams {
   inputPrompt: string
   workingLanguage: 'pl' | 'en'
@@ -22,6 +24,7 @@ export interface AnalyzePromptParams {
   taskType?: string | null
   expectedOutputFormat?: string | null
   constraints?: string | null
+  dbProfile?: ModelProfileRow | null
 }
 
 export type AnalysisServiceResult = {
@@ -47,6 +50,17 @@ function mergeUsage(
     promptTokens: firstUsage.promptTokens + secondUsage.promptTokens,
     completionTokens: firstUsage.completionTokens + secondUsage.completionTokens,
     totalTokens: firstUsage.totalTokens + secondUsage.totalTokens
+  }
+}
+
+export function normalizeDbProfile(dbProfile: ModelProfileRow): ModelProfile {
+  return {
+    slug: dbProfile.slug as 'general-llm' | 'openrouter-deepseek-v4-flash',
+    displayName: dbProfile.display_name,
+    provider: dbProfile.provider,
+    verificationStatus: dbProfile.verification_status,
+    confidenceLevel: dbProfile.confidence_level,
+    profileVersion: dbProfile.profile_version
   }
 }
 
@@ -111,10 +125,14 @@ export async function analyzePrompt(
     taskGoal,
     taskType,
     expectedOutputFormat,
-    constraints
+    constraints,
+    dbProfile
   } = params
 
-  const modelProfile = mvpModelProfiles.find((p) => p.slug === selectedProfileSlug)
+  const modelProfile = dbProfile
+    ? normalizeDbProfile(dbProfile)
+    : mvpModelProfiles.find((p) => p.slug === selectedProfileSlug)
+
   if (!modelProfile) {
     throw new Error(`Invalid model profile slug: ${selectedProfileSlug}`)
   }
@@ -135,7 +153,10 @@ export async function analyzePrompt(
     systemInstruction,
     userPrompt,
     workingLanguage,
-    options
+    {
+      ...options,
+      dbProfile
+    }
   )
 
   const scores = calculateScore(validatedResult.criteria_scores)

@@ -1,28 +1,35 @@
 import { NextResponse } from 'next/server'
+import { randomUUID } from 'node:crypto'
+import type { User } from '@supabase/supabase-js'
 import { z } from 'zod'
-import { detectSensitiveData } from '@/lib/privacy/sensitive-data-detector'
+import { scanRequestFields } from '@/lib/privacy/sensitive-data-detector'
 import { resolveOrCreateOwnerId } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
+import { calculateUsageCost } from '@/lib/ai/pricing'
 import {
   createPromptAnalysis,
   createUsageEvent,
   getModelProfileBySlug,
-  getUsageCountTodayForUser,
-  getUsageCountThisMonthForUser
+  acquireReservation,
+  completeReservation,
+  releaseReservation
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { SemanticValidationError } from '@/lib/ai/semantic-validation'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import { recordProviderError } from '@/lib/monitoring/observability'
 import { serverEnv, checkProductionEnv } from '@/lib/env/server'
-import { hashValue } from '@/lib/rate-limit/hash-ip'
-import { PLAN_LIMITS, canAnalyzePrompt, getPlanSlugForUser } from '@/lib/plans/config'
+import { hashValue, getClientIp } from '@/lib/rate-limit/hash-ip'
+import { PLAN_LIMITS, getPlanSlugForUser } from '@/lib/plans/config'
 import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
 
 
-// Input validation schema using Zod
+// Input validation schema using Zod.
+// input_prompt uses an absolute transport ceiling of 25,000 chars — larger than
+// any valid plan limit (Pro: 24,000). Per-plan enforcement happens AFTER identity
+// and plan resolution below, so Free/Anonymous are not accidentally granted extra capacity.
 const analyzeRequestSchema = z.object({
-  input_prompt: z.string(),
+  input_prompt: z.string().max(25000, 'Prompt exceeds maximum transport length.'),
   working_language: z.enum(['pl', 'en']),
   selected_profile_slug: z.enum(['general-llm', 'openrouter-deepseek-v4-flash']),
   audit_mode: z.enum(['universal', 'seo_content', 'coding', 'data_analysis', 'research', 'marketing_sales', 'agent_workflow']).default('universal'),
@@ -39,6 +46,10 @@ export async function POST(request: Request) {
   let userId: string | null = null
   let ipHash: string | null = null
   let userAgentHash: string | null = null
+  let requestId: string | undefined
+  let reservationAcquired = false
+  let controller: AbortController | undefined
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
 
   try {
     // 0. Ensure production environment is correctly configured
@@ -60,7 +71,7 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         {
-          error: 'invalid_input',
+          error: 'validation_error',
           message: 'Invalid request payload structure or data types.',
           details: parsed.error.flatten()
         },
@@ -82,21 +93,85 @@ export async function POST(request: Request) {
     selectedProfileSlug = selected_profile_slug
     workingLanguage = working_language
 
-    // 2. Resolve owner_anonymous_id and authenticated user server-side (do not trust request body)
+    // 2. Resolve authenticated user server-side first (do not trust request body)
+    let user: User | null = null
+    try {
+      user = await getAuthUser()
+    } catch (err) {
+      if (err instanceof Error && err.name === 'TransientAuthError') {
+        throw err
+      }
+      console.error('Non-transient auth error in resolve:', err)
+    }
+
     const resolvedOwner = await resolveOrCreateOwnerId()
     ownerAnonymousId = resolvedOwner.id
-    const user = await getAuthUser()
     userId = user?.id || null
 
     // 2a. Hash IP and User-Agent server-side for abuse telemetry.
     //     Raw values are never stored — only SHA-256 hashes salted with APP_URL.
     //     Headers may be absent (null) — we never fabricate values.
-    const rawIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      ?? request.headers.get('x-real-ip')
-      ?? null
+    const rawIp = getClientIp(request.headers)
     const rawUa = request.headers.get('user-agent') ?? null
     ipHash = rawIp ? hashValue(rawIp) : null
     userAgentHash = rawUa ? hashValue(rawUa) : null
+
+    // 2b. Resolve plan server-side BEFORE any validation that is plan-dependent.
+    //     The client must never supply or override the plan.
+    const resolvedPlanSlug = await getPlanSlugForUser(userId)
+    const planConfig = PLAN_LIMITS[resolvedPlanSlug]
+
+    // 2c. Validate prompt minimum length
+    if (input_prompt.length < serverEnv.MIN_PROMPT_CHARS) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'PROMPT_TOO_SHORT'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+      return NextResponse.json(
+        {
+          error: 'validation_error',
+          message: `Wprowadzony prompt jest za krótki. Minimalna długość to ${serverEnv.MIN_PROMPT_CHARS} znaków.`
+        },
+        { status: 400 }
+      )
+    }
+
+    // 2d. Validate prompt maximum length using the resolved plan limit.
+    //     Pro: 24,000 chars; Free/Anonymous: 12,000 chars.
+    //     This runs AFTER plan resolution so Pro is never blocked by a global lower limit.
+    if (input_prompt.length > planConfig.maxPromptChars) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'PROMPT_TOO_LONG',
+          plan_slug: resolvedPlanSlug,
+          max_chars: planConfig.maxPromptChars
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+      return NextResponse.json(
+        {
+          error: 'validation_error',
+          message: `Przekroczono maksymalną długość promptu dla planu ${planConfig.name} (${planConfig.maxPromptChars} znaków).`,
+          plan: resolvedPlanSlug,
+          maxPromptChars: planConfig.maxPromptChars
+        },
+        { status: 400 }
+      )
+    }
 
     // Log analysis_started immediately after validation and owner resolution
     await createUsageEvent({
@@ -111,11 +186,17 @@ export async function POST(request: Request) {
       user_agent_hash: userAgentHash
     })
 
-    // 3. Run sensitive-data detection server-side
-    const detection = detectSensitiveData(input_prompt)
+    // 3. Run sensitive-data detection server-side on all user-controlled text fields
+    const scanResult = scanRequestFields({
+      input_prompt,
+      task_goal,
+      task_type,
+      expected_output_format,
+      constraints
+    })
 
     // Log sensitive data warning shown if alert is low or medium risk
-    if (detection.riskLevel === 'low' || detection.riskLevel === 'medium') {
+    if (scanResult.riskLevel === 'low' || scanResult.riskLevel === 'medium') {
       await createUsageEvent({
         owner_anonymous_id: ownerAnonymousId,
         user_id: userId,
@@ -123,15 +204,16 @@ export async function POST(request: Request) {
         metadata_json: {
           profile_slug: selected_profile_slug,
           working_language: working_language,
-          risk_level: detection.riskLevel
+          risk_level: scanResult.riskLevel,
+          findings: scanResult.findings
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
       })
     }
 
-    // 4. If high-risk secret is detected, block and do not save raw prompt
-    if (detection.riskLevel === 'high' && serverEnv.SENSITIVE_DATA_BLOCK_HIGH_RISK) {
+    // 4. If high-risk secret is detected, block and do not save raw prompt or other fields
+    if (scanResult.riskLevel === 'high' && serverEnv.SENSITIVE_DATA_BLOCK_HIGH_RISK) {
       // Record a sensitive data blocked telemetry usage event without saving the raw prompt
       await createUsageEvent({
         owner_anonymous_id: ownerAnonymousId,
@@ -140,7 +222,8 @@ export async function POST(request: Request) {
         metadata_json: {
           profile_slug: selected_profile_slug,
           working_language: working_language,
-          risk_level: 'high'
+          risk_level: 'high',
+          findings: scanResult.findings
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
@@ -161,77 +244,42 @@ export async function POST(request: Request) {
       })
 
       // Exclude prompt value from logs for privacy
-      console.warn('[Sensitive Data Blocked]: High-risk credentials detected in input prompt.')
+      console.warn('[Sensitive Data Blocked]: High-risk credentials detected in request fields.')
 
       return NextResponse.json(
         {
-          error: 'high_risk_sensitive_data_detected',
-          message: 'Wykryto poufne dane wysokiego ryzyka (np. klucze API). Usuń je przed kontynuowaniem.',
-          findings: detection.findings
+          error: 'sensitive_data_detected',
+          message: 'Wykryto poufne dane wysokiego ryzyka (np. klucze API lub hasła). Usuń je przed kontynuowaniem.',
+          findings: scanResult.findings
         },
         { status: 422 }
       )
     }
 
-    // 5. Validate prompt min/max character lengths
-    if (input_prompt.length < serverEnv.MIN_PROMPT_CHARS) {
-      await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId,
-        user_id: userId,
-        event_type: 'analysis_failed',
-        metadata_json: {
-          profile_slug: selected_profile_slug,
-          working_language: working_language,
-          error_code: 'PROMPT_TOO_SHORT'
-        },
-        ip_hash: ipHash,
-        user_agent_hash: userAgentHash
-      })
+    // 5. (Prompt length is now validated above in step 2c/2d, after plan resolution.)
 
+    // 6. Check plan-based daily abuse and monthly usage limits using atomic reservation ledger.
+    requestId = randomUUID()
+    let reservationResult: string
+    try {
+      reservationResult = await acquireReservation(requestId, ownerAnonymousId, userId)
+    } catch (dbError) {
+      console.error('[POST /api/analyze Reservation DB Error]:', dbError)
       return NextResponse.json(
         {
-          error: 'invalid_input',
-          message: `Wprowadzony prompt jest za krótki. Minimalna długość to ${serverEnv.MIN_PROMPT_CHARS} znaków.`
+          error: 'temporary_service_error',
+          message: 'Usługa jest tymczasowo niedostępna ze względu na błąd bazy danych. Spróbuj ponownie później.'
         },
-        { status: 400 }
+        { status: 500 }
       )
     }
 
-    if (input_prompt.length > serverEnv.MAX_PROMPT_CHARS) {
-      await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId,
-        user_id: userId,
-        event_type: 'analysis_failed',
-        metadata_json: {
-          profile_slug: selected_profile_slug,
-          working_language: working_language,
-          error_code: 'PROMPT_TOO_LONG'
-        },
-        ip_hash: ipHash,
-        user_agent_hash: userAgentHash
-      })
+    if (reservationResult === 'daily_limit_reached' || reservationResult === 'monthly_limit_reached') {
+      const errCode = reservationResult === 'daily_limit_reached' ? 'DAILY_LIMIT_REACHED' : 'MONTHLY_LIMIT_REACHED'
+      const planSlug = await getPlanSlugForUser(userId)
+      const planConfig = PLAN_LIMITS[planSlug]
+      const limitVal = reservationResult === 'daily_limit_reached' ? planConfig.dailyAnalyses : planConfig.monthlyAnalyses
 
-      return NextResponse.json(
-        {
-          error: 'prompt_too_long',
-          message: `Przekroczono maksymalną długość promptu (${serverEnv.MAX_PROMPT_CHARS} znaków).`
-        },
-        { status: 413 }
-      )
-    }
-
-    // 6. Check plan-based daily abuse and monthly usage limits.
-    const planSlug = await getPlanSlugForUser(userId)
-
-    const dailyCount = await getUsageCountTodayForUser(ownerAnonymousId, userId)
-    const monthlyCount = await getUsageCountThisMonthForUser(ownerAnonymousId, userId)
-
-    const planConfig = PLAN_LIMITS[planSlug]
-    const limitCheck = canAnalyzePrompt(planSlug, monthlyCount, dailyCount)
-
-    if (!limitCheck.allowed) {
-      const errCode = limitCheck.reason === 'daily_abuse_limit_reached' ? 'DAILY_LIMIT_REACHED' : 'MONTHLY_LIMIT_REACHED'
-      
       await createUsageEvent({
         owner_anonymous_id: ownerAnonymousId,
         user_id: userId,
@@ -240,7 +288,7 @@ export async function POST(request: Request) {
           profile_slug: selected_profile_slug,
           working_language: working_language,
           error_code: errCode,
-          limit: limitCheck.limit
+          limit: limitVal
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
@@ -260,12 +308,12 @@ export async function POST(request: Request) {
         user_agent_hash: userAgentHash
       })
 
-      if (limitCheck.reason === 'daily_abuse_limit_reached') {
+      if (reservationResult === 'daily_limit_reached') {
         return NextResponse.json(
           {
-            error: 'limit_reached',
-            message: `Przekroczono dzienny limit analiz (${limitCheck.limit}) dla planu ${planConfig.name}. Spróbuj ponownie jutro.`,
-            limit: limitCheck.limit,
+            error: 'entitlement_error',
+            message: `Przekroczono dzienny limit analiz (${limitVal}) dla planu ${planConfig.name}. Spróbuj ponownie jutro.`,
+            limit: limitVal,
             reason: 'daily_abuse_limit_reached'
           },
           { status: 429 }
@@ -273,15 +321,18 @@ export async function POST(request: Request) {
       } else {
         return NextResponse.json(
           {
-            error: 'monthly_limit_reached',
-            message: `Przekroczono miesięczny limit analiz (${limitCheck.limit}) dla planu ${planConfig.name}. Rozszerz plan do Pro, aby uzyskać większe limity.`,
-            limit: limitCheck.limit,
+            error: 'entitlement_error',
+            message: `Przekroczono miesięczny limit analiz (${limitVal}) dla planu ${planConfig.name}. Rozszerz plan do Pro, aby uzyskać większe limity.`,
+            limit: limitVal,
             reason: 'monthly_limit_reached'
           },
           { status: 402 }
         )
       }
     }
+
+    // Mark that we have successfully reserved quota for this request
+    reservationAcquired = true
 
 
     // 7. Load selected model profile from database
@@ -309,9 +360,47 @@ export async function POST(request: Request) {
       )
     }
 
+    const capabilities = (dbProfile.capabilities_json || {}) as Record<string, unknown>
+    const isProfileEnabled = capabilities.enabled !== false
+    if (!isProfileEnabled) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'MODEL_PROFILE_DISABLED'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      })
+
+      return NextResponse.json(
+        {
+          error: 'model_profile_unavailable',
+          message: `Wybrany profil modelu (${selected_profile_slug}) jest niedostępny.`
+        },
+        { status: 404 }
+      )
+    }
+
     // 8-12. Build prompt, call OpenRouter, validate response, and calculate weighted score
     const isMockMode = process.env.AI_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test'
     
+    // Set up AbortController and request-cancel event listener
+    controller = new AbortController()
+    if (request.signal) {
+      request.signal.addEventListener('abort', () => {
+        controller?.abort(new Error('CLIENT_CLOSED'))
+      })
+    }
+
+    const timeoutMs = serverEnv.AI_PROVIDER_TIMEOUT_MS
+    timeoutId = setTimeout(() => {
+      controller?.abort(new Error('PROVIDER_TIMEOUT'))
+    }, timeoutMs)
+
     const analysisResult = await analyzePrompt(
       {
         inputPrompt: input_prompt,
@@ -321,12 +410,24 @@ export async function POST(request: Request) {
         taskGoal: task_goal || null,
         taskType: task_type || null,
         expectedOutputFormat: expected_output_format || null,
-        constraints: constraints || null
+        constraints: constraints || null,
+        dbProfile
       },
       {
-        mockMode: isMockMode
+        mockMode: isMockMode,
+        abortSignal: controller.signal
       }
     )
+
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+      timeoutId = undefined
+    }
+
+    // Bounding output size validation
+    if (!analysisResult.analysis.improved_prompt || analysisResult.analysis.improved_prompt.length > 50000) {
+      throw new Error('MALFORMED_OUTPUT: Improved prompt is empty or exceeds limits.')
+    }
 
     // 13. Save prompt_analyses record to database
     const createdRecord = await createPromptAnalysis({
@@ -340,14 +441,14 @@ export async function POST(request: Request) {
       task_type: task_type || null,
       expected_output_format: expected_output_format || null,
       constraints: constraints || null,
-      sensitive_data_risk_level: detection.riskLevel as 'none' | 'low' | 'medium' | 'high',
-      sensitive_data_findings_json: detection.findings,
+      sensitive_data_risk_level: scanResult.riskLevel as 'none' | 'low' | 'medium' | 'high',
+      sensitive_data_findings_json: scanResult.findings,
       overall_score: analysisResult.scores.overallScore,
       score_level: analysisResult.scores.scoreLevel as 'weak' | 'needs_work' | 'decent' | 'strong' | 'excellent',
       analysis_json: analysisResult.analysis,
       improved_prompt: analysisResult.analysis.improved_prompt,
-      model_id_used: getOwnerConfiguredModelId(),
-      provider_used: 'openrouter',
+      model_id_used: (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId(),
+      provider_used: dbProfile.provider || 'openrouter',
       analysis_schema_version: process.env.ANALYSIS_SCHEMA_VERSION || '1.0.0',
       scoring_version: process.env.SCORING_VERSION || '1.0.0',
       model_profile_version: dbProfile.profile_version || '1.0.0',
@@ -355,6 +456,13 @@ export async function POST(request: Request) {
     })
 
     if (!createdRecord) {
+      if (reservationAcquired && requestId) {
+        await releaseReservation(requestId).catch((err) => {
+          console.error('Failed to release reservation:', err)
+        })
+        reservationAcquired = false
+      }
+
       await createUsageEvent({
         owner_anonymous_id: ownerAnonymousId,
         user_id: userId,
@@ -377,11 +485,40 @@ export async function POST(request: Request) {
       )
     }
 
-    // 14. Save analysis_completed usage_event record only after successful saved database result
-    const promptTokens = analysisResult.usage?.promptTokens || 0
-    const completionTokens = analysisResult.usage?.completionTokens || 0
-    const totalTokens = analysisResult.usage?.totalTokens || 0
-    const calculatedCost = (promptTokens * 0.075 + completionTokens * 0.30) / 1000000
+    // Mark reservation as completed since database record was saved successfully
+    if (reservationAcquired && requestId) {
+      await completeReservation(requestId).catch((err) => {
+        console.error('Failed to complete reservation:', err)
+      })
+      reservationAcquired = false
+    }
+
+    // 14. Validate numeric usage values and calculate cost server-side
+    let promptTokens = 0
+    let completionTokens = 0
+    let totalTokens = 0
+    let usageStatus: 'measured' | 'estimated' | 'unavailable' = 'unavailable'
+
+    if (analysisResult.usage) {
+      const p = analysisResult.usage.promptTokens
+      const c = analysisResult.usage.completionTokens
+      const t = analysisResult.usage.totalTokens
+
+      if (typeof p === 'number' && Number.isFinite(p) && p >= 0 &&
+          typeof c === 'number' && Number.isFinite(c) && c >= 0 &&
+          typeof t === 'number' && Number.isFinite(t) && t >= 0) {
+        promptTokens = p
+        completionTokens = c
+        totalTokens = t >= p + c ? t : p + c
+        usageStatus = isMockMode ? 'estimated' : 'measured'
+      }
+    }
+
+    const modelId = (capabilities.model_id as string | undefined) || 'deepseek/deepseek-v4-flash'
+    const providerUsed = dbProfile.provider || 'openrouter'
+    const calculatedCost = usageStatus !== 'unavailable'
+      ? calculateUsageCost(providerUsed, modelId, promptTokens, completionTokens)
+      : null
 
     await createUsageEvent({
       owner_anonymous_id: ownerAnonymousId,
@@ -391,12 +528,13 @@ export async function POST(request: Request) {
         analysis_id: createdRecord.id,
         profile_slug: selected_profile_slug,
         working_language: working_language,
-        token_usage: analysisResult.usage ? {
+        token_usage: usageStatus !== 'unavailable' ? {
           prompt_tokens: promptTokens,
           completion_tokens: completionTokens,
-          total_tokens: totalTokens
+          total_tokens: totalTokens,
+          status: usageStatus
         } : null,
-        cost_estimate: analysisResult.usage ? calculatedCost : null
+        cost_estimate: calculatedCost
       },
       ip_hash: ipHash,
       user_agent_hash: userAgentHash
@@ -411,116 +549,178 @@ export async function POST(request: Request) {
       improved_prompt: analysisResult.analysis.improved_prompt,
       change_explanations: analysisResult.analysis.change_explanations,
       analysis: analysisResult.analysis,
-      sensitive_data: detection
+      sensitive_data: scanResult
     })
 
   } catch (error) {
+    if (reservationAcquired && requestId) {
+      await releaseReservation(requestId).catch((err) => {
+        console.error('Failed to release reservation in catch block:', err)
+      })
+      reservationAcquired = false
+    }
+
+    const errorId = randomUUID()
+
     // Invoke provider error monitoring hook
     recordProviderError(error, {
+      request_id: requestId,
+      error_id: errorId,
       selected_profile_slug: selectedProfileSlug,
       working_language: workingLanguage
     })
 
-    // 1. Semantic Validation Failures (Invalid Structured Output)
-    if (error instanceof SemanticValidationError) {
+    const logFailureEvent = async (errCode: string) => {
       await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId,
-        user_id: userId,
-        event_type: 'invalid_structured_output',
-        metadata_json: {
-          profile_slug: selectedProfileSlug,
-          working_language: workingLanguage,
-          error_code: 'INVALID_STRUCTURED_OUTPUT'
-        },
-        ip_hash: ipHash,
-        user_agent_hash: userAgentHash
-      })
-
-      await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId,
+        owner_anonymous_id: ownerAnonymousId || '00000000-0000-0000-0000-000000000000',
         user_id: userId,
         event_type: 'analysis_failed',
         metadata_json: {
           profile_slug: selectedProfileSlug,
           working_language: workingLanguage,
-          error_code: 'INVALID_STRUCTURED_OUTPUT'
+          error_code: errCode,
+          error_id: errorId
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
-      })
+      }).catch(() => null)
+    }
+
+    // 1. Transient Auth Failure
+    if (error instanceof Error && error.name === 'TransientAuthError') {
+      await logFailureEvent('TRANSIENT_AUTH_ERROR')
+      return NextResponse.json(
+        {
+          error: 'authentication_error',
+          message: 'Usługa autoryzacji jest tymczasowo niedostępna. Spróbuj ponownie później.',
+          error_id: errorId
+        },
+        { status: 503 }
+      )
+    }
+
+    // 2. Client Cancellation
+    const isClientCancelled = (
+      (error instanceof Error && error.message === 'CLIENT_CLOSED') ||
+      (controller?.signal.aborted &&
+       controller.signal.reason instanceof Error &&
+       controller.signal.reason.message === 'CLIENT_CLOSED')
+    )
+
+    if (isClientCancelled) {
+      await logFailureEvent('CLIENT_CANCELLED')
+      console.warn(`[CLIENT_CANCELLED]: Request aborted by client. request_id=${requestId}`)
+      return NextResponse.json(
+        {
+          error: 'client_cancelled',
+          message: 'Połączenie zostało przerwane przez klienta.',
+          error_id: errorId
+        },
+        { status: 499 }
+      )
+    }
+
+    // 3. Timeout Errors
+    const isTimeout = (
+      (error instanceof Error && error.message === 'PROVIDER_TIMEOUT') ||
+      (error instanceof ProviderError && error.errorCode === 'provider_timeout') ||
+      (controller?.signal.aborted &&
+       controller.signal.reason instanceof Error &&
+       controller.signal.reason.message === 'PROVIDER_TIMEOUT')
+    )
+
+    if (isTimeout) {
+      await logFailureEvent('PROVIDER_TIMEOUT')
+      return NextResponse.json(
+        {
+          error: 'provider_timeout',
+          message: 'Żądanie analizy przekroczyło limit czasu. Spróbuj ponownie.',
+          error_id: errorId
+        },
+        { status: 504 }
+      )
+    }
+
+    // 4. Semantic Validation Failures (Invalid Structured Output)
+    if (
+      error instanceof SemanticValidationError ||
+      (error instanceof Error && error.message.startsWith('MALFORMED_OUTPUT'))
+    ) {
+      await logFailureEvent('INVALID_STRUCTURED_OUTPUT')
 
       console.error('[POST /api/analyze SemanticValidationError]:', error)
       return NextResponse.json(
         {
-          error: 'invalid_structured_output',
-          message: 'Odpowiedź AI nie spełnia reguł strukturalnych. Spróbuj ponownie.'
+          error: 'malformed_provider_output',
+          message: 'Odpowiedź AI nie spełnia reguł strukturalnych. Spróbuj ponownie.',
+          error_id: errorId
         },
         { status: 502 }
       )
     }
 
-    // 2. Provider Rate Limits or Failures
+    // 5. Provider Rate Limits or Failures
     if (error instanceof ProviderError) {
-      const isTransient = error.statusCode === 429 || error.statusCode === 503
-      const status = isTransient ? 503 : 502
-      const errCode = isTransient ? 'PROVIDER_RATE_LIMIT' : 'PROVIDER_ERROR'
+      const isRateLimit = error.errorCode === 'provider_rate_limit'
+      const isAuthError = error.errorCode === 'provider_authentication_error'
+      const isConfigError = error.errorCode === 'provider_configuration_error'
+      const isTimeoutError = error.errorCode === 'provider_timeout'
+      const isMalformed = error.errorCode === 'malformed_provider_output'
 
-      await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId,
-        user_id: userId,
-        event_type: 'provider_error',
-        metadata_json: {
-          profile_slug: selectedProfileSlug,
-          working_language: workingLanguage,
-          error_code: errCode
-        },
-        ip_hash: ipHash,
-        user_agent_hash: userAgentHash
-      })
+      const publicCode = isRateLimit
+        ? 'provider_rate_limit'
+        : isAuthError
+        ? 'provider_authentication_error'
+        : isConfigError
+        ? 'provider_configuration_error'
+        : isTimeoutError
+        ? 'provider_timeout'
+        : isMalformed
+        ? 'malformed_provider_output'
+        : 'provider_unavailable'
 
-      await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId,
-        user_id: userId,
-        event_type: 'analysis_failed',
-        metadata_json: {
-          profile_slug: selectedProfileSlug,
-          working_language: workingLanguage,
-          error_code: errCode
-        },
-        ip_hash: ipHash,
-        user_agent_hash: userAgentHash
-      })
+      const status = isRateLimit
+        ? 429
+        : isAuthError || isMalformed
+        ? 502
+        : isTimeoutError
+        ? 504
+        : 503 // For configuration_error, unavailable, and others
 
+      await logFailureEvent(publicCode.toUpperCase())
       return NextResponse.json(
         {
-          error: isTransient ? 'provider_unavailable' : 'provider_error',
-          message: error.userMessage
+          error: publicCode,
+          message: error.userMessage,
+          error_id: errorId
         },
         { status }
       )
     }
 
-    // 3. Catch-all Internal System Failures
-    await createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId,
-      user_id: userId,
-      event_type: 'analysis_failed',
-      metadata_json: {
-        profile_slug: selectedProfileSlug,
-        working_language: workingLanguage,
-        error_code: 'INTERNAL_ERROR'
-      },
-      ip_hash: ipHash,
-      user_agent_hash: userAgentHash
-    })
+    // 6. Catch-all Internal System Failures (including Database errors)
+    const isDbError = error instanceof Error && (
+      error.message.includes('Database error') ||
+      error.message.includes('db') ||
+      error.message.includes('PG') ||
+      error.message.includes('foreign key') ||
+      error.message.includes('violates')
+    )
+    const systemErrCode = isDbError ? 'DATABASE_ERROR' : 'INTERNAL_ERROR'
+    await logFailureEvent(systemErrCode)
 
-    console.error('[POST /api/analyze Error]:', error)
+    console.error(`[SYSTEM_ERROR] error_id=${errorId} message="${error instanceof Error ? error.message : String(error)}"`)
     return NextResponse.json(
       {
-        error: 'internal_error',
-        message: 'Wystąpił nieoczekiwany błąd serwera. Spróbuj ponownie później.'
+        error: isDbError ? 'database_error' : 'internal_error',
+        message: 'Wystąpił nieoczekiwany błąd serwera. Spróbuj ponownie później.',
+        error_id: errorId
       },
       { status: 500 }
     )
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
   }
 }

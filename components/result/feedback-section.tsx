@@ -61,12 +61,12 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
     <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8 flex flex-col justify-between">
       <div>
         <h3 className="text-base font-bold text-[#E2E8F0]">Czy ten audyt był pomocny?</h3>
-        <p className="mt-1 text-xs text-[#4A5568]">Twój feedback pozwala nam stale ulepszać filtry inżynierii promptów.</p>
+        <p className="mt-1 text-xs text-[#8290A2]">Twój feedback pozwala nam stale ulepszać filtry inżynierii promptów.</p>
       </div>
 
       <div className="mt-6 space-y-3">
         {feedbackSubmitted ? (
-          <div className="inline-flex items-center gap-2 rounded-lg bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 px-4 py-3 text-xs font-bold text-[#6EE7B7]">
+          <div role="status" aria-live="polite" className="inline-flex items-center gap-2 rounded-lg bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 px-4 py-3 text-xs font-bold text-[#6EE7B7]">
             <svg className="h-4 w-4 shrink-0 text-[#6EE7B7]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -83,7 +83,7 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
                 className={`flex flex-1 items-center justify-center gap-2 rounded-lg border py-3 text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 cursor-pointer ${
                   feedbackVote === 'up'
                     ? 'border-[#6EE7B7]/30 bg-[#6EE7B7]/10 text-[#6EE7B7]'
-                    : 'border-[#2A2A3A] bg-[#1C1C27] text-[#4A5568] hover:text-[#94A3B8] hover:border-[#3A3A52]'
+                    : 'border-[#2A2A3A] bg-[#1C1C27] text-[#8290A2] hover:text-[#E2E8F0] hover:border-[#3A3A52]'
                 }`}
               >
                 <span className="text-base">👍</span>
@@ -97,7 +97,7 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
                 className={`flex flex-1 items-center justify-center gap-2 rounded-lg border py-3 text-xs font-semibold transition-all active:scale-95 disabled:opacity-60 cursor-pointer ${
                   feedbackVote === 'down'
                     ? 'border-[#F87171]/30 bg-[#F87171]/10 text-[#F87171]'
-                    : 'border-[#2A2A3A] bg-[#1C1C27] text-[#4A5568] hover:text-[#94A3B8] hover:border-[#3A3A52]'
+                    : 'border-[#2A2A3A] bg-[#1C1C27] text-[#8290A2] hover:text-[#E2E8F0] hover:border-[#3A3A52]'
                 }`}
               >
                 <span className="text-base">👎</span>
@@ -107,7 +107,7 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
 
             {feedbackVote === 'down' && (
               <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                <label htmlFor="feedback-comment" className="text-xs font-bold uppercase tracking-wider text-[#4A5568]">
+                <label htmlFor="feedback-comment" className="text-xs font-bold uppercase tracking-wider text-[#8290A2]">
                   Co poszło nie tak? (opcjonalne, maks. 500 znaków)
                 </label>
                 <textarea
@@ -117,7 +117,7 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
                   maxLength={500}
                   rows={3}
                   placeholder="Opisz co mogło być lepsze..."
-                  className="w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-2.5 font-sans text-sm text-[#E2E8F0] placeholder-[#4A5568] focus:border-[#A78BFA]/40 focus:outline-none resize-none transition-colors"
+                  className="w-full rounded-lg border border-[#2A2A3A] bg-[#0C0C10] px-4 py-2.5 font-sans text-sm text-[#E2E8F0] placeholder-[#8290A2] focus:border-[#A78BFA]/40 focus:outline-none resize-none transition-colors"
                 />
                 <button
                   id="feedback-submit-btn"
@@ -131,7 +131,7 @@ export function FeedbackSection({ analysisId }: FeedbackSectionProps) {
             )}
 
             {feedbackError && (
-              <p className="text-xs font-medium text-[#F87171]">⚠️ {feedbackError}</p>
+              <p role="alert" className="text-xs font-medium text-[#F87171]">⚠️ {feedbackError}</p>
             )}
           </>
         )}

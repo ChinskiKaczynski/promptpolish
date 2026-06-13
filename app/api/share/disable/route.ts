@@ -4,7 +4,6 @@ import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { disableShareLink, createUsageEvent } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
-import { getPlanSlugForUser, canShare } from '@/lib/plans/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,7 +39,8 @@ export async function POST(request: Request) {
 
     const { analysis_id } = parsed.data
 
-    // 1. Resolve owner identity from signed secure cookie or authenticated session
+    // 1. Resolve owner identity from signed secure cookie or authenticated session.
+    //    The client must never supply or override the identity.
     const user = await getAuthUser()
     const ownerAnonymousId = await getOwnerIdFromCookies()
 
@@ -54,19 +54,13 @@ export async function POST(request: Request) {
       )
     }
 
-    // 2. Check Pro subscription entitlement for sharing management
-    const planSlug = await getPlanSlugForUser(user?.id || null)
-    if (!canShare(planSlug)) {
-      return NextResponse.json(
-        {
-          error: 'forbidden',
-          message: 'Sharing results requires a Pro subscription.'
-        },
-        { status: 403 }
-      )
-    }
+    // 2. Per product contract, ALL plans (anonymous, free, pro) can revoke share links.
+    //    No plan-based entitlement check is performed.
+    //    Only the owner can revoke; disableShareLink atomically verifies ownership.
 
-    // 3. Disable sharing
+    // 3. Disable sharing atomically:
+    //    Sets is_share_enabled = false AND share_token = NULL in a single owner-scoped UPDATE.
+    //    Non-owner attempts affect zero rows and return false.
     const success = await disableShareLink(analysis_id, ownerAnonymousId || '', user?.id)
     if (!success) {
       return NextResponse.json(
@@ -78,7 +72,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // 3. Save telemetry log event
+    // 4. Save telemetry log event
     await createUsageEvent({
       owner_anonymous_id: ownerAnonymousId || '',
       user_id: user?.id || null,

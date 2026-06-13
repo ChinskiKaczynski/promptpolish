@@ -19,17 +19,19 @@ vi.mock('@/lib/plans/config', () => ({
   getPlanSlugForUser: vi.fn(),
   canExportPdf: vi.fn(),
   canExportMarkdown: vi.fn(),
+  canExportText: vi.fn(),
 }))
 
 import { GET } from '@/app/api/export/[id]/route'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
-import { getPlanSlugForUser, canExportPdf, canExportMarkdown } from '@/lib/plans/config'
+import { getPlanSlugForUser, canExportPdf, canExportMarkdown, canExportText } from '@/lib/plans/config'
 import type { PromptAnalysisRow } from '@/lib/supabase/types'
 
 const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
 const OWNER_ID = 'owner-anon-uuid'
+const SAFE_ID = ANALYSIS_ID.slice(0, 8)
 
 const mockAnalysisRecord: PromptAnalysisRow = {
   id: ANALYSIS_ID,
@@ -92,6 +94,7 @@ describe('Export v1 API Dynamic Routes', () => {
     vi.mocked(getPlanSlugForUser).mockResolvedValue('pro')
     vi.mocked(canExportPdf).mockReturnValue(true)
     vi.mocked(canExportMarkdown).mockReturnValue(true)
+    vi.mocked(canExportText).mockReturnValue(true)
   })
 
   it('rejects with 400 if format is missing or invalid', async () => {
@@ -100,6 +103,8 @@ describe('Export v1 API Dynamic Routes', () => {
     const res = await GET(req, { params })
 
     expect(res.status).toBe(400)
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
     expect(await res.text()).toContain('Invalid or missing format')
   })
 
@@ -110,7 +115,9 @@ describe('Export v1 API Dynamic Routes', () => {
 
     expect(res.status).toBe(200)
     expect(res.headers.get('Content-Type')).toContain('text/markdown')
-    expect(res.headers.get('Content-Disposition')).toBe(`attachment; filename="promptpolish-audit-${ANALYSIS_ID}.md"`)
+    expect(res.headers.get('Content-Disposition')).toBe(`attachment; filename="promptpolish-report-${SAFE_ID}.md"`)
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
 
     const text = await res.text()
     
@@ -151,7 +158,9 @@ describe('Export v1 API Dynamic Routes', () => {
 
     expect(res.status).toBe(200)
     expect(res.headers.get('Content-Type')).toContain('text/plain')
-    expect(res.headers.get('Content-Disposition')).toBe(`attachment; filename="promptpolish-audit-${ANALYSIS_ID}.txt"`)
+    expect(res.headers.get('Content-Disposition')).toBe(`attachment; filename="promptpolish-report-${SAFE_ID}.txt"`)
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
 
     const text = await res.text()
 
@@ -190,12 +199,13 @@ describe('Export v1 API Dynamic Routes', () => {
     const res = await GET(req, { params })
 
     expect(res.status).toBe(404)
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
     expect(await res.text()).toContain('Not Found or Access Denied')
     expect(createUsageEvent).not.toHaveBeenCalled()
   })
 
   it('returns 404 for soft-deleted analyses', async () => {
-    // getPromptAnalysisForOwner returns null if analysis is soft deleted
     vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(null)
 
     const req = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=txt`)
@@ -203,6 +213,8 @@ describe('Export v1 API Dynamic Routes', () => {
     const res = await GET(req, { params })
 
     expect(res.status).toBe(404)
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
     expect(createUsageEvent).not.toHaveBeenCalled()
   })
 
@@ -213,7 +225,9 @@ describe('Export v1 API Dynamic Routes', () => {
 
     expect(res.status).toBe(200)
     expect(res.headers.get('Content-Type')).toContain('application/pdf')
-    expect(res.headers.get('Content-Disposition')).toBe(`attachment; filename="promptpolish-audit-${ANALYSIS_ID}.pdf"`)
+    expect(res.headers.get('Content-Disposition')).toBe(`attachment; filename="promptpolish-report-${SAFE_ID}.pdf"`)
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
 
     const body = await res.arrayBuffer()
     expect(body.byteLength).toBeGreaterThan(0)
@@ -229,7 +243,7 @@ describe('Export v1 API Dynamic Routes', () => {
     })
   })
 
-  it('returns 403 Forbidden for authorized owner with Free subscription', async () => {
+  it('returns 403 Forbidden JSON for authorized owner with Free subscription requesting PDF', async () => {
     vi.mocked(getPlanSlugForUser).mockResolvedValue('free')
     vi.mocked(canExportPdf).mockReturnValue(false)
 
@@ -238,7 +252,17 @@ describe('Export v1 API Dynamic Routes', () => {
     const res = await GET(req, { params })
 
     expect(res.status).toBe(403)
-    expect(await res.text()).toContain('PDF export requires a Pro subscription')
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
+    
+    const json = await res.json()
+    expect(json).toEqual({
+      error: 'entitlement_denied',
+      feature: 'exportPdf',
+      plan: 'free',
+      upgradeRequired: true,
+      message: 'PDF export is available on the Pro plan.'
+    })
     expect(createUsageEvent).not.toHaveBeenCalled()
   })
 
@@ -250,9 +274,28 @@ describe('Export v1 API Dynamic Routes', () => {
     const res = await GET(req, { params })
 
     expect(res.status).toBe(404)
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
     expect(createUsageEvent).not.toHaveBeenCalled()
   })
-  it('returns 403 Forbidden for Free plan requesting Markdown export', async () => {
+
+  it('returns 200 for Free plan requesting Markdown/TXT export when entitled', async () => {
+    vi.mocked(getPlanSlugForUser).mockResolvedValue('free')
+    vi.mocked(canExportMarkdown).mockReturnValue(true)
+    vi.mocked(canExportText).mockReturnValue(true)
+
+    // Markdown
+    const reqMd = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=markdown`)
+    const resMd = await GET(reqMd, { params: Promise.resolve({ id: ANALYSIS_ID }) })
+    expect(resMd.status).toBe(200)
+
+    // TXT
+    const reqTxt = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=txt`)
+    const resTxt = await GET(reqTxt, { params: Promise.resolve({ id: ANALYSIS_ID }) })
+    expect(resTxt.status).toBe(200)
+  })
+
+  it('returns 403 Forbidden JSON if canExportMarkdown returns false', async () => {
     vi.mocked(getPlanSlugForUser).mockResolvedValue('free')
     vi.mocked(canExportMarkdown).mockReturnValue(false)
 
@@ -261,20 +304,30 @@ describe('Export v1 API Dynamic Routes', () => {
     const res = await GET(req, { params })
 
     expect(res.status).toBe(403)
-    expect(await res.text()).toContain('Export requires a Pro subscription')
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
+
+    const json = await res.json()
+    expect(json.error).toBe('entitlement_denied')
+    expect(json.feature).toBe('exportMarkdown')
     expect(createUsageEvent).not.toHaveBeenCalled()
   })
 
-  it('returns 403 Forbidden for Free plan requesting TXT export', async () => {
+  it('returns 403 Forbidden JSON if canExportText returns false', async () => {
     vi.mocked(getPlanSlugForUser).mockResolvedValue('free')
-    vi.mocked(canExportMarkdown).mockReturnValue(false)
+    vi.mocked(canExportText).mockReturnValue(false)
 
     const req = new Request(`http://localhost/api/export/${ANALYSIS_ID}?format=txt`)
     const params = Promise.resolve({ id: ANALYSIS_ID })
     const res = await GET(req, { params })
 
     expect(res.status).toBe(403)
-    expect(await res.text()).toContain('Export requires a Pro subscription')
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    expect(res.headers.get('Pragma')).toBe('no-cache')
+
+    const json = await res.json()
+    expect(json.error).toBe('entitlement_denied')
+    expect(json.feature).toBe('exportText')
     expect(createUsageEvent).not.toHaveBeenCalled()
   })
 })
