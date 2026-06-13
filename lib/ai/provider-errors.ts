@@ -33,7 +33,7 @@ export function isNestedTimeout(error: unknown): boolean {
   function containsTimeoutString(val: unknown): boolean {
     if (typeof val === 'string') {
       const lower = val.toLowerCase()
-      return timeoutSubstrings.some(sub => val.includes(sub)) ||
+      return timeoutSubstrings.some(sub => lower.includes(sub.toLowerCase())) ||
              lower.includes('timeout') ||
              lower.includes('abort')
     }
@@ -99,21 +99,28 @@ export function normalizeProviderError(error: unknown): ProviderError {
   if (isNestedTimeout(error)) {
     const statusCode = (error && typeof error === 'object' && 'statusCode' in error) ? (error as Record<string, unknown>).statusCode as number | undefined : undefined
     const originalMessage = error instanceof Error ? error.message : String(error)
-    const formattedMessage = originalMessage.startsWith('PROVIDER_TIMEOUT:')
-      ? originalMessage
-      : `PROVIDER_TIMEOUT: ${originalMessage}`
-    
-    const isNetworkOrFetch = originalMessage.toLowerCase().includes('fetch') || originalMessage.toLowerCase().includes('network')
-    const userMsg = isNetworkOrFetch 
-      ? highVolumeMessage 
-      : 'The prompt analysis request timed out. Please try again.'
+
+    const isPlatformTimeout =
+      originalMessage.includes('FUNCTION_INVOCATION_TIMEOUT') ||
+      originalMessage.includes('TASK_TIMEOUT') ||
+      originalMessage.includes('Vercel platform timeout')
+
+    if (isPlatformTimeout) {
+      return new ProviderError(
+        `PROVIDER_TIMEOUT (PLATFORM_TIMEOUT): ${originalMessage}`,
+        'The prompt analysis request timed out at the platform level. Please try again.',
+        error,
+        statusCode ?? 504,
+        'function_platform_timeout'
+      )
+    }
 
     return new ProviderError(
-      formattedMessage,
-      userMsg,
+      `PROVIDER_TIMEOUT (UPSTREAM_TIMEOUT): ${originalMessage}`,
+      'The AI provider request timed out. Please try again.',
       error,
-      statusCode,
-      'provider_timeout'
+      statusCode ?? 504,
+      'upstream_provider_error'
     )
   }
 
@@ -172,7 +179,7 @@ export function normalizeProviderError(error: unknown): ProviderError {
       if (lowerMessage.includes('429')) {
         errorCode = 'provider_rate_limit'
       } else if (lowerMessage.includes('timeout')) {
-        errorCode = 'provider_timeout'
+        errorCode = 'upstream_provider_error'
       }
 
       return new ProviderError(

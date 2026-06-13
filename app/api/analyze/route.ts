@@ -23,6 +23,7 @@ import { hashValue, getClientIp } from '@/lib/rate-limit/hash-ip'
 import { PLAN_LIMITS, getPlanSlugForUser } from '@/lib/plans/config'
 import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
 
+export const maxDuration = 60
 
 // Input validation schema using Zod.
 // input_prompt uses an absolute transport ceiling of 25,000 chars — larger than
@@ -48,8 +49,6 @@ export async function POST(request: Request) {
   let userAgentHash: string | null = null
   let requestId: string | undefined
   let reservationAcquired = false
-  let controller: AbortController | undefined
-  let timeoutId: ReturnType<typeof setTimeout> | undefined
 
   try {
     // 0. Ensure production environment is correctly configured
@@ -388,18 +387,7 @@ export async function POST(request: Request) {
     // 8-12. Build prompt, call OpenRouter, validate response, and calculate weighted score
     const isMockMode = process.env.AI_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test'
     
-    // Set up AbortController and request-cancel event listener
-    controller = new AbortController()
-    if (request.signal) {
-      request.signal.addEventListener('abort', () => {
-        controller?.abort(new Error('CLIENT_CLOSED'))
-      })
-    }
-
     const timeoutMs = serverEnv.AI_PROVIDER_TIMEOUT_MS
-    timeoutId = setTimeout(() => {
-      controller?.abort(new Error('PROVIDER_TIMEOUT'))
-    }, timeoutMs)
 
     const analysisResult = await analyzePrompt(
       {
@@ -415,14 +403,10 @@ export async function POST(request: Request) {
       },
       {
         mockMode: isMockMode,
-        abortSignal: controller.signal
+        abortSignal: request.signal || undefined,
+        timeoutMs
       }
     )
-
-    if (timeoutId) {
-      clearTimeout(timeoutId)
-      timeoutId = undefined
-    }
 
     // Bounding output size validation
     if (!analysisResult.analysis.improved_prompt || analysisResult.analysis.improved_prompt.length > 50000) {
@@ -606,9 +590,7 @@ export async function POST(request: Request) {
     // 2. Client Cancellation
     const isClientCancelled = (
       (error instanceof Error && error.message === 'CLIENT_CLOSED') ||
-      (controller?.signal.aborted &&
-       controller.signal.reason instanceof Error &&
-       controller.signal.reason.message === 'CLIENT_CLOSED')
+      (request.signal && request.signal.aborted)
     )
 
     if (isClientCancelled) {
@@ -626,19 +608,33 @@ export async function POST(request: Request) {
 
     // 3. Timeout Errors
     const isTimeout = (
-      (error instanceof Error && error.message === 'PROVIDER_TIMEOUT') ||
-      (error instanceof ProviderError && error.errorCode === 'provider_timeout') ||
-      (controller?.signal.aborted &&
-       controller.signal.reason instanceof Error &&
-       controller.signal.reason.message === 'PROVIDER_TIMEOUT')
+      (error instanceof Error && error.message.includes('PROVIDER_TIMEOUT')) ||
+      (error instanceof ProviderError && (
+        error.errorCode === 'provider_timeout' ||
+        error.errorCode === 'upstream_provider_error' ||
+        error.errorCode === 'function_platform_timeout'
+      ))
     )
 
     if (isTimeout) {
-      await logFailureEvent('PROVIDER_TIMEOUT')
+      let publicCode = 'provider_timeout'
+      let message = 'Żądanie analizy przekroczyło limit czasu. Spróbuj ponownie.'
+
+      if (error instanceof ProviderError) {
+        if (error.errorCode === 'upstream_provider_error') {
+          publicCode = 'upstream_provider_error'
+          message = 'Dostawca AI nie odpowiedział w oczekiwanym czasie. Spróbuj ponownie.'
+        } else if (error.errorCode === 'function_platform_timeout') {
+          publicCode = 'function_platform_timeout'
+          message = 'Serwer przekroczył limit czasu operacji. Spróbuj ponownie.'
+        }
+      }
+
+      await logFailureEvent(publicCode.toUpperCase())
       return NextResponse.json(
         {
-          error: 'provider_timeout',
-          message: 'Żądanie analizy przekroczyło limit czasu. Spróbuj ponownie.',
+          error: publicCode,
+          message,
           error_id: errorId
         },
         { status: 504 }
@@ -669,7 +665,10 @@ export async function POST(request: Request) {
       const isAuthError = error.errorCode === 'provider_authentication_error'
       const isConfigError = error.errorCode === 'provider_configuration_error'
       const isTimeoutError = error.errorCode === 'provider_timeout'
+      const isUpstreamTimeout = error.errorCode === 'upstream_provider_error'
+      const isPlatformTimeout = error.errorCode === 'function_platform_timeout'
       const isMalformed = error.errorCode === 'malformed_provider_output'
+      const isUnknownAbort = error.errorCode === 'unknown_abort'
 
       const publicCode = isRateLimit
         ? 'provider_rate_limit'
@@ -679,17 +678,25 @@ export async function POST(request: Request) {
         ? 'provider_configuration_error'
         : isTimeoutError
         ? 'provider_timeout'
+        : isUpstreamTimeout
+        ? 'upstream_provider_error'
+        : isPlatformTimeout
+        ? 'function_platform_timeout'
         : isMalformed
         ? 'malformed_provider_output'
+        : isUnknownAbort
+        ? 'unknown_abort'
         : 'provider_unavailable'
 
       const status = isRateLimit
         ? 429
         : isAuthError || isMalformed
         ? 502
-        : isTimeoutError
+        : isTimeoutError || isUpstreamTimeout || isPlatformTimeout
         ? 504
-        : 503 // For configuration_error, unavailable, and others
+        : isUnknownAbort
+        ? 499
+        : 503
 
       await logFailureEvent(publicCode.toUpperCase())
       return NextResponse.json(
@@ -723,8 +730,6 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId)
-    }
+    // No-op
   }
 }

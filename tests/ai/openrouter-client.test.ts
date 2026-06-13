@@ -160,12 +160,12 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       expect(normalized.userMessage).toContain('encountered an error while processing')
     })
 
-    it('maps generic network timeout and fetch errors to standardized high volume user message', () => {
+    it('maps generic network timeout and fetch errors to standardized user message', () => {
       const networkError = new Error('fetch failed due to DNS timeout or network connectivity issue')
       const normalized = normalizeProviderError(networkError)
 
       expect(networkError).toBeDefined()
-      expect(normalized.userMessage).toContain('handling high volume')
+      expect(normalized.userMessage).toContain('timed out')
     })
   })
 
@@ -175,7 +175,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       expect(isNestedTimeout(err)).toBe(true)
 
       const normalized = normalizeProviderError(err)
-      expect(normalized.errorCode).toBe('provider_timeout')
+      expect(normalized.errorCode).toBe('upstream_provider_error')
       expect(normalized.message).toContain('PROVIDER_TIMEOUT')
     })
 
@@ -185,7 +185,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       expect(isNestedTimeout(nestedErr)).toBe(true)
 
       const normalized = normalizeProviderError(nestedErr)
-      expect(normalized.errorCode).toBe('provider_timeout')
+      expect(normalized.errorCode).toBe('upstream_provider_error')
       expect(normalized.message).toContain('PROVIDER_TIMEOUT')
     })
 
@@ -206,7 +206,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       expect(isNestedTimeout(wrappingError)).toBe(true)
 
       const normalized = normalizeProviderError(wrappingError)
-      expect(normalized.errorCode).toBe('provider_timeout')
+      expect(normalized.errorCode).toBe('upstream_provider_error')
       expect(normalized.message).toContain('PROVIDER_TIMEOUT')
     })
 
@@ -223,7 +223,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       expect(isNestedTimeout(mockApiError)).toBe(true)
 
       const normalized = normalizeProviderError(mockApiError)
-      expect(normalized.errorCode).toBe('provider_timeout')
+      expect(normalized.errorCode).toBe('upstream_provider_error')
       expect(normalized.statusCode).toBe(200)
       expect(normalized.message).toContain('PROVIDER_TIMEOUT')
     })

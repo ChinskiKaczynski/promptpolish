@@ -38,7 +38,7 @@ export const serverEnvSchema = z.object({
   STRIPE_ENABLED: strictBool.default(false),
   ADMIN_EMAILS: z.string().optional(),
   RATE_LIMIT_HMAC_SECRET: z.string().optional(),
-  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(30000)
+  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(5000).max(120000).default(45000)
 })
 
 let parsedEnv: z.infer<typeof serverEnvSchema>

@@ -68,13 +68,18 @@ describe('Analyze Route Timeout & Abort integration', () => {
     // Mock analyzePrompt to block until aborted
     vi.mocked(analyzePrompt).mockImplementation(async (params, options) => {
       const signal = options?.abortSignal
+      const timeoutMs = options?.timeoutMs || 100
       return new Promise((resolve, reject) => {
         if (signal?.aborted) {
           reject(new Error('PROVIDER_TIMEOUT'))
           return
         }
-        signal?.addEventListener('abort', () => {
+        const timer = setTimeout(() => {
           reject(new Error('PROVIDER_TIMEOUT'))
+        }, timeoutMs)
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timer)
+          reject(new Error('CLIENT_CLOSED'))
         })
       })
     })

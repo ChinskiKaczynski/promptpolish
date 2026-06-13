@@ -1,7 +1,7 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { generateText, Output } from 'ai'
 import { analysisResultSchema, type AnalysisResult } from './schemas'
-import { normalizeProviderError, ProviderError, isNestedTimeout } from './provider-errors'
+import { normalizeProviderError, ProviderError } from './provider-errors'
 import { getOwnerConfiguredModelId } from './model-catalog'
 
 import type { ModelProfileRow } from '@/lib/supabase/types'
@@ -79,17 +79,34 @@ export async function executeOpenRouterAnalysis(
   const siteUrl = process.env.OPENROUTER_SITE_URL
   const appName = process.env.OPENROUTER_APP_NAME
 
-  // Resolve the effective AbortSignal – prefer an externally supplied one,
-  // otherwise create our own when timeoutMs is set.
-  let ownController: AbortController | undefined
+  // Resolve the effective AbortSignal – link external signal and timeout into a single ownController
+  const ownController = new AbortController()
+  const effectiveSignal = ownController.signal
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined
-  let effectiveSignal: AbortSignal | undefined = abortSignal
+  let abortListener: (() => void) | undefined
+  let abortReason: 'provider_timeout' | 'client_cancelled' | 'unknown_abort' | undefined
 
-  if (!effectiveSignal && timeoutMs && timeoutMs > 0) {
-    ownController = new AbortController()
-    effectiveSignal = ownController.signal
+  if (abortSignal) {
+    if (abortSignal.aborted) {
+      abortReason = 'client_cancelled'
+      ownController.abort('client_cancelled')
+    } else {
+      abortListener = () => {
+        if (!abortReason) {
+          abortReason = 'client_cancelled'
+          ownController.abort('client_cancelled')
+        }
+      }
+      abortSignal.addEventListener('abort', abortListener)
+    }
+  }
+
+  if (timeoutMs && timeoutMs > 0) {
     timeoutHandle = setTimeout(() => {
-      ownController!.abort(new Error(`PROVIDER_TIMEOUT: Request aborted after ${timeoutMs}ms`))
+      if (!abortReason) {
+        abortReason = 'provider_timeout'
+        ownController.abort('provider_timeout')
+      }
     }, timeoutMs)
   }
 
@@ -132,24 +149,36 @@ export async function executeOpenRouterAnalysis(
       } : undefined
     }
   } catch (error) {
-    // Detect AbortError BEFORE normalizeProviderError so downstream callers
-    // can distinguish provider_timeout from generic provider failures.
-    if (isNestedTimeout(error)) {
-      const ms = timeoutMs ?? 0
-      if (error instanceof ProviderError) {
-        throw error
+    // If the effective signal was aborted, check our explicit abortReason
+    if (effectiveSignal.aborted) {
+      const reason = abortReason || 'unknown_abort'
+      if (reason === 'provider_timeout') {
+        throw new ProviderError(
+          `PROVIDER_TIMEOUT: Request aborted after ${timeoutMs}ms`,
+          'The prompt analysis request timed out. Please try again.',
+          error,
+          504,
+          'provider_timeout'
+        )
+      } else if (reason === 'client_cancelled') {
+        throw new Error('CLIENT_CLOSED')
+      } else {
+        throw new ProviderError(
+          'Request aborted due to an unknown abort.',
+          'The prompt analysis request was interrupted.',
+          error,
+          499,
+          'unknown_abort'
+        )
       }
-      throw new ProviderError(
-        `PROVIDER_TIMEOUT: Request aborted after ${ms}ms`,
-        'The prompt analysis request timed out. Please try again.',
-        error,
-        undefined,
-        'provider_timeout'
-      )
     }
-    // Standardized provider error normalization for all other failures
+
+    // Standardized provider error normalization for all other failures (e.g. upstream timeouts, rate limits)
     throw normalizeProviderError(error)
   } finally {
     if (timeoutHandle !== undefined) clearTimeout(timeoutHandle)
+    if (abortSignal && abortListener) {
+      abortSignal.removeEventListener('abort', abortListener)
+    }
   }
 }
