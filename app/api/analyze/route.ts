@@ -571,8 +571,12 @@ export async function POST(request: Request) {
     })
 
     const logFailureEvent = async (errCode: string) => {
+      if (!ownerAnonymousId) {
+        console.warn(`[logFailureEvent skipped] No anonymous identity available to log event ${errCode}`)
+        return
+      }
       await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId || '00000000-0000-0000-0000-000000000000',
+        owner_anonymous_id: ownerAnonymousId,
         user_id: userId,
         event_type: 'analysis_failed',
         metadata_json: {

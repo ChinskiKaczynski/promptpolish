@@ -54,8 +54,8 @@ export async function GET(
     // 2. Fetch prompt analysis and strictly verify owner identity in database filter.
     //    Public share tokens DO NOT grant export access — only private ownership does.
     const record = user
-      ? await getPromptAnalysisForOwner(id, ownerAnonymousId || '', user.id)
-      : await getPromptAnalysisForOwner(id, ownerAnonymousId || '')
+      ? await getPromptAnalysisForOwner(id, ownerAnonymousId, user.id)
+      : await getPromptAnalysisForOwner(id, ownerAnonymousId)
 
     if (!record) {
       // Return 404 — non-owners must not learn whether another result exists
@@ -138,15 +138,17 @@ export async function GET(
         : format === 'txt' ? 'export_txt'
         : 'export_markdown'
 
-      await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId || '',
-        user_id: user?.id || null,
-        event_type: eventType,
-        metadata_json: {
-          analysis_id: id,
-          export_type: format
-        }
-      })
+      if (ownerAnonymousId) {
+        await createUsageEvent({
+          owner_anonymous_id: ownerAnonymousId,
+          user_id: user?.id || null,
+          event_type: eventType,
+          metadata_json: {
+            analysis_id: id,
+            export_type: format
+          }
+        })
+      }
     } catch (err) {
       console.error(`Failed to log export_${format} usage event:`, err)
     }

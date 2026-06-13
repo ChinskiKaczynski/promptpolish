@@ -75,13 +75,17 @@ export async function createPromptAnalysis(
  */
 export async function getPromptAnalysisForOwner(
   id: string,
-  ownerAnonymousId: string,
+  ownerAnonymousId?: string | null,
   userId?: string
 ): Promise<PromptAnalysisRow | null> {
   validateUuid(id, 'id')
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   if (userId) {
     validateUuid(userId, 'userId')
+  }
+  if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  } else if (!userId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
   }
 
   const supabase = getSupabaseAdminClient()
@@ -92,9 +96,13 @@ export async function getPromptAnalysisForOwner(
     .is('deleted_at', null)
 
   if (userId) {
-    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+      query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    } else {
+      query = query.eq('user_id', userId)
+    }
   } else {
-    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId!)
   }
 
   const { data, error } = await query.maybeSingle()
@@ -114,7 +122,7 @@ export async function getPromptAnalysisForOwner(
       return null // Access Denied
     }
   } else {
-    if (analysis.owner_anonymous_id !== ownerAnonymousId) {
+    if (!ownerAnonymousId || analysis.owner_anonymous_id !== ownerAnonymousId) {
       return null // Access Denied
     }
   }
@@ -546,13 +554,17 @@ export async function createCopyEvent(
  */
 export async function createShareLink(
   analysisId: string,
-  ownerAnonymousId: string,
+  ownerAnonymousId?: string | null,
   userId?: string
 ): Promise<string | null> {
   validateUuid(analysisId, 'analysisId')
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   if (userId) {
     validateUuid(userId, 'userId')
+  }
+  if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  } else if (!userId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
   }
 
   const shareToken = createShareToken()
@@ -567,9 +579,13 @@ export async function createShareLink(
     .is('deleted_at', null)
 
   if (userId) {
-    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+      query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    } else {
+      query = query.eq('user_id', userId)
+    }
   } else {
-    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId!)
   }
 
   const { data, error } = await query.select('share_token').maybeSingle()
@@ -593,13 +609,17 @@ export async function createShareLink(
  */
 export async function disableShareLink(
   analysisId: string,
-  ownerAnonymousId: string,
+  ownerAnonymousId?: string | null,
   userId?: string
 ): Promise<boolean> {
   validateUuid(analysisId, 'analysisId')
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   if (userId) {
     validateUuid(userId, 'userId')
+  }
+  if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  } else if (!userId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
   }
 
   const supabase = getSupabaseAdminClient()
@@ -612,9 +632,13 @@ export async function disableShareLink(
     .eq('id', analysisId)
 
   if (userId) {
-    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+      query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    } else {
+      query = query.eq('user_id', userId)
+    }
   } else {
-    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId!)
   }
 
   const { data, error } = await query.select('id').maybeSingle()
@@ -657,12 +681,16 @@ export async function getUsageCountToday(ownerAnonymousId: string): Promise<numb
  * Counts successful prompt analyses in the current UTC calendar day for a user (either logged-in or anonymous).
  */
 export async function getUsageCountTodayForUser(
-  ownerAnonymousId: string,
+  ownerAnonymousId?: string | null,
   userId?: string | null
 ): Promise<number> {
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   if (userId) {
     validateUuid(userId, 'userId')
+  }
+  if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  } else if (!userId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
   }
   const supabase = getSupabaseAdminClient()
   const startOfDay = new Date()
@@ -677,7 +705,7 @@ export async function getUsageCountTodayForUser(
   if (userId) {
     query = query.eq('user_id', userId)
   } else {
-    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+    query = query.eq('owner_anonymous_id', ownerAnonymousId!)
   }
 
   const { data, error } = await query
@@ -698,12 +726,16 @@ export async function getUsageCountTodayForUser(
  * Counts successful prompt analyses in the current UTC calendar month for a user (either logged-in or anonymous).
  */
 export async function getUsageCountThisMonthForUser(
-  ownerAnonymousId: string,
+  ownerAnonymousId?: string | null,
   userId?: string | null
 ): Promise<number> {
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   if (userId) {
     validateUuid(userId, 'userId')
+  }
+  if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  } else if (!userId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
   }
   const supabase = getSupabaseAdminClient()
   const startOfMonth = new Date()
@@ -719,7 +751,7 @@ export async function getUsageCountThisMonthForUser(
   if (userId) {
     query = query.eq('user_id', userId)
   } else {
-    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+    query = query.eq('owner_anonymous_id', ownerAnonymousId!)
   }
 
   const { data, error } = await query
@@ -742,13 +774,17 @@ export async function getUsageCountThisMonthForUser(
  */
 export async function softDeleteAnalysis(
   id: string,
-  ownerAnonymousId: string,
+  ownerAnonymousId?: string | null,
   userId?: string
 ): Promise<boolean> {
   validateUuid(id, 'id')
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   if (userId) {
     validateUuid(userId, 'userId')
+  }
+  if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  } else if (!userId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
   }
 
   const supabase = getSupabaseAdminClient()
@@ -758,9 +794,13 @@ export async function softDeleteAnalysis(
     .eq('id', id)
 
   if (userId) {
-    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+      query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    } else {
+      query = query.eq('user_id', userId)
+    }
   } else {
-    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId!)
   }
 
   const { data, error } = await query.select('id').maybeSingle()
@@ -780,14 +820,18 @@ export async function softDeleteAnalysis(
  */
 export async function toggleFavoriteAnalysis(
   id: string,
-  ownerAnonymousId: string,
+  ownerAnonymousId: string | null | undefined,
   userId: string | undefined,
   isFavorite: boolean
 ): Promise<boolean> {
   validateUuid(id, 'id')
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   if (userId) {
     validateUuid(userId, 'userId')
+  }
+  if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  } else if (!userId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
   }
 
   const supabase = getSupabaseAdminClient()
@@ -797,9 +841,13 @@ export async function toggleFavoriteAnalysis(
     .eq('id', id)
 
   if (userId) {
-    query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+      query = query.or(`user_id.eq.${userId},and(user_id.is.null,owner_anonymous_id.eq.${ownerAnonymousId})`)
+    } else {
+      query = query.eq('user_id', userId)
+    }
   } else {
-    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId)
+    query = query.is('user_id', null).eq('owner_anonymous_id', ownerAnonymousId!)
   }
 
   const { data, error } = await query.select('id').maybeSingle()
@@ -817,13 +865,17 @@ export async function toggleFavoriteAnalysis(
  * Counts usage events recorded for an identity in the last N seconds.
  */
 export async function getRecentEventsCount(
-  ownerAnonymousId: string,
+  ownerAnonymousId: string | null | undefined,
   userId: string | null,
   seconds: number
 ): Promise<number> {
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   if (userId) {
     validateUuid(userId, 'userId')
+  }
+  if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  } else if (!userId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
   }
 
   const supabase = getSupabaseAdminClient()
@@ -837,7 +889,7 @@ export async function getRecentEventsCount(
   if (userId) {
     query = query.eq('user_id', userId)
   } else {
-    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+    query = query.eq('owner_anonymous_id', ownerAnonymousId!)
   }
 
   const { count, error } = await query
@@ -919,13 +971,17 @@ export async function releaseReservation(reservationId: string): Promise<boolean
  * Counts feedback_submitted events recorded for an identity in the last N seconds.
  */
 export async function getRecentFeedbackCount(
-  ownerAnonymousId: string,
+  ownerAnonymousId: string | null | undefined,
   userId: string | null,
   seconds: number
 ): Promise<number> {
-  validateUuid(ownerAnonymousId, 'ownerAnonymousId')
   if (userId) {
     validateUuid(userId, 'userId')
+  }
+  if (ownerAnonymousId !== undefined && ownerAnonymousId !== null) {
+    validateUuid(ownerAnonymousId, 'ownerAnonymousId')
+  } else if (!userId) {
+    throw new Error('Anonymous access requires a valid owner UUID')
   }
 
   const supabase = getSupabaseAdminClient()
@@ -940,7 +996,7 @@ export async function getRecentFeedbackCount(
   if (userId) {
     query = query.eq('user_id', userId)
   } else {
-    query = query.eq('owner_anonymous_id', ownerAnonymousId)
+    query = query.eq('owner_anonymous_id', ownerAnonymousId!)
   }
 
   const { count, error } = await query

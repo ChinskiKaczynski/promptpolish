@@ -45,7 +45,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
   const sortByParam = allowedSorts.includes(sort as SortBy) ? (sort as SortBy) : 'newest'
 
   // 3. Query filtered database history
-  const history = await getPromptAnalysesForUser(user?.id || '', ownerAnonymousId || '', {
+  const history = await getPromptAnalysesForUser(user?.id || null, ownerAnonymousId || null, {
     search,
     lang,
     profile,
@@ -54,18 +54,22 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
   })
 
   // 4. Log history_viewed event (server-side)
-  await createUsageEvent({
-    owner_anonymous_id: ownerAnonymousId || '',
-    user_id: user?.id || null,
-    event_type: 'history_viewed',
-    metadata_json: {}
-  }).catch(err => {
-    console.error('Failed to log history_viewed event:', err)
-  })
+  if (ownerAnonymousId) {
+    await createUsageEvent({
+      owner_anonymous_id: ownerAnonymousId,
+      user_id: user?.id || null,
+      event_type: 'history_viewed',
+      metadata_json: {}
+    }).catch(err => {
+      console.error('Failed to log history_viewed event:', err)
+    })
+  }
 
   // 5. Guest Flow logic: show promotional CTA if user is guest and has ZERO analyses
   if (!user) {
-    const totalGuestAnalyses = (await getPromptAnalysesForUser('', ownerAnonymousId || '')).length
+    const totalGuestAnalyses = ownerAnonymousId
+      ? (await getPromptAnalysesForUser(null, ownerAnonymousId)).length
+      : 0
     if (totalGuestAnalyses === 0) {
       return (
         <div className="flex min-h-screen flex-col bg-[#0C0C10] text-[#E2E8F0] selection:bg-[#A78BFA]/20 antialiased font-sans">

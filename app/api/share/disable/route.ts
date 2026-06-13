@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     // 3. Disable sharing atomically:
     //    Sets is_share_enabled = false AND share_token = NULL in a single owner-scoped UPDATE.
     //    Non-owner attempts affect zero rows and return false.
-    const success = await disableShareLink(analysis_id, ownerAnonymousId || '', user?.id)
+    const success = await disableShareLink(analysis_id, ownerAnonymousId, user?.id)
     if (!success) {
       return NextResponse.json(
         {
@@ -73,14 +73,16 @@ export async function POST(request: Request) {
     }
 
     // 4. Save telemetry log event
-    await createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId || '',
-      user_id: user?.id || null,
-      event_type: 'share_link_disabled',
-      metadata_json: {
-        analysis_id
-      }
-    })
+    if (ownerAnonymousId) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: user?.id || null,
+        event_type: 'share_link_disabled',
+        metadata_json: {
+          analysis_id
+        }
+      })
+    }
 
     return NextResponse.json({
       success: true

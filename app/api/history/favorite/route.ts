@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     // 2. Perform DB update with strict ownership checks
     const success = await toggleFavoriteAnalysis(
       analysisId,
-      ownerAnonymousId || '',
+      ownerAnonymousId,
       user?.id,
       isFavorite
     )
@@ -35,14 +35,16 @@ export async function POST(request: Request) {
     }
 
     // 3. Log usage event
-    await createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId || '',
-      user_id: user?.id || null,
-      event_type: isFavorite ? 'history_favorite_added' : 'history_favorite_removed',
-      metadata_json: { analysis_id: analysisId }
-    }).catch(err => {
-      console.error('Failed to log favorite usage event:', err)
-    })
+    if (ownerAnonymousId) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: user?.id || null,
+        event_type: isFavorite ? 'history_favorite_added' : 'history_favorite_removed',
+        metadata_json: { analysis_id: analysisId }
+      }).catch(err => {
+        console.error('Failed to log favorite usage event:', err)
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {

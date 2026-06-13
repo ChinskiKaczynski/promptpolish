@@ -53,6 +53,7 @@ vi.mock('@/components/plans/usage-meter', () => ({
 
 import AccountPage from '@/app/account/page'
 import { getAuthUser } from '@/lib/identity/auth'
+import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import {
   getUserProfile,
   getUsageCountThisMonthForUser,
@@ -90,6 +91,7 @@ describe('AccountPage Beta & Plan Limitations UI', () => {
     vi.clearAllMocks()
     process.env.STRIPE_ENABLED = 'false' // default for beta tests
     vi.mocked(getPromptAnalysesForUser).mockResolvedValue([])
+    vi.mocked(getOwnerIdFromCookies).mockResolvedValue('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
   })
 
   it('redirects to /login if there is no authenticated user session', async () => {

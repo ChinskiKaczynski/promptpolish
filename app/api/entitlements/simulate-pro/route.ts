@@ -39,17 +39,19 @@ export async function POST() {
 
     // Fire simulate_pro_enabled telemetry event
     const ownerAnonymousId = await getOwnerIdFromCookies()
-    createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId || '',
-      user_id: user.id,
-      event_type: 'simulate_pro_enabled',
-      metadata_json: {
-        environment: process.env.NODE_ENV,
-        triggered_by: 'simulate-pro-api',
-      },
-    }).catch((err) => {
-      console.error('Failed to log simulate_pro_enabled event:', err)
-    })
+    if (ownerAnonymousId) {
+      createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: user.id,
+        event_type: 'simulate_pro_enabled',
+        metadata_json: {
+          environment: process.env.NODE_ENV,
+          triggered_by: 'simulate-pro-api',
+        },
+      }).catch((err) => {
+        console.error('Failed to log simulate_pro_enabled event:', err)
+      })
+    }
 
     return NextResponse.json(
       {

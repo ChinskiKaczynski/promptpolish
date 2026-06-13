@@ -29,39 +29,39 @@ describe('Anonymous Owner Identity', () => {
   })
 
   describe('signId & verifyAndExtractId', () => {
-    it('signs a standard UUID and successfully verifies it', () => {
+    it('signs a standard UUID and successfully verifies it', async () => {
       const originalUuid = '4a8a9a6b-d3c2-48e2-b1db-f5c6d7e8a9b0'
-      const signedValue = signId(originalUuid)
+      const signedValue = await signId(originalUuid)
       
       expect(signedValue).toContain(originalUuid)
       expect(signedValue).toContain('.')
 
-      const verifiedUuid = verifyAndExtractId(signedValue)
+      const verifiedUuid = await verifyAndExtractId(signedValue)
       expect(verifiedUuid).toBe(originalUuid)
     })
 
-    it('rejects an invalid signature or tampered value', () => {
+    it('rejects an invalid signature or tampered value', async () => {
       const originalUuid = '4a8a9a6b-d3c2-48e2-b1db-f5c6d7e8a9b0'
-      const signedValue = signId(originalUuid)
+      const signedValue = await signId(originalUuid)
 
       // Tamper signature
       const tamperedValue = signedValue + 'a'
-      expect(verifyAndExtractId(tamperedValue)).toBeNull()
+      expect(await verifyAndExtractId(tamperedValue)).toBeNull()
 
       // Tamper ID
       const tamperedId = signedValue.replace('4a8a9a6b', '4a8a9a6c')
-      expect(verifyAndExtractId(tamperedId)).toBeNull()
+      expect(await verifyAndExtractId(tamperedId)).toBeNull()
     })
 
-    it('rejects values without correct signed separator format', () => {
-      expect(verifyAndExtractId('just-a-plain-uuid-string')).toBeNull()
-      expect(verifyAndExtractId('uuid.too.many.separators')).toBeNull()
+    it('rejects values without correct signed separator format', async () => {
+      expect(await verifyAndExtractId('just-a-plain-uuid-string')).toBeNull()
+      expect(await verifyAndExtractId('uuid.too.many.separators')).toBeNull()
     })
 
-    it('rejects non-UUID formats even with valid HMAC formats', () => {
+    it('rejects non-UUID formats even with valid HMAC formats', async () => {
       const badId = 'not-a-uuid-format'
-      const signedValue = signId(badId)
-      expect(verifyAndExtractId(signedValue)).toBeNull()
+      const signedValue = await signId(badId)
+      expect(await verifyAndExtractId(signedValue)).toBeNull()
     })
   })
 
@@ -76,7 +76,7 @@ describe('Anonymous Owner Identity', () => {
 
     it('returns verified ID if cookie is present and valid', async () => {
       const uuid = '5f4e3d2c-1b0a-4c5d-8e9f-a0b1c2d3e4f5'
-      const signed = signId(uuid)
+      const signed = await signId(uuid)
       mockGet.mockReturnValue({ value: signed })
 
       const result = await getOwnerIdFromCookies()
@@ -110,7 +110,7 @@ describe('Anonymous Owner Identity', () => {
   describe('resolveOrCreateOwnerId', () => {
     it('reuses existing verified owner identity', async () => {
       const existingUuid = '5f4e3d2c-1b0a-4c5d-8e9f-a0b1c2d3e4f5'
-      const signed = signId(existingUuid)
+      const signed = await signId(existingUuid)
       mockGet.mockReturnValue({ value: signed })
 
       const result = await resolveOrCreateOwnerId()

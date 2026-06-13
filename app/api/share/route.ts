@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     // 3. Enable sharing and generate cryptographically secure share token.
     //    createShareLink verifies ownership and that deleted_at IS NULL before updating.
-    const shareToken = await createShareLink(analysis_id, ownerAnonymousId || '', user?.id)
+    const shareToken = await createShareLink(analysis_id, ownerAnonymousId, user?.id)
     if (!shareToken) {
       return NextResponse.json(
         {
@@ -71,14 +71,16 @@ export async function POST(request: Request) {
     }
 
     // 4. Save telemetry log event
-    await createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId || '',
-      user_id: user?.id || null,
-      event_type: 'share_link_created',
-      metadata_json: {
-        analysis_id
-      }
-    })
+    if (ownerAnonymousId) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: user?.id || null,
+        event_type: 'share_link_created',
+        metadata_json: {
+          analysis_id
+        }
+      })
+    }
 
     return NextResponse.json({
       success: true,

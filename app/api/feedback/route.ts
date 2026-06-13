@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     const userId = user?.id || null
 
     // 3. Rate limiting check (max 10 feedbacks per 60 seconds per identity)
-    const recentCount = await getRecentFeedbackCount(ownerAnonymousId || '', userId, 60)
+    const recentCount = await getRecentFeedbackCount(ownerAnonymousId, userId, 60)
     if (recentCount >= 10) {
       return NextResponse.json(
         {
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     // 4. Verify ownership — non-owners and share viewers cannot submit feedback
     const ownedRecord = await getPromptAnalysisForOwner(
       analysis_id,
-      ownerAnonymousId || '',
+      ownerAnonymousId,
       userId || undefined
     )
 
@@ -113,16 +113,18 @@ export async function POST(request: Request) {
     }
 
     // Telemetry: record feedback_submitted event
-    await createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId || '',
-      user_id: userId,
-      event_type: 'feedback_submitted',
-      metadata_json: {
-        analysis_id,
-        rating,
-        feedback_id: saved.id
-      }
-    })
+    if (ownerAnonymousId) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'feedback_submitted',
+        metadata_json: {
+          analysis_id,
+          rating,
+          feedback_id: saved.id
+        }
+      })
+    }
 
     return NextResponse.json({ success: true })
 

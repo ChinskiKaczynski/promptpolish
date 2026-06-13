@@ -55,24 +55,26 @@ export default async function AccountPage() {
 
   // 3. Resolve history count combining user_id and current anonymous owner ID.
   const ownerAnonymousId = await getOwnerIdFromCookies()
-  const history = await getPromptAnalysesForUser(user.id, ownerAnonymousId || '')
+  const history = await getPromptAnalysesForUser(user.id, ownerAnonymousId)
 
   // 4. Log account_viewed event (server-side)
-  await createUsageEvent({
-    owner_anonymous_id: ownerAnonymousId || '',
-    user_id: user.id,
-    event_type: 'account_viewed',
-    metadata_json: {}
-  }).catch(err => {
-    console.error('Failed to log account_viewed event:', err)
-  })
+  if (ownerAnonymousId) {
+    await createUsageEvent({
+      owner_anonymous_id: ownerAnonymousId,
+      user_id: user.id,
+      event_type: 'account_viewed',
+      metadata_json: {}
+    }).catch(err => {
+      console.error('Failed to log account_viewed event:', err)
+    })
+  }
 
   // 5. Fetch subscription only when Stripe is active.
   const stripeEnabled = process.env.STRIPE_ENABLED === 'true'
   const subscription = stripeEnabled ? await getSubscriptionByUserId(user.id) : null
 
   // 6. Calculate monthly usage metrics
-  const monthlyCount = await getUsageCountThisMonthForUser(ownerAnonymousId || '', user.id)
+  const monthlyCount = await getUsageCountThisMonthForUser(ownerAnonymousId, user.id)
   const limits = PLAN_LIMITS[planSlug]
   const monthlyLimit = limits.monthlyAnalyses
 

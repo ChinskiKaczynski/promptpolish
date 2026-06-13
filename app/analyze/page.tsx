@@ -21,25 +21,27 @@ export default async function AnalyzePage() {
 
   const userId = user?.id ?? null
   const planSlug = await getPlanSlugForUser(userId)
-  const monthlyCount = await getUsageCountThisMonthForUser(ownerAnonymousId || '', userId)
+  const monthlyCount = await getUsageCountThisMonthForUser(ownerAnonymousId, userId)
   const monthlyLimit = PLAN_LIMITS[planSlug].monthlyAnalyses
   const usagePct = monthlyLimit > 0 ? Math.round((monthlyCount / monthlyLimit) * 100) : 0
 
   // Fire limit_warning_shown event server-side when approaching limit (≥80%) but not yet blocked
   if (usagePct >= 80 && usagePct < 100) {
-    createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId || '',
-      user_id: userId,
-      event_type: 'limit_warning_shown',
-      metadata_json: {
-        plan_slug: planSlug,
-        monthly_count: monthlyCount,
-        monthly_limit: monthlyLimit,
-        usage_pct: usagePct,
-      },
-    }).catch((err) => {
-      console.error('Failed to log limit_warning_shown event:', err)
-    })
+    if (ownerAnonymousId) {
+      createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'limit_warning_shown',
+        metadata_json: {
+          plan_slug: planSlug,
+          monthly_count: monthlyCount,
+          monthly_limit: monthlyLimit,
+          usage_pct: usagePct,
+        },
+      }).catch((err) => {
+        console.error('Failed to log limit_warning_shown event:', err)
+      })
+    }
   }
 
   const stripeEnabled = process.env.STRIPE_ENABLED === 'true'

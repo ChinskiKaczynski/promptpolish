@@ -51,7 +51,9 @@ vi.mock('@/lib/supabase/queries', () => ({
 }))
 
 vi.mock('@/lib/identity/anonymous', () => ({
-  getOwnerIdFromCookies: vi.fn().mockResolvedValue('anonymous-owner-id')
+  getOwnerIdFromCookies: vi.fn().mockResolvedValue('anonymous-owner-id'),
+  verifyAndExtractId: vi.fn().mockResolvedValue('anonymous-owner-id'),
+  signId: vi.fn().mockImplementation(async (id) => `${id}.signed`)
 }))
 
 import { getAuthUser } from '@/lib/identity/auth'

@@ -28,17 +28,19 @@ export default async function PricingPage() {
 
   const ownerAnonymousId = await getOwnerIdFromCookies()
 
-  createUsageEvent({
-    owner_anonymous_id: ownerAnonymousId || '',
-    user_id: user?.id ?? null,
-    event_type: 'pricing_viewed',
-    metadata_json: {
-      stripe_enabled: stripeEnabled,
-      plan_slug: profile?.plan_slug ?? null,
-    },
-  }).catch((err) => {
-    console.error('Failed to log pricing_viewed event:', err)
-  })
+  if (ownerAnonymousId) {
+    createUsageEvent({
+      owner_anonymous_id: ownerAnonymousId,
+      user_id: user?.id ?? null,
+      event_type: 'pricing_viewed',
+      metadata_json: {
+        stripe_enabled: stripeEnabled,
+        plan_slug: profile?.plan_slug ?? null,
+      },
+    }).catch((err) => {
+      console.error('Failed to log pricing_viewed event:', err)
+    })
+  }
 
   const freeLimits = PLAN_LIMITS.free
   const proLimits = PLAN_LIMITS.pro

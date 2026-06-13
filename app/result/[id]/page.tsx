@@ -33,8 +33,8 @@ export default async function PrivateResultPage({ params }: PageProps) {
 
   // 2. Fetch prompt analysis and strictly verify owner identity in database filter
   const record = user
-    ? await getPromptAnalysisForOwner(id, ownerAnonymousId || '', user.id)
-    : await getPromptAnalysisForOwner(id, ownerAnonymousId || '')
+    ? await getPromptAnalysisForOwner(id, ownerAnonymousId, user.id)
+    : await getPromptAnalysisForOwner(id, ownerAnonymousId)
   if (!record) {
     notFound()
   }
