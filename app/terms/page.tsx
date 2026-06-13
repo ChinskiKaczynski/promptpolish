@@ -34,7 +34,7 @@ export default function TermsPage() {
         {/* Article Container */}
         <article className="prose prose-slate max-w-none">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
-            Regulamin Korzystania (Draft MVP)
+            Regulamin Korzystania
           </h1>
           <p className="mt-2 text-xs text-slate-400">Ostatnia aktualizacja: 4 czerwca 2026 r.</p>
           
@@ -74,7 +74,7 @@ export default function TermsPage() {
             <section className="space-y-3">
               <h2 className="text-lg font-bold text-slate-900">4. Subskrypcja Pro Plan i Płatności Stripe</h2>
               <p>
-                Platforma przewiduje płatny plan premium (&quot;Pro Plan&quot;), oferujący wyższe limity (np. do 500 analiz miesięcznie), rozszerzoną długość znaków (do 24 000), eksporty PDF/Markdown oraz zbiorcze audyty (Batch Audit).
+              Platforma przewiduje płatny plan premium (&quot;Pro Plan&quot;), oferujący wyższe limity (np. do 500 analiz miesięcznie), rozszerzoną długość znaków (do 24 000) oraz eksporty PDF/Markdown.
               </p>
               <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-4 text-xs space-y-2 font-semibold">
                 <p>
@@ -108,7 +108,7 @@ export default function TermsPage() {
                 <code>[REFUND POLICY TBD — legal review required]</code>
               </p>
               <p className="text-xs text-slate-500 font-semibold">
-                Rozważana polityka zakłada 14-dniowe okno na zgłoszenie zwrotu, pod warunkiem zużycia poniżej 10 analiz promptów w danym okresie rozliczeniowym (w celu pokrycia bezpośrednich kosztów API). Wszelkie zgłoszenia po uruchomieniu płatności będą musiały być kierowane na adres: <code>[SUPPORT EMAIL TBD]</code>.
+                Rozważana polityka zakłada 14-dniowe okno na zgłoszenie zwrotu, pod warunkiem zużycia poniżej 10 analiz promptów w danym okresie rozliczeniowym (w celu pokrycia bezpośrednich kosztów API). Wszelkie zgłoszenia po uruchomieniu płatności będą musiały być kierowane na adres: <a href="mailto:kontakt@promptpolish.pl" className="text-indigo-600 underline">kontakt@promptpolish.pl</a>.
               </p>
             </section>
 
@@ -158,8 +158,8 @@ export default function TermsPage() {
                 Wszelkie pytania, zgłoszenia błędów oraz wnioski dotyczące warunków świadczenia usług prosimy kierować na poniższe dane kontaktowe:
               </p>
               <ul className="list-none space-y-1 text-xs text-slate-600 font-semibold">
-                <li><strong>E-mail wsparcia:</strong> <code>[SUPPORT EMAIL TBD]</code></li>
-                <li><strong>Zapytania prawne:</strong> <code>[SUPPORT EMAIL TBD]</code></li>
+                <li><strong>E-mail wsparcia:</strong> <a href="mailto:kontakt@promptpolish.pl" className="text-indigo-600 underline">kontakt@promptpolish.pl</a></li>
+                <li><strong>Zapytania prawne:</strong> <a href="mailto:kontakt@promptpolish.pl" className="text-indigo-600 underline">kontakt@promptpolish.pl</a></li>
                 <li><strong>Nazwa podmiotu:</strong> <code>[LEGAL ENTITY NAME TBD]</code></li>
                 <li><strong>Adres rejestrowy:</strong> <code>[REGISTERED BUSINESS ADDRESS TBD]</code></li>
               </ul>

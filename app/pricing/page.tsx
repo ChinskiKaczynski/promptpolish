@@ -8,7 +8,6 @@ import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
 
 const CheckoutButton = nextDynamic(() => import('@/components/pricing/checkout-button').then((mod) => mod.CheckoutButton))
-const SimulateProButton = nextDynamic(() => import('@/components/pricing/simulate-pro-button').then((mod) => mod.SimulateProButton))
 const WaitlistForm = nextDynamic(() => import('@/components/pricing/waitlist-form').then((mod) => mod.WaitlistForm))
 
 export const dynamic = 'force-dynamic'
@@ -68,7 +67,7 @@ export default async function PricingPage() {
         {!stripeEnabled && (
           <div className="mt-6 mb-2 flex items-center justify-center gap-2 text-xs text-[#8290A2] font-mono">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#F97316] shrink-0"></span>
-            Beta — płatności tymczasowo niedostępne. Dostępna symulacja Pro po zalogowaniu.
+            Beta — płatności tymczasowo niedostępne.
           </div>
         )}
 
@@ -115,10 +114,6 @@ export default async function PricingPage() {
                   <li className="flex items-center gap-2.5">
                     <span className="text-[#2A2A3A] font-bold">✗</span>
                     <span className="text-sm text-[#8290A2]">Eksport do PDF (Pro)</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <span className="text-[#2A2A3A] font-bold">✗</span>
-                    <span className="text-sm text-[#8290A2]">Zbiorczy audyt (Batch Audit) wielu promptów</span>
                   </li>
                 </ul>
               </div>
@@ -174,10 +169,6 @@ export default async function PricingPage() {
                     <span className="text-[#6EE7B7] font-bold">✓</span>
                     <span className="text-sm text-[#94A3B8]"><strong>Eksport PDF (Pro)</strong> – elegancki raport dla klienta</span>
                   </li>
-                  <li className="flex items-center gap-2.5">
-                    <span className="text-[#6EE7B7] font-bold">✓</span>
-                    <span className="text-sm text-[#94A3B8]"><strong>Batch Audit (Pro)</strong> – analizuj wiele promptów naraz</span>
-                  </li>
                 </ul>
               </div>
             </div>
@@ -220,22 +211,7 @@ export default async function PricingPage() {
                 </div>
               )}
 
-              {/* Developer Simulation Gate */}
-              <div className="border-t border-[#2A2A3A]/50 pt-3">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-[#8290A2] text-center mb-2">
-                  Tryb Deweloperski / Testy Integracyjne
-                </p>
-                {user ? (
-                  <SimulateProButton isPro={profile?.plan_slug === 'pro'} />
-                ) : (
-                  <Link
-                    href="/login"
-                    className="block text-center w-full rounded-lg border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#22223A] text-[#94A3B8] font-semibold py-2 text-xs active:scale-[0.98] transition-all text-center cursor-pointer"
-                  >
-                    Zaloguj się, aby symulować Pro
-                  </Link>
-                )}
-              </div>
+
             </div>
           </div>
         </div>
@@ -253,15 +229,10 @@ export default async function PricingPage() {
             <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-2">
               <h4 className="text-sm font-bold text-[#E2E8F0] font-heading">Kiedy płatności będą w pełni aktywne?</h4>
               <p className="text-xs text-[#94A3B8] leading-relaxed">
-                Obecnie PromptPolish jest w fazie zamkniętych testów beta. Pracujemy nad integracją Stripe, ale na ten moment wszystkie funkcje premium można testować bezpłatnie po zalogowaniu i włączeniu symulacji Pro.
+                Obecnie PromptPolish jest w fazie zamkniętych testów beta. Pracujemy nad integracją Stripe — dokładny termin ogłosimy wkrótce.
               </p>
             </div>
-            <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-2">
-              <h4 className="text-sm font-bold text-[#E2E8F0] font-heading">Jak mogę przetestować funkcje Pro?</h4>
-              <p className="text-xs text-[#94A3B8] leading-relaxed">
-                Jeśli chcesz wypróbować możliwości wersji Pro (np. eksport PDF, Markdown lub wyższe limity długości promptu), zaloguj się i użyj przycisku „Aktywuj Symulację Pro” w sekcji deweloperskiej powyżej.
-              </p>
-            </div>
+
             <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-2">
               <h4 className="text-sm font-bold text-[#E2E8F0] font-heading">Czy moje dane są bezpieczne?</h4>
               <p className="text-xs text-[#94A3B8] leading-relaxed">

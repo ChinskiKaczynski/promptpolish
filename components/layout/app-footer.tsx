@@ -21,6 +21,7 @@ export function AppFooter({ theme }: AppFooterProps = {}) {
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-[#8290A2]">
           <Link className="hover:text-[#A78BFA] transition-colors" href="/privacy">Polityka prywatności</Link>
           <Link className="hover:text-[#A78BFA] transition-colors" href="/terms">Regulamin</Link>
+          <a className="hover:text-[#A78BFA] transition-colors" href="mailto:kontakt@promptpolish.pl">Kontakt</a>
           <span className="text-[#8290A2]">© {new Date().getFullYear()} PromptPolish</span>
         </div>
       </div>
