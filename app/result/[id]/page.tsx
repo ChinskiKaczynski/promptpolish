@@ -59,7 +59,8 @@ export default async function PrivateResultPage({ params }: PageProps) {
     isShareEnabled: record.is_share_enabled,
     shareToken: record.share_token,
     selected_profile_slug: record.selected_profile_slug,
-    working_language: record.working_language
+    working_language: record.working_language,
+    input_prompt: record.input_prompt
   }
 
   return (

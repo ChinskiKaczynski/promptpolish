@@ -23,7 +23,7 @@ import { hashValue, getClientIp } from '@/lib/rate-limit/hash-ip'
 import { PLAN_LIMITS, getPlanSlugForUser } from '@/lib/plans/config'
 import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
 
-export const maxDuration = 60
+export const maxDuration = 120
 
 // Input validation schema using Zod.
 // input_prompt uses an absolute transport ceiling of 25,000 chars — larger than
@@ -387,7 +387,7 @@ export async function POST(request: Request) {
     // 8-12. Build prompt, call OpenRouter, validate response, and calculate weighted score
     const isMockMode = process.env.AI_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test'
     
-    const timeoutMs = serverEnv.AI_PROVIDER_TIMEOUT_MS
+    const timeoutMs = Math.min(110000, serverEnv.AI_PROVIDER_TIMEOUT_MS * 2) // Overall AI budget, bounded by 110s
 
     const analysisResult = await analyzePrompt(
       {
@@ -404,7 +404,8 @@ export async function POST(request: Request) {
       {
         mockMode: isMockMode,
         abortSignal: request.signal || undefined,
-        timeoutMs
+        timeoutMs,
+        requestId
       }
     )
 

@@ -277,5 +277,83 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
         })
       )
     })
+
+    it('defaults reasoning to false for deepseek models when not explicitly provided in capabilities', async () => {
+      const dbProfile = {
+        id: 'p1',
+        slug: 'openrouter-deepseek-v4-flash',
+        display_name: 'Test Profile',
+        provider: 'openrouter',
+        model_family: 'deepseek',
+        profile_type: 'provider_model',
+        source_type: 'internal',
+        verification_status: 'verified',
+        confidence_level: 'high',
+        capabilities_json: {
+          model_id: 'deepseek/deepseek-v4-flash',
+          temperature: 0.8,
+          max_tokens: 1500
+        },
+        profile_version: '1.0.0',
+        created_at: '',
+        updated_at: ''
+      } as unknown as ModelProfileRow
+
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockClear()
+
+      await executeOpenRouterAnalysis('sys instruction', 'user prompt', {
+        dbProfile
+      })
+
+      expect(generateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          providerMetadata: expect.objectContaining({
+            openrouter: expect.objectContaining({
+              reasoning: false
+            })
+          })
+        })
+      )
+    })
+
+    it('defaults reasoning to false for non-deepseek models when not explicitly provided', async () => {
+      const dbProfile = {
+        id: 'p1',
+        slug: 'general-llm',
+        display_name: 'Test Profile',
+        provider: 'openrouter',
+        model_family: 'openai',
+        profile_type: 'provider_model',
+        source_type: 'internal',
+        verification_status: 'verified',
+        confidence_level: 'high',
+        capabilities_json: {
+          model_id: 'openai/gpt-4o-mini',
+          temperature: 0.8,
+          max_tokens: 1500
+        },
+        profile_version: '1.0.0',
+        created_at: '',
+        updated_at: ''
+      } as unknown as ModelProfileRow
+
+      const { generateText } = await import('ai')
+      vi.mocked(generateText).mockClear()
+
+      await executeOpenRouterAnalysis('sys instruction', 'user prompt', {
+        dbProfile
+      })
+
+      expect(generateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          providerMetadata: expect.objectContaining({
+            openrouter: expect.objectContaining({
+              reasoning: false
+            })
+          })
+        })
+      )
+    })
   })
 })

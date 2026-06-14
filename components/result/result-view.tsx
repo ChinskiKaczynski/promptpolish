@@ -19,6 +19,7 @@ type ResultViewProps = {
     shareToken?: string | null;
     selected_profile_slug?: string;
     working_language?: string;
+    input_prompt?: string;
   }
   mode: 'private' | 'share' | 'public'
   planSlug?: 'free' | 'pro'
@@ -247,6 +248,28 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
               </p>
             </div>
           </section>
+
+          {/* Original Prompt Collapsible Section */}
+          {mode === 'private' && result.input_prompt && (
+            <details className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 transition-all duration-300">
+              <summary className="flex items-center justify-between font-heading text-lg font-bold text-[#E2E8F0] cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none">
+                <span>Oryginalny prompt</span>
+                <svg
+                  className="h-5 w-5 text-[#8290A2] transition-transform duration-300 group-open:rotate-180 group-open:text-[#A78BFA]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              <div className="mt-4 border-t border-[#2A2A3A]/40 pt-4">
+                <pre className="whitespace-pre-wrap break-words font-mono text-xs text-[#94A3B8] bg-[#0C0C10] p-4 rounded-lg border border-[#2A2A3A]">
+                  {result.input_prompt}
+                </pre>
+              </div>
+            </details>
+          )}
 
           {/* Top Weaknesses Section */}
           <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">

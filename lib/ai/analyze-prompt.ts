@@ -73,6 +73,7 @@ async function executeAndValidateWithSingleRepairRetry(
   result: AnalysisResult
   usage?: AnalysisServiceResult['usage']
 }> {
+  const startTime = Date.now()
   const initialResponse = await executeOpenRouterAnalysis(systemInstruction, userPrompt, options)
 
   try {
@@ -85,6 +86,15 @@ async function executeAndValidateWithSingleRepairRetry(
       throw error
     }
 
+    const elapsed = Date.now() - startTime
+    const totalTimeout = options?.timeoutMs ?? 45000
+    const remainingTimeout = totalTimeout - elapsed
+
+    if (remainingTimeout < 5000) {
+      console.warn(`[analyzePrompt] Skipping repair retry: insufficient remaining time (${remainingTimeout}ms)`)
+      throw error
+    }
+
     const repairPrompt = constructRepairPrompt({
       previousOutput: initialResponse.output,
       validationErrors: formatValidationErrors(error.errors),
@@ -94,7 +104,10 @@ async function executeAndValidateWithSingleRepairRetry(
     const repairedResponse = await executeOpenRouterAnalysis(
       systemInstruction,
       repairPrompt,
-      options
+      {
+        ...options,
+        timeoutMs: remainingTimeout
+      }
     )
 
     return {

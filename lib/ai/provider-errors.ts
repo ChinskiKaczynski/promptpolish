@@ -156,7 +156,10 @@ export function normalizeProviderError(error: unknown): ProviderError {
     }
 
     // 2. Catch Vercel AI SDK NoObjectGeneratedError
-    if (NoObjectGeneratedError.isInstance(error)) {
+    if (
+      NoObjectGeneratedError.isInstance(error) ||
+      (error instanceof Error && (error.name === 'NoObjectGeneratedError' || error.message.includes('No output generated')))
+    ) {
       return new ProviderError(
         `Failed to generate structured object: ${error.message}`,
         generalErrorMessage,

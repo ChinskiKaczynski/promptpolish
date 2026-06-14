@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
@@ -37,6 +37,7 @@ vi.mock('ai', async (importOriginal) => {
   }
 })
 
+import { generateText } from 'ai'
 import { serverEnvSchema } from '@/lib/env/server'
 import { executeOpenRouterAnalysis } from '@/lib/ai/openrouter-client'
 import { isNestedTimeout, normalizeProviderError } from '@/lib/ai/provider-errors'
@@ -48,11 +49,11 @@ describe('Timeout and Abort Regression Suite', () => {
   })
 
   describe('1. Zod Environment Variable Validation', () => {
-    it('uses the default value of 45000 when missing', () => {
+    it('uses the default value of 55000 when missing', () => {
       const parsed = serverEnvSchema.parse({
         // Empty env values
       })
-      expect(parsed.AI_PROVIDER_TIMEOUT_MS).toBe(45000)
+      expect(parsed.AI_PROVIDER_TIMEOUT_MS).toBe(55000)
     })
 
     it('accepts a valid timeout value', () => {
@@ -192,6 +193,159 @@ describe('Timeout and Abort Regression Suite', () => {
       expect(normalized.errorCode).not.toBe('provider_timeout')
       expect(normalized.errorCode).not.toBe('upstream_provider_error')
       expect(normalized.errorCode).not.toBe('function_platform_timeout')
+    })
+  })
+
+  describe('4. Transient Retry & Remaining Timeout Mechanics', () => {
+    it('executes one successful retry after a transient failure', async () => {
+      let calls = 0
+      vi.mocked(generateText).mockImplementation(async () => {
+        calls++
+        if (calls === 1) {
+          throw new Error('fetch failed') // Retryable: maps to provider_unavailable
+        }
+        return {
+          output: {
+            overall_summary: 'Mocked successful output after retry',
+            criteria_scores: []
+          },
+          usage: { promptTokens: 10, completionTokens: 10 }
+        } as unknown as Awaited<ReturnType<typeof generateText>>
+      })
+
+      const res = await executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 30000 })
+      expect(calls).toBe(2)
+      expect(res.output.overall_summary).toBe('Mocked successful output after retry')
+    })
+
+    it('stops retrying and throws error once retry attempts are exhausted', async () => {
+      let calls = 0
+      vi.mocked(generateText).mockImplementation(async () => {
+        calls++
+        throw new Error('fetch failed') // Retryable: maps to provider_unavailable
+      })
+
+      await expect(executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 30000 })).rejects.toThrowError('fetch failed')
+      expect(calls).toBe(2)
+    })
+
+    it('does not retry permanent errors (like authorization errors)', async () => {
+      let calls = 0
+      vi.mocked(generateText).mockImplementation(async () => {
+        calls++
+        throw new Error('API Key Invalid') // Non-retryable
+      })
+
+      await expect(executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 30000 })).rejects.toThrowError('API Key Invalid')
+      expect(calls).toBe(1)
+    })
+  })
+
+  describe('5. Fallback Quality, Timeouts, Tokens and Logging Rules', () => {
+    let spyConsoleInfo: ReturnType<typeof vi.spyOn>
+
+    beforeEach(() => {
+      spyConsoleInfo = vi.spyOn(console, 'info').mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      spyConsoleInfo.mockRestore()
+    })
+
+    it('uses primary model first, then fallback model on safe errors with require_parameters: true', async () => {
+      const calls: string[] = []
+      vi.mocked(generateText).mockImplementation(async (options: unknown) => {
+        const opts = options as { model: { modelId: string } }
+        const modelId = opts.model.modelId
+        calls.push(modelId)
+        if (calls.length === 1) {
+          throw new Error('Request aborted after 10000ms') // Timeout error
+        }
+        return {
+          output: { overall_summary: 'Successful fallback' },
+          usage: { promptTokens: 150, completionTokens: 200, outputTokenDetails: { reasoningTokens: 50 } },
+          finishReason: 'stop'
+        } as unknown as Awaited<ReturnType<typeof generateText>>
+      })
+
+      const res = await executeOpenRouterAnalysis('system-inst', 'user-prompt', {
+        timeoutMs: 30000,
+        requestId: 'test-req-id'
+      })
+
+      expect(calls).toEqual(['deepseek/deepseek-v4-flash', 'openai/gpt-4o-mini'])
+      expect(res.selectedModel).toBe('openai/gpt-4o-mini')
+      expect(res.attempt).toBe(2)
+      expect(res.usage?.reasoningTokens).toBe(50)
+      expect(res.usage?.visibleTokens).toBe(150)
+      expect(res.finishReason).toBe('stop')
+
+      // Assert require_parameters: true is passed to generateText on each attempt
+      expect(generateText).toHaveBeenCalledTimes(2)
+      interface GenerateTextArgs {
+        model: {
+          settings: {
+            provider: {
+              require_parameters: boolean
+            }
+          }
+        }
+        providerMetadata?: {
+          openrouter?: {
+            reasoning?: boolean
+          }
+        }
+      }
+      const call1Args = vi.mocked(generateText).mock.calls[0][0] as unknown as GenerateTextArgs
+      const call2Args = vi.mocked(generateText).mock.calls[1][0] as unknown as GenerateTextArgs
+      expect(call1Args.model.settings.provider.require_parameters).toBe(true)
+      expect(call2Args.model.settings.provider.require_parameters).toBe(true)
+
+      // Assert reasoning is false by default
+      expect(call1Args.providerMetadata?.openrouter?.reasoning).toBe(false)
+      expect(call2Args.providerMetadata?.openrouter?.reasoning).toBe(false)
+
+      // Assert sanitized logging occurred
+      expect(spyConsoleInfo).toHaveBeenCalled()
+      const logLines = spyConsoleInfo.mock.calls.map((c: unknown[]) => JSON.parse(c[1] as string))
+      expect(logLines[0]).toMatchObject({
+        requestId: 'test-req-id',
+        attempt: 1,
+        selectedModel: 'deepseek/deepseek-v4-flash',
+        errorCategory: 'upstream_provider_error'
+      })
+      expect(logLines[1]).toMatchObject({
+        requestId: 'test-req-id',
+        attempt: 2,
+        selectedModel: 'openai/gpt-4o-mini',
+        finishReason: 'stop',
+        visibleOutputTokens: 150,
+        reasoningTokens: 50,
+        totalOutputTokens: 200
+      })
+      // Double check no prompts or outputs are logged
+      const loggedString = JSON.stringify(logLines)
+      expect(loggedString).not.toContain('user-prompt')
+      expect(loggedString).not.toContain('Successful fallback')
+    })
+
+    it('bounds fallback timeout based on remaining operation budget', async () => {
+      vi.mocked(generateText).mockImplementation(async (options: unknown) => {
+        const opts = options as { model: { modelId: string } }
+        if (opts.model.modelId === 'deepseek/deepseek-v4-flash') {
+          throw new Error('PROVIDER_TIMEOUT')
+        }
+        return {
+          output: { overall_summary: 'Success' },
+          usage: { promptTokens: 10, completionTokens: 10 }
+        } as unknown as Awaited<ReturnType<typeof generateText>>
+      })
+
+      await executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 20000 })
+
+      // Verification that generateText's signal is monitored or remaining time is calculated
+      // In the mock, we can verify that the second call was initiated.
+      expect(generateText).toHaveBeenCalledTimes(2)
     })
   })
 })

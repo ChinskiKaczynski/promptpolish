@@ -17,6 +17,7 @@ export const serverEnvSchema = z.object({
   APP_URL: z.string().url().default('http://localhost:3000'),
   OPENROUTER_API_KEY: z.string().optional(),
   OPENROUTER_MODEL_ID: z.string().default('deepseek/deepseek-v4-flash'),
+  OPENROUTER_FALLBACK_MODEL_ID: z.string().default('openai/gpt-4o-mini'),
   OPENROUTER_SITE_URL: z.string().optional(),
   OPENROUTER_APP_NAME: z.string().optional(),
   AI_MOCK_MODE: strictBool.default(false),
@@ -38,7 +39,7 @@ export const serverEnvSchema = z.object({
   STRIPE_ENABLED: strictBool.default(false),
   ADMIN_EMAILS: z.string().optional(),
   RATE_LIMIT_HMAC_SECRET: z.string().optional(),
-  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(5000).max(120000).default(45000)
+  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(5000).max(120000).default(55000)
 })
 
 let parsedEnv: z.infer<typeof serverEnvSchema>
