@@ -35,6 +35,8 @@ export type AnalysisServiceResult = {
     completionTokens: number
     totalTokens: number
   }
+  selectedModel: string
+  attempt: number
 }
 
 type OpenRouterAnalysisResponse = Awaited<ReturnType<typeof executeOpenRouterAnalysis>>
@@ -72,6 +74,8 @@ async function executeAndValidateWithSingleRepairRetry(
 ): Promise<{
   result: AnalysisResult
   usage?: AnalysisServiceResult['usage']
+  selectedModel: string
+  attempt: number
 }> {
   const startTime = Date.now()
   const initialResponse = await executeOpenRouterAnalysis(systemInstruction, userPrompt, options)
@@ -79,7 +83,9 @@ async function executeAndValidateWithSingleRepairRetry(
   try {
     return {
       result: validateAnalysisResult(initialResponse.output),
-      usage: initialResponse.usage
+      usage: initialResponse.usage,
+      selectedModel: initialResponse.selectedModel,
+      attempt: initialResponse.attempt
     }
   } catch (error) {
     if (!(error instanceof SemanticValidationError)) {
@@ -112,7 +118,9 @@ async function executeAndValidateWithSingleRepairRetry(
 
     return {
       result: validateAnalysisResult(repairedResponse.output),
-      usage: mergeUsage(initialResponse.usage, repairedResponse.usage)
+      usage: mergeUsage(initialResponse.usage, repairedResponse.usage),
+      selectedModel: repairedResponse.selectedModel,
+      attempt: repairedResponse.attempt
     }
   }
 }
@@ -162,7 +170,7 @@ export async function analyzePrompt(
     constraints
   })
 
-  const { result: validatedResult, usage } = await executeAndValidateWithSingleRepairRetry(
+  const { result: validatedResult, usage, selectedModel, attempt } = await executeAndValidateWithSingleRepairRetry(
     systemInstruction,
     userPrompt,
     workingLanguage,
@@ -177,6 +185,8 @@ export async function analyzePrompt(
   return {
     analysis: validatedResult,
     scores,
-    usage
+    usage,
+    selectedModel,
+    attempt
   }
 }

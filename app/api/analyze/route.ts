@@ -432,7 +432,7 @@ export async function POST(request: Request) {
       score_level: analysisResult.scores.scoreLevel as 'weak' | 'needs_work' | 'decent' | 'strong' | 'excellent',
       analysis_json: analysisResult.analysis,
       improved_prompt: analysisResult.analysis.improved_prompt,
-      model_id_used: (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId(),
+      model_id_used: analysisResult.selectedModel || (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId(),
       provider_used: dbProfile.provider || 'openrouter',
       analysis_schema_version: process.env.ANALYSIS_SCHEMA_VERSION || '1.0.0',
       scoring_version: process.env.SCORING_VERSION || '1.0.0',
@@ -499,8 +499,11 @@ export async function POST(request: Request) {
       }
     }
 
-    const modelId = (capabilities.model_id as string | undefined) || 'deepseek/deepseek-v4-flash'
+    const primaryModelId = (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
+    const modelId = analysisResult.selectedModel || primaryModelId
     const providerUsed = dbProfile.provider || 'openrouter'
+    const fallbackUsed = analysisResult.attempt > 1
+    const attemptNumber = analysisResult.attempt
     const calculatedCost = usageStatus !== 'unavailable'
       ? calculateUsageCost(providerUsed, modelId, promptTokens, completionTokens)
       : null
@@ -513,6 +516,10 @@ export async function POST(request: Request) {
         analysis_id: createdRecord.id,
         profile_slug: selected_profile_slug,
         working_language: working_language,
+        primary_model_id: primaryModelId,
+        model_id_used: modelId,
+        fallback_used: fallbackUsed,
+        attempt_number: attemptNumber,
         token_usage: usageStatus !== 'unavailable' ? {
           prompt_tokens: promptTokens,
           completion_tokens: completionTokens,

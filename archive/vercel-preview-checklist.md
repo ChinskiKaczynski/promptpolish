@@ -1,4 +1,4 @@
-﻿> [!WARNING]
+> [!WARNING]
 > **Archived / Historical** — This document has been moved to archive/ and is no longer an active project reference. It is retained for historical context only. Do not use as instructions.
 
 # Vercel Preview Deployment & DB Setup Checklist â€” PromptPolish
@@ -16,6 +16,7 @@ Deploy these variables in your **Vercel Preview Environment** settings. Do **NOT
 | **`APP_URL`** | All | `string (URL)` | Root URL of the deployment. Defaults to `http://localhost:3000`. |
 | **`OPENROUTER_API_KEY`** | Server | `string` | Live OpenRouter API Key. Required in production. |
 | **`OPENROUTER_MODEL_ID`** | Server | `string` | Target model ID. Defaults to `deepseek/deepseek-v4-flash`. |
+| **`OPENROUTER_FALLBACK_MODEL_ID`** | Server | `string` | (Optional) Candidate fallback model ID. Defaults to `openai/gpt-4o-mini`. If absent or blank, fallback is cleanly disabled. |
 | **`SUPABASE_SECRET_KEY`** | Server | `string` | Service-role key for Supabase admin queries. Never prefix with `NEXT_PUBLIC_`. Required in production. |
 | **`NEXT_PUBLIC_SUPABASE_URL`** | Client/Server | `string (URL)` | Supabase Project API URL. |
 | **`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`** | Client/Server | `string` | Supabase Anon/Publishable Key (formerly `NEXT_PUBLIC_SUPABASE_ANON_KEY`). |

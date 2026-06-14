@@ -88,11 +88,24 @@ export async function executeOpenRouterAnalysis(
 
   // 3. Resolve model ID and additional metadata headers from environment variables / dbProfile
   const capabilities = (dbProfile?.capabilities_json || {}) as Record<string, unknown>
-  const primaryModelId = (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
-  const fallbackModelId = (capabilities.fallback_model_id as string | undefined) ||
-                          (capabilities.fallbackModelId as string | undefined) ||
-                          process.env.OPENROUTER_FALLBACK_MODEL_ID ||
-                          'openai/gpt-4o-mini'
+  const primaryModelId = (process.env.NODE_ENV !== 'production' && process.env.TEST_OVERRIDE_PRIMARY_MODEL)
+    ? process.env.TEST_OVERRIDE_PRIMARY_MODEL
+    : ((capabilities.model_id as string | undefined) || getOwnerConfiguredModelId())
+
+  let rawFallback = (capabilities.fallback_model_id as string | undefined) ||
+                    (capabilities.fallbackModelId as string | undefined) ||
+                    process.env.OPENROUTER_FALLBACK_MODEL_ID
+
+  if (process.env.NODE_ENV !== 'production' && process.env.TEST_OVERRIDE_FALLBACK_MODEL) {
+    rawFallback = process.env.TEST_OVERRIDE_FALLBACK_MODEL
+  }
+
+  const fallbackModelId = (rawFallback && rawFallback.trim() !== '') ? rawFallback.trim() : null
+  const isMalformed = fallbackModelId !== null && !fallbackModelId.includes('/')
+  if (isMalformed) {
+    console.warn(`[executeOpenRouterAnalysis] Fallback model ID "${fallbackModelId}" is malformed. Disabling fallback.`)
+  }
+  const isFallbackEnabled = fallbackModelId !== null && fallbackModelId !== primaryModelId && !isMalformed
   const effectiveTemperature = capabilities.temperature !== undefined ? (capabilities.temperature as number) : (temperature ?? 0.1)
   const maxTokens = capabilities.max_tokens !== undefined ? (capabilities.max_tokens as number) : 4000
   const siteUrl = process.env.OPENROUTER_SITE_URL
@@ -114,7 +127,7 @@ export async function executeOpenRouterAnalysis(
       throw lastError
     }
 
-    const selectedModel = attempt === 1 ? primaryModelId : fallbackModelId
+    const selectedModel = attempt === 1 ? primaryModelId : (fallbackModelId || 'openai/gpt-4o-mini')
     const attemptTimeoutMs = attempt === 1 ? primaryTimeoutMs : remainingBudgetMs
 
     const ownController = new AbortController()
@@ -150,6 +163,35 @@ export async function executeOpenRouterAnalysis(
     const attemptStartTime = Date.now()
 
     try {
+      if (process.env.NODE_ENV !== 'production') {
+        if (process.env.TEST_FORCE_PRIMARY_FAILURE === 'true' && attempt === 1) {
+          throw new ProviderError(
+            'PROVIDER_TIMEOUT: Simulated transient failure for primary model (timeout)',
+            'Simulated primary model timeout.',
+            new Error('Simulated upstream timeout'),
+            504,
+            'provider_timeout'
+          )
+        }
+        if (process.env.TEST_FORCE_PRIMARY_NON_TRANSIENT_FAILURE === 'true' && attempt === 1) {
+          throw new ProviderError(
+            'Simulated non-transient failure (401 Unauthorized)',
+            'Authentication failed.',
+            new Error('Simulated 401'),
+            401,
+            'provider_authentication_error'
+          )
+        }
+        if (process.env.TEST_FORCE_FALLBACK_FAILURE === 'true' && attempt === 2) {
+          throw new ProviderError(
+            'PROVIDER_TIMEOUT: Simulated transient failure for fallback model (timeout)',
+            'Simulated fallback model timeout.',
+            new Error('Simulated upstream timeout'),
+            504,
+            'provider_timeout'
+          )
+        }
+      }
       const openrouter = createOpenRouter({
         apiKey,
         headers: {
@@ -324,7 +366,7 @@ export async function executeOpenRouterAnalysis(
         )) ||
         normalizedError.errorCode === 'malformed_provider_output'
 
-      if (attempt === 1 && isFallbackSafe && remainingBudgetNow > 5000) {
+      if (attempt === 1 && isFallbackEnabled && isFallbackSafe && remainingBudgetNow > 5000) {
         attempt++
         lastError = normalizedError
         console.warn(`[executeOpenRouterAnalysis] Attempt 1 failed. Error: ${normalizedError.message}. Initiating fallback to ${fallbackModelId} in ${remainingBudgetNow}ms...`)

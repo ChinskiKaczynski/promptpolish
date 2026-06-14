@@ -1,4 +1,4 @@
-﻿> [!WARNING]
+> [!WARNING]
 > **Archived / Historical** — This document has been moved to archive/ and is no longer an active project reference. It is retained for historical context only. Do not use as instructions.
 
 # Operator Runbook â€” PromptPolish v1.0
@@ -36,7 +36,7 @@ This runbook details diagnostic criteria, containment procedures, rollback paths
     3. Confirm `OPENROUTER_API_KEY` is correctly mapped and has non-zero credits.
 *   **Safe User-Facing Behavior:** The client UI must fail gracefully, showing Polish/English localized error banners indicating temporary provider unavailability without exposing raw API stack traces.
 *   **Rollback or Mitigation:** 
-    *   If the model endpoint is unstable, check if a fallback model is configured or rotate the API key.
+    *   If the model endpoint is unstable, check if `OPENROUTER_FALLBACK_MODEL_ID` is configured (defaults to `openai/gpt-4o-mini`). Note that if this variable is absent, blank, or equal to the primary model ID, fallback is cleanly disabled.
     *   If failure rates exceed 5% over a 15-minute window, notify users via a status banner.
 *   **Escalation:** Contact the Lead AI Engineer or Platform Ops if authentication keys are rejected.
 
