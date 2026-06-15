@@ -8,6 +8,96 @@ import type { ModelProfileRow } from '@/lib/supabase/types'
 
 import { serverEnv } from '@/lib/env/server'
 
+export type TextGenerator = (
+  model: string,
+  systemInstruction: string,
+  userPrompt: string,
+  options: {
+    temperature: number
+    maxTokens: number
+    abortSignal: AbortSignal
+    providerMetadata?: Record<string, unknown>
+  }
+) => Promise<{
+  output: AnalysisResult
+  usage?: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+    reasoningTokens?: number
+    visibleTokens?: number
+  }
+  finishReason?: string
+}>
+
+export const defaultTextGenerator: TextGenerator = async (
+  model,
+  systemInstruction,
+  userPrompt,
+  opts
+) => {
+  const apiKey = process.env.OPENROUTER_API_KEY
+  if (!apiKey || apiKey.trim() === '') {
+    throw new ProviderError(
+      'Missing OpenRouter API Key',
+      'The prompt analysis engine is not configured with an API key. Please check your system environment.',
+      new Error('OPENROUTER_API_KEY is not defined in environment variables.')
+    )
+  }
+
+  const siteUrl = process.env.OPENROUTER_SITE_URL
+  const appName = process.env.OPENROUTER_APP_NAME
+
+  const openrouter = createOpenRouter({
+    apiKey,
+    headers: {
+      ...(siteUrl ? { 'HTTP-Referer': siteUrl } : {}),
+      ...(appName ? { 'X-Title': appName } : {}),
+    },
+  })
+
+  const { output, usage, finishReason } = await generateText({
+    model: openrouter.chat(model, {
+      provider: {
+        require_parameters: true
+      }
+    }),
+    system: systemInstruction,
+    prompt: userPrompt,
+    temperature: opts.temperature,
+    maxOutputTokens: opts.maxTokens,
+    abortSignal: opts.abortSignal,
+    output: Output.object({
+      schema: analysisResultSchema
+    }),
+    ...(opts.providerMetadata && Object.keys(opts.providerMetadata).length > 0
+      ? { providerMetadata: opts.providerMetadata }
+      : {})
+  })
+
+  const rawUsage = usage as unknown as {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+    reasoningTokens?: number
+    outputTokenDetails?: { reasoningTokens?: number }
+  } | undefined
+
+  return {
+    output,
+    usage: rawUsage
+      ? {
+          promptTokens: rawUsage.promptTokens,
+          completionTokens: rawUsage.completionTokens,
+          totalTokens: rawUsage.totalTokens,
+          reasoningTokens: rawUsage.outputTokenDetails?.reasoningTokens ?? rawUsage.reasoningTokens ?? 0,
+          visibleTokens: Math.max(0, rawUsage.completionTokens - (rawUsage.outputTokenDetails?.reasoningTokens ?? rawUsage.reasoningTokens ?? 0))
+        }
+      : undefined,
+    finishReason: finishReason || 'stop'
+  }
+}
+
 export interface OpenRouterClientOptions {
   mockMode?: boolean
   mockResponse?: AnalysisResult
@@ -22,6 +112,7 @@ export interface OpenRouterClientOptions {
   timeoutMs?: number
   dbProfile?: ModelProfileRow | null
   requestId?: string
+  textGenerator?: TextGenerator
 }
 
 export interface OpenRouterAnalysisResponse {
@@ -33,7 +124,7 @@ export interface OpenRouterAnalysisResponse {
     reasoningTokens?: number
     visibleTokens?: number
   }
-  finishReason?: string
+  finishReason: string
   selectedModel: string
   attempt: number
   durationMs: number
@@ -76,29 +167,13 @@ export async function executeOpenRouterAnalysis(
     }
   }
 
-  // 2. Validate API Key for live calls
-  const apiKey = process.env.OPENROUTER_API_KEY
-  if (!apiKey || apiKey.trim() === '') {
-    throw new ProviderError(
-      'Missing OpenRouter API Key',
-      'The prompt analysis engine is not configured with an API key. Please check your system environment.',
-      new Error('OPENROUTER_API_KEY is not defined in environment variables.')
-    )
-  }
-
-  // 3. Resolve model ID and additional metadata headers from environment variables / dbProfile
+  // 2. Resolve model ID and additional metadata headers from environment variables / dbProfile
   const capabilities = (dbProfile?.capabilities_json || {}) as Record<string, unknown>
-  const primaryModelId = (process.env.NODE_ENV !== 'production' && process.env.TEST_OVERRIDE_PRIMARY_MODEL)
-    ? process.env.TEST_OVERRIDE_PRIMARY_MODEL
-    : ((capabilities.model_id as string | undefined) || getOwnerConfiguredModelId())
+  const primaryModelId = (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
 
-  let rawFallback = (capabilities.fallback_model_id as string | undefined) ||
+  const rawFallback = (capabilities.fallback_model_id as string | undefined) ||
                     (capabilities.fallbackModelId as string | undefined) ||
                     process.env.OPENROUTER_FALLBACK_MODEL_ID
-
-  if (process.env.NODE_ENV !== 'production' && process.env.TEST_OVERRIDE_FALLBACK_MODEL) {
-    rawFallback = process.env.TEST_OVERRIDE_FALLBACK_MODEL
-  }
 
   const fallbackModelId = (rawFallback && rawFallback.trim() !== '') ? rawFallback.trim() : null
   const isMalformed = fallbackModelId !== null && !fallbackModelId.includes('/')
@@ -108,8 +183,6 @@ export async function executeOpenRouterAnalysis(
   const isFallbackEnabled = fallbackModelId !== null && fallbackModelId !== primaryModelId && !isMalformed
   const effectiveTemperature = capabilities.temperature !== undefined ? (capabilities.temperature as number) : (temperature ?? 0.1)
   const maxTokens = capabilities.max_tokens !== undefined ? (capabilities.max_tokens as number) : 4000
-  const siteUrl = process.env.OPENROUTER_SITE_URL
-  const appName = process.env.OPENROUTER_APP_NAME
 
   const startTime = Date.now()
   const totalTimeout = timeoutMs ?? 110000 // Total operation budget (default: 110s)
@@ -163,42 +236,7 @@ export async function executeOpenRouterAnalysis(
     const attemptStartTime = Date.now()
 
     try {
-      if (process.env.NODE_ENV !== 'production') {
-        if (process.env.TEST_FORCE_PRIMARY_FAILURE === 'true' && attempt === 1) {
-          throw new ProviderError(
-            'PROVIDER_TIMEOUT: Simulated transient failure for primary model (timeout)',
-            'Simulated primary model timeout.',
-            new Error('Simulated upstream timeout'),
-            504,
-            'provider_timeout'
-          )
-        }
-        if (process.env.TEST_FORCE_PRIMARY_NON_TRANSIENT_FAILURE === 'true' && attempt === 1) {
-          throw new ProviderError(
-            'Simulated non-transient failure (401 Unauthorized)',
-            'Authentication failed.',
-            new Error('Simulated 401'),
-            401,
-            'provider_authentication_error'
-          )
-        }
-        if (process.env.TEST_FORCE_FALLBACK_FAILURE === 'true' && attempt === 2) {
-          throw new ProviderError(
-            'PROVIDER_TIMEOUT: Simulated transient failure for fallback model (timeout)',
-            'Simulated fallback model timeout.',
-            new Error('Simulated upstream timeout'),
-            504,
-            'provider_timeout'
-          )
-        }
-      }
-      const openrouter = createOpenRouter({
-        apiKey,
-        headers: {
-          ...(siteUrl ? { 'HTTP-Referer': siteUrl } : {}),
-          ...(appName ? { 'X-Title': appName } : {}),
-        },
-      })
+      const generator = options.textGenerator || defaultTextGenerator
 
       const supportsReasoning = capabilities.supportsReasoning as boolean | undefined
       const reasoningMode = capabilities.reasoningMode as 'enabled' | 'disabled' | 'provider-default' | undefined
@@ -230,22 +268,17 @@ export async function executeOpenRouterAnalysis(
         }
       }
 
-      const { output, usage, finishReason } = await generateText({
-        model: openrouter.chat(selectedModel, {
-          provider: {
-            require_parameters: true
-          }
-        }),
-        system: systemInstruction,
-        prompt: userPrompt,
-        temperature: effectiveTemperature,
-        maxOutputTokens: maxTokens,
-        abortSignal: effectiveSignal,
-        output: Output.object({
-          schema: analysisResultSchema
-        }),
-        ...(Object.keys(providerMetadata).length > 0 ? { providerMetadata } : {})
-      })
+      const { output, usage, finishReason } = await generator(
+        selectedModel,
+        systemInstruction,
+        userPrompt,
+        {
+          temperature: effectiveTemperature,
+          maxTokens,
+          abortSignal: effectiveSignal,
+          providerMetadata: Object.keys(providerMetadata).length > 0 ? providerMetadata : undefined
+        }
+      )
 
       const rawUsage = usage as {
         promptTokens?: number
@@ -275,7 +308,7 @@ export async function executeOpenRouterAnalysis(
         remainingBudgetMs: totalTimeout - (Date.now() - startTime),
         errorCategory: undefined,
         upstreamStatus: undefined,
-        finishReason,
+        finishReason: finishReason || 'stop',
         promptChars: userPrompt.length + systemInstruction.length,
         visibleOutputTokens,
         reasoningTokens,

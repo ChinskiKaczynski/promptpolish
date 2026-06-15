@@ -1,10 +1,39 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import type { ModelProfileRow } from '@/lib/supabase/types'
 
-vi.mock('server-only', () => ({}))
+import { enforceLiveAiGuards } from './live-guard'
+
+// Load environment variables from .env.local manually
+function loadEnvLocal() {
+  const envPath = path.join(process.cwd(), '.env.local')
+  if (fs.existsSync(envPath)) {
+    const content = fs.readFileSync(envPath, 'utf8')
+    const lines = content.split(/\r?\n/)
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const firstEquals = trimmed.indexOf('=')
+      if (firstEquals !== -1) {
+        const key = trimmed.slice(0, firstEquals).trim()
+        let val = trimmed.slice(firstEquals + 1).trim()
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1)
+        }
+        if (process.env[key] === undefined) {
+          process.env[key] = val
+        }
+      }
+    }
+  }
+}
+
+loadEnvLocal()
+
+// Enforce Guards
+enforceLiveAiGuards()
 
 const PROMPTS = [
   {
@@ -69,12 +98,11 @@ const PROMPTS = [
   }
 ]
 
-describe('AI Score Calibration Runner', () => {
+describe('AI Score Calibration Runner (Live)', () => {
   const originalEnv = { ...process.env }
 
   beforeEach(() => {
-    process.env = { ...originalEnv }
-    process.env.NODE_ENV = 'development'
+    process.env = { ...originalEnv } as NodeJS.ProcessEnv
     process.env.AI_MOCK_MODE = 'false'
   })
 
@@ -107,7 +135,7 @@ describe('AI Score Calibration Runner', () => {
         display_name: 'DeepSeek v4 Flash Profile',
         provider: 'openrouter',
         capabilities_json: {
-          model_id: 'openai/gpt-4o-mini',
+          model_id: process.env.OPENROUTER_FALLBACK_MODEL_ID || 'openai/gpt-4o-mini',
           temperature: 0.1,
           max_tokens: 4000
         },
@@ -174,7 +202,6 @@ describe('AI Score Calibration Runner', () => {
       }
     }
 
-    // Run all 10 prompts concurrently
     const results = await Promise.all(PROMPTS.map(p => runPromptComparison(p)))
 
     const diffs = results.map(r => r.diff).sort((a, b) => a - b)
@@ -186,9 +213,13 @@ describe('AI Score Calibration Runner', () => {
     const intentPreservationRate = (results.filter(r => r.intentPreserved === 'pass').length / results.length) * 100
     const usefulnessRate = (results.filter(r => r.usefulness === 'pass').length / results.length) * 100
 
-    const artifactsDir = 'C:\\Users\\Nuph\\.gemini\\antigravity-ide\\brain\\294fdfd6-f81c-4b6b-848b-f4350a8d2e1d'
+    const testResultsDir = path.join(process.cwd(), 'test-results')
+    if (!fs.existsSync(testResultsDir)) {
+      fs.mkdirSync(testResultsDir, { recursive: true })
+    }
+
     fs.writeFileSync(
-      path.join(artifactsDir, 'calibration_raw.json'),
+      path.join(testResultsDir, 'calibration_raw.json'),
       JSON.stringify(results, null, 2)
     )
 
@@ -210,8 +241,8 @@ describe('AI Score Calibration Runner', () => {
       report += `| ${r.id} (${r.category}) | ${r.primaryScore} | ${r.fallbackScore} | ${r.diff} | ${r.overlapPct}% | ${r.intentPreserved} | ${r.usefulness} |\n`
     }
 
-    fs.writeFileSync(path.join(artifactsDir, 'calibration_results.md'), report)
-    console.log('Calibration complete. Report written to calibration_results.md')
+    fs.writeFileSync(path.join(testResultsDir, 'calibration_results.md'), report)
+    console.log(`Calibration complete. Report written to ${path.join(testResultsDir, 'calibration_results.md')}`)
 
     expect(medianDiff).toBeLessThanOrEqual(10)
     expect(maxDiff).toBeLessThanOrEqual(20)

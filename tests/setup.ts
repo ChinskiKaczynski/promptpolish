@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { vi, beforeAll, afterAll } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -32,3 +32,26 @@ try {
   console.warn('Failed to load .env.local in test setup:', err)
 }
 
+// Global external network guard for OpenRouter in normal (offline) tests
+let originalFetch: typeof globalThis.fetch;
+
+beforeAll(() => {
+  originalFetch = globalThis.fetch;
+  globalThis.fetch = async function (input, init) {
+    const urlString = typeof input === 'string' ? input : (input instanceof URL ? input.toString() : (input as Request).url || '');
+
+    if (urlString.includes('openrouter.ai') && process.env.RUN_LIVE_AI_TESTS !== 'true') {
+      const errorMsg = `[SECURITY BLOCK] Attempted external network request to OpenRouter during offline tests: ${urlString}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    return originalFetch.call(this, input, init);
+  };
+});
+
+afterAll(() => {
+  if (originalFetch) {
+    globalThis.fetch = originalFetch;
+  }
+});

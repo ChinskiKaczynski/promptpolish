@@ -13,7 +13,9 @@
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:live:fallback": "vitest run --config vitest.live.config.ts scripts/live-ai/run-fallback-route-check.live.test.ts",
+    "test:live:calibration": "vitest run --config vitest.live.config.ts scripts/live-ai/run-calibration.live.test.ts"
   },
   "dependencies": {
     "@openrouter/ai-sdk-provider": "2.9.0",
