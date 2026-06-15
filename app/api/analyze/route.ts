@@ -22,7 +22,7 @@ import { serverEnv, checkProductionEnv } from '@/lib/env/server'
 import { hashValue, getClientIp } from '@/lib/rate-limit/hash-ip'
 import { PLAN_LIMITS, getPlanSlugForUser } from '@/lib/plans/config'
 import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
-
+export const runtime = "nodejs";
 export const maxDuration = 120
 
 // Input validation schema using Zod.
