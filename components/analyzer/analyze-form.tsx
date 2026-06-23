@@ -98,7 +98,7 @@ export function AnalyzeForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (isTooShort || isTooLong || isBlocked) return
+    if (isSubmitting || isTooShort || isTooLong || isBlocked) return
     
     setErrorMessage(null)
     setIsMonthlyLimitReached(false)

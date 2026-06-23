@@ -97,6 +97,11 @@ export default async function HomePage() {
 
               {/* Pixel-perfect HTML/CSS app mockup replica from the screenshot */}
               <div className="relative rounded-2xl border border-[#2A2A3A] bg-[#13131A] p-2 shadow-[0_0_0_1px_#2A2A3A,0_8px_48px_-8px_rgba(0,0,0,0.7)] glow-violet">
+                {/* Demo badge */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 inline-flex items-center gap-1.5 rounded-full border border-[#A78BFA]/30 bg-[#13131A] px-3 py-0.5 text-[9px] font-bold uppercase tracking-widest text-[#A78BFA]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#A78BFA] animate-pulse" aria-hidden="true" />
+                  DEMO / Przykładowy wynik
+                </div>
                 <div className="rounded-[18px] border border-[#1E1E2E] bg-[#0C0C10] overflow-hidden grid grid-cols-[160px_1fr] h-[480px]">
                   
                   {/* Mockup Sidebar */}

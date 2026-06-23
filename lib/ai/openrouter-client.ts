@@ -200,7 +200,13 @@ export async function executeOpenRouterAnalysis(
       throw lastError
     }
 
-    const selectedModel = attempt === 1 ? primaryModelId : (fallbackModelId || 'openai/gpt-4o-mini')
+    if (attempt === 2 && !fallbackModelId) {
+      // Should be unreachable: isFallbackEnabled guard above prevents entering attempt 2
+      // without a valid fallbackModelId, but we defend explicitly to never invoke an
+      // unapproved / hardcoded model.
+      throw lastError || new Error('Fallback attempt reached without a configured fallback model.')
+    }
+    const selectedModel = attempt === 1 ? primaryModelId : fallbackModelId!
     const attemptTimeoutMs = attempt === 1 ? primaryTimeoutMs : remainingBudgetMs
 
     const ownController = new AbortController()

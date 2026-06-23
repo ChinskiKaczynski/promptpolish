@@ -58,7 +58,7 @@ export function UpgradeModal({ isOpen, onClose, featureName }: UpgradeModalProps
             Odblokuj {featureName}
           </h3>
           <p id="upgrade-modal-desc" className="text-xs leading-relaxed text-[#94A3B8] px-2">
-            Ta funkcja jest zarezerwowana dla subskrybentów planu **Pro**. Podnieś jakość swojej pracy dzięki rozszerzonym narzędziom inżynierii promptów.
+            Ta funkcja jest zarezerwowana dla subskrybentów planu <strong>Pro</strong>. Podnieś jakość swojej pracy dzięki rozszerzonym narzędziom inżynierii promptów.
           </p>
         </div>
 

@@ -1,5 +1,8 @@
 import Link from 'next/link'
 
+// Evaluated at build time — avoids SSR/client hydration mismatch on the copyright year.
+const CURRENT_YEAR = new Date().getFullYear()
+
 interface AppFooterProps {
   theme?: 'light' | 'dark'
 }
@@ -22,9 +25,10 @@ export function AppFooter({ theme }: AppFooterProps = {}) {
           <Link className="hover:text-[#A78BFA] transition-colors" href="/privacy">Polityka prywatności</Link>
           <Link className="hover:text-[#A78BFA] transition-colors" href="/terms">Regulamin</Link>
           <a className="hover:text-[#A78BFA] transition-colors" href="mailto:kontakt@promptpolish.pl">Kontakt</a>
-          <span className="text-[#8290A2]">© {new Date().getFullYear()} PromptPolish</span>
+          <span className="text-[#8290A2]" suppressHydrationWarning>© {CURRENT_YEAR} PromptPolish</span>
         </div>
       </div>
     </footer>
   )
 }
+

@@ -211,12 +211,11 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   </p>
                   
                   {isStaleOrUnverified && (
-                    <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 flex gap-2 text-amber-500" role="alert">
-                      <span className="text-sm leading-none mt-0.5" aria-hidden="true">⚠️</span>
-                      <div className="text-[11px] leading-relaxed font-semibold">
-                        <p className="font-bold uppercase tracking-wide">Dane profilu niezweryfikowane (Stale/Unverified Data)</p>
-                        <p className="mt-0.5 opacity-90">Parametry techniczne i możliwości tego profilu mogą być nieaktualne.</p>
-                      </div>
+                    <div className="rounded-lg border border-[#2A2A3A] bg-[#1C1C27] p-3 flex gap-2 text-[#8290A2]">
+                      <span className="text-sm leading-none mt-0.5 shrink-0" aria-hidden="true">ℹ️</span>
+                      <p className="text-[11px] leading-relaxed">
+                        Profil nie deklaruje konkretnych parametrów technicznych modelu — celowe podejście, które eliminuje nieaktualne roszczenia dotyczące możliwości.
+                      </p>
                     </div>
                   )}
 

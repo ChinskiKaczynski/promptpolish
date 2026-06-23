@@ -387,7 +387,7 @@ export async function POST(request: Request) {
     // 8-12. Build prompt, call OpenRouter, validate response, and calculate weighted score
     const isMockMode = process.env.AI_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test'
     
-    const timeoutMs = Math.min(110000, serverEnv.AI_PROVIDER_TIMEOUT_MS * 2) // Overall AI budget, bounded by 110s
+    const timeoutMs = Math.min(55000, serverEnv.AI_PROVIDER_TIMEOUT_MS) // Overall AI budget, bounded by 55s to prevent Vercel gateway timeout (60s)
 
     const analysisResult = await analyzePrompt(
       {
