@@ -23,7 +23,7 @@ import { hashValue, getClientIp } from '@/lib/rate-limit/hash-ip'
 import { PLAN_LIMITS, getPlanSlugForUser } from '@/lib/plans/config'
 import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
 export const runtime = "nodejs";
-export const maxDuration = 120
+export const maxDuration = 220
 
 // Input validation schema using Zod.
 // input_prompt uses an absolute transport ceiling of 25,000 chars — larger than
@@ -392,7 +392,7 @@ export async function POST(request: Request) {
     // DB overhead before (auth/plan/reservation) + after (save/events) costs ~7–10s.
     // We leave a 15s margin: 60s - 15s = 45s for the AI call itself.
     // This ensures the route can return a controlled error before the platform 504.
-    const timeoutMs = Math.min(45000, serverEnv.AI_PROVIDER_TIMEOUT_MS)
+    const timeoutMs = Math.min(90000, serverEnv.AI_PROVIDER_TIMEOUT_MS)
 
     const routeAiStartMs = Date.now()
     console.info('[analyze/route]', JSON.stringify({
