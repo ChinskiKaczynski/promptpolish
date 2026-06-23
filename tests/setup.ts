@@ -34,8 +34,6 @@ try {
 
 // Force test environment defaults to match standard contract expectations
 process.env.ANONYMOUS_DAILY_LIMIT = '3'
-process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openai/gpt-4o-mini'
-
 
 // Global external network guard for OpenRouter in normal (offline) tests
 let originalFetch: typeof globalThis.fetch;

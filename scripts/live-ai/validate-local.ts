@@ -1,5 +1,3 @@
-import fs from 'fs'
-import path from 'path'
 
 const TARGET_URL = 'http://localhost:3000'
 
@@ -22,7 +20,7 @@ const normalPrompts = [
 ]
 
 // Construct the long prompt
-let longPromptBase = `Stwórz kompleksowy brief marketingowy i pakiet tekstów sprzedażowych dla nowej platformy SaaS w języku polskim. 
+const longPromptBase = `Stwórz kompleksowy brief marketingowy i pakiet tekstów sprzedażowych dla nowej platformy SaaS w języku polskim. 
 Nazwa platformy to: "TaskFlow". Jest to system do zarządzania zadaniami dla mikro i małych przedsiębiorstw.
 Oto szczegółowy opis założeń, funkcji, person, tonu głosu, konkurencji oraz celów, które musisz uwzględnić w analizie i wygenerowanych materiałach.
 
@@ -109,15 +107,16 @@ async function runLiveCheck() {
         success: status === 200,
         error: status !== 200 ? (data.message || data.error) : null
       })
-    } catch (e: any) {
-      console.error('Request failed:', e)
+    } catch (e) {
+      const err = e as Error
+      console.error('Request failed:', err)
       results.push({
         name: p.name,
         type: 'normal',
         status: -1,
         duration: 'N/A',
         success: false,
-        error: e.message
+        error: err.message
       })
     }
   }
@@ -150,15 +149,16 @@ async function runLiveCheck() {
       success: status === 200,
       error: status !== 200 ? (data.message || data.error) : null
     })
-  } catch (e: any) {
-    console.error('Request failed:', e)
+  } catch (e) {
+    const err = e as Error
+    console.error('Request failed:', err)
     results.push({
       name: 'Long Prompt Audit',
       type: 'long',
       status: -1,
       duration: 'N/A',
       success: false,
-      error: e.message
+      error: err.message
     })
   }
 

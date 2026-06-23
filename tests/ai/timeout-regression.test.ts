@@ -43,9 +43,17 @@ import { executeOpenRouterAnalysis } from '@/lib/ai/openrouter-client'
 import { isNestedTimeout, normalizeProviderError } from '@/lib/ai/provider-errors'
 
 describe('Timeout and Abort Regression Suite', () => {
+  const originalEnv = { ...process.env }
+
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.OPENROUTER_API_KEY = 'mock-key'
+    // Fallback is disabled globally by default
+    delete process.env.OPENROUTER_FALLBACK_MODEL_ID
+  })
+
+  afterEach(() => {
+    process.env = { ...originalEnv }
   })
 
   describe('1. Zod Environment Variable Validation', () => {
@@ -197,6 +205,10 @@ describe('Timeout and Abort Regression Suite', () => {
   })
 
   describe('4. Transient Retry & Remaining Timeout Mechanics', () => {
+    beforeEach(() => {
+      process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openai/gpt-4o-mini'
+    })
+
     it('executes one successful retry after a transient failure', async () => {
       let calls = 0
       vi.mocked(generateText).mockImplementation(async () => {
@@ -245,6 +257,7 @@ describe('Timeout and Abort Regression Suite', () => {
     let spyConsoleInfo: ReturnType<typeof vi.spyOn>
 
     beforeEach(() => {
+      process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openai/gpt-4o-mini'
       spyConsoleInfo = vi.spyOn(console, 'info').mockImplementation(() => {})
     })
 

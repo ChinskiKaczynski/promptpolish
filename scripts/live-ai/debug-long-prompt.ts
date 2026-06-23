@@ -9,7 +9,7 @@ Module.prototype.require = function (id: string) {
   return originalRequire.apply(this, arguments as any);
 };
 
-import { analyzePrompt } from '../lib/ai/analyze-prompt'
+import { analyzePrompt } from '../../lib/ai/analyze-prompt'
 import * as fs from 'fs'
 import * as path from 'path'
 
