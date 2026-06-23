@@ -386,8 +386,22 @@ export async function POST(request: Request) {
 
     // 8-12. Build prompt, call OpenRouter, validate response, and calculate weighted score
     const isMockMode = process.env.AI_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test'
-    
-    const timeoutMs = Math.min(55000, serverEnv.AI_PROVIDER_TIMEOUT_MS) // Overall AI budget, bounded by 55s to prevent Vercel gateway timeout (60s)
+
+    // AI provider timeout budget.
+    // Vercel HTTP response gateway cuts off at ~60s regardless of maxDuration.
+    // DB overhead before (auth/plan/reservation) + after (save/events) costs ~7–10s.
+    // We leave a 15s margin: 60s - 15s = 45s for the AI call itself.
+    // This ensures the route can return a controlled error before the platform 504.
+    const timeoutMs = Math.min(45000, serverEnv.AI_PROVIDER_TIMEOUT_MS)
+
+    const routeAiStartMs = Date.now()
+    console.info('[analyze/route]', JSON.stringify({
+      event: 'ai_call_start',
+      request_id: requestId,
+      timeout_budget_ms: timeoutMs,
+      model_profile: selected_profile_slug,
+      working_language: working_language
+    }))
 
     const analysisResult = await analyzePrompt(
       {
@@ -408,6 +422,12 @@ export async function POST(request: Request) {
         requestId
       }
     )
+
+    console.info('[analyze/route]', JSON.stringify({
+      event: 'ai_call_end',
+      request_id: requestId,
+      ai_duration_ms: Date.now() - routeAiStartMs
+    }))
 
     // Bounding output size validation
     if (!analysisResult.analysis.improved_prompt || analysisResult.analysis.improved_prompt.length > 50000) {
@@ -626,15 +646,17 @@ export async function POST(request: Request) {
 
     if (isTimeout) {
       let publicCode = 'provider_timeout'
-      let message = 'Żądanie analizy przekroczyło limit czasu. Spróbuj ponownie.'
+      // "Nie pobraliśmy limitu" is safe to state: reservation is released in the catch block above
+      // before we reach this handler, so quota is not consumed on timeout.
+      let message = 'Analiza trwała zbyt długo i została bezpiecznie przerwana. Nie pobraliśmy limitu za tę próbę. Spróbuj ponownie za chwilę albo skróć prompt.'
 
       if (error instanceof ProviderError) {
         if (error.errorCode === 'upstream_provider_error') {
           publicCode = 'upstream_provider_error'
-          message = 'Dostawca AI nie odpowiedział w oczekiwanym czasie. Spróbuj ponownie.'
+          message = 'Analiza trwała zbyt długo i została bezpiecznie przerwana. Nie pobraliśmy limitu za tę próbę. Spróbuj ponownie za chwilę albo skróć prompt.'
         } else if (error.errorCode === 'function_platform_timeout') {
           publicCode = 'function_platform_timeout'
-          message = 'Serwer przekroczył limit czasu operacji. Spróbuj ponownie.'
+          message = 'Analiza trwała zbyt długo i została bezpiecznie przerwana. Nie pobraliśmy limitu za tę próbę. Spróbuj ponownie za chwilę albo skróć prompt.'
         }
       }
 
