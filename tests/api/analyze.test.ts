@@ -46,6 +46,7 @@ import {
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
+import { SemanticValidationError } from '@/lib/ai/semantic-validation'
 import type { ModelProfileRow, PromptAnalysisRow, UserProfileRow } from '@/lib/supabase/types'
 import type { AnalysisServiceResult } from '@/lib/ai/analyze-prompt'
 import type { User } from '@supabase/supabase-js'
@@ -456,6 +457,76 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(response.status).toBe(503)
       expect(data.error).toBe('provider_unavailable')
       expect(data.message).toBe(error.userMessage)
+    })
+
+    it('maps malformed_provider_output failures to 502 Bad Gateway with Polish message, releases reservation, and logs failure', async () => {
+      const error = new ProviderError(
+        'No object generated',
+        'Encountered an error',
+        null,
+        undefined,
+        'malformed_provider_output'
+      )
+      vi.mocked(analyzePrompt).mockRejectedValue(error)
+
+      const response = await POST(makeRequest(validPayload))
+      const data = await response.json()
+
+      expect(response.status).toBe(502)
+      expect(data.error).toBe('malformed_provider_output')
+      expect(data.message).toBe('Nie udało się poprawnie złożyć raportu z odpowiedzi modelu. Spróbuj ponownie albo skróć prompt.')
+
+      // Verification: Check reservation was released
+      expect(releaseReservation).toHaveBeenCalled()
+      expect(completeReservation).not.toHaveBeenCalled()
+
+      // Verification: Telemetry event logged
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: 'analysis_failed',
+          metadata_json: expect.objectContaining({
+            error_code: 'MALFORMED_PROVIDER_OUTPUT'
+          })
+        })
+      )
+      expect(createUsageEvent).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: 'analysis_completed'
+        })
+      )
+    })
+
+    it('maps SemanticValidationError failures to 502 Bad Gateway with Polish message, releases reservation, and logs failure', async () => {
+      const error = new SemanticValidationError([
+        { path: 'criteria_scores', message: 'Order mismatch' }
+      ])
+      vi.mocked(analyzePrompt).mockRejectedValue(error)
+
+      const response = await POST(makeRequest(validPayload))
+      const data = await response.json()
+
+      expect(response.status).toBe(502)
+      expect(data.error).toBe('malformed_provider_output')
+      expect(data.message).toBe('Nie udało się poprawnie złożyć raportu z odpowiedzi modelu. Spróbuj ponownie albo skróć prompt.')
+
+      // Verification: Check reservation was released
+      expect(releaseReservation).toHaveBeenCalled()
+      expect(completeReservation).not.toHaveBeenCalled()
+
+      // Verification: Telemetry event logged
+      expect(createUsageEvent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: 'analysis_failed',
+          metadata_json: expect.objectContaining({
+            error_code: 'INVALID_STRUCTURED_OUTPUT'
+          })
+        })
+      )
+      expect(createUsageEvent).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: 'analysis_completed'
+        })
+      )
     })
 
     it('returns 500 Internal Error when unexpected generic throw occurs', async () => {

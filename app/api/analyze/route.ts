@@ -682,7 +682,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: 'malformed_provider_output',
-          message: 'Odpowiedź AI nie spełnia reguł strukturalnych. Spróbuj ponownie.',
+          message: 'Nie udało się poprawnie złożyć raportu z odpowiedzi modelu. Spróbuj ponownie albo skróć prompt.',
           error_id: errorId
         },
         { status: 502 }
@@ -732,7 +732,9 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: publicCode,
-          message: error.userMessage,
+          message: isMalformed
+            ? 'Nie udało się poprawnie złożyć raportu z odpowiedzi modelu. Spróbuj ponownie albo skróć prompt.'
+            : error.userMessage,
           error_id: errorId
         },
         { status }

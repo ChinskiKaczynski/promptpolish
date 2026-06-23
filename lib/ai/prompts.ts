@@ -103,6 +103,13 @@ export function constructUserAnalysisPrompt(params: ConstructPromptParams): stri
   if (expectedOutputFormat) contextSection += `- User Specified Expected Output Format: ${expectedOutputFormat}\n`
   if (constraints) contextSection += `- User Specified Constraints: ${constraints}\n`
 
+  let longPromptInstruction = ''
+  if (inputPrompt.length > 4000) {
+    longPromptInstruction = workingLanguage === 'pl'
+      ? `\n- [BARDZO DŁUGI PROMPT WEJŚCIOWY (>4000 znaków)]: Skoncentruj się na zwięzłym podsumowaniu strategii ulepszenia. Wygenerowany ulepszony prompt (improved_prompt) musi być zwięzły, kompaktowy i użyteczny — nie kopiuj ani nie powtarzaj całego oryginalnego promptu słowo w słowo. Pisz skrajnie zwięźle. Ogranicz rationales, suggestions, plan i explanations do absolutnego minimum (maksymalnie 1-2 zwięzłe zdania). Upewnij się, że cała odpowiedź JSON mieści się w limicie tokenów i nie zostanie ucięta.`
+      : `\n- [VERY LONG INPUT PROMPT (>4000 characters)]: Focus on summarizing the improvement strategy concisely. The generated improved prompt (improved_prompt) must be compact, useful, and structured — do not mirror or copy the entire original prompt back. Keep critiques extremely concise: limit all rationales, suggestions, plan, and explanations to the absolute minimum (maximum 1-2 concise sentences). Ensure that the entire JSON response stays well within the output token budget to avoid truncation.`
+  }
+
   return `
 Analyze and improve the following prompt:
 
@@ -126,7 +133,7 @@ ${requiredCriteriaList}
 - Redact or avoid echoing any sensitive credentials or secrets found in the input prompt.
 - Retain the original intent and core objectives of the input prompt.
 - Make the improved prompt highly professional, clearly structured, and optimized for the target model profile without being overly verbose.
-- Do not include Markdown code fences around the JSON output.
+- Do not include Markdown code fences around the JSON output.${longPromptInstruction}
 `
 }
 
