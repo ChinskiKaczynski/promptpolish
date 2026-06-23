@@ -34,7 +34,6 @@ export const metadata: Metadata = {
     'optymalizacja promptów',
     'audyt promptów',
     'prompt polish',
-    'gemini',
     'prompt audit',
     'prompt optimizer',
     'sztuczna inteligencja'

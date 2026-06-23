@@ -176,6 +176,11 @@ details[open] summary ~ * {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* Explicitly freeze decorative background blobs */
+  .animate-blob-1,
+  .animate-blob-2 {
+    animation: none !important;
+  }
 }
 
 /* Custom Animation Utilities */

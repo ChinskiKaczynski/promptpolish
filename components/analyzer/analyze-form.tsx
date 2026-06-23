@@ -288,6 +288,7 @@ export function AnalyzeForm() {
           </div>
           <textarea
             id="prompt-textarea"
+            aria-label="Treść promptu do analizy"
             className={`prompt-textarea min-h-[220px] w-full rounded-lg px-4 py-3.5 resize-y transition-all ${isTooLong ? 'border-[#F87171]/60' : isApproachingLimit ? 'border-[#F97316]/50' : ''}`}
             placeholder={workingLanguage === 'pl' 
               ? 'Wklej tutaj treść promptu, który chcesz przetestować i ulepszyć (minimum 20 znaków)...' 

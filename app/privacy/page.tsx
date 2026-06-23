@@ -170,7 +170,7 @@ export default function PrivacyPage() {
                   <strong>Dla Użytkowników Zalogowanych:</strong> Usunięcie konta w panelu ustawień aplikacji powoduje natychmiastowe wysłanie żądań anulowania subskrypcji do Stripe oraz kaskadowe usunięcie profilu, historii zapytań oraz powiązanych danych z bazy Supabase.
                 </li>
                 <li>
-                  <strong>Wnioski ręczne:</strong> Pytania o zakres przetwarzanych danych lub wnioski o ich usunięcie można kierować na adres: <code>[PRIVACY CONTACT EMAIL TBD]</code> lub <code>[SUPPORT EMAIL TBD]</code>. Wniosek zostanie zweryfikowany pod kątem własności sesji i obsłużony w ustawowym terminie.
+                  <strong>Wnioski ręczne:</strong> Pytania o zakres przetwarzanych danych lub wnioski o ich usunięcie można kierować na adres: <a href="mailto:kontakt@promptpolish.pl" className="text-indigo-600 underline">kontakt@promptpolish.pl</a>. Wniosek zostanie zweryfikowany pod kątem własności sesji i obsłużony w ustawowym terminie.
                 </li>
               </ul>
             </section>
@@ -188,8 +188,8 @@ export default function PrivacyPage() {
                 Wszelkie zapytania dotyczące ochrony danych osobowych prosimy kierować na poniższe dane kontaktowe:
               </p>
               <ul className="list-none space-y-1 text-xs text-slate-600 font-semibold">
-                <li><strong>Koordynator ds. prywatności:</strong> <code>[PRIVACY CONTACT EMAIL TBD]</code></li>
-                <li><strong>E-mail wsparcia:</strong> <code>[SUPPORT EMAIL TBD]</code></li>
+                <li><strong>Koordynator ds. prywatności:</strong> <a href="mailto:kontakt@promptpolish.pl" className="text-indigo-600 underline">kontakt@promptpolish.pl</a></li>
+                <li><strong>E-mail wsparcia:</strong> <a href="mailto:kontakt@promptpolish.pl" className="text-indigo-600 underline">kontakt@promptpolish.pl</a></li>
                 <li><strong>Nazwa podmiotu:</strong> <code>[LEGAL ENTITY NAME TBD]</code></li>
                 <li><strong>Adres rejestrowy:</strong> <code>[REGISTERED BUSINESS ADDRESS TBD]</code></li>
               </ul>
