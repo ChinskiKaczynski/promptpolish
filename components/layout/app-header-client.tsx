@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LogoIcon } from '@/components/ui/logo'
+import { Logo } from '@/components/ui/logo'
 
 interface AppHeaderClientProps {
   theme: 'light' | 'dark'
@@ -50,13 +50,8 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
     <header className={`border-b sticky top-0 z-50 backdrop-blur-xl transition-all duration-200 ${bgStyle}`}>
       <div className="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#7C3AED]/10 border border-[#A78BFA]/20 group-hover:border-[#A78BFA]/50 transition-all duration-200 shadow-[0_0_12px_rgba(167,139,250,0.15)] backdrop-blur-md">
-            <LogoIcon className="h-6 w-6" />
-          </div>
-          <span className="text-base font-bold tracking-tight text-[#E2E8F0] group-hover:text-white transition-colors duration-150 font-heading">
-            PromptPolish
-          </span>
+        <Link href="/">
+          <Logo iconSize="md" textSize="md" />
         </Link>
 
         {/* Desktop Navigation Links */}
