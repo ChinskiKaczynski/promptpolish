@@ -32,7 +32,7 @@ export function AnalyzeForm() {
   const router = useRouter()
   const [inputPrompt, setInputPrompt] = useState('')
   const [workingLanguage, setWorkingLanguage] = useState<'pl' | 'en'>('pl')
-  const [profileSlug, setProfileSlug] = useState('general-llm')
+  const profileSlug = 'general-llm'
   const [auditMode, setAuditMode] = useState('universal')
   
   // Optional Prompt Calibration Fields
@@ -71,7 +71,6 @@ export function AnalyzeForm() {
     if (isSubmitting && !errorMessage) {
       if (createdId && currentStepIndex >= loadingSteps.length - 1) {
         const timer = setTimeout(() => {
-          setIsSubmitting(false)
           router.push(`/result/${createdId}`)
         }, 0)
         return () => clearTimeout(timer)
@@ -87,7 +86,6 @@ export function AnalyzeForm() {
         } else {
           if (createdId) {
             clearInterval(interval)
-            setIsSubmitting(false)
             router.push(`/result/${createdId}`)
           }
         }
@@ -357,36 +355,6 @@ export function AnalyzeForm() {
                 setConstraints={setConstraints}
                 workingLanguage={workingLanguage}
               />
-
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div className="w-full border-t border-[#2A2A3A]" />
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-[#13131A] px-4 text-xs font-bold uppercase tracking-widest text-[#8290A2]">
-                    {workingLanguage === 'pl' ? 'Ustawienia zaawansowane' : 'Advanced Settings'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="target-ai-model-select" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] block">
-                  {workingLanguage === 'pl' ? 'Docelowy model AI' : 'Target AI model'}
-                </label>
-                <select
-                  id="target-ai-model-select"
-                  className="select-dark w-full rounded-lg px-4 py-3 text-sm font-medium transition cursor-pointer"
-                  value={profileSlug}
-                  onChange={(e) => setProfileSlug(e.target.value)}
-                >
-                  <option value="general-llm">
-                    {workingLanguage === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model'}
-                  </option>
-                  <option value="openrouter-deepseek-v4-flash">
-                    {workingLanguage === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model'}
-                  </option>
-                </select>
-              </div>
             </div>
           )}
         </div>

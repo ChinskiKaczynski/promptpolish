@@ -150,11 +150,7 @@ export default async function AccountPage() {
             Subskrypcja i rozliczenia
           </h3>
 
-          {!stripeEnabled && (
-            <div className="mt-4 rounded-lg border border-[#F59E0B]/25 bg-[#F59E0B]/6 p-4 text-xs text-[#F59E0B] leading-relaxed font-semibold">
-              <strong>Beta Info:</strong> Bramka płatności Stripe jest obecnie wyłączona (STRIPE_ENABLED=false). Cennik i funkcje konta Pro są symulowane.
-            </div>
-          )}
+
 
           {subscription ? (
             /* Stripe Subscription Details */

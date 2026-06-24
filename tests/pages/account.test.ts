@@ -135,16 +135,7 @@ describe('AccountPage Beta & Plan Limitations UI', () => {
     expect(usageMeterProps?.monthlyLimit).toBe(20) // PLAN_LIMITS.free.monthlyAnalyses
     expect(usageMeterProps?.variant).toBe('inline')
     expect(usageMeterProps?.isSimulatedPro).toBe(false) // free plan, not simulated pro
-
-    // Billing status card: beta info banner present when Stripe is disabled
     const mainElement = jsx.props.children[1]
-    expect(mainElement.type).toBe('main')
-
-    const billingCard = mainElement.props.children[2]
-    const betaBanner = billingCard.props.children[1]
-    expect(betaBanner.props.children[0].props.children).toBe('Beta Info:')
-    expect(betaBanner.props.children[1]).toContain('Bramka płatności Stripe jest obecnie wyłączona')
-
     // History shortcut link present
     const historyShortcut = mainElement.props.children[3]
     const historyLink = historyShortcut.props.children[1].props.children[1]

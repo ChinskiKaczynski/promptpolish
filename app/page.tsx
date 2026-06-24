@@ -160,101 +160,132 @@ export default async function HomePage() {
                   </div>
 
                   {/* Mockup Main content area */}
-                  <div className="p-4 flex flex-col justify-between bg-[#0C0C10] overflow-y-auto">
+                  <div className="p-4 flex flex-col bg-[#0C0C10] overflow-y-auto">
                     
                     {/* Mockup header */}
-                    <div className="flex items-center justify-between border-b border-[#2A2A3A] pb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#E2E8F0]">Wynik audytu</span>
-                        <span className="inline-flex items-center rounded-full bg-[#6EE7B7]/10 px-2 py-0.5 text-[8px] font-bold text-[#6EE7B7] border border-[#6EE7B7]/20">
-                          Doskonały potencjał
+                    <div className="flex items-center justify-between border-b border-[#2A2A3A] pb-3 shrink-0">
+                      <div>
+                        <span className="inline-flex items-center rounded-md bg-[#1C1C27] border border-[#3A3A52] px-1.5 py-0.5 text-[8px] font-semibold text-[#A78BFA] uppercase tracking-wider">
+                          Prywatny audyt
                         </span>
+                        <h4 className="text-[10px] font-bold text-[#E2E8F0] mt-0.5">Raport audytu promptu</h4>
                       </div>
-                      <button className="rounded-lg border border-[#2A2A3A] px-2 py-1 text-[9px] font-bold text-[#94A3B8] flex items-center gap-1 hover:bg-[#1C1C27]" aria-label="Udostępnij raport">
-                        <span>🔗</span> Udostępnij
+                      <button className="rounded border border-[#2A2A3A] px-2 py-0.5 text-[8px] font-semibold text-[#94A3B8] flex items-center gap-1 hover:bg-[#1C1C27]" aria-label="Eksportuj raport">
+                        Eksportuj ▼
                       </button>
                     </div>
 
-                    {/* Circular Overall Score & Score breakdown */}
-                    <div className="mt-3.5 grid grid-cols-[80px_1fr] gap-4 items-center border-b border-[#2A2A3A] pb-3.5">
-                      {/* Overall Score Circle */}
-                      <div className="relative h-18 w-18 flex flex-col items-center justify-center rounded-full border-[5px] border-[#A78BFA] border-t-[#2A2A3A] -rotate-45 shrink-0">
-                        <div className="rotate-45 flex flex-col items-center">
-                          <span className="text-lg font-black text-[#E2E8F0] leading-none">82</span>
-                          <span className="text-[8px] font-bold text-[#8290A2] mt-0.5">/100</span>
-                        </div>
+                    {/* Score Display Card */}
+                    <div className="mt-3 relative flex items-center justify-between overflow-hidden rounded-xl border border-[#A78BFA]/20 bg-[#A78BFA]/5 p-3 shadow-sm shrink-0">
+                      <div className="space-y-1">
+                        <p className="text-[7px] font-mono font-bold uppercase tracking-[0.1em] text-[#8290A2]">Ogólna Ocena Jakości</p>
+                        <h5 className="text-xs font-bold text-[#A78BFA]">Bardzo dobry</h5>
+                        <p className="text-[8px] leading-snug text-[#94A3B8] max-w-[140px]">Prompt jest solidny, wymaga jedynie kosmetycznych usprawnień.</p>
                       </div>
 
-                      {/* Breakdown Bars */}
-                      <div className="space-y-1.5">
-                        <span className="text-[8px] font-bold uppercase tracking-wider text-[#8290A2] block">Szczegóły punktacji</span>
-                        
+                      {/* Mini SVG circular progress meter */}
+                      <div className="relative h-12 w-12 shrink-0 rounded-full bg-[#1C1C27] flex items-center justify-center border border-[#2A2A3A]">
+                        <svg className="h-[40px] w-[40px] -rotate-90">
+                          <circle cx="20" cy="20" r="16" className="stroke-[#1C1C27]" strokeWidth="3.5" fill="transparent" />
+                          <circle cx="20" cy="20" r="16" className="stroke-[#A78BFA]" strokeWidth="3.5" fill="transparent" strokeDasharray="100.5" strokeDashoffset="18" strokeLinecap="round" />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-[10px] font-black text-[#E2E8F0] font-mono leading-none">82</span>
+                          <span className="text-[5px] font-mono font-bold text-[#8290A2] mt-0.5">/ 100</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Details Breakdown */}
+                    <div className="mt-3 space-y-2 border-t border-[#2A2A3A]/30 pt-3 shrink-0">
+                      <div className="flex items-center justify-between text-[8px] font-bold text-[#8290A2] uppercase tracking-wider">
+                        <span>Kryteria szczegółowe</span>
+                        <span className="text-[#A78BFA]">3 z 10 Parametrów</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {/* Criterion 1: Jasność celu */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-[8px]">
-                            <span className="font-semibold text-[#94A3B8]">Jasność</span>
-                            <span className="font-bold text-[#E2E8F0]">85</span>
+                            <span className="font-semibold text-[#E2E8F0]">Jasność celu</span>
+                            <span className="rounded bg-[#A78BFA]/10 border border-[#A78BFA]/20 px-1 py-0.2 text-[7px] font-bold text-[#A78BFA]">8 / 10</span>
                           </div>
                           <div className="h-1 w-full bg-[#1C1C27] rounded-full overflow-hidden border border-[#2A2A3A]/20">
-                            <div className="h-full bg-[#A78BFA] rounded-full" style={{ width: '85%' }} />
+                            <div className="h-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] rounded-full" style={{ width: '80%' }} />
                           </div>
                         </div>
 
+                        {/* Criterion 2: Kompletność kontekstu */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-[8px]">
-                            <span className="font-semibold text-[#94A3B8]">Precyzja</span>
-                            <span className="font-bold text-[#E2E8F0]">90</span>
+                            <span className="font-semibold text-[#E2E8F0]">Kompletność kontekstu</span>
+                            <span className="rounded bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 px-1 py-0.2 text-[7px] font-bold text-[#6EE7B7]">9 / 10</span>
                           </div>
                           <div className="h-1 w-full bg-[#1C1C27] rounded-full overflow-hidden border border-[#2A2A3A]/20">
-                            <div className="h-full bg-[#A78BFA] rounded-full" style={{ width: '90%' }} />
+                            <div className="h-full bg-gradient-to-r from-[#059669] to-[#6EE7B7] rounded-full" style={{ width: '90%' }} />
                           </div>
                         </div>
 
+                        {/* Criterion 3: Definicje ograniczeń */}
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-[8px]">
-                            <span className="font-semibold text-[#94A3B8]">Kontekst</span>
-                            <span className="font-bold text-[#E2E8F0]">75</span>
+                            <span className="font-semibold text-[#E2E8F0]">Definicje ograniczeń</span>
+                            <span className="rounded bg-[#A78BFA]/10 border border-[#A78BFA]/20 px-1 py-0.2 text-[7px] font-bold text-[#A78BFA]">7 / 10</span>
                           </div>
                           <div className="h-1 w-full bg-[#1C1C27] rounded-full overflow-hidden border border-[#2A2A3A]/20">
-                            <div className="h-full bg-[#A78BFA] rounded-full" style={{ width: '75%' }} />
+                            <div className="h-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] rounded-full" style={{ width: '70%' }} />
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Original & Polished Prompt side by side */}
-                    <div className="mt-3.5 grid grid-cols-2 gap-3">
-                      <div className="rounded-lg border border-[#2A2A3A] bg-[#13131A] p-2.5 flex flex-col justify-between h-28">
-                        <div>
-                          <span className="text-[8px] font-bold text-[#8290A2] uppercase tracking-wider">Oryginalny prompt</span>
-                          <p className="mt-1 text-[9px] text-[#94A3B8] leading-normal font-medium">Napisz post na bloga o AI</p>
-                        </div>
-                        <span className="text-[8px] text-[#8290A2] font-medium">6 tokenów</span>
-                      </div>
-
-                      <div className="rounded-lg border border-[#A78BFA]/20 bg-[#13131A] p-2.5 flex flex-col justify-between h-28 relative">
-                        <button className="absolute top-2.5 right-2.5 rounded border border-[#2A2A3A] bg-[#1C1C27] px-1.5 py-0.5 text-[8px] font-semibold text-[#94A3B8] hover:bg-[#1C1C27]">
-                          Kopiuj
-                        </button>
-                        <div>
-                          <span className="text-[8px] font-bold text-[#8290A2] uppercase tracking-wider">Poprawiony prompt</span>
-                          <p className="mt-1 text-[9px] text-[#94A3B8] leading-normal font-semibold">Napisz post na blogu o długości 1000 słów o wpływie generatywnej sztucznej inteligencji...</p>
-                        </div>
-                        <div className="flex items-center justify-between mt-1 border-t border-[#2A2A3A] pt-1.5">
-                          <span className="text-[8px] text-[#8290A2] font-medium">42 tokeny</span>
-                          <span className="text-[8px] font-bold text-[#6EE7B7] bg-[#6EE7B7]/10 px-1 rounded border border-[#6EE7B7]/20">+6 ulepszeń</span>
-                        </div>
+                    {/* Original Prompt Collapsible */}
+                    <div className="mt-3 border-t border-[#2A2A3A]/30 pt-3 shrink-0">
+                      <div className="flex items-center justify-between rounded-lg border border-[#2A2A3A] bg-[#13131A] px-3 py-1.5 text-[8px] font-semibold text-[#E2E8F0]">
+                        <span>Oryginalny prompt</span>
+                        <span className="text-[#8290A2]">▼</span>
                       </div>
                     </div>
 
-                    {/* Top Improvements */}
-                    <div className="mt-3">
-                      <span className="text-[8px] font-bold uppercase tracking-wider text-[#8290A2] block mb-1.5">Kluczowe poprawki</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {['Dodaj kontekst', 'Zwiększ precyzję', 'Dodaj ograniczenia', 'Popraw strukturę', 'Określ odbiorcę'].map((tag) => (
-                          <span key={tag} className="rounded-full bg-[#1C1C27] border border-[#2A2A3A] px-2 py-0.5 text-[8px] font-semibold text-[#8290A2]">
-                            {tag}
+                    {/* Improved Prompt Block */}
+                    <div className="mt-3 overflow-hidden rounded-lg border border-[#2A2A3A] bg-[#0C0C10] shadow-md flex-grow flex flex-col min-h-[120px]">
+                      {/* Editor Top Bar */}
+                      <div className="flex items-center justify-between border-b border-[#2A2A3A] bg-[#13131A] px-3 py-1.5 shrink-0">
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-0.5">
+                            <span className="h-1.5 w-1.5 rounded-full bg-rose-500/85" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500/85" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/85" />
+                          </div>
+                          <span className="text-[7px] font-semibold uppercase tracking-widest text-[#94A3B8] border-l border-[#2A2A3A] pl-1.5">
+                            POPRAWIONY PROMPT
                           </span>
-                        ))}
+                        </div>
+                        <span className="rounded border border-[#2A2A3A] bg-[#1C1C27] px-1 py-0.2 text-[7px] font-bold text-[#8290A2]">
+                          Kopiuj
+                        </span>
+                      </div>
+                      
+                      {/* Editor Code Area */}
+                      <div className="p-3 font-mono text-[8px] leading-relaxed text-[#E2E8F0] space-y-1 overflow-y-auto flex-1">
+                        <div className="flex items-start">
+                          <span className="select-none w-3 text-right text-[#8290A2] shrink-0 pr-1.5 border-r border-[#2A2A3A]/40 font-mono">1</span>
+                          <code className="pl-2 whitespace-pre-wrap break-words font-mono text-[#E2E8F0] block flex-1">
+                            Napisz szczegółowy post na blogu o długości około 1000 słów
+                          </code>
+                        </div>
+                        <div className="flex items-start">
+                          <span className="select-none w-3 text-right text-[#8290A2] shrink-0 pr-1.5 border-r border-[#2A2A3A]/40 font-mono">2</span>
+                          <code className="pl-2 whitespace-pre-wrap break-words font-mono text-[#E2E8F0] block flex-1">
+                            na temat wpływu generatywnej sztucznej inteligencji na pracę
+                          </code>
+                        </div>
+                        <div className="flex items-start">
+                          <span className="select-none w-3 text-right text-[#8290A2] shrink-0 pr-1.5 border-r border-[#2A2A3A]/40 font-mono">3</span>
+                          <code className="pl-2 whitespace-pre-wrap break-words font-mono text-[#E2E8F0] block flex-1">
+                            biurową, uwzględniając konkretne przykłady narzędzi.
+                          </code>
+                        </div>
                       </div>
                     </div>
 
@@ -267,29 +298,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Safety Warning Preflight Section */}
-        <section className="px-6 py-12">
-          <div className="mx-auto max-w-6xl">
-            <div className="rounded-xl border border-[#F59E0B]/20 bg-[#F59E0B]/5 p-6 sm:p-8">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m0-6h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Ochrona danych wrażliwych przed analizą</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[#94A3B8]">
-                    PromptPolish stawia prywatność na pierwszym miejscu. Narzędzie działa w 100% anonimowo. Przed przesłaniem promptu do analizy, system uruchamia automatyczny filtr w poszukiwaniu kluczy API, tokenów autoryzacyjnych lub poufnych danych finansowych.
-                  </p>
-                  <p className="mt-2 text-xs font-semibold text-[#F59E0B]">
-                    WAŻNE: Pod żadnym pozorem nie wklejaj haseł, kluczy API, tajemnic handlowych ani danych osobowych klientów.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         {/* Benefits Section */}
         <section id="features" className="mx-auto max-w-6xl px-6 py-20">
@@ -376,30 +385,30 @@ export default async function HomePage() {
             <div className="text-center">
               <h2 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#A78BFA]">Dla Kogo?</h2>
               <p className="mt-3 text-3xl font-bold tracking-tight text-[#E2E8F0] font-heading sm:text-4xl">
-                Zaprojektowany dla profesjonalistów
+                Zaprojektowany dla każdego
               </p>
               <p className="mx-auto mt-4 max-w-2xl text-[#94A3B8] text-sm">
-                Sprawdź, jak PromptPolish ułatwia codzienną pracę z technologiami generatywnymi.
+                Sprawdź, jak PromptPolish pomaga w nauce, pracy i codziennych projektach ze sztuczną inteligencją.
               </p>
             </div>
 
             <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 {
-                  role: 'Konsultanci i trenerzy AI',
-                  benefit: 'Szybkie audytowanie promptów dostarczanych przez klientów i dostarczanie powtarzalnych raportów z konkretną punktacją zamiast subiektywnych opinii.'
+                  role: 'Studenci i uczniowie',
+                  benefit: 'Twórz lepsze konspekty nauki, dopracowuj zapytania do prac badawczych i szybciej przyswajaj wiedzę dzięki trafnym instrukcjom dla modeli AI.'
                 },
                 {
-                  role: 'Marketerzy i copywriterzy',
-                  benefit: 'Optymalizacja promptów generujących teksty sprzedażowe, newslettery i kreacje w celu uzyskania spójnego tonu i zminimalizowania ryzyka halucynacji AI.'
+                  role: 'Twórcy i freelancerzy',
+                  benefit: 'Ulepszaj prompty generujące grafiki, scenariusze czy posty. Buduj unikalny styl i oszczędzaj czas przy tworzeniu kreatywnych treści.'
                 },
                 {
-                  role: 'Developerzy i zespoły AI',
-                  benefit: 'Testowanie i standaryzacja promptów systemowych (system instructions) przed wdrożeniem ich do kodu aplikacji lub chatbotów produkcyjnych.'
+                  role: 'Pracownicy biurowi i marketerzy',
+                  benefit: 'Piszesz newslettery, raporty lub analizujesz dane? Zdobądź pewność, że AI dokładnie zrozumie Twoje intencje i wygeneruje bezbłędne odpowiedzi.'
                 },
                 {
-                  role: 'Zespoły produktu i e-commerce',
-                  benefit: 'Podnoszenie kompetencji wewnętrznych zespołów poprzez proste, przejrzyste narzędzie do nauki właściwej struktury promptowania.'
+                  role: 'Założyciele i programiści',
+                  benefit: 'Optymalizuj zapytania systemowe w swoich aplikacjach i automatyzuj procesy z pełną precyzją, bez marnowania tokenów i czasu na nieudane próby.'
                 }
               ].map((user, i) => (
                 <div key={i} className="flex flex-col rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] transition-all duration-200">
@@ -460,6 +469,25 @@ export default async function HomePage() {
             <Link className="inline-flex items-center justify-center rounded-lg gradient-btn px-8 py-4 text-center text-sm font-bold text-white active:scale-95 transition-all cursor-pointer" href="/analyze">
               Sprawdź swój prompt teraz
             </Link>
+          </div>
+
+          <div className="max-w-2xl mx-auto mt-16 p-5 rounded-xl border border-[#2A2A3A] bg-[#13131A]/60 backdrop-blur-sm text-left">
+            <div className="flex gap-3.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#A78BFA]/10 text-[#A78BFA] border border-[#A78BFA]/20">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-[#E2E8F0] tracking-wide">Bezpieczeństwo i ochrona danych wrażliwych</h4>
+                <p className="text-[11px] leading-relaxed text-[#94A3B8]">
+                  PromptPolish stawia prywatność na pierwszym miejscu i działa w pełni anonimowo. Przed analizą lokalny filtr automatycznie sprawdza prompt pod kątem kluczy API, tokenów czy haseł.
+                </p>
+                <p className="text-[10px] font-bold text-[#F59E0B]">
+                  Pamiętaj: Ze względów bezpieczeństwa pod żadnym pozorem nie wklejaj do analizatora haseł, prywatnych kluczy ani tajemnic handlowych.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
       </main>
