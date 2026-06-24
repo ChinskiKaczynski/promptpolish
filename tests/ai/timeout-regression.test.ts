@@ -47,6 +47,7 @@ describe('Timeout and Abort Regression Suite', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    process.env.OPENROUTER_MODEL_ID = 'openrouter/owl-alpha'
     process.env.OPENROUTER_API_KEY = 'mock-key'
     // Fallback is disabled globally by default
     delete process.env.OPENROUTER_FALLBACK_MODEL_ID

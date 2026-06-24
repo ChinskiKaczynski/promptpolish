@@ -92,6 +92,11 @@ function getModelProfileLabel(slug: string, lang: 'pl' | 'en'): string {
   return slug
 }
 
+export function normalizeNewlines(str: string): string {
+  if (!str) return ''
+  return str.replace(/\\n/g, '\n').replace(/\r\n/g, '\n')
+}
+
 export function formatAnalysis(record: PromptAnalysisRow, format: 'markdown' | 'txt'): string {
   const lang = record.working_language === 'pl' ? 'pl' : 'en'
   const t = TRANSLATIONS[lang]
@@ -105,6 +110,7 @@ export function formatAnalysis(record: PromptAnalysisRow, format: 'markdown' | '
 
   const scoreLabel = t.scoreLevels[record.score_level] || record.score_level
   const modelProfile = getModelProfileLabel(record.selected_profile_slug, lang)
+  const improvedPrompt = normalizeNewlines(record.improved_prompt)
 
   if (format === 'markdown') {
     let md = `# ${t.title}\n\n`
@@ -128,7 +134,7 @@ export function formatAnalysis(record: PromptAnalysisRow, format: 'markdown' | '
     md += `\n`
 
     md += `## ${t.improvedPrompt}\n\n`
-    md += `\`\`\`text\n${record.improved_prompt}\n\`\`\`\n\n`
+    md += `\`\`\`text\n${improvedPrompt}\n\`\`\`\n\n`
 
     md += `## ${t.criteria}\n\n`
     analysis.criteria_scores.forEach(item => {
@@ -214,7 +220,7 @@ export function formatAnalysis(record: PromptAnalysisRow, format: 'markdown' | '
     txt += `${subSeparator}\n`
     txt += `${t.improvedPrompt.toUpperCase()}\n`
     txt += `${subSeparator}\n`
-    txt += `${record.improved_prompt}\n\n`
+    txt += `${improvedPrompt}\n\n`
 
     txt += `${subSeparator}\n`
     txt += `${t.criteria.toUpperCase()}\n`

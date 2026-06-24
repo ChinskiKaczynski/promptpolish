@@ -3,143 +3,130 @@ import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
 
 export const metadata: Metadata = {
-  title: 'Polityka Prywatności (Draft) — PromptPolish',
+  title: 'Polityka Prywatności — PromptPolish',
   robots: {
     index: false,
-    follow: false,
+    follow: true,
   },
 }
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-slate-50/30 text-slate-900 font-sans selection:bg-indigo-100 antialiased">
+    <div className="flex min-h-screen flex-col bg-[#0C0C10] text-[#E2E8F0] selection:bg-[#A78BFA]/20 antialiased font-sans">
       <AppHeader />
 
       {/* Main Content Area */}
-      <main className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+      <main className="flex-grow mx-auto max-w-3xl w-full px-6 py-12 sm:py-16">
         
-        {/* Draft Alert Notice */}
-        <div className="rounded-3xl border border-amber-200/70 bg-amber-50/20 p-5 mb-8 shadow-sm">
-          <div className="flex gap-3">
-            <span className="text-xl">⚠️</span>
-            <div>
-              <h3 className="text-sm font-bold text-amber-900 uppercase tracking-wider">Wersja Robocza / Draft Privacy Policy</h3>
-              <p className="mt-1 text-xs leading-relaxed text-amber-900 font-semibold">
-                To jest roboczy draft polityki prywatności dla platformy <strong>PromptPolish</strong>. Niniejszy dokument służy celom deweloperskim i testowym, nie stanowi oficjalnej porady prawnej i wymaga pełnego audytu prawnego przed udostępnieniem serwisu dla publicznego ruchu lub transakcji płatniczych z Unii Europejskiej (UE). Wdrożenie płatności produkcyjnych (Paid Production) jest wstrzymane do czasu ukończenia weryfikacji przez certyfikowanego radcę prawnego. Zgodność z RODO (GDPR) nie jest na tym etapie gwarantowana.
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Article Container */}
-        <article className="prose prose-slate max-w-none">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
-            Polityka Prywatności (Draft MVP)
+        <article className="max-w-none">
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#E2E8F0] sm:text-4xl font-heading">
+            Polityka Prywatności
           </h1>
-          <p className="mt-2 text-xs text-slate-400">Ostatnia aktualizacja: 4 czerwca 2026 r.</p>
+          <p className="mt-2 text-xs text-[#8290A2]">Ostatnia aktualizacja: 4 czerwca 2026 r.</p>
           
-          <div className="mt-8 space-y-8 text-sm leading-relaxed text-slate-700">
+          <div className="mt-8 space-y-8 text-sm leading-relaxed text-[#94A3B8]">
             
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">1. Ochrona Danych i Krytyczne Ostrzeżenie</h2>
+              <h2 className="text-lg font-bold text-[#E2E8F0] font-heading border-b border-[#2A2A3A] pb-2 mt-8 mb-4">1. Ochrona Danych i Bezpieczeństwo Promptów</h2>
               <p>
-                PromptPolish stawia bezpieczeństwo Twoich danych na pierwszym miejscu, działając w oparciu o model <strong>anonymous-first</strong>. W przypadku wersji bezpłatnej nie wymagamy rejestracji, zakładania kont, ani podawania adresów e-mail do przeprowadzenia analizy. W przypadku wyboru płatnego abonamentu (Pro Plan) dane konta i powiązane dane transakcyjne będą przetwarzane wyłącznie w celach realizacji subskrypcji.
+                PromptPolish stawia bezpieczeństwo Twoich danych na pierwszym miejscu, działając w oparciu o model <strong className="text-[#E2E8F0]">anonymous-first</strong>. W przypadku wersji bezpłatnej nie wymagamy rejestracji, zakładania kont, ani podawania adresów e-mail do przeprowadzenia analizy. W przypadku wyboru płatnego abonamentu (Pro Plan) dane konta i powiązane dane transakcyjne będą przetwarzane wyłącznie w celach realizacji subskrypcji.
               </p>
-              <div className="rounded-2xl border border-rose-100 bg-rose-50/20 p-4 font-semibold text-rose-950">
-                <p className="text-xs uppercase font-bold text-rose-800 mb-1">⚠️ BEZWZGLĘDNY ZAKAZ WKLEJANIA DANYCH WRAŻLIWYCH:</p>
-                <p className="text-xs leading-relaxed">
+              <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-[#F87171]">
+                <p className="text-xs uppercase font-bold text-[#F87171] mb-1">⚠️ Bezwzględny zakaz wklejania danych wrażliwych:</p>
+                <p className="text-xs leading-relaxed text-[#F87171]/90">
                   Pod żadnym pozorem nie wklejaj w polu analizy promptów haseł, kluczy API (np. tokenów dostępowych, kluczy OpenAI/Google), poufnych danych finansowych, danych osobowych swoich klientów ani tajemnic przedsiębiorstwa. Narzędzie uruchamia automatyczne lokalne filtry bezpieczeństwa (preflight), ale nie zastępują one zdrowego rozsądku i ostrożności użytkownika.
                 </p>
               </div>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">2. Sesja Anonimowa i Pliki Cookie</h2>
+              <h2 className="text-lg font-bold text-[#E2E8F0] font-heading border-b border-[#2A2A3A] pb-2 mt-8 mb-4">2. Sesja Anonimowa i Pliki Cookie</h2>
               <p>
-                W celach autoryzacyjnych i w celu zachowania własności nad audytami bez logowania, system generuje identyfikator sesji zapisywany w pliku cookie o nazwie <code>owner_anonymous_id</code> (atrybuty HttpOnly, Secure, SameSite=Strict).
+                W celach autoryzacyjnych i w celu zachowania własności nad audytami bez logowania, system generuje identyfikator sesji zapisywany w pliku cookie o nazwie <code className="text-[#A78BFA] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">owner_anonymous_id</code> (atrybuty HttpOnly, Secure, SameSite=Strict).
               </p>
               <p>
-                Identyfikator ten jest powiązany z wygenerowanymi przez Ciebie raportami przez okres <strong>30 dni</strong>.
+                Identyfikator ten jest powiązany z wygenerowanymi przez Ciebie raportami przez okres <strong className="text-[#E2E8F0]">30 dni</strong>.
               </p>
-              <p className="font-semibold text-slate-900">
-                Ważne: Wyszyszczenie plików cookie lub pamięci podręcznej w przeglądarce spowoduje bezpowrotną utratę dostępu do wygenerowanych wcześniej prywatnych linków typu <code>/result/[id]</code>. Serwer nie będzie w stanie zweryfikować Twoich uprawnień do odczytu lub edycji tych raportów.
+              <p className="font-semibold text-[#E2E8F0]">
+                Ważne: Wyszyszczenie plików cookie lub pamięci podręcznej w przeglądarce spowoduje bezpowrotną utratę dostępu do wygenerowanych wcześniej prywatnych linków typu <code className="text-[#A78BFA] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">/result/[id]</code>. Serwer nie będzie w stanie zweryfikować Twoich uprawnień do odczytu lub edycji tych raportów.
               </p>
-              <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-4 text-xs font-semibold">
-                <p className="font-bold text-indigo-950 uppercase mb-1">Informacja dotycząca plików cookie (ePrivacy Note):</p>
-                <p className="leading-relaxed text-indigo-900">
-                  Bieżące założenie: używane są wyłącznie pliki cookie ściśle niezbędne. Wymogi dotyczące zgody na pliki cookie muszą zostać zweryfikowane przed publicznym uruchomieniem, w szczególności jeśli dodane zostaną zewnętrzne narzędzia analityczne lub marketingowe.
+              <div className="rounded-xl border border-[#A78BFA]/20 bg-[#A78BFA]/5 p-4 text-xs font-semibold text-[#94A3B8]">
+                <p className="font-bold text-[#E2E8F0] uppercase mb-1">Informacja dotycząca plików cookie:</p>
+                <p className="leading-relaxed">
+                  Serwis wykorzystuje pliki cookie wyłącznie w celu zapewnienia prawidłowego działania funkcji technicznych (pliki niezbędne). Nie stosujemy plików cookie do śledzenia użytkowników ani w celach marketingowych.
                 </p>
               </div>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">3. Konta Użytkowników i Zbierane Dane</h2>
+              <h2 className="text-lg font-bold text-[#E2E8F0] font-heading border-b border-[#2A2A3A] pb-2 mt-8 mb-4">3. Konta Użytkowników i Zbierane Dane</h2>
               <p>
                 Po zalogowaniu się do serwisu (opcjonalna rejestracja), zbieramy i przetwarzamy następujące dane:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-600 font-semibold">
-                <li><strong>Dane konta:</strong> Adres e-mail, identyfikator użytkownika oraz nazwa wyświetlana.</li>
-                <li><strong>Historia promptów:</strong> Treści przesyłanych zapytań tekstowych oraz wygenerowane ulepszenia (optymalizacje), oceny i diagnozy, aby umożliwić synchronizację i ponowny dostęp do zapytań na różnych urządzeniach.</li>
-                <li><strong>Metadane płatności Stripe:</strong> Kiedy subskrypcje i bramka płatnicza zostaną włączone, przetwarzane będą metadane płatnicze (np. status subskrypcji, identyfikator klienta Stripe). Dane te są synchronizowane tylko wtedy, gdy billing jest aktywny w systemie.</li>
+              <ul className="list-disc pl-5 space-y-2 text-sm text-[#94A3B8]">
+                <li><strong className="text-[#E2E8F0]">Dane konta:</strong> Adres e-mail, identyfikator użytkownika oraz nazwa wyświetlana.</li>
+                <li><strong className="text-[#E2E8F0]">Historia promptów:</strong> Treści przesyłanych zapytań tekstowych oraz wygenerowane ulepszenia (optymalizacje), oceny i diagnozy, aby umożliwić synchronizację i ponowny dostęp do zapytań na różnych urządzeniach.</li>
+                <li><strong className="text-[#E2E8F0]">Metadane płatności Stripe:</strong> W przypadku korzystania z planów płatnych przetwarzane są podstawowe metadane płatnicze (np. status subskrypcji, identyfikator klienta Stripe) służące do zarządzania statusem konta.</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">4. Zewnętrzni Dostawcy i Podmioty Przetwarzające (Sub-processors)</h2>
+              <h2 className="text-lg font-bold text-[#E2E8F0] font-heading border-b border-[#2A2A3A] pb-2 mt-8 mb-4">4. Zewnętrzni Dostawcy i Podmioty Przetwarzające</h2>
               <p>
-                W celu dostarczania usług, PromptPolish planuje współpracować z poniższymi podmiotami. Przesyłanie danych do tych dostawców ma status <strong>&quot;do zweryfikowania przed wdrożeniem produkcyjnym&quot;</strong> i wymaga formalnego zawarcia umów powierzenia przetwarzania (DPA):
+                W celu prawidłowego świadczenia usług, PromptPolish współpracuje z zaufanymi dostawcami zewnętrznymi. Przekazywanie danych odbywa się na podstawie umów powierzenia przetwarzania danych osobowych (DPA) lub innych standardowych klauzul umownych zgodnych z RODO:
               </p>
-              <ul className="list-disc pl-5 space-y-2 text-xs text-slate-600 font-semibold">
+              <ul className="list-disc pl-5 space-y-2 text-sm text-[#94A3B8]">
                 <li>
-                  <strong>Supabase, Inc. (Baza danych)</strong>: Odpowiada za przechowywanie rejestrów sesji, historii promptów oraz danych kont użytkowników. Baza danych oraz kopie zapasowe podlegają weryfikacji pod kątem fizycznej lokalizacji serwerów i ograniczenia ich do obszaru EOG (EEA).
+                  <strong className="text-[#E2E8F0]">Supabase, Inc. (Baza danych)</strong>: Odpowiada za bezpieczne przechowywanie danych sesji, historii analiz oraz danych kont użytkowników.
                 </li>
                 <li>
-                  <strong>Vercel Inc. (Hosting i Telemetria)</strong>: Odpowiada za hosting interfejsu, routing oraz bezserwerowe funkcje API. Regiony przetwarzania żądań podlegają weryfikacji i konfiguracji przed startem komercyjnym.
+                  <strong className="text-[#E2E8F0]">Vercel Inc. (Hosting i infrastruktura sieciowa)</strong>: Odpowiada za hosting aplikacji, routing oraz funkcje bezserwerowe API.
                 </li>
                 <li>
-                  <strong>Stripe, Inc. (Procesowanie płatności)</strong>: Odpowiada za obsługę Checkout, transakcje oraz cykl życia subskrypcji. Serwis nie przechowuje ani nie ma dostępu do pełnych numerów kart płatniczych. Retencja faktur podlega regulacjom podatkowym.
+                  <strong className="text-[#E2E8F0]">Stripe, Inc. (Obsługa płatności)</strong>: Odpowiada za bezpieczne procesowanie transakcji płatniczych oraz obsługę subskrypcji. Serwis nie przechowuje ani nie ma wglądu w dane kart płatniczych użytkowników.
                 </li>
                 <li>
-                  <strong>OpenRouter / skonfigurowany dostawca modelu AI (Silnik AI)</strong>: Odpowiada za generowanie audytów i optymalizację promptów. Zasady zapisu logów, polityki braku trenowania modeli oraz data residency u dostawców modeli AI stanowią przedmiot weryfikacji umów handlowych (status: warunki do weryfikacji).
+                  <strong className="text-[#E2E8F0]">OpenRouter (Silnik AI / Analiza promptów)</strong>: Pośredniczy w przesyłaniu treści promptów do wybranego modelu językowego (LLM) w celu przeprowadzenia audytu i optymalizacji. Zapytania są przetwarzane z poszanowaniem zasad poufności i nie są wykorzystywane do trenowania modeli publicznych.
                 </li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">5. Retencja Danych (Okres Przechowywania)</h2>
+              <h2 className="text-lg font-bold text-[#E2E8F0] font-heading border-b border-[#2A2A3A] pb-2 mt-8 mb-4">5. Retencja Danych (Okres Przechowywania)</h2>
               <p>
-                Harmonogram retencji danych stanowi odzwierciedlenie <strong>bieżącego założenia technicznego (engineering intent)</strong>, a nie ostateczną prawną certyfikację zgodności:
+                Dbamy o zasadę minimalizacji danych. Poszczególne kategorie danych są przechowywane wyłącznie przez czas niezbędny do realizacji celów świadczenia usługi:
               </p>
               
-              <div className="overflow-x-auto my-4 rounded-2xl border border-slate-200 bg-white">
-                <table className="min-w-full divide-y divide-slate-200 text-xs">
+              <div className="overflow-x-auto my-4 rounded-xl border border-[#2A2A3A] bg-[#13131A] shadow-lg">
+                <table className="min-w-full divide-y divide-[#2A2A3A] text-xs">
                   <thead>
-                    <tr className="bg-slate-50 text-left font-semibold text-slate-700">
+                    <tr className="bg-[#1C1C27] text-left font-bold text-[#E2E8F0]">
                       <th className="px-4 py-3">Typ Danych</th>
                       <th className="px-4 py-3">Okres Przechowywania</th>
-                      <th className="px-4 py-3">Opis i Uzasadnienie techniczne</th>
+                      <th className="px-4 py-3">Cel i opis techniczny</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 bg-white text-slate-600 font-semibold">
-                    <tr>
-                      <td className="px-4 py-3 font-bold text-slate-800">Anonimowe analizy promptów</td>
-                      <td className="px-4 py-3 text-indigo-600 font-bold">30 Dni</td>
-                      <td className="px-4 py-3">Automatycznie usuwane z bazy danych Supabase po 30 dniach od ich utworzenia.</td>
+                  <tbody className="divide-y divide-[#2A2A3A] text-[#94A3B8]">
+                    <tr className="hover:bg-[#1C1C27]/50 transition-colors">
+                      <td className="px-4 py-3 font-bold text-[#E2E8F0]">Anonimowe analizy promptów</td>
+                      <td className="px-4 py-3 text-[#A78BFA] font-bold">30 Dni</td>
+                      <td className="px-4 py-3">Automatycznie i trwale usuwane z bazy danych po upływie 30 dni od ich utworzenia.</td>
                     </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-bold text-slate-800">Zgromadzone logi i telemetria</td>
-                      <td className="px-4 py-3 text-indigo-600 font-bold">90 Dni</td>
-                      <td className="px-4 py-3">Używane do analizy błędów i zabezpieczania aplikacji.</td>
+                    <tr className="hover:bg-[#1C1C27]/50 transition-colors">
+                      <td className="px-4 py-3 font-bold text-[#E2E8F0]">Logi serwerowe i telemetria</td>
+                      <td className="px-4 py-3 text-[#A78BFA] font-bold">90 Dni</td>
+                      <td className="px-4 py-3">Używane do diagnozowania błędów systemowych oraz ochrony przed nadużyciami.</td>
                     </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-bold text-slate-800">Opinie i głosy (Upvote/Downvote)</td>
-                      <td className="px-4 py-3 text-indigo-600 font-bold">180 Dni</td>
-                      <td className="px-4 py-3">Zbierane w celach analizy jakości ocen audytora promptów.</td>
+                    <tr className="hover:bg-[#1C1C27]/50 transition-colors">
+                      <td className="px-4 py-3 font-bold text-[#E2E8F0]">Oceny i opinie (Upvote/Downvote)</td>
+                      <td className="px-4 py-3 text-[#A78BFA] font-bold">180 Dni</td>
+                      <td className="px-4 py-3">Przechowywane w celu poprawy algorytmu ulepszania promptów.</td>
                     </tr>
-                    <tr>
-                      <td className="px-4 py-3 font-bold text-slate-800">Subskrypcje i Faktury Stripe</td>
-                      <td className="px-4 py-3 text-amber-600 font-bold">Zgodnie z przepisami</td>
-                      <td className="px-4 py-3">Przechowywane po stronie Stripe przez 5-7 lat zgodnie z przepisami podatkowymi (tylko w przypadku płatności).</td>
+                    <tr className="hover:bg-[#1C1C27]/50 transition-colors">
+                      <td className="px-4 py-3 font-bold text-[#E2E8F0]">Dane subskrypcyjne Stripe</td>
+                      <td className="px-4 py-3 text-[#6EE7B7] font-bold">Zgodnie z przepisami</td>
+                      <td className="px-4 py-3">Dane transakcyjne i faktury są przechowywane przez 5-7 lat zgodnie z wymogami przepisów podatkowo-rachunkowych.</td>
                     </tr>
                   </tbody>
                 </table>
@@ -147,51 +134,51 @@ export default function PrivacyPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">6. Udostępnianie Wyników i Generowane Pliki</h2>
+              <h2 className="text-lg font-bold text-[#E2E8F0] font-heading border-b border-[#2A2A3A] pb-2 mt-8 mb-4">6. Udostępnianie Wyników i Generowane Pliki</h2>
               <p>
                 Wszystkie analizy są domyślnie prywatne. Funkcje udostępniania i eksportu podlegają następującym zasadom:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-600 font-semibold">
-                <li><strong>Publiczne linki (Share Links):</strong> Użytkownik może dobrowolnie wygenerować publiczny link `/share/[token]`. Wygenerowane w ten sposób publiczne analizy są <strong>wyłączone z automatycznej 30-dniowej procedury usuwania</strong>, aby uniknąć niedziałających linków u osób trzecich. Pozostają aktywne w bazie danych, dopóki użytkownik ręcznie nie wyłączy udostępniania lub nie usunie danej analizy.</li>
-                <li><strong>Eksport plików (PDF/Markdown):</strong> Generowane pliki eksportu (PDF oraz pliki Markdown) są kompilowane w pamięci na żądanie i przesyłane bezpośrednio do przeglądarki użytkownika. Nie są trwale składowane w bazie ani w magazynach plików (object storage).</li>
+              <ul className="list-disc pl-5 space-y-2 text-sm text-[#94A3B8]">
+                <li><strong className="text-[#E2E8F0]">Publiczne linki (Share Links):</strong> Użytkownik może dobrowolnie wygenerować publiczny link w formacie <code className="text-[#A78BFA] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">/share/[token]</code>. Wygenerowane w ten sposób publiczne analizy są wyłączone z automatycznej 30-dniowej procedury usuwania w celu zapobiegania uszkodzonym odnośnikom. Pozostają one aktywne do momentu wyłączenia udostępniania lub usunięcia analizy przez jej twórcę.</li>
+                <li><strong className="text-[#E2E8F0]">Eksport plików (PDF/Markdown):</strong> Generowane pliki eksportu (PDF oraz Markdown) są tworzone w pamięci urządzenia użytkownika i nie są trwale przechowywane w systemowych magazynach plików.</li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">7. Prawa Użytkownika i Procedura Usuwania (RODO/GDPR Art. 17)</h2>
+              <h2 className="text-lg font-bold text-[#E2E8F0] font-heading border-b border-[#2A2A3A] pb-2 mt-8 mb-4">7. Prawa Użytkownika i Procedura Usuwania (RODO/GDPR Art. 17)</h2>
               <p>
-                Użytkownicy posiadają prawo dostępu do swoich danych, ich poprawiania oraz żądania ich usunięcia:
+                Każdemu użytkownikowi przysługuje prawo do dostępu do swoich danych, ich sprostowania, przenoszenia, ograniczenia przetwarzania oraz żądania ich trwałego usunięcia:
               </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-600 font-semibold">
+              <ul className="list-disc pl-5 space-y-2 text-sm text-[#94A3B8]">
                 <li>
-                  <strong>Dla Użytkowników Anonimowych:</strong> Możesz usunąć lokalne ciasteczka w przeglądarce, co natychmiast zerwie połączenie z Twoimi danymi. Rekordy w bazie danych zostaną automatycznie wyczyszczone zgodnie z 30-dniowym cyklem retencji.
+                  <strong className="text-[#E2E8F0]">Dla użytkowników anonimowych:</strong> Możesz usunąć pliki cookie w przeglądarce, co natychmiastowo zerwie powiązanie z Twoją sesją. Dane przypisane do identyfikatora sesji zostaną usunięte zgodnie z cyklem retencji.
                 </li>
                 <li>
-                  <strong>Dla Użytkowników Zalogowanych:</strong> Usunięcie konta w panelu ustawień aplikacji powoduje natychmiastowe wysłanie żądań anulowania subskrypcji do Stripe oraz kaskadowe usunięcie profilu, historii zapytań oraz powiązanych danych z bazy Supabase.
+                  <strong className="text-[#E2E8F0]">Dla użytkowników zalogowanych:</strong> Usunięcie konta w panelu ustawień aplikacji skutkuje natychmiastowym anulowaniem aktywnej subskrypcji w Stripe oraz całkowitym usunięciem profilu i powiązanej z nim historii z bazy danych.
                 </li>
                 <li>
-                  <strong>Wnioski ręczne:</strong> Pytania o zakres przetwarzanych danych lub wnioski o ich usunięcie można kierować na adres: <a href="mailto:kontakt@promptpolish.pl" className="text-indigo-600 underline">kontakt@promptpolish.pl</a>. Wniosek zostanie zweryfikowany pod kątem własności sesji i obsłużony w ustawowym terminie.
+                  <strong className="text-[#E2E8F0]">Wnioski e-mail:</strong> Pytania dotyczące przetwarzania danych oraz wnioski o ich ręczne usunięcie można kierować na adres: <a href="mailto:kontakt@promptpolish.pl" className="text-[#A78BFA] hover:text-[#C4B5FD] transition-colors underline">kontakt@promptpolish.pl</a>.
                 </li>
               </ul>
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-bold text-slate-900">8. Telemetria i Bezpieczeństwo IP</h2>
+              <h2 className="text-lg font-bold text-[#E2E8F0] font-heading border-b border-[#2A2A3A] pb-2 mt-8 mb-4">8. Bezpieczeństwo i Ochrona Adresów IP</h2>
               <p>
-                Adresy IP użytkowników są wykorzystywane do celów obronnych (rate limiting, ochrona przed atakami DDoS). W tym celu na serwerze adresy IP są natychmiast solone i hashowane w pamięci operacyjnej przed zapisaniem do bazy. Klucz szyfrujący (sól) ulega rotacji co <strong>24 godziny</strong>, co uniemożliwia trwałą rekonstrukcję lub śledzenie historycznych adresów IP.
+                Adresy IP użytkowników są wykorzystywane wyłącznie w celach bezpieczeństwa (np. zapobieganie nadużyciom, ataki DDoS, rate limiting). Zgodnie z zasadą prywatności, adresy IP są natychmiast hashowane w pamięci operacyjnej z użyciem kryptograficznej soli przed zapisaniem do bazy danych. Sól ulega automatycznej rotacji co <strong className="text-[#E2E8F0]">24 godziny</strong>, co uniemożliwia trwałe śledzenie lub rekonstrukcję adresu IP.
               </p>
             </section>
 
-            <section className="space-y-3 border-t border-slate-200 pt-6">
-              <h2 className="text-base font-bold text-slate-900">9. Kontakt w Sprawach Prywatności</h2>
-              <p className="text-xs">
-                Wszelkie zapytania dotyczące ochrony danych osobowych prosimy kierować na poniższe dane kontaktowe:
+            <section className="space-y-3 border-t border-[#2A2A3A] pt-6">
+              <h2 className="text-lg font-bold text-[#E2E8F0] font-heading mb-3">9. Kontakt w Sprawach Prywatności</h2>
+              <p className="text-sm leading-relaxed text-[#94A3B8]">
+                Wszelkie pytania i wnioski dotyczące przetwarzania danych osobowych oraz realizacji przysługujących praw prosimy kierować na poniższe adresy:
               </p>
-              <ul className="list-none space-y-1 text-xs text-slate-600 font-semibold">
-                <li><strong>Koordynator ds. prywatności:</strong> <a href="mailto:kontakt@promptpolish.pl" className="text-indigo-600 underline">kontakt@promptpolish.pl</a></li>
-                <li><strong>E-mail wsparcia:</strong> <a href="mailto:kontakt@promptpolish.pl" className="text-indigo-600 underline">kontakt@promptpolish.pl</a></li>
-                <li><strong>Nazwa podmiotu:</strong> <code>[LEGAL ENTITY NAME TBD]</code></li>
-                <li><strong>Adres rejestrowy:</strong> <code>[REGISTERED BUSINESS ADDRESS TBD]</code></li>
+              <ul className="list-none space-y-2 text-sm text-[#94A3B8]">
+                <li><strong className="text-[#E2E8F0]">E-mail wsparcia i prywatności:</strong> <a href="mailto:kontakt@promptpolish.pl" className="text-[#A78BFA] hover:text-[#C4B5FD] transition-colors underline">kontakt@promptpolish.pl</a></li>
+                <li><strong className="text-[#E2E8F0]">Nazwa podmiotu (Administrator):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[Nazwa firmy do uzupełnienia]</code></li>
+                <li><strong className="text-[#E2E8F0]">Adres rejestrowy:</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[Adres rejestrowy do uzupełnienia]</code></li>
+                <li><strong className="text-[#E2E8F0]">Dane rejestrowe (NIP/KRS/REGON):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[NIP/KRS/REGON do uzupełnienia]</code></li>
               </ul>
             </section>
 

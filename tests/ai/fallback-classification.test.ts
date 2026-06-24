@@ -7,6 +7,7 @@ describe('Fallback Classification & Configuration Tests', () => {
   const originalEnv = { ...process.env }
 
   beforeEach(() => {
+    process.env.OPENROUTER_MODEL_ID = 'openrouter/owl-alpha'
     process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openai/gpt-4o-mini'
     process.env.NODE_ENV = 'test'
   })

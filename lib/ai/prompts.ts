@@ -52,6 +52,7 @@ Core Operation Rules:
     - Mark assumed details as placeholders and do not present assumed details as facts.
     - Use placeholders instead (written in the target working language). Examples: [product name] (EN) / [nazwa produktu] (PL), [target audience] (EN) / [grupa docelowa] (PL), [location] (EN) / [lokalizacja] (PL), [primary benefit] (EN) / [główna korzyść] (PL), [brand voice] (EN) / [głos marki] (PL).
     - Ensure that the user's original intent is preserved and that the prompt remains copy-ready.
+16. FORMATTING CONTRACT: The improved prompt (\`improved_prompt\` field in the JSON response) must preserve paragraph structure, line breaks, lists, and spacing. Use clear headings, bullet points, and newlines to make it readable and structured. Do not flatten it into a single line or a wall of text. Use paragraph breaks (double newlines), list formatting (bullet points \`-\` or numbered lists \`1.\`), clear spacing, and line breaks where appropriate. When the input prompt has structure or when improving its structure, represent this clearly using standard whitespace formatting (newlines \`\\n\`).
 
 ${requiredCriteriaInstruction}
 `
@@ -132,7 +133,7 @@ ${requiredCriteriaList}
 - For "model_profile_fit", evaluate compatibility strictly against the [MODEL PROFILE DATA] provided above. Do not reference external benchmarks or claim knowledge of pricing or context windows not listed in the profile.
 - Redact or avoid echoing any sensitive credentials or secrets found in the input prompt.
 - Retain the original intent and core objectives of the input prompt.
-- Make the improved prompt highly professional, clearly structured, and optimized for the target model profile without being overly verbose.
+- Make the improved prompt highly professional, clearly structured, and optimized for the target model profile without being overly verbose. Ensure that the improved prompt (\`improved_prompt\`) preserves paragraph structure, line breaks, lists, and spacing, using newlines (\`\\n\`) for structure.
 - Do not include Markdown code fences around the JSON output.${longPromptInstruction}
 `
 }

@@ -17,6 +17,7 @@ import {
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { SemanticValidationError } from '@/lib/ai/semantic-validation'
 import { ProviderError } from '@/lib/ai/provider-errors'
+import { normalizeNewlines } from '@/lib/export/format-analysis'
 import { recordProviderError } from '@/lib/monitoring/observability'
 import { serverEnv, checkProductionEnv } from '@/lib/env/server'
 import { hashValue, getClientIp } from '@/lib/rate-limit/hash-ip'
@@ -433,6 +434,10 @@ export async function POST(request: Request) {
     if (!analysisResult.analysis.improved_prompt || analysisResult.analysis.improved_prompt.length > 50000) {
       throw new Error('MALFORMED_OUTPUT: Improved prompt is empty or exceeds limits.')
     }
+
+    // Normalize newlines in the generated improved prompt
+    const normalizedImprovedPrompt = normalizeNewlines(analysisResult.analysis.improved_prompt)
+    analysisResult.analysis.improved_prompt = normalizedImprovedPrompt
 
     // 13. Save prompt_analyses record to database
     const createdRecord = await createPromptAnalysis({

@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf'
 import type { PromptAnalysisRow } from '@/lib/supabase/types'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 import { NOTO_SANS_REGULAR_BASE64 } from './fonts/noto-sans-regular'
+import { normalizeNewlines } from './format-analysis'
 
 const TRANSLATIONS = {
   pl: {
@@ -257,7 +258,8 @@ export function generatePdf(record: PromptAnalysisRow): Uint8Array {
   doc.text(t.improvedPrompt, margin, currentY)
   currentY += 7
 
-  const promptLines = record.improved_prompt.split('\n')
+  const improvedPrompt = normalizeNewlines(record.improved_prompt)
+  const promptLines = improvedPrompt.split('\n')
   doc.setFont('NotoSans', 'normal')
   doc.setFontSize(9.5)
   doc.setTextColor(15, 23, 42)

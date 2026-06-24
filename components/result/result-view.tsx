@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 import { mvpModelProfiles } from '@/lib/ai/model-profiles'
+import { normalizeNewlines } from '@/lib/export/format-analysis'
 import nextDynamic from 'next/dynamic'
 
 const CopyButton = nextDynamic(() => import('./copy-button').then((mod) => mod.CopyButton))
@@ -92,7 +93,8 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
   }, [])
 
   const scoreMeta = scoreLevelTranslations[result.scoreLevel] || scoreLevelTranslations.decent
-  const promptLines = result.improved_prompt.split('\n')
+  const normalizedImprovedPrompt = normalizeNewlines(result.improved_prompt)
+  const promptLines = normalizedImprovedPrompt.split('\n')
 
   // Score SVG math
   const radius = 42
@@ -119,10 +121,10 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             <ExportActions
               analysisId={result.id}
               planSlug={planSlug}
-              improvedPrompt={result.improved_prompt}
+              improvedPrompt={normalizedImprovedPrompt}
             />
           ) : (
-            <CopyButton text={result.improved_prompt} analysisId={result.id} variant="primary" />
+            <CopyButton text={normalizedImprovedPrompt} analysisId={result.id} variant="primary" />
           )}
         </div>
       </div>
@@ -420,7 +422,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             </span>
           </div>
 
-          <CopyButton text={result.improved_prompt} analysisId={result.id} variant="secondary" />
+          <CopyButton text={normalizedImprovedPrompt} analysisId={result.id} variant="secondary" />
         </div>
 
         {/* Editor Code Area */}
