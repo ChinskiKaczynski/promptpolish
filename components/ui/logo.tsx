@@ -90,8 +90,8 @@ export function LogoIcon({ className = 'h-6 w-6' }: LogoMarkProps) {
 
 interface LogoProps {
   className?: string
-  iconSize?: 'sm' | 'md' | 'lg'
-  textSize?: 'sm' | 'md' | 'lg'
+  iconSize?: 'sm' | 'md' | 'lg' | 'navbar'
+  textSize?: 'sm' | 'md' | 'lg' | 'navbar'
 }
 
 export function Logo({ className = '', iconSize = 'md', textSize = 'md' }: LogoProps) {
@@ -113,6 +113,12 @@ export function Logo({ className = '', iconSize = 'md', textSize = 'md' }: LogoP
       badge: 'h-12 w-12 rounded-2xl bg-violet-500/15 border border-violet-400/40 shadow-[0_0_24px_rgba(139,92,246,0.30)]',
       icon: 'h-[28px] w-[28px]',
       text: 'text-lg font-bold text-white tracking-[-0.02em]'
+    },
+    navbar: {
+      container: 'flex items-center gap-3 md:gap-[14px] group w-full md:min-w-[240px]',
+      badge: 'h-11 w-11 md:h-[56px] md:w-[56px] rounded-xl md:rounded-2xl bg-violet-500/15 border border-violet-400/35 md:border-violet-400/40 shadow-[0_0_18px_rgba(139,92,246,0.22)] md:shadow-[0_0_30px_rgba(139,92,246,0.32)]',
+      icon: 'h-[26px] w-[26px] md:h-[34px] md:w-[34px]',
+      text: 'text-[17px] md:text-[22px] font-bold text-white tracking-[-0.02em] md:tracking-[-0.03em]'
     }
   }
 
@@ -125,7 +131,7 @@ export function Logo({ className = '', iconSize = 'md', textSize = 'md' }: LogoP
       <div className={`flex items-center justify-center transition-all duration-300 group-hover:border-violet-400/50 group-hover:shadow-[0_0_22px_rgba(139,92,246,0.35)] backdrop-blur-md ${currentIcon.badge}`}>
         <LogoMark className={`${currentIcon.icon} transition-transform duration-300 group-hover:scale-105`} />
       </div>
-      <span className={`tracking-tight text-white group-hover:text-slate-100 transition-colors duration-150 font-heading ${currentText.text}`}>
+      <span className={`text-white group-hover:text-slate-100 transition-colors duration-150 font-heading ${currentText.text}`}>
         PromptPolish
       </span>
     </div>

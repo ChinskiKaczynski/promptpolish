@@ -47,11 +47,11 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
   const isLinkActive = (path: string) => pathname === path
 
   return (
-    <header className={`border-b sticky top-0 z-50 backdrop-blur-xl transition-all duration-200 ${bgStyle}`}>
-      <div className="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
+    <header className={`border-b sticky top-0 z-50 backdrop-blur-xl transition-all duration-200 h-[64px] md:h-[80px] flex items-center ${bgStyle}`}>
+      <div className="w-full max-w-6xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <Link href="/">
-          <Logo iconSize="md" textSize="md" />
+          <Logo iconSize="navbar" textSize="navbar" />
         </Link>
 
         {/* Desktop Navigation Links */}
@@ -128,7 +128,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                   </Link>
                   <Link
                     href="/analyze"
-                    className="inline-flex items-center justify-center rounded-lg gradient-btn px-4 py-2 text-xs font-bold text-white transition active:scale-95 cursor-pointer shadow-[0_2px_10px_rgba(124,58,237,0.25)] hover:shadow-[0_4px_16px_rgba(124,58,237,0.4)]"
+                    className="inline-flex items-center justify-center rounded-lg gradient-btn px-4 py-2 text-xs font-bold text-white transition active:scale-95 cursor-pointer shadow-[0_1px_4px_rgba(124,58,237,0.12)] hover:shadow-[0_2px_8px_rgba(124,58,237,0.20)]"
                   >
                     Zacznij za darmo
                   </Link>
@@ -253,7 +253,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                   <Link
                     href="/analyze"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="w-full text-center inline-flex items-center justify-center rounded-lg gradient-btn px-4 py-2 text-xs font-bold text-white transition active:scale-95 cursor-pointer mt-2 shadow-[0_2px_10px_rgba(124,58,237,0.25)]"
+                    className="w-full text-center inline-flex items-center justify-center rounded-lg gradient-btn px-4 py-2 text-xs font-bold text-white transition active:scale-95 cursor-pointer mt-2 shadow-[0_1px_4px_rgba(124,58,237,0.12)]"
                   >
                     Zacznij za darmo
                   </Link>
