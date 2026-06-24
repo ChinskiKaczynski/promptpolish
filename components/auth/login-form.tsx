@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabaseClient } from '@/lib/supabase/client'
+import { LogoIcon } from '@/components/ui/logo'
 
 export function LoginForm() {
   const router = useRouter()
@@ -70,9 +71,8 @@ export function LoginForm() {
     <div className="w-full max-w-md rounded-xl border border-[#2A2A3A] bg-[#13131A] p-8">
       <div className="text-center">
         <div className="flex justify-center mb-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1C1C27] border border-[#3A3A52] overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-icon.png" alt="PromptPolish Logo" className="h-8 w-8 object-contain" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#7C3AED]/10 border border-[#A78BFA]/20 shadow-[0_0_15px_rgba(167,139,250,0.2)]">
+            <LogoIcon className="h-8 w-8" />
           </div>
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-[#E2E8F0] font-heading">

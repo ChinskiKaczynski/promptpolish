@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { LogoIcon } from '@/components/ui/logo'
 
 interface AppHeaderClientProps {
   theme: 'light' | 'dark'
@@ -50,11 +51,10 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
       <div className="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1C1C27] border border-[#3A3A52] hover:border-[#A78BFA]/50 transition-colors overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-icon.png" alt="PromptPolish Logo" className="h-5.5 w-5.5 object-contain" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#7C3AED]/10 border border-[#A78BFA]/20 group-hover:border-[#A78BFA]/50 transition-all duration-200 shadow-[0_0_12px_rgba(167,139,250,0.15)] backdrop-blur-md">
+            <LogoIcon className="h-6 w-6" />
           </div>
-          <span className="text-base font-bold tracking-tight text-[#E2E8F0] font-heading">
+          <span className="text-base font-bold tracking-tight text-[#E2E8F0] group-hover:text-white transition-colors duration-150 font-heading">
             PromptPolish
           </span>
         </Link>

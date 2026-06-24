@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
+import { LogoIcon } from '@/components/ui/logo'
 
 export default async function HomePage() {
   return (
@@ -109,9 +110,8 @@ export default async function HomePage() {
                     <div>
                       {/* Star brand logo */}
                       <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded bg-[#1C1C27] border border-[#2A2A3A] overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src="/logo-icon.png" alt="PromptPolish Logo" className="h-4 w-4 object-contain" />
+                        <div className="flex h-6 w-6 items-center justify-center rounded bg-[#7C3AED]/10 border border-[#A78BFA]/20">
+                          <LogoIcon className="h-4 w-4" />
                         </div>
                         <span className="text-xs font-bold text-[#E2E8F0] tracking-tight font-sans">PromptPolish</span>
                       </div>

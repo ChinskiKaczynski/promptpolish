@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LogoIcon } from '@/components/ui/logo'
 
 // Evaluated at build time — avoids SSR/client hydration mismatch on the copyright year.
 const CURRENT_YEAR = new Date().getFullYear()
@@ -14,9 +15,8 @@ export function AppFooter({ theme }: AppFooterProps = {}) {
     <footer className="border-t border-[#2A2A3A] bg-[#0C0C10] py-10 px-6 mt-auto">
       <div className="mx-auto max-w-6xl flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-6 w-6 items-center justify-center rounded bg-[#1C1C27] border border-[#2A2A3A] overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-icon.png" alt="PromptPolish Logo" className="h-4 w-4 object-contain" />
+          <div className="flex h-7 w-7 items-center justify-center rounded bg-[#7C3AED]/10 border border-[#A78BFA]/20">
+            <LogoIcon className="h-4.5 w-4.5" />
           </div>
           <span className="text-sm font-bold text-[#E2E8F0] font-heading">PromptPolish</span>
         </div>
