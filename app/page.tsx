@@ -109,10 +109,9 @@ export default async function HomePage() {
                     <div>
                       {/* Star brand logo */}
                       <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded bg-[#1C1C27] border border-[#2A2A3A]">
-                          <svg className="h-4 w-4 fill-[#A78BFA]" viewBox="0 0 24 24">
-                            <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z" />
-                          </svg>
+                        <div className="flex h-6 w-6 items-center justify-center rounded bg-[#1C1C27] border border-[#2A2A3A] overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src="/logo-icon.png" alt="PromptPolish Logo" className="h-4 w-4 object-contain" />
                         </div>
                         <span className="text-xs font-bold text-[#E2E8F0] tracking-tight font-sans">PromptPolish</span>
                       </div>

@@ -69,6 +69,12 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-md rounded-xl border border-[#2A2A3A] bg-[#13131A] p-8">
       <div className="text-center">
+        <div className="flex justify-center mb-6">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1C1C27] border border-[#3A3A52] overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-icon.png" alt="PromptPolish Logo" className="h-8 w-8 object-contain" />
+          </div>
+        </div>
         <h1 className="text-2xl font-bold tracking-tight text-[#E2E8F0] font-heading">
           {isSignUp ? 'Utwórz bezpłatne konto' : 'Zaloguj się do PromptPolish'}
         </h1>

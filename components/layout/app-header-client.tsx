@@ -50,10 +50,9 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
       <div className="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1C1C27] border border-[#3A3A52] hover:border-[#A78BFA]/50 transition-colors">
-            <svg className="h-5 w-5 fill-[#A78BFA]" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z" />
-            </svg>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1C1C27] border border-[#3A3A52] hover:border-[#A78BFA]/50 transition-colors overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-icon.png" alt="PromptPolish Logo" className="h-5.5 w-5.5 object-contain" />
           </div>
           <span className="text-base font-bold tracking-tight text-[#E2E8F0] font-heading">
             PromptPolish

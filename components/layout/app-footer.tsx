@@ -14,10 +14,9 @@ export function AppFooter({ theme }: AppFooterProps = {}) {
     <footer className="border-t border-[#2A2A3A] bg-[#0C0C10] py-10 px-6 mt-auto">
       <div className="mx-auto max-w-6xl flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-6 w-6 items-center justify-center rounded bg-[#1C1C27] border border-[#2A2A3A]">
-            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L15.3 8.7L22 12L15.3 15.3L12 22L8.7 15.3L2 12L8.7 8.7Z" fill="#A78BFA"/>
-            </svg>
+          <div className="flex h-6 w-6 items-center justify-center rounded bg-[#1C1C27] border border-[#2A2A3A] overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-icon.png" alt="PromptPolish Logo" className="h-4 w-4 object-contain" />
           </div>
           <span className="text-sm font-bold text-[#E2E8F0] font-heading">PromptPolish</span>
         </div>
