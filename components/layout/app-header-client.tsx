@@ -137,7 +137,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
 
               {/* Polish active indicator status badge for MVP */}
               {!isLoggedIn && (
-                <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#1C1C27] text-[#6EE7B7] border border-[#6EE7B7]/20">
+                <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#13131A] text-[#6EE7B7]/70 border border-[#6EE7B7]/15">
                   Działa bez konta
                 </span>
               )}
@@ -148,7 +148,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
         {/* Mobile Navigation Toggle (Hamburger) */}
         <div className="flex md:hidden items-center gap-3">
           {!isLoggedIn && !publicShare && (
-            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#1C1C27] text-[#6EE7B7] border border-[#6EE7B7]/20">
+            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#13131A] text-[#6EE7B7]/70 border border-[#6EE7B7]/15">
               Działa bez konta
             </span>
           )}
