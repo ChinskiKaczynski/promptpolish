@@ -97,19 +97,22 @@ interface LogoProps {
 export function Logo({ className = '', iconSize = 'md', textSize = 'md' }: LogoProps) {
   const sizeMap = {
     sm: {
-      badge: 'h-7 w-7 rounded bg-[#7C3AED]/10 border border-[#A78BFA]/20 shadow-[0_0_12px_rgba(139,92,246,0.15)]',
-      icon: 'h-[16px] w-[16px]',
+      container: 'rounded-xl px-2.5 py-1 bg-violet-500/5 border border-violet-500/10 hover:bg-violet-500/10 hover:border-violet-500/20 transition-all duration-200 gap-2',
+      badge: 'h-8 w-8 rounded-lg bg-[#7C3AED]/10 border border-[#A78BFA]/20 shadow-[0_0_12px_rgba(139,92,246,0.15)]',
+      icon: 'h-[18px] w-[18px]',
       text: 'text-sm font-semibold tracking-[-0.01em] text-slate-200'
     },
     md: {
-      badge: 'h-10 w-10 rounded-xl bg-violet-500/15 border border-violet-400/35 shadow-[0_0_22px_rgba(139,92,246,0.30)]',
-      icon: 'h-[22px] w-[22px]',
-      text: 'text-base font-semibold tracking-[-0.02em] text-slate-100'
+      container: 'rounded-2xl px-3 py-1.5 bg-slate-950/70 border border-violet-400/25 shadow-[0_0_28px_rgba(139,92,246,0.22)] transition-all duration-300 hover:bg-violet-500/12 hover:border-violet-400/40 hover:shadow-[0_0_32px_rgba(139,92,246,0.35)] backdrop-blur-md gap-3',
+      badge: 'h-[46px] w-[46px] rounded-xl bg-violet-500/15 border border-violet-400/35 shadow-[0_0_22px_rgba(139,92,246,0.30)]',
+      icon: 'h-[26px] w-[26px]',
+      text: 'text-[17px] font-bold tracking-[-0.02em] text-slate-100'
     },
     lg: {
+      container: 'rounded-2xl px-4 py-2 bg-slate-950/70 border border-violet-400/30 shadow-[0_0_32px_rgba(139,92,246,0.25)] transition-all duration-300 hover:bg-violet-500/15 hover:border-violet-400/45 hover:shadow-[0_0_36px_rgba(139,92,246,0.4)] backdrop-blur-md gap-3.5',
       badge: 'h-12 w-12 rounded-2xl bg-violet-500/15 border border-violet-400/40 shadow-[0_0_28px_rgba(139,92,246,0.35)]',
-      icon: 'h-[26px] w-[26px]',
-      text: 'text-lg font-semibold tracking-[-0.02em] text-slate-100'
+      icon: 'h-[28px] w-[28px]',
+      text: 'text-lg font-bold tracking-[-0.02em] text-white'
     }
   }
 
@@ -117,9 +120,9 @@ export function Logo({ className = '', iconSize = 'md', textSize = 'md' }: LogoP
   const currentText = sizeMap[textSize] || sizeMap.md
 
   return (
-    <div className={`flex items-center gap-2.5 group ${className}`}>
+    <div className={`flex items-center group transition-all duration-300 ${currentIcon.container} ${className}`}>
       {/* Premium Translucent Badge with Violet Glow */}
-      <div className={`flex items-center justify-center transition-all duration-300 group-hover:border-violet-400/60 group-hover:shadow-[0_0_26px_rgba(139,92,246,0.45)] backdrop-blur-md ${currentIcon.badge}`}>
+      <div className={`flex items-center justify-center transition-all duration-300 ${currentIcon.badge}`}>
         <LogoMark className={`${currentIcon.icon} transition-transform duration-300 group-hover:scale-105`} />
       </div>
       <span className={`tracking-tight group-hover:text-white transition-colors duration-150 font-heading ${currentText.text}`}>

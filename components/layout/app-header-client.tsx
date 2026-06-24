@@ -48,7 +48,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
 
   return (
     <header className={`border-b sticky top-0 z-50 backdrop-blur-xl transition-all duration-200 ${bgStyle}`}>
-      <div className="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-6 py-1.5 flex items-center justify-between">
         {/* Logo */}
         <Link href="/">
           <Logo iconSize="md" textSize="md" />
@@ -137,7 +137,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
 
               {/* Polish active indicator status badge for MVP */}
               {!isLoggedIn && (
-                <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#13131A] text-[#6EE7B7]/70 border border-[#6EE7B7]/15">
+                <span className="rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-[#13131A] text-emerald-500/60 border border-emerald-500/10">
                   Działa bez konta
                 </span>
               )}
@@ -148,7 +148,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
         {/* Mobile Navigation Toggle (Hamburger) */}
         <div className="flex md:hidden items-center gap-3">
           {!isLoggedIn && !publicShare && (
-            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold bg-[#13131A] text-[#6EE7B7]/70 border border-[#6EE7B7]/15">
+            <span className="rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-[#13131A] text-emerald-500/60 border border-emerald-500/10">
               Działa bez konta
             </span>
           )}
