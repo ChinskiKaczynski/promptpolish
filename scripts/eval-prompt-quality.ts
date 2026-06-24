@@ -478,7 +478,7 @@ async function main() {
   if (limit) console.log(`Evaluation Limit: First ${limit} items per fixture category`)
 
   const apiKey = process.env.OPENROUTER_API_KEY
-  const targetModelId = process.env.OPENROUTER_MODEL_ID || 'deepseek/deepseek-v4-flash'
+  const targetModelId = process.env.OPENROUTER_MODEL_ID || 'openrouter/owl-alpha'
 
   if (isLive && (!apiKey || apiKey.trim() === '')) {
     console.error('[ERROR] LIVE mode requested, but OPENROUTER_API_KEY is not defined in .env.local.')

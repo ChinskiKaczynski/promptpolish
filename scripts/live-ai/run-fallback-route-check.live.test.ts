@@ -56,7 +56,7 @@ vi.mock('@/lib/supabase/queries', () => ({
     display_name: 'DeepSeek v4 Flash Profile',
     provider: 'openrouter',
     capabilities_json: {
-      model_id: 'deepseek/deepseek-v4-flash',
+      model_id: 'openrouter/owl-alpha',
       temperature: 0.1,
       max_tokens: 4000
     },
@@ -94,7 +94,7 @@ vi.mock('ai', async (importOriginal) => {
     generateText: vi.fn().mockImplementation(async (options: unknown) => {
       const opts = options as { model: { modelId: string } }
       const modelId = opts.model.modelId
-      if (modelId === 'deepseek/deepseek-v4-flash') {
+      if (modelId === 'openrouter/owl-alpha') {
         console.log(`[Live Check] Simulating primary model failure for: ${modelId}`)
         throw new Error('PROVIDER_TIMEOUT: Request aborted after 55000ms')
       }

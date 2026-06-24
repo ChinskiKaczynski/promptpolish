@@ -9,9 +9,9 @@ export interface ModelPricing {
 
 // Trusted server-side pricing configuration keyed by provider and model
 export const PRICING_CONFIG: Record<string, ModelPricing> = {
-  'openrouter:deepseek/deepseek-v4-flash': {
+  'openrouter:openrouter/owl-alpha': {
     provider: 'openrouter',
-    modelId: 'deepseek/deepseek-v4-flash',
+    modelId: 'openrouter/owl-alpha',
     inputCostPerMillion: 75000,   // $0.075 per 1,000,000 tokens
     outputCostPerMillion: 300000  // $0.30 per 1,000,000 tokens
   }

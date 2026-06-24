@@ -290,7 +290,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
         verification_status: 'verified',
         confidence_level: 'high',
         capabilities_json: {
-          model_id: 'deepseek/deepseek-v4-flash',
+          model_id: 'openrouter/owl-alpha',
           temperature: 0.8,
           max_tokens: 1500
         },

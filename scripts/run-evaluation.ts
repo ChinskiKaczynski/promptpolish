@@ -73,7 +73,7 @@ interface EvaluationResultItem {
 
 async function runEvaluation() {
   const apiKey = process.env.OPENROUTER_API_KEY
-  const modelId = process.env.OPENROUTER_MODEL_ID || 'deepseek/deepseek-v4-flash'
+  const modelId = process.env.OPENROUTER_MODEL_ID || 'openrouter/owl-alpha'
   const docsDir = path.join(process.cwd(), 'docs')
   const reportPath = path.join(docsDir, 'evaluation-results.md')
 

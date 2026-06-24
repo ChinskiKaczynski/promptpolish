@@ -49,7 +49,7 @@ interface Telemetry {
 
 async function runSmokeTest() {
   const apiKey = process.env.OPENROUTER_API_KEY
-  const modelId = process.env.OPENROUTER_MODEL_ID || 'deepseek/deepseek-v4-flash'
+  const modelId = process.env.OPENROUTER_MODEL_ID || 'openrouter/owl-alpha'
   const siteUrl = process.env.OPENROUTER_SITE_URL
   const appName = process.env.OPENROUTER_APP_NAME
 

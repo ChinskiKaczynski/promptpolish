@@ -68,7 +68,7 @@ describe('Fallback Classification & Configuration Tests', () => {
   })
 
   it('disables fallback when fallback ID is equal to primary ID', async () => {
-    process.env.OPENROUTER_FALLBACK_MODEL_ID = 'deepseek/deepseek-v4-flash' // identical to default primary
+    process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openrouter/owl-alpha' // identical to default primary
 
     let callCount = 0
     const mockGenerator: TextGenerator = async () => {

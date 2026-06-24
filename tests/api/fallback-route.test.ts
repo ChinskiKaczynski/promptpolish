@@ -27,7 +27,7 @@ vi.mock('@/lib/supabase/queries', () => ({
     display_name: 'DeepSeek v4 Flash Profile',
     provider: 'openrouter',
     capabilities_json: {
-      model_id: 'deepseek/deepseek-v4-flash',
+      model_id: 'openrouter/owl-alpha',
       temperature: 0.1,
       max_tokens: 4000
     },
@@ -98,7 +98,7 @@ describe('Route Handler integration test', () => {
       output: mockAnalysisResult,
       usage: { promptTokens: 100, completionTokens: 150, totalTokens: 250, reasoningTokens: 0, visibleTokens: 150 },
       finishReason: 'stop',
-      selectedModel: 'deepseek/deepseek-v4-flash',
+      selectedModel: 'openrouter/owl-alpha',
       attempt: 1,
       durationMs: 400
     })
@@ -119,7 +119,7 @@ describe('Route Handler integration test', () => {
 
     // Verify database and event counts
     expect(mockAnalyses.length).toBe(1)
-    expect(mockAnalyses[0].model_id_used).toBe('deepseek/deepseek-v4-flash')
+    expect(mockAnalyses[0].model_id_used).toBe('openrouter/owl-alpha')
 
     const completedEvents = mockUsageEvents.filter(e => e.event_type === 'analysis_completed')
     expect(completedEvents.length).toBe(1)
@@ -261,7 +261,7 @@ describe('Route Handler integration test', () => {
       output: mockAnalysisResult,
       usage: { promptTokens: 100, completionTokens: 150, totalTokens: 250, reasoningTokens: 0, visibleTokens: 150 },
       finishReason: 'stop',
-      selectedModel: 'deepseek/deepseek-v4-flash',
+      selectedModel: 'openrouter/owl-alpha',
       attempt: 1,
       durationMs: 400
     })
@@ -281,7 +281,7 @@ describe('Route Handler integration test', () => {
     expect(res.status).toBe(200)
 
     expect(mockAnalyses.length).toBe(1)
-    expect(mockAnalyses[0].model_id_used).toBe('deepseek/deepseek-v4-flash')
+    expect(mockAnalyses[0].model_id_used).toBe('openrouter/owl-alpha')
 
     const completedEvents = mockUsageEvents.filter(e => e.event_type === 'analysis_completed')
     expect(completedEvents.length).toBe(1)
@@ -291,13 +291,13 @@ describe('Route Handler integration test', () => {
 
   it('Scenario 6: Primary and fallback IDs identical', async () => {
     // Disable fallback by making fallback ID identical to primary
-    process.env.OPENROUTER_FALLBACK_MODEL_ID = 'deepseek/deepseek-v4-flash'
+    process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openrouter/owl-alpha'
 
     mockExecuteAnalysis.mockResolvedValue({
       output: mockAnalysisResult,
       usage: { promptTokens: 100, completionTokens: 150, totalTokens: 250, reasoningTokens: 0, visibleTokens: 150 },
       finishReason: 'stop',
-      selectedModel: 'deepseek/deepseek-v4-flash',
+      selectedModel: 'openrouter/owl-alpha',
       attempt: 1,
       durationMs: 400
     })
@@ -317,7 +317,7 @@ describe('Route Handler integration test', () => {
     expect(res.status).toBe(200)
 
     expect(mockAnalyses.length).toBe(1)
-    expect(mockAnalyses[0].model_id_used).toBe('deepseek/deepseek-v4-flash')
+    expect(mockAnalyses[0].model_id_used).toBe('openrouter/owl-alpha')
 
     const completedEvents = mockUsageEvents.filter(e => e.event_type === 'analysis_completed')
     expect(completedEvents.length).toBe(1)

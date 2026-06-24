@@ -286,7 +286,7 @@ describe('Timeout and Abort Regression Suite', () => {
         requestId: 'test-req-id'
       })
 
-      expect(calls).toEqual(['deepseek/deepseek-v4-flash', 'openai/gpt-4o-mini'])
+      expect(calls).toEqual(['openrouter/owl-alpha', 'openai/gpt-4o-mini'])
       expect(res.selectedModel).toBe('openai/gpt-4o-mini')
       expect(res.attempt).toBe(2)
       expect(res.usage?.reasoningTokens).toBe(50)
@@ -324,7 +324,7 @@ describe('Timeout and Abort Regression Suite', () => {
       expect(logLines[0]).toMatchObject({
         requestId: 'test-req-id',
         attempt: 1,
-        selectedModel: 'deepseek/deepseek-v4-flash',
+        selectedModel: 'openrouter/owl-alpha',
         errorCategory: 'upstream_provider_error'
       })
       expect(logLines[1]).toMatchObject({
@@ -345,7 +345,7 @@ describe('Timeout and Abort Regression Suite', () => {
     it('bounds fallback timeout based on remaining operation budget', async () => {
       vi.mocked(generateText).mockImplementation(async (options: unknown) => {
         const opts = options as { model: { modelId: string } }
-        if (opts.model.modelId === 'deepseek/deepseek-v4-flash') {
+        if (opts.model.modelId === 'openrouter/owl-alpha') {
           throw new Error('PROVIDER_TIMEOUT')
         }
         return {

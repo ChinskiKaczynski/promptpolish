@@ -122,7 +122,7 @@ describe('AI Score Calibration Runner (Live)', () => {
         display_name: 'DeepSeek v4 Flash Profile',
         provider: 'openrouter',
         capabilities_json: {
-          model_id: 'deepseek/deepseek-v4-flash',
+          model_id: 'openrouter/owl-alpha',
           temperature: 0.1,
           max_tokens: 4000
         },

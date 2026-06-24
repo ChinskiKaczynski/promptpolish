@@ -373,7 +373,7 @@ Zły przykład: "Najlepsze w Polsce zintegrowane oprogramowanie klasy cloud-SaaS
     spotCheck.improvedPromptVisible = bodyText.includes('POPRAWIONY PROMPT') || bodyText.includes('Skopiuj')
     
     // Check internals hidden
-    const hasInternals = bodyText.includes('OpenRouter') || bodyText.includes('deepseek/deepseek-v4-flash') || bodyText.includes('gpt-4o-mini') || bodyText.includes('API key') || bodyText.includes('OPENROUTER_')
+    const hasInternals = bodyText.includes('OpenRouter') || bodyText.includes('openrouter/owl-alpha') || bodyText.includes('gpt-4o-mini') || bodyText.includes('API key') || bodyText.includes('OPENROUTER_')
     spotCheck.internalsHidden = !hasInternals
     
     // Check stale warning

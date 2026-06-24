@@ -21,13 +21,13 @@ describe('Owner Model Catalog Aliases', () => {
 
   it('rejects/falls back on invalid alias to OPENROUTER_MODEL_ID or default', () => {
     process.env.AI_MODEL_ALIAS = 'invalid-alias-name'
-    process.env.OPENROUTER_MODEL_ID = 'deepseek/deepseek-v4-flash'
+    process.env.OPENROUTER_MODEL_ID = 'openrouter/owl-alpha'
 
-    expect(getOwnerConfiguredModelId()).toBe('deepseek/deepseek-v4-flash')
+    expect(getOwnerConfiguredModelId()).toBe('openrouter/owl-alpha')
   })
 
   it('reverts to the absolute fallback model if all env values are empty', () => {
-    expect(getOwnerConfiguredModelId()).toBe('deepseek/deepseek-v4-flash')
+    expect(getOwnerConfiguredModelId()).toBe('openrouter/owl-alpha')
   })
 
   it('uses OPENROUTER_MODEL_ID directly if AI_MODEL_ALIAS is not specified', () => {

@@ -9,7 +9,7 @@ describe('Usage and Cost Accounting', () => {
   it('correctly calculates cost for known models with exact token counts (measured known-price)', () => {
     const cost = calculateUsageCost(
       'openrouter',
-      'deepseek/deepseek-v4-flash',
+      'openrouter/owl-alpha',
       1000,
       2000
     )
@@ -24,7 +24,7 @@ describe('Usage and Cost Accounting', () => {
   it('returns null for negative token counts (negative usage)', () => {
     const cost = calculateUsageCost(
       'openrouter',
-      'deepseek/deepseek-v4-flash',
+      'openrouter/owl-alpha',
       -100,
       500
     )
@@ -34,7 +34,7 @@ describe('Usage and Cost Accounting', () => {
   it('returns null for NaN or infinite token counts (NaN/infinite usage)', () => {
     const costNaN = calculateUsageCost(
       'openrouter',
-      'deepseek/deepseek-v4-flash',
+      'openrouter/owl-alpha',
       NaN,
       500
     )
@@ -42,7 +42,7 @@ describe('Usage and Cost Accounting', () => {
 
     const costInf = calculateUsageCost(
       'openrouter',
-      'deepseek/deepseek-v4-flash',
+      'openrouter/owl-alpha',
       Infinity,
       500
     )
@@ -52,7 +52,7 @@ describe('Usage and Cost Accounting', () => {
   it('handles zero tokens correctly', () => {
     const cost = calculateUsageCost(
       'openrouter',
-      'deepseek/deepseek-v4-flash',
+      'openrouter/owl-alpha',
       0,
       0
     )

@@ -42,7 +42,7 @@ vi.mock('@/lib/supabase/queries', () => ({
     confidence_level: 'high',
     stale_after_days: 30,
     capabilities_json: {
-      model_id: 'deepseek/deepseek-v4-flash',
+      model_id: 'openrouter/owl-alpha',
       enabled: true
     },
     profile_version: '1.0.0',
@@ -223,7 +223,7 @@ describe('P1 Timeout Regression: /api/analyze', () => {
         analysis: mockAnalysisResult,
         scores: { overallScore: 72, scoreLevel: 'decent' },
         usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
-        selectedModel: 'deepseek/deepseek-v4-flash',
+        selectedModel: 'openrouter/owl-alpha',
         attempt: 1
       })
 
@@ -306,7 +306,7 @@ describe('P1 Timeout Regression: /api/analyze', () => {
         analysis: mockAnalysisResult,
         scores: { overallScore: 72, scoreLevel: 'decent' },
         usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
-        selectedModel: 'deepseek/deepseek-v4-flash',
+        selectedModel: 'openrouter/owl-alpha',
         attempt: 1
       })
 

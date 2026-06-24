@@ -5,13 +5,15 @@
 
 > [!WARNING]
 > **LEGAL & TAX BLOCKER â€” APP IS NOT LEGALLY READY FOR PRODUCTION**  
-> This checklist contains engineering and compliance requirements for the launch of PromptPolish. Currently, **PromptPolish is NOT legally ready for commercial paid traffic**. 
+> This checklist contains engineering and compliance requirements for the launch of PromptPolish. Currently, **PromptPolish is NOT legally ready for commercial paid traffic**.
 > All production payments **must remain disabled** (`STRIPE_ENABLED=false` is the safe default configuration) until all blockers listed in this document are resolved, and formal legal and tax counsel audits have been executed and signed off.
 
 ---
 
 ## Referenced Documents
+
 This checklist consolidates and references specialized launch, billing, and operational policies. Use the following links to review specific detailed guides:
+
 - [docs/stripe-test-mode-checklist.md](./stripe-test-mode-checklist.md) â€” Stripe test-mode setup and verification scenarios.
 - [docs/legal-readiness.md](./legal-readiness.md) â€” GDPR, ePrivacy, and legal entity transition roadmap.
 - [docs/billing-policy-draft.md](./billing-policy-draft.md) â€” Terms for subscriptions, cancellations, and grace periods.
@@ -24,6 +26,7 @@ This checklist consolidates and references specialized launch, billing, and oper
 ---
 
 ## 1. Technical Readiness Blockers
+
 These items verify the core infrastructure and backend pipelines are secure, performant, and correctly configured.
 
 - [ ] **Production Supabase Migrations Verified**: Confirm the production Supabase database project is created and all migrations from `supabase/migrations` have been successfully applied.
@@ -33,7 +36,7 @@ These items verify the core infrastructure and backend pipelines are secure, per
   - `OPENROUTER_API_KEY` (Production quota key)
   - `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRICE_ID_PRO`
   - `APP_URL` (Pointed to the production domain)
-  - *Note: Real production passwords and secrets must never be committed to repository code or checklist files.*
+  - _Note: Real production passwords and secrets must never be committed to repository code or checklist files._
 - [ ] **OpenRouter Provider Health & Failovers**: Check provider latency and ensure semantic schema formatting matches expected outputs. Verify that transient status codes (429/503) degrade gracefully into standard user-facing messages.
 - [ ] **Database Cron Cleanup Verified**: Verify that automated database retention cleanup runs successfully (Usage events purged after 90 days, Feedback events after 180 days, and Prompt analyses after 30 days unless starred or shared).
 - [ ] **Admin Metrics Sanitation**: Confirm `/admin/metrics` gathers statistics through privacy-safe SQL queries without exposing PII (IPs are salted and hashed in-memory, email lists are excluded from logs).
@@ -51,6 +54,7 @@ These items verify the core infrastructure and backend pipelines are secure, per
 ---
 
 ## 2. Product Readiness (Aesthetics & Layout Polish)
+
 These visual and layout verification items guarantee the MVP user experience is premium and functional across devices.
 
 - [ ] **Anonymous Analysis Smoke Test**: Confirm unauthenticated users can perform a prompt audit, view the result scorecard, copy the improved prompt, and toggle language between PL and EN.
@@ -71,6 +75,7 @@ These visual and layout verification items guarantee the MVP user experience is 
 ---
 
 ## 3. Stripe & Billing Readiness Blockers
+
 Billing validations that must be performed in development/test-mode first, and configured for production before launching.
 
 - [ ] **Stripe Test Mode Product and Price Created**: Confirm product "PromptPolish Pro" and recurring price ($9.00/mo or equivalent) are manually set up in the Stripe Dashboard (Test Mode).
@@ -95,6 +100,7 @@ Billing validations that must be performed in development/test-mode first, and c
 ---
 
 ## 4. Legal & Tax Readiness Blockers
+
 Compliance hurdles that must be formally cleared by legal and tax counsel before accepting real customer payments.
 
 - [ ] **Official Legal Entity Configured**: Finalize the formal business legal name and corporate physical address. Confirm these details are filled in on public terms and footer sections.
@@ -113,12 +119,13 @@ Compliance hurdles that must be formally cleared by legal and tax counsel before
 ---
 
 ## 5. Privacy & Vendor Readiness Blockers
+
 Data governance and sub-processor audits to protect user data and align with privacy regulations.
 
 - [ ] **Supabase DPA Executed**: Formally sign the Data Processing Addendum (DPA) with Supabase. Confirm database server hosting is geo-confined to the European Economic Area (EEA) if required.
 - [ ] **Vercel DPA Executed**: Execute the DPA with Vercel. Verify that serverless compute deployment locations are aligned with corporate privacy data storage rules.
 - [ ] **Stripe DPA Executed**: Complete the data processing terms with Stripe, confirming standard contractual clauses (SCCs) are active for international transfers.
-- [ ] **OpenRouter/AI Provider Agreement Audited**: Review the agreements with OpenRouter and verify that the target model (e.g., `deepseek/deepseek-v4-flash`) does not retain input prompts for training or manual review.
+- [ ] **OpenRouter/AI Provider Agreement Audited**: Review the agreements with OpenRouter and verify that the target model (e.g., `openrouter/owl-alpha`) does not retain input prompts for training or manual review.
 - [ ] **Data Retention Window Verification**: Confirm database schema retention schedules are verified in the runtime (e.g. daily cron schedules purging historical telemetry).
 - [ ] **Account Deletion Flow Tested**: Validate that clicking "UsuĹ„ konto" triggers cascading deletes in Supabase (deleting profiles, history, and usage logs) and triggers a subscription cancellation webhook to Stripe.
 - [ ] **Cookie & ePrivacy Directive Decision**: Formally resolve if the essential ownership cookie `owner_anonymous_id` requires a consent banner under local implementation of the ePrivacy Directive.
@@ -127,17 +134,22 @@ Data governance and sub-processor audits to protect user data and align with pri
 ---
 
 ## 6. Manual Production Smoke Test Plan
+
 A manual end-to-end verification checklist to execute in the live production environment.
 
 ### Phase A: Before Enabling Stripe
-*Run tests with `STRIPE_ENABLED=false` set in production.*
+
+_Run tests with `STRIPE_ENABLED=false` set in production._
+
 - [ ] Paste a prompt containing mock credentials. Confirm preflight scanning blocks the audit client-side.
 - [ ] Audit a standard prompt. Confirm successful redirection to `/result/[id]`.
 - [ ] Navigate to `/pricing`. Verify the Pro checkout buttons are swapped for a waitlist signup or show "Beta Mode" alerts.
 - [ ] Register a new account. Confirm login works. Check that the developer sandbox allows simulated Pro testing, but Stripe payments are unavailable.
 
 ### Phase B: Immediately After Enabling Stripe (Test Mode Staging)
-*Temporarily deploy code with `STRIPE_ENABLED=true` pointing to Stripe Test Keys.*
+
+_Temporarily deploy code with `STRIPE_ENABLED=true` pointing to Stripe Test Keys._
+
 - [ ] Navigate to `/pricing`. Confirm checkout redirects cleanly to Stripe Checkout.
 - [ ] Complete payment with mock test card `4242 4242 4242 4242`. Confirm checkout returns user to success page.
 - [ ] Verify profile plan badge swaps to **Pro**.
@@ -146,20 +158,26 @@ A manual end-to-end verification checklist to execute in the live production env
 - [ ] Confirm account page updates showing subscription is scheduled for downgrade at period end.
 
 ### Phase C: After First Real Production Transaction
-*Execute immediately after promoting Stripe Live Keys and set `STRIPE_ENABLED=true` in production.*
+
+_Execute immediately after promoting Stripe Live Keys and set `STRIPE_ENABLED=true` in production._
+
 - [ ] Execute a real purchase using a valid personal payment card.
 - [ ] Verify Stripe processes payment and generates a compliant PDF invoice.
 - [ ] Confirm DB updates user profile to `pro`.
 - [ ] Verify the support inbox receives standard webhook-triggered receipt confirmations if enabled.
 
 ### Phase D: After Forced Downgrade/Cancellation
-*Verify downgrade states manually.*
+
+_Verify downgrade states manually._
+
 - [ ] In the Stripe Live Dashboard, locate the real customer subscription and force cancel it immediately.
 - [ ] Verify that the database updates the profile's `plan_slug` to `free`.
 - [ ] Verify that navigating to a result and clicking **Export to PDF** returns a warning to upgrade.
 
 ### Phase E: After Rollback Execution
-*Validate that system handles rollbacks safely.*
+
+_Validate that system handles rollbacks safely._
+
 - [ ] Set `STRIPE_ENABLED=false` on production.
 - [ ] Open the app. Confirm the pricing page removes Checkout links and displays waitlist forms.
 - [ ] Verify that existing Pro users (synced before rollback) can still log in and view past records without application crashes.
@@ -167,6 +185,7 @@ A manual end-to-end verification checklist to execute in the live production env
 ---
 
 ## 7. Rollback Plan
+
 Standard operating procedures to immediately revert live payments if severe integration failures occur post-launch.
 
 1. **Toggle Billing Switch**: Change the environment variable `STRIPE_ENABLED=false` in the production host settings.
@@ -184,17 +203,21 @@ Standard operating procedures to immediately revert live payments if severe inte
 The release manager must review the checklist and issue a final launch status.
 
 ### đźź˘ GO Conditions
+
 You may transition `STRIPE_ENABLED=true` in production **ONLY** if:
-*   [ ] Every P0/P1 item in the **Technical Readiness** list is completed.
-*   [ ] Every P0/P1 item in the **Product Readiness** list is completed.
-*   [ ] Stripe Test Mode verification scenarios have completed with 100% success.
-*   [ ] Legal counsel has reviewed and approved terms, privacy policies, and DPAs.
-*   [ ] Tax counsel has finalized EU VAT, sales tax, and OSS registration rules.
+
+- [ ] Every P0/P1 item in the **Technical Readiness** list is completed.
+- [ ] Every P0/P1 item in the **Product Readiness** list is completed.
+- [ ] Stripe Test Mode verification scenarios have completed with 100% success.
+- [ ] Legal counsel has reviewed and approved terms, privacy policies, and DPAs.
+- [ ] Tax counsel has finalized EU VAT, sales tax, and OSS registration rules.
 
 ### đź”´ NO-GO Conditions
+
 You must halt the launch and keep `STRIPE_ENABLED=false` if:
-*   [ ] **Legal/Tax Review Incomplete**: Counsel has not formally approved the draft terms or refund rules.
-*   [ ] **Stripe Test Mode Fails**: Webhook synchronization, grace periods, or downgrades fail during local/staging tests.
-*   [ ] **Missing Production Credentials**: Production Stripe Price IDs or secrets are missing from the configuration.
-*   [ ] **Unstable Provider Health**: The OpenRouter API endpoint is unstable, experiencing high latency, or throwing unexpected HTTP 429/500/503 errors.
-*   [ ] **Client-Side Entitlement Enforcement Only**: Any premium endpoint (such as `/api/export/[id]/route.ts` for PDF download) verifies Pro plans *only* on the client bundle, without a strict server-side database entitlement audit.
+
+- [ ] **Legal/Tax Review Incomplete**: Counsel has not formally approved the draft terms or refund rules.
+- [ ] **Stripe Test Mode Fails**: Webhook synchronization, grace periods, or downgrades fail during local/staging tests.
+- [ ] **Missing Production Credentials**: Production Stripe Price IDs or secrets are missing from the configuration.
+- [ ] **Unstable Provider Health**: The OpenRouter API endpoint is unstable, experiencing high latency, or throwing unexpected HTTP 429/500/503 errors.
+- [ ] **Client-Side Entitlement Enforcement Only**: Any premium endpoint (such as `/api/export/[id]/route.ts` for PDF download) verifies Pro plans _only_ on the client bundle, without a strict server-side database entitlement audit.

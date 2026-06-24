@@ -16,7 +16,7 @@ const strictBool = z.preprocess((val) => {
 export const serverEnvSchema = z.object({
   APP_URL: z.string().url().default('http://localhost:3000'),
   OPENROUTER_API_KEY: z.string().optional(),
-  OPENROUTER_MODEL_ID: z.string().default('deepseek/deepseek-v4-flash'),
+  OPENROUTER_MODEL_ID: z.string().default('openrouter/owl-alpha'),
   OPENROUTER_FALLBACK_MODEL_ID: z.string().optional(),
   OPENROUTER_SITE_URL: z.string().optional(),
   OPENROUTER_APP_NAME: z.string().optional(),

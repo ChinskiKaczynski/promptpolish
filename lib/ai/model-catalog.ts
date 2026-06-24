@@ -2,11 +2,11 @@ import 'server-only'
 
 // A server-only model catalog mapping aliases to concrete provider model IDs
 export const MODEL_ALIASES: Record<string, string> = {
-  cheap: 'deepseek/deepseek-v4-flash',
-  fast: 'deepseek/deepseek-v4-flash',
-  quality: 'deepseek/deepseek-v4-flash',
-  default: 'deepseek/deepseek-v4-flash',
-  current: 'deepseek/deepseek-v4-flash'
+  cheap: 'openrouter/owl-alpha',
+  fast: 'openrouter/owl-alpha',
+  quality: 'openrouter/owl-alpha',
+  default: 'openrouter/owl-alpha',
+  current: 'openrouter/owl-alpha'
 }
 
 /**
@@ -14,7 +14,7 @@ export const MODEL_ALIASES: Record<string, string> = {
  * Priority:
  * 1. AI_MODEL_ALIAS env variable mapped through the catalog (if valid).
  * 2. OPENROUTER_MODEL_ID env variable (direct model ID).
- * 3. Default fallback ('deepseek/deepseek-v4-flash').
+ * 3. Default fallback ('openrouter/owl-alpha').
  */
 export function getOwnerConfiguredModelId(): string {
   const alias = process.env.AI_MODEL_ALIAS?.trim()
@@ -27,5 +27,5 @@ export function getOwnerConfiguredModelId(): string {
     return directModelId
   }
 
-  return 'deepseek/deepseek-v4-flash'
+  return 'openrouter/owl-alpha'
 }

@@ -216,7 +216,7 @@ async function runSingleRequest(
     const data = await response.json()
     const analysisId = data.id
 
-    let modelUsed = 'deepseek/deepseek-v4-flash'
+    let modelUsed = 'openrouter/owl-alpha'
     let promptTokens = 0
     let completionTokens = 0
     const reasoningTokens = 0

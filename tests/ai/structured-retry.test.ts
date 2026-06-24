@@ -96,7 +96,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
         .mockResolvedValueOnce({
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'deepseek/deepseek-v4-flash',
+          selectedModel: 'openrouter/owl-alpha',
           attempt: 1,
           durationMs: 200
         })
@@ -123,14 +123,14 @@ describe('Structured Output Retry and Size Control Tests', () => {
         .mockResolvedValueOnce({
           output: invalidJson,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'deepseek/deepseek-v4-flash',
+          selectedModel: 'openrouter/owl-alpha',
           attempt: 1,
           durationMs: 200
         })
         .mockResolvedValueOnce({
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'deepseek/deepseek-v4-flash',
+          selectedModel: 'openrouter/owl-alpha',
           attempt: 1,
           durationMs: 200
         })
@@ -170,7 +170,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
       expect(mockExecuteAnalysis).toHaveBeenCalledTimes(2)
     })
 
-    it('does not trigger fallback to other models during retry (stays on deepseek/deepseek-v4-flash)', async () => {
+    it('does not trigger fallback to other models during retry (stays on openrouter/owl-alpha)', async () => {
       mockExecuteAnalysis
         .mockRejectedValueOnce(
           new ProviderError(
@@ -184,14 +184,14 @@ describe('Structured Output Retry and Size Control Tests', () => {
         .mockResolvedValueOnce({
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'deepseek/deepseek-v4-flash',
+          selectedModel: 'openrouter/owl-alpha',
           attempt: 1,
           durationMs: 200
         })
 
       const res = await analyzePrompt(validParams)
       expect(mockExecuteAnalysis).toHaveBeenCalledTimes(2)
-      expect(res.selectedModel).toBe('deepseek/deepseek-v4-flash')
+      expect(res.selectedModel).toBe('openrouter/owl-alpha')
     })
   })
 
