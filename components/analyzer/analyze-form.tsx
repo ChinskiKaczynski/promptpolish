@@ -216,7 +216,7 @@ export function AnalyzeForm() {
       />
 
       {/* Main Analyzer Form */}
-      <form onSubmit={handleSubmit} className="space-y-7 rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-8">
+      <form onSubmit={handleSubmit} className="space-y-8 rounded-2xl border border-white/5 bg-[#13131A]/60 backdrop-blur-md p-6 sm:p-8 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.8)]">
         
         <MonthlyLimitBanner
           isMonthlyLimitReached={isMonthlyLimitReached}
@@ -225,26 +225,29 @@ export function AnalyzeForm() {
           workingLanguage={workingLanguage}
         />
 
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg border border-[#2A2A3A] bg-[#1C1C27] px-4 py-2.5 text-xs text-[#8290A2]">
-          <span className="flex items-center gap-1.5 text-[#94A3B8]">
-            <svg className="h-3.5 w-3.5 text-[#F97316] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        {/* Premium Preflight Banner */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-amber-500/10 bg-amber-500/5 px-5 py-3 text-xs text-[#94A3B8] shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 h-full w-[3px] bg-[#F97316]" />
+          <span className="flex items-center gap-2 text-[#E2E8F0] font-semibold">
+            <svg className="h-4 w-4 text-[#F97316] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.938 18h12.124c1.348 0 2.19-1.46 1.516-2.61L13.516 6.39c-.674-1.15-2.358-1.15-3.032 0L4.422 15.39c-.674 1.15.168 2.61 1.516 2.61z" />
             </svg>
-            {workingLanguage === 'pl' ? 'Nie wklejaj kluczy API ani haseł.' : 'Do not paste API keys or passwords.'}
+            {workingLanguage === 'pl' ? 'Preflight bezpieczeństwa:' : 'Security preflight:'}
           </span>
+          <span>{workingLanguage === 'pl' ? 'Nie wklejaj kluczy API ani haseł.' : 'Do not paste API keys or passwords.'}</span>
           <span className="hidden sm:inline text-[#2A2A3A]">·</span>
-          <span>{workingLanguage === 'pl' ? 'Limit dzienny odnawia się o północy UTC.' : 'Daily limit resets at midnight UTC.'}</span>
+          <span className="text-[#8290A2]">{workingLanguage === 'pl' ? 'Limit dzienny odnawia się o północy UTC.' : 'Daily limit resets at midnight UTC.'}</span>
         </div>
 
         {/* Mandatory Selections */}
         <div className="grid gap-6 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <label htmlFor="working-language-select" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] block">
+          <div className="space-y-2">
+            <label htmlFor="working-language-select" className="text-xs font-bold uppercase tracking-wider text-[#8290A2] block">
               {workingLanguage === 'pl' ? 'Język roboczy' : 'Working language'}
             </label>
             <select 
               id="working-language-select"
-              className="select-dark w-full rounded-lg px-4 py-3 text-sm font-medium transition cursor-pointer" 
+              className="select-dark w-full rounded-xl px-4 py-3.5 text-sm font-semibold transition cursor-pointer" 
               value={workingLanguage} 
               onChange={(e) => setWorkingLanguage(e.target.value as 'pl' | 'en')}
             >
@@ -253,13 +256,13 @@ export function AnalyzeForm() {
             </select>
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="audit-mode-select" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] block">
+          <div className="space-y-2">
+            <label htmlFor="audit-mode-select" className="text-xs font-bold uppercase tracking-wider text-[#8290A2] block">
               {workingLanguage === 'pl' ? 'Tryb audytu' : 'Audit mode'}
             </label>
             <select 
               id="audit-mode-select"
-              className="select-dark w-full rounded-lg px-4 py-3 text-sm font-medium transition cursor-pointer" 
+              className="select-dark w-full rounded-xl px-4 py-3.5 text-sm font-semibold transition cursor-pointer" 
               value={auditMode} 
               onChange={(e) => setAuditMode(e.target.value)}
             >
@@ -277,7 +280,7 @@ export function AnalyzeForm() {
         {/* Primary Prompt Input Textarea */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <label htmlFor="prompt-textarea" className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8] block">
+            <label htmlFor="prompt-textarea" className="text-xs font-bold uppercase tracking-wider text-[#8290A2] block">
               {workingLanguage === 'pl' ? 'Prompt do audytu (Wymagany)' : 'Prompt to audit (Required)'}
             </label>
             <span className={`text-xs font-mono font-medium ${isTooLong ? 'text-[#F87171]' : isApproachingLimit ? 'text-[#F97316]' : 'text-[#8290A2]'}`}>
@@ -287,7 +290,7 @@ export function AnalyzeForm() {
           <textarea
             id="prompt-textarea"
             aria-label="Treść promptu do analizy"
-            className={`prompt-textarea min-h-[220px] w-full rounded-lg px-4 py-3.5 resize-y transition-all ${isTooLong ? 'border-[#F87171]/60' : isApproachingLimit ? 'border-[#F97316]/50' : ''}`}
+            className={`prompt-textarea min-h-[240px] w-full rounded-xl px-4 py-4 resize-y transition-all ${isTooLong ? 'border-[#F87171]/60' : isApproachingLimit ? 'border-[#F97316]/50' : ''}`}
             placeholder={workingLanguage === 'pl' 
               ? 'Wklej tutaj treść promptu, który chcesz przetestować i ulepszyć (minimum 20 znaków)...' 
               : 'Paste the content of the prompt you want to test and improve here (minimum 20 characters)...'}
@@ -331,7 +334,7 @@ export function AnalyzeForm() {
             onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
             aria-expanded={isAdvancedOpen}
             aria-controls="advanced-calibration-panel"
-            className="flex w-full items-center justify-between rounded-lg border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#1C1C27]/80 hover:border-[#3A3A52] px-5 py-3.5 text-xs font-bold text-[#94A3B8] uppercase tracking-widest transition"
+            className="flex w-full items-center justify-between rounded-xl border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#1C1C27]/85 hover:border-[#3A3A52] px-5 py-4 text-xs font-bold text-[#8290A2] uppercase tracking-widest transition duration-300"
           >
             <span>{workingLanguage === 'pl' ? 'Opcjonalna kalibracja i model docelowy' : 'Optional calibration & target model'}</span>
             <svg
@@ -343,7 +346,7 @@ export function AnalyzeForm() {
           </button>
 
           {isAdvancedOpen && (
-            <div id="advanced-calibration-panel" className="space-y-6 pt-4 border-t border-[#2A2A3A] animate-in fade-in duration-200">
+            <div id="advanced-calibration-panel" className="space-y-6 pt-5 border-t border-[#2A2A3A]/40 animate-in fade-in duration-300">
               <CalibrationFields
                 taskGoal={taskGoal}
                 setTaskGoal={setTaskGoal}
@@ -361,7 +364,7 @@ export function AnalyzeForm() {
 
         {/* Mapped Localized Error Banners */}
         {errorMessage && (
-          <div id="api-error" role="alert" className="rounded-lg border border-[#F87171]/30 bg-[#F87171]/8 p-4 text-xs font-semibold text-[#F87171] flex gap-3 items-center">
+          <div id="api-error" role="alert" className="rounded-xl border border-[#F87171]/30 bg-[#F87171]/8 p-4 text-xs font-semibold text-[#F87171] flex gap-3 items-center">
             <svg className="h-5 w-5 shrink-0 text-[#F87171]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -375,7 +378,7 @@ export function AnalyzeForm() {
         {/* Submission Button */}
         <div className="pt-4">
           <button
-            className="w-full rounded-lg gradient-btn text-white font-semibold py-4 text-sm disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none transition-all flex items-center justify-center gap-2"
+            className="w-full rounded-xl gradient-btn text-white font-bold py-4.5 text-sm disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none transition-all flex items-center justify-center gap-2 cursor-pointer"
             disabled={isTooShort || isTooLong || isBlocked || isSubmitting}
             type="submit"
           >

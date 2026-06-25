@@ -292,18 +292,15 @@ export default async function HomePage() {
 
                 </div>
               </div>
-
             </div>
           </div>
         </section>
 
-
-
         {/* Benefits Section */}
-        <section id="features" className="mx-auto max-w-6xl px-6 py-20">
+        <section id="features" className="mx-auto max-w-6xl px-6 py-24">
           <div className="text-center">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#A78BFA]">Wszystko, czego potrzebujesz do tworzenia lepszych promptów</h2>
-            <p className="mt-3 text-3xl font-bold tracking-tight text-[#E2E8F0] font-heading sm:text-4xl">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#A78BFA]">Wszystko, czego potrzebujesz do tworzenia lepszych promptów</h2>
+            <p className="mt-4 text-3xl font-extrabold tracking-tight text-[#E2E8F0] font-heading sm:text-4xl">
               Co zyskujesz dzięki PromptPolish?
             </p>
             <p className="mx-auto mt-4 max-w-2xl text-[#94A3B8] text-sm">
@@ -311,119 +308,190 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <article className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] hover:bg-[#1C1C27] transition-all duration-200">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#A78BFA]/10 border border-[#A78BFA]/20 text-[#A78BFA] mb-5">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-                </svg>
+          {/* Bento Grid Layout */}
+          <div className="mt-16 grid gap-6 lg:grid-cols-3">
+            {/* Card 1: Wide */}
+            <article className="group premium-card rounded-2xl p-8 lg:col-span-2 flex flex-col justify-between overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.06),rgba(0,0,0,0))] pointer-events-none -z-10" />
+              <div>
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#A78BFA]/10 border border-[#A78BFA]/20 text-[#A78BFA] mb-6">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-[#E2E8F0] font-heading">Głęboki audyt promptów</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#94A3B8] max-w-md">
+                  Wielwymiarowa ocena pod kątem jasności, precyzji, kontekstu i innych parametrów. Koniec ze zgadywaniem.
+                </p>
               </div>
-              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Głęboki audyt promptów</h3>
-              <p className="mt-2.5 text-sm leading-relaxed text-[#94A3B8]">
-                Wielwymiarowa ocena pod kątem jasności, precyzji, kontekstu i innych parametrów. Koniec ze zgadywaniem.
-              </p>
+              {/* Mini mockup inside card */}
+              <div className="mt-6 rounded-xl border border-[#2A2A3A]/60 bg-[#0C0C10]/60 p-4 font-mono text-[10px] text-[#8290A2] space-y-2 select-none">
+                <div className="flex items-center justify-between text-xs font-semibold text-[#E2E8F0]">
+                  <span>Miernik struktury promptu</span>
+                  <span className="text-[#A78BFA]">Poziom: 8.5 / 10</span>
+                </div>
+                <div className="h-1.5 w-full bg-[#1C1C27] rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] rounded-full" style={{ width: '85%' }} />
+                </div>
+              </div>
             </article>
 
-            <article className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] hover:bg-[#1C1C27] transition-all duration-200">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 text-[#6EE7B7] mb-5">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+            {/* Card 2: Tall */}
+            <article className="group premium-card rounded-2xl p-8 lg:col-span-1 flex flex-col justify-between overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-[radial-gradient(circle_at_top_right,rgba(110,231,183,0.06),rgba(0,0,0,0))] pointer-events-none -z-10" />
+              <div>
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 text-[#6EE7B7] mb-6">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-[#E2E8F0] font-heading">Inteligentne sugestie</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#94A3B8]">
+                  Gotowe do wdrożenia usprawnienia dostosowane do Twoich celów. Precyzyjnie wskazane luki i zalecenia.
+                </p>
               </div>
-              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Inteligentne sugestie</h3>
-              <p className="mt-2.5 text-sm leading-relaxed text-[#94A3B8]">
-                Gotowe do wdrożenia usprawnienia dostosowane do Twoich celów. Precyzyjnie wskazane luki i zalecenia.
-              </p>
+              <div className="mt-6 rounded-lg bg-[#6EE7B7]/5 border border-[#6EE7B7]/10 p-3 text-[10px] text-[#6EE7B7] flex items-center gap-2">
+                <span className="text-xs">💡</span>
+                <span>Dodaj jawne role systemowe dla zwiększenia spójności.</span>
+              </div>
             </article>
 
-            <article className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] hover:bg-[#1C1C27] transition-all duration-200">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#A78BFA]/10 border border-[#A78BFA]/20 text-[#A78BFA] mb-5">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+            {/* Card 3: Tall/Small */}
+            <article className="group premium-card rounded-2xl p-8 lg:col-span-1 flex flex-col justify-between overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-[radial-gradient(circle_at_top_right,rgba(167,139,250,0.06),rgba(0,0,0,0))] pointer-events-none -z-10" />
+              <div>
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#A78BFA]/10 border border-[#A78BFA]/20 text-[#A78BFA] mb-6">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-[#E2E8F0] font-heading">Biblioteka promptów</h3>
+                <span className="text-[10px] font-mono uppercase font-bold text-[#A78BFA]/75 bg-[#A78BFA]/10 rounded px-1.5 py-0.5 mt-2 inline-block self-start">Wkrótce</span>
+                <p className="mt-3 text-sm leading-relaxed text-[#94A3B8]">
+                  Organizuj, wersjonuj i używaj ponownie swoich najlepszych promptów. Wszystko w jednym bezpiecznym miejscu.
+                </p>
               </div>
-              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Biblioteka promptów (Wkrótce)</h3>
-              <p className="mt-2.5 text-sm leading-relaxed text-[#94A3B8]">
-                Organizuj, wersjonuj i używaj ponownie swoich najlepszych promptów. Wszystko w jednym bezpiecznym miejscu.
-              </p>
             </article>
 
-            <article className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] hover:bg-[#1C1C27] transition-all duration-200">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 text-[#6EE7B7] mb-5">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2" />
-                </svg>
+            {/* Card 4: Wide */}
+            <article className="group premium-card rounded-2xl p-8 lg:col-span-2 flex flex-col justify-between overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(circle_at_top_right,rgba(110,231,183,0.06),rgba(0,0,0,0))] pointer-events-none -z-10" />
+              <div>
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 text-[#6EE7B7] mb-6">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-[#E2E8F0] font-heading">Śledź i udoskonalaj</h3>
+                <span className="text-[10px] font-mono uppercase font-bold text-[#6EE7B7]/75 bg-[#6EE7B7]/10 rounded px-1.5 py-0.5 mt-2 inline-block self-start">Wkrótce</span>
+                <p className="mt-3 text-sm leading-relaxed text-[#94A3B8] max-w-md">
+                  Monitoruj jakość w czasie i stale podnoś poprawność instrukcji. Rozwijaj swoje kompetencje razem z nami.
+                </p>
               </div>
-              <h3 className="text-base font-bold text-[#E2E8F0] font-heading">Śledź i udoskonalaj (Wkrótce)</h3>
-              <p className="mt-2.5 text-sm leading-relaxed text-[#94A3B8]">
-                Monitoruj jakość w czasie i stale podnoś poprawność instrukcji. Rozwijaj swoje kompetencje razem z nami.
-              </p>
+              {/* Fake stats chart mock */}
+              <div className="mt-6 flex gap-4 select-none">
+                <div className="flex-1 rounded-lg border border-[#2A2A3A]/40 bg-[#0C0C10]/40 p-3 text-center">
+                  <p className="text-[9px] uppercase tracking-wider text-[#8290A2] font-semibold">Tydzień 1</p>
+                  <p className="text-lg font-bold font-mono text-[#A78BFA] mt-1">64%</p>
+                </div>
+                <div className="flex-1 rounded-lg border border-[#2A2A3A]/40 bg-[#0C0C10]/40 p-3 text-center">
+                  <p className="text-[9px] uppercase tracking-wider text-[#8290A2] font-semibold">Tydzień 2</p>
+                  <p className="text-lg font-bold font-mono text-[#6EE7B7] mt-1">82%</p>
+                </div>
+              </div>
             </article>
           </div>
         </section>
 
         {/* Metric Strip Section replacing the testimonials */}
-        <section className="border-y border-[#2A2A3A] bg-[#13131A] py-10 px-6">
-          <div className="mx-auto max-w-4xl grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
+        <section className="border-y border-[#2A2A3A] bg-[#13131A] py-12 px-6 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(167,139,250,0.03),transparent)] pointer-events-none" />
+          <div className="mx-auto max-w-4xl grid grid-cols-2 sm:grid-cols-3 gap-8 text-center relative z-10">
             {[
               { value: '100%', label: 'Anonimowy — bez rejestracji' },
               { value: '10 kryteriów', label: 'Inżynierii promptów w każdym audycie' },
               { value: '0 PLN', label: 'Podstawowy dostęp na zawsze' },
             ].map((stat) => (
-              <div key={stat.label}>
-                <p className="text-2xl font-bold font-mono text-[#A78BFA]">{stat.value}</p>
-                <p className="mt-1 text-xs text-[#8290A2] leading-snug">{stat.label}</p>
+              <div key={stat.label} className="group">
+                <p className="text-3xl font-extrabold font-mono text-[#A78BFA] group-hover:scale-105 transition-transform duration-300">{stat.value}</p>
+                <p className="mt-2 text-xs text-[#8290A2] font-semibold leading-snug">{stat.label}</p>
               </div>
             ))}
           </div>
         </section>
 
         {/* Target Users Section */}
-        <section className="border-b border-[#2A2A3A] px-6 py-20">
+        <section className="border-b border-[#2A2A3A] px-6 py-24 relative">
           <div className="mx-auto max-w-6xl">
-            <div className="text-center">
-              <h2 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#A78BFA]">Dla Kogo?</h2>
-              <p className="mt-3 text-3xl font-bold tracking-tight text-[#E2E8F0] font-heading sm:text-4xl">
-                Zaprojektowany dla każdego
-              </p>
-              <p className="mx-auto mt-4 max-w-2xl text-[#94A3B8] text-sm">
-                Sprawdź, jak PromptPolish pomaga w nauce, pracy i codziennych projektach ze sztuczną inteligencją.
-              </p>
-            </div>
-
-            <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                {
-                  role: 'Studenci i uczniowie',
-                  benefit: 'Twórz lepsze konspekty nauki, dopracowuj zapytania do prac badawczych i szybciej przyswajaj wiedzę dzięki trafnym instrukcjom dla modeli AI.'
-                },
-                {
-                  role: 'Twórcy i freelancerzy',
-                  benefit: 'Ulepszaj prompty generujące grafiki, scenariusze czy posty. Buduj unikalny styl i oszczędzaj czas przy tworzeniu kreatywnych treści.'
-                },
-                {
-                  role: 'Pracownicy biurowi i marketerzy',
-                  benefit: 'Piszesz newslettery, raporty lub analizujesz dane? Zdobądź pewność, że AI dokładnie zrozumie Twoje intencje i wygeneruje bezbłędne odpowiedzi.'
-                },
-                {
-                  role: 'Założyciele i programiści',
-                  benefit: 'Optymalizuj zapytania systemowe w swoich aplikacjach i automatyzuj procesy z pełną precyzją, bez marnowania tokenów i czasu na nieudane próby.'
-                }
-              ].map((user, i) => (
-                <div key={i} className="flex flex-col rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#3A3A52] transition-all duration-200">
-                  <h3 className="text-sm font-bold text-[#E2E8F0] font-heading">{user.role}</h3>
-                  <p className="mt-2.5 text-[11px] leading-relaxed text-[#8290A2] flex-grow">{user.benefit}</p>
+            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] items-start">
+              {/* Left Column Sticky Header */}
+              <div className="lg:sticky lg:top-28">
+                <h2 className="text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#A78BFA]">Dla Kogo?</h2>
+                <h3 className="mt-4 text-3xl font-extrabold tracking-tight text-[#E2E8F0] font-heading sm:text-4xl leading-tight">
+                  Zaprojektowany dla każdego
+                </h3>
+                <p className="mt-4 text-sm leading-relaxed text-[#94A3B8]">
+                  Sprawdź, jak PromptPolish pomaga w nauce, pracy i codziennych projektach ze sztuczną inteligencją.
+                </p>
+                
+                <div className="mt-8 hidden lg:block rounded-xl border border-[#2A2A3A] bg-[#13131A]/40 p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-xs font-semibold text-[#E2E8F0]">Dopasowane profile analizy</span>
+                  </div>
+                  <p className="text-[11px] text-[#8290A2] leading-relaxed">
+                    Każdy segment użytkowników otrzymuje ukierunkowane sugestie odpowiadające ich specyficznym potrzebom.
+                  </p>
                 </div>
-              ))}
+              </div>
+
+              {/* Right Column Stacked List */}
+              <div className="space-y-4">
+                {[
+                  {
+                    icon: '🎓',
+                    role: 'Studenci i uczniowie',
+                    benefit: 'Twórz lepsze konspekty nauki, dopracowuj zapytania do prac badawczych i szybciej przyswajaj wiedzę dzięki trafnym instrukcjom dla modeli AI.'
+                  },
+                  {
+                    icon: '🎨',
+                    role: 'Twórcy i freelancerzy',
+                    benefit: 'Ulepszaj prompty generujące grafiki, scenariusze czy posty. Buduj unikalny styl i oszczádzaj czas przy tworzeniu kreatywnych treści.'
+                  },
+                  {
+                    icon: '💼',
+                    role: 'Pracownicy biurowi i marketerzy',
+                    benefit: 'Piszesz newslettery, raporty lub analizujesz dane? Zdobądź pewność, że AI dokładnie zrozumie Twoje intencje i wygeneruje bezbłędne odpowiedzi.'
+                  },
+                  {
+                    icon: '💻',
+                    role: 'Założyciele i programiści',
+                    benefit: 'Optymalizuj zapytania systemowe w swoich aplikacjach i automatyzuj procesy z pełną precyzją, bez marnowania tokenów i czasu na nieudane próby.'
+                  }
+                ].map((user, i) => (
+                  <div 
+                    key={i} 
+                    className="group flex gap-4 rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#A78BFA]/30 hover:bg-[#1C1C27] hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#A78BFA]/10 border border-[#A78BFA]/20 text-xl">
+                      {user.icon}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-[#E2E8F0] font-heading">{user.role}</h4>
+                      <p className="mt-2 text-[11px] leading-relaxed text-[#8290A2] font-medium">{user.benefit}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
         {/* How It Works (Flow Explanation) Section */}
-        <section className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
+        <section className="mx-auto max-w-6xl px-6 py-24 lg:py-28 relative">
           <div className="text-center">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-[#A78BFA]">Proces</h2>
-            <p className="mt-3 text-3xl font-bold tracking-tight text-[#E2E8F0] font-heading sm:text-4xl">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-[0.25em] text-[#A78BFA]">Proces</h2>
+            <p className="mt-4 text-3xl font-extrabold tracking-tight text-[#E2E8F0] font-heading sm:text-4xl">
               Jak przebiega audyt promptu?
             </p>
             <p className="mx-auto mt-4 max-w-2xl text-[#94A3B8] text-sm">
@@ -431,37 +499,50 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 relative">
-            {[
-              {
-                num: '01',
-                title: 'Wklejasz prompt',
-                desc: 'Wprowadzasz swoją instrukcję, opcjonalnie definiując cel, typ zadania lub oczekiwany format.'
-              },
-              {
-                num: '02',
-                title: 'Lokalny skan bezpieczeństwa',
-                desc: 'Nasz skaner natychmiast analizuje tekst w poszukiwaniu kluczy API, tokenów lub haseł, chroniąc Twoje dane.'
-              },
-              {
-                num: '03',
-                title: 'Audyt jakości promptu',
-                desc: 'Model analizuje instrukcję pod kątem 10 kluczowych kryteriów inżynierii promptów.'
-              },
-              {
-                num: '04',
-                title: 'Gotowy wynik',
-                desc: 'Odbierasz ustrukturyzowany raport, punktację, lista zmian oraz gotowy do wdrożenia, ulepszony prompt.'
-              }
-            ].map((step, i) => (
-              <div key={i} className="relative rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 hover:border-[#A78BFA]/30 transition-all">
-                <span className="text-2xl font-black font-mono text-[#1C1C27] absolute top-4 right-4 select-none">
-                  {step.num}
-                </span>
-                <h3 className="text-sm font-bold text-[#E2E8F0] font-heading mt-2">{step.title}</h3>
-                <p className="mt-3 text-xs leading-relaxed text-[#94A3B8]">{step.desc}</p>
-              </div>
-            ))}
+          {/* Connected timeline container */}
+          <div className="mt-20 relative">
+            {/* Connecting dashed line for desktop */}
+            <div className="absolute top-[28px] left-[12.5%] w-[75%] h-[1px] border-t border-dashed border-[#2A2A3A] hidden lg:block -z-10" />
+
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  num: '01',
+                  title: 'Wklejasz prompt',
+                  desc: 'Wprowadzasz swoją instrukcję, opcjonalnie definiując cel, typ zadania lub oczekiwany format.'
+                },
+                {
+                  num: '02',
+                  title: 'Lokalny skan bezpieczeństwa',
+                  desc: 'Nasz skaner natychmiast analizuje tekst w poszukiwaniu kluczy API, tokenów lub haseł, chroniąc Twoje dane.'
+                },
+                {
+                  num: '03',
+                  title: 'Audyt jakości promptu',
+                  desc: 'Model analizuje instrukcję pod kątem 10 kluczowych kryteriów inżynierii promptów.'
+                },
+                {
+                  num: '04',
+                  title: 'Gotowy wynik',
+                  desc: 'Odbierasz ustrukturyzowany raport, punktację, lista zmian oraz gotowy do wdrożenia, ulepszony prompt.'
+                }
+              ].map((step, i) => (
+                <div key={i} className="group relative text-center lg:text-left">
+                  {/* Timeline Badge Anchor */}
+                  <div className="flex justify-center lg:justify-start">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[#2A2A3A] bg-[#0C0C10] font-mono text-sm font-black text-[#A78BFA] group-hover:border-[#A78BFA] group-hover:shadow-[0_0_15px_rgba(167,139,250,0.2)] transition-all duration-300">
+                      {step.num}
+                    </span>
+                  </div>
+                  
+                  {/* Text Container */}
+                  <div className="mt-6 rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 group-hover:border-[#A78BFA]/20 group-hover:bg-[#1C1C27]/50 transition-all duration-300">
+                    <h4 className="text-sm font-bold text-[#E2E8F0] font-heading">{step.title}</h4>
+                    <p className="mt-2.5 text-[11px] leading-relaxed text-[#94A3B8] font-medium">{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="mt-16 text-center">
@@ -470,21 +551,22 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="max-w-2xl mx-auto mt-16 p-5 rounded-xl border border-[#2A2A3A] bg-[#13131A]/60 backdrop-blur-sm text-left">
-            <div className="flex gap-3.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#A78BFA]/10 text-[#A78BFA] border border-[#A78BFA]/20">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          <div className="max-w-2xl mx-auto mt-16 p-6 rounded-xl border border-[#2A2A3A] bg-[#13131A]/60 backdrop-blur-sm text-left relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.03),rgba(0,0,0,0))] pointer-events-none" />
+            <div className="flex gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#A78BFA]/10 text-[#A78BFA] border border-[#A78BFA]/20">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <div className="space-y-1">
-                <h4 className="text-xs font-bold text-[#E2E8F0] tracking-wide">Bezpieczeństwo i ochrona danych wrażliwych</h4>
+              <div className="space-y-1.5">
+                <h4 className="text-xs font-bold text-[#E2E8F0] tracking-wide uppercase">Bezpieczeństwo i ochrona danych wrażliwych</h4>
                 <p className="text-[11px] leading-relaxed text-[#94A3B8]">
                   PromptPolish stawia prywatność na pierwszym miejscu i działa w pełni anonimowo. Przed analizą lokalny filtr automatycznie sprawdza prompt pod kątem kluczy API, tokenów czy haseł.
                 </p>
-                <p className="text-[10px] font-bold text-[#F59E0B]">
+                <div className="rounded border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[10px] font-semibold text-[#F59E0B] mt-2">
                   Pamiętaj: Ze względów bezpieczeństwa pod żadnym pozorem nie wklejaj do analizatora haseł, prywatnych kluczy ani tajemnic handlowych.
-                </p>
+                </div>
               </div>
             </div>
           </div>
