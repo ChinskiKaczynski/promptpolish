@@ -132,18 +132,18 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       {/* Main Score & Warning Cards Layout */}
       <div className="grid gap-6 md:grid-cols-[1fr_1.2fr] animate-fade-in-up animation-delay-100">
         {/* Score Display Card */}
-        <div className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border p-6 sm:p-8 shadow-xl transition-all duration-300 backdrop-blur-md ${scoreMeta.bg} ${scoreMeta.border}`}>
-          <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-[#A78BFA]/10 opacity-30 blur-2xl pointer-events-none" />
+        <div className={`relative flex flex-col justify-between overflow-hidden rounded-xl border p-6 sm:p-7 shadow-lg transition-all ${scoreMeta.bg} ${scoreMeta.border}`}>
+          <div className="absolute -right-16 -top-16 h-32 w-32 rounded-full bg-[#A78BFA]/5 opacity-30 blur-2xl pointer-events-none" />
           
           <div className="flex items-center justify-between gap-6 relative z-10">
             <div className="space-y-2">
-              <p className="text-xs font-mono font-bold uppercase tracking-[0.18em] text-[#8290A2]">Ogólna Ocena Jakości</p>
-              <h2 className={`text-3xl font-extrabold tracking-tight font-heading ${scoreMeta.text}`}>{scoreMeta.label}</h2>
-              <p className="text-xs leading-relaxed text-[#94A3B8] max-w-[240px] font-semibold">{scoreMeta.desc}</p>
+              <p className="text-xs font-mono font-bold uppercase tracking-[0.15em] text-[#8290A2]">Ogólna Ocena Jakości</p>
+              <h2 className={`text-2xl font-bold tracking-tight font-heading ${scoreMeta.text}`}>{scoreMeta.label}</h2>
+              <p className="text-xs leading-relaxed text-[#94A3B8] max-w-[240px]">{scoreMeta.desc}</p>
             </div>
             
             {/* SVG Circular Progress Meter */}
-            <div className="relative h-24 w-24 shrink-0 rounded-full bg-[#1C1C27] flex items-center justify-center border border-white/5 shadow-inner">
+            <div className="relative h-24 w-24 shrink-0 rounded-full bg-[#1C1C27] flex items-center justify-center border border-[#2A2A3A]">
               <svg className="h-[88px] w-[88px] -rotate-90">
                 <circle
                   cx="44"
@@ -172,10 +172,10 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             </div>
           </div>
 
-          <div className="mt-6 border-t border-[#2A2A3A]/40 pt-4 relative z-10">
-            <div className="flex items-center justify-between text-[11px] font-mono text-[#8290A2] font-semibold">
-              <span>Wersja algorytmu: <strong className="font-bold text-[#6EE7B7]/70">{result.analysis_schema_version || '1.0.0'}</strong></span>
-              <span className="font-bold text-[#6EE7B7]/70">
+          <div className="mt-6 border-t border-[#2A2A3A]/50 pt-4 relative z-10">
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#8290A2]">
+              <span>Wersja algorytmu: <strong className="font-semibold text-[#6EE7B7]/70">{result.analysis_schema_version || '1.0.0'}</strong></span>
+              <span className="font-semibold text-[#6EE7B7]/70">
                 {planSlug === 'pro'
                   ? 'Profesjonalny audyt Pro'
                   : mode === 'share'
@@ -192,39 +192,38 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           const isStaleOrUnverified = !profile || profile.verificationStatus !== 'verified'
           
           return (
-            <div className="flex flex-col justify-between rounded-2xl border border-white/5 bg-[#13131A]/60 backdrop-blur-md p-6 sm:p-8 shadow-lg relative overflow-hidden">
-              <div className="absolute -right-16 -bottom-16 h-32 w-32 rounded-full bg-[#A78BFA]/5 opacity-20 blur-2xl pointer-events-none" />
-              <div className="space-y-4 relative z-10">
+            <div className="flex flex-col justify-between rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
+              <div className="space-y-4">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1C1C27] text-[#A78BFA] border border-[#2A2A3A] shrink-0">
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                   </div>
-                  <h3 className="text-xs font-bold text-[#8290A2] uppercase tracking-widest">
+                  <h3 className="text-xs font-bold text-[#94A3B8] uppercase tracking-widest">
                     PROFIL AUDYTU: {profile ? profile.displayName.toUpperCase() : 'UNIWERSALNY'}
                   </h3>
                 </div>
                 
-                <div className="space-y-4">
-                  <p className="text-xs leading-relaxed text-[#94A3B8] font-medium">
+                <div className="space-y-3">
+                  <p className="text-xs leading-relaxed text-[#94A3B8]">
                     {profile?.slug === 'openrouter-deepseek-v4-flash'
                       ? 'Analiza ocenia prompt pod kątem zaawansowanego modelu DeepSeek v4 Flash, weryfikując precyzję, jasność i instrukcje warunkowe.'
                       : 'Analiza ocenia prompt według ogólnych, uniwersalnych zasad przejrzystości, kontekstu i struktury dla LLM.'}
                   </p>
                   
                   {isStaleOrUnverified && (
-                    <div className="rounded-xl border border-white/5 bg-[#1C1C27]/50 p-4.5 flex gap-2.5 text-[#8290A2] shadow-inner">
+                    <div className="rounded-lg border border-[#2A2A3A] bg-[#1C1C27] p-3 flex gap-2 text-[#8290A2]">
                       <span className="text-sm leading-none mt-0.5 shrink-0" aria-hidden="true">ℹ️</span>
-                      <p className="text-[11px] leading-relaxed font-medium">
+                      <p className="text-[11px] leading-relaxed">
                         Profil nie deklaruje konkretnych parametrów technicznych modelu — celowe podejście, które eliminuje nieaktualne roszczenia dotyczące możliwości.
                       </p>
                     </div>
                   )}
 
-                  <div className="rounded-xl border border-amber-500/10 bg-amber-500/5 p-4 flex gap-3.5 shadow-sm">
-                    <span className="text-lg shrink-0" aria-hidden="true">💡</span>
-                    <p className="text-[11px] leading-relaxed text-amber-500/80 font-bold">
+                  <div className="rounded-lg border border-[#F59E0B]/20 bg-[#F59E0B]/5 p-3.5 flex gap-3">
+                    <span className="text-lg" aria-hidden="true">💡</span>
+                    <p className="text-[11px] leading-relaxed text-[#F59E0B]/80 font-medium">
                       Ten audyt ma charakter pomocniczy. Przed użyciem promptu w krytycznym procesie zweryfikuj wynik samodzielnie.
                     </p>
                   </div>
@@ -242,10 +241,10 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         <div className="space-y-8 animate-fade-in-up animation-delay-200">
           
           {/* Overall Summary Card */}
-          <section className="premium-card rounded-2xl p-6 sm:p-8 relative overflow-hidden">
-            <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading mb-4 border-b border-[#2A2A3A]/40 pb-3">Podsumowanie audytu</h3>
+          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
+            <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading mb-4">Podsumowanie audytu</h3>
             <div className="relative">
-              <p className="text-xs sm:text-sm leading-relaxed text-[#94A3B8] font-medium">
+              <p className="text-xs sm:text-sm leading-relaxed text-[#94A3B8] pl-2">
                 {result.overall_summary}
               </p>
             </div>
@@ -253,7 +252,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
 
           {/* Original Prompt Collapsible Section */}
           {mode === 'private' && result.input_prompt && (
-            <details className="group rounded-2xl border border-white/5 bg-[#13131A]/40 p-6 sm:p-8 transition-all duration-300 shadow-md">
+            <details className="group rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 transition-all duration-300">
               <summary className="flex items-center justify-between font-heading text-lg font-bold text-[#E2E8F0] cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none">
                 <span>Oryginalny prompt</span>
                 <svg
@@ -266,7 +265,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                 </svg>
               </summary>
               <div className="mt-4 border-t border-[#2A2A3A]/40 pt-4">
-                <pre className="whitespace-pre-wrap break-words font-mono text-xs text-[#94A3B8] bg-[#0C0C10]/80 p-4.5 rounded-xl border border-white/5 shadow-inner">
+                <pre className="whitespace-pre-wrap break-words font-mono text-xs text-[#94A3B8] bg-[#0C0C10] p-4 rounded-lg border border-[#2A2A3A]">
                   {result.input_prompt}
                 </pre>
               </div>
@@ -274,8 +273,8 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
           )}
 
           {/* Top Weaknesses Section */}
-          <section className="premium-card rounded-2xl p-6 sm:p-8 relative overflow-hidden">
-            <div className="flex items-center gap-2.5 mb-5 border-b border-[#2A2A3A]/40 pb-3">
+          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
+            <div className="flex items-center gap-2.5 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -286,19 +285,19 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
             
             <div className="grid gap-3">
               {result.top_weaknesses.map((weakness, i) => (
-                <div key={i} className="flex items-start gap-3.5 rounded-xl bg-[#1C1C27]/50 p-4 border border-white/5 hover:border-rose-500/10 hover:bg-[#1C1C27] transition-all duration-300 shadow-sm">
+                <div key={i} className="flex items-start gap-3 rounded-xl bg-[#1C1C27] p-4 border border-[#2A2A3A] hover:bg-[#222230] transition-colors">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F87171]/10 text-xs font-black text-[#F87171] border border-[#F87171]/20">
                     {i + 1}
                   </span>
-                  <p className="text-xs font-bold text-[#94A3B8] leading-relaxed">{weakness}</p>
+                  <p className="text-xs font-semibold text-[#94A3B8] leading-relaxed">{weakness}</p>
                 </div>
               ))}
             </div>
           </section>
 
           {/* Improvement Plan Section */}
-          <section className="premium-card rounded-2xl p-6 sm:p-8 relative overflow-hidden">
-            <div className="flex items-center gap-2.5 mb-5 border-b border-[#2A2A3A]/40 pb-3">
+          <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7">
+            <div className="flex items-center gap-2.5 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -307,13 +306,13 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
               <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">Plan naprawy</h3>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3.5">
               {result.improvement_plan.map((step, i) => (
-                <div key={i} className="flex items-start gap-3.5 p-2 rounded-xl hover:bg-white/5 transition-all duration-300">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#A78BFA]/10 text-xs font-black text-[#A78BFA] border border-[#A78BFA]/20 mt-0.5">
+                <div key={i} className="flex items-start gap-3 p-1">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#A78BFA]/10 text-xs font-black text-[#A78BFA] border border-[#A78BFA]/20">
                     {i + 1}
                   </div>
-                  <p className="text-xs font-bold text-[#94A3B8] leading-relaxed">{step}</p>
+                  <p className="text-xs font-bold text-[#94A3B8] mt-0.5 leading-relaxed">{step}</p>
                 </div>
               ))}
             </div>
@@ -322,18 +321,18 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Right Side: Criteria Breakdown with Native Details/Summary */}
-        <section className="premium-card rounded-2xl p-6 sm:p-8 animate-fade-in-up animation-delay-300 relative overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[#2A2A3A]/40 pb-4 mb-4">
+        <section className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-6 sm:p-7 animate-fade-in-up animation-delay-300">
+          <div className="flex items-center justify-between border-b border-[#2A2A3A]/30 pb-4 mb-4">
             <div>
               <h3 className="text-lg font-bold tracking-tight text-[#E2E8F0] font-heading">Kryteria szczegółowe</h3>
-              <p className="text-[11px] text-[#8290A2] mt-1.5 font-bold">Kliknij kryterium, aby zobaczyć wyjaśnienie</p>
+              <p className="text-[11px] text-[#8290A2] mt-0.5 font-medium">Kliknij kryterium, aby zobaczyć wyjaśnienie</p>
             </div>
             <span className="rounded-full bg-[#A78BFA]/10 border border-[#A78BFA]/20 px-2.5 py-0.5 text-xs font-bold text-[#A78BFA] uppercase tracking-wider">
               10 Parametrów
             </span>
           </div>
 
-          <div className="divide-y divide-[#2A2A3A]/40">
+          <div className="divide-y divide-[#2A2A3A]/30">
             {result.criteria_scores.map((item) => {
               const barColor = item.raw_score_0_10 >= 8 
                 ? 'from-[#059669] to-[#6EE7B7]' 
@@ -352,8 +351,8 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                 : 'bg-[#F87171]/10 text-[#F87171] border-[#F87171]/20'
 
               return (
-                <details key={item.criterion} className="group py-4.5 first:pt-0 last:pb-0">
-                  <summary className="flex w-full items-center justify-between gap-4 text-left hover:opacity-90 active:scale-[0.99] transition-all list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none py-1">
+                <details key={item.criterion} className="group py-4 first:pt-0 last:pb-0">
+                  <summary className="flex w-full items-center justify-between gap-4 text-left hover:opacity-90 active:scale-[0.99] transition-all list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none">
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs sm:text-sm font-bold text-[#E2E8F0]">
@@ -365,7 +364,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                       </div>
                       
                       {/* Progress Bar with smooth growth animation */}
-                      <div className="mt-3 h-2 w-full bg-[#0C0C10] rounded-full overflow-hidden border border-white/5 shadow-inner">
+                      <div className="mt-2.5 h-1.5 w-full bg-[#1C1C27] rounded-full overflow-hidden border border-[#2A2A3A]">
                         <div
                           className={`h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-1000 ease-out`}
                           style={{ width: mounted ? `${item.raw_score_0_10 * 10}%` : '0%' }}
@@ -388,13 +387,13 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
 
                   {/* Expandable Details Container */}
                   <div className="mt-3.5 transition-all duration-300">
-                    <div className="rounded-xl bg-[#0C0C10]/60 border border-white/5 p-4.5 space-y-3.5 shadow-inner">
+                    <div className="rounded-xl bg-[#1C1C27] border border-[#2A2A3A] p-4 space-y-3">
                       <div>
-                        <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8290A2]">Analiza słabości:</p>
-                        <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed font-bold">{item.rationale}</p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#8290A2]">Analiza słabości:</p>
+                        <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed font-semibold">{item.rationale}</p>
                       </div>
-                      <div className="border-t border-[#2A2A3A]/40 pt-2.5">
-                        <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#A78BFA]">Rekomendowane ulepszenie:</p>
+                      <div className="border-t border-[#2A2A3A] pt-2.5">
+                        <p className="text-xs font-bold uppercase tracking-wider text-[#A78BFA]">Rekomendowane ulepszenie:</p>
                         <p className="mt-1 text-xs text-[#A78BFA] font-bold leading-relaxed">{item.improvement_suggestion}</p>
                       </div>
                     </div>
@@ -408,9 +407,9 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       </div>
 
       {/* Improved Prompt Block (Sleek Dark Theme Editor Style matching layout mockup) */}
-      <section className="overflow-hidden rounded-2xl border border-[#2A2A3A]/80 bg-[#0C0C10] shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative animate-fade-in-up animation-delay-400">
+      <section className="overflow-hidden rounded-xl border border-[#2A2A3A] bg-[#0C0C10] shadow-2xl animate-fade-in-up animation-delay-400">
         {/* Editor Top Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#2A2A3A]/60 bg-[#13131A]/60 px-6 py-4.5 backdrop-blur-md">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#2A2A3A] bg-[#13131A] px-6 py-4">
           <div className="flex items-center gap-3">
             {/* Mock Windows controls from screenshot mockup */}
             <div className="flex items-center gap-1.5 shrink-0">
@@ -418,7 +417,7 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
               <span className="h-3 w-3 rounded-full bg-amber-500/85" />
               <span className="h-3 w-3 rounded-full bg-emerald-500/85" />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#94A3B8] border-l border-[#2A2A3A]/60 pl-3">
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#94A3B8] border-l border-[#2A2A3A] pl-3">
               POPRAWIONY PROMPT
             </span>
           </div>
@@ -427,14 +426,14 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
         </div>
 
         {/* Editor Code Area */}
-        <div className="p-6 font-mono text-sm leading-relaxed text-[#E2E8F0] selection:bg-[#A78BFA]/20 bg-[#07070a]">
+        <div className="p-6 font-mono text-sm leading-relaxed text-[#E2E8F0] selection:bg-[#A78BFA]/20">
           <pre className="whitespace-pre-wrap break-words font-mono w-full">
             {promptLines.map((line, i) => (
-              <div key={i} className="flex items-start hover:bg-[#A78BFA]/5 transition-colors duration-200 rounded py-1 px-1.5">
-                <span className="select-none w-10 text-right text-[#8290A2]/60 shrink-0 pr-4 border-r border-white/5 font-mono text-xs font-bold">
+              <div key={i} className="flex items-start hover:bg-[#A78BFA]/5 transition-colors duration-150 rounded py-0.5 px-1">
+                <span className="select-none w-8 text-right text-[#8290A2] shrink-0 pr-3 border-r border-[#2A2A3A]/40 font-mono">
                   {i + 1}
                 </span>
-                <code className="pl-5 whitespace-pre-wrap break-words font-mono text-[#E2E8F0] flex-1 block">
+                <code className="pl-4 whitespace-pre-wrap break-words font-mono text-[#E2E8F0] flex-1 block">
                   {line || ' '}
                 </code>
               </div>
@@ -447,54 +446,54 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 animate-fade-in-up animation-delay-500">
         
         {/* Change Explanations */}
-        <div className="rounded-2xl border border-white/5 bg-[#13131A]/60 backdrop-blur-md p-6 shadow-md hover:border-[#A78BFA]/20 transition-all duration-300">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-3.5">
           <div className="flex items-center gap-2.5 text-[#A78BFA]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">Wyjaśnienie Zmian</h4>
           </div>
-          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed mt-4">
-            {result.change_explanations.map((note, i) => <li key={i} className="font-medium">{note}</li>)}
+          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed">
+            {result.change_explanations.map((note, i) => <li key={i}>{note}</li>)}
           </ul>
         </div>
 
         {/* Model Fit Notes */}
-        <div className="rounded-2xl border border-white/5 bg-[#13131A]/60 backdrop-blur-md p-6 shadow-md hover:border-[#A78BFA]/20 transition-all duration-300">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-3.5">
           <div className="flex items-center gap-2.5 text-[#A78BFA]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
             </svg>
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">ZGODNOŚĆ Z PROFILEM</h4>
           </div>
-          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed mt-4">
-            {result.model_fit_notes.map((note, i) => <li key={i} className="font-medium">{note}</li>)}
+          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed">
+            {result.model_fit_notes.map((note, i) => <li key={i}>{note}</li>)}
           </ul>
         </div>
 
         {/* Uncertainty Warnings */}
-        <div className="rounded-2xl border border-white/5 bg-[#13131A]/60 backdrop-blur-md p-6 shadow-md hover:border-amber-500/20 transition-all duration-300">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-3.5">
           <div className="flex items-center gap-2.5 text-[#F59E0B]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">OSTRZEŻENIA</h4>
           </div>
-          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed mt-4">
-            {result.uncertainty_warnings.map((note, i) => <li key={i} className="font-medium">{note}</li>)}
+          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed">
+            {result.uncertainty_warnings.map((note, i) => <li key={i}>{note}</li>)}
           </ul>
         </div>
 
         {/* Safety Notes */}
-        <div className="rounded-2xl border border-white/5 bg-[#13131A]/60 backdrop-blur-md p-6 shadow-md hover:border-rose-500/20 transition-all duration-300">
+        <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-3.5">
           <div className="flex items-center gap-2.5 text-[#F87171]">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             <h4 className="text-xs font-bold uppercase tracking-wider text-[#E2E8F0]">BEZPIECZEŃSTWO</h4>
           </div>
-          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed mt-4">
-            {result.safety_notes.map((note, i) => <li key={i} className="font-medium">{note}</li>)}
+          <ul className="list-disc pl-4 space-y-2 text-xs text-[#94A3B8] leading-relaxed">
+            {result.safety_notes.map((note, i) => <li key={i}>{note}</li>)}
           </ul>
         </div>
 

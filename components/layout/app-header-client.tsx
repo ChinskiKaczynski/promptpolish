@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Logo } from '@/components/ui/logo'
@@ -19,15 +19,6 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 15)
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -48,17 +39,15 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
   }
 
   // Theme style mappings - dark-mode-first
-  const bgStyle = isScrolled 
-    ? 'bg-[#0C0C10]/80 border-[#2A2A3A]/60 shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-md'
-    : 'bg-[#0C0C10]/20 border-transparent backdrop-blur-sm'
-  const textStyle = 'text-[#94A3B8] hover:text-[#E2E8F0] transition-colors duration-200 text-sm font-medium relative py-1.5 group'
-  const activeTextStyle = 'text-[#A78BFA] font-semibold text-sm relative py-1.5 group'
+  const bgStyle = 'bg-[#0C0C10]/90 border-[#2A2A3A] text-[#E2E8F0]'
+  const textStyle = 'text-[#94A3B8] hover:text-[#E2E8F0] transition-colors duration-150 text-sm font-medium'
+  const activeTextStyle = 'text-[#A78BFA] font-semibold text-sm'
   const buttonBorderClass = 'border-[#2A2A3A] bg-[#13131A] hover:bg-[#1C1C27] hover:border-[#3A3A52] text-[#E2E8F0] shadow-none'
 
   const isLinkActive = (path: string) => pathname === path
 
   return (
-    <header className={`border-b sticky top-0 z-50 transition-all duration-300 h-[64px] md:h-[80px] flex items-center ${bgStyle}`}>
+    <header className={`border-b sticky top-0 z-50 backdrop-blur-xl transition-all duration-200 h-[64px] md:h-[80px] flex items-center ${bgStyle}`}>
       <div className="w-full max-w-6xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <Link href="/">
@@ -74,8 +63,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                 href="/"
                 className={isLinkActive('/') ? activeTextStyle : textStyle}
               >
-                <span>Strona główna</span>
-                <span className={`absolute bottom-0 left-0 w-full h-[1.5px] rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] transition-transform duration-300 origin-center ${isLinkActive('/') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                Strona główna
               </Link>
               <Link
                 href="/analyze"
@@ -90,22 +78,19 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                 href="/"
                 className={isLinkActive('/') ? activeTextStyle : textStyle}
               >
-                <span>Strona główna</span>
-                <span className={`absolute bottom-0 left-0 w-full h-[1.5px] rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] transition-transform duration-300 origin-center ${isLinkActive('/') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                Strona główna
               </Link>
               <Link
                 href="/analyze"
                 className={isLinkActive('/analyze') ? activeTextStyle : textStyle}
               >
-                <span>Nowy audyt</span>
-                <span className={`absolute bottom-0 left-0 w-full h-[1.5px] rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] transition-transform duration-300 origin-center ${isLinkActive('/analyze') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                Nowy audyt
               </Link>
               <Link
                 href="/pricing"
                 className={isLinkActive('/pricing') ? activeTextStyle : textStyle}
               >
-                <span>Cennik</span>
-                <span className={`absolute bottom-0 left-0 w-full h-[1.5px] rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] transition-transform duration-300 origin-center ${isLinkActive('/pricing') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                Cennik
               </Link>
 
               {isAdmin && (
@@ -113,8 +98,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                   href="/admin/metrics"
                   className={isLinkActive('/admin/metrics') ? activeTextStyle : textStyle}
                 >
-                  <span>Admin</span>
-                  <span className={`absolute bottom-0 left-0 w-full h-[1.5px] rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] transition-transform duration-300 origin-center ${isLinkActive('/admin/metrics') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                  Admin
                 </Link>
               )}
 
@@ -124,8 +108,7 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
                     href="/account"
                     className={isLinkActive('/account') ? activeTextStyle : textStyle}
                   >
-                    <span>Konto</span>
-                    <span className={`absolute bottom-0 left-0 w-full h-[1.5px] rounded-full bg-gradient-to-r from-[#7C3AED] to-[#A78BFA] transition-transform duration-300 origin-center ${isLinkActive('/account') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
+                    Konto
                   </Link>
                   <button
                     onClick={handleLogout}
