@@ -46,7 +46,7 @@ export const defaultTextGenerator: TextGenerator = async (
   }
 
   const { output, usage, finishReason } = await generateText({
-    model: google(model) as any,
+    model: google(model),
     system: systemInstruction,
     prompt: userPrompt,
     temperature: opts.temperature,
