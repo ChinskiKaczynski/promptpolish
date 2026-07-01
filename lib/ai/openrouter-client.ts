@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google'
-import { generateText, Output } from 'ai'
+import { generateObject, NoObjectGeneratedError } from 'ai'
 import { analysisResultSchema, type AnalysisResult } from './schemas'
 import { normalizeProviderError, ProviderError } from './provider-errors'
 import { getOwnerConfiguredModelId } from './model-catalog'
@@ -45,41 +45,62 @@ export const defaultTextGenerator: TextGenerator = async (
     )
   }
 
-  const { output, usage, finishReason } = await generateText({
-    model: google(model),
-    system: systemInstruction,
-    prompt: userPrompt,
-    temperature: opts.temperature,
-    maxOutputTokens: opts.maxTokens,
-    abortSignal: opts.abortSignal,
-    output: Output.object({
-      schema: analysisResultSchema
-    }),
-    ...(opts.providerMetadata && Object.keys(opts.providerMetadata).length > 0
-      ? { providerMetadata: opts.providerMetadata }
-      : {})
-  })
-
-  const rawUsage = usage as unknown as {
-    promptTokens: number
-    completionTokens: number
-    totalTokens: number
-    reasoningTokens?: number
-    outputTokenDetails?: { reasoningTokens?: number }
-  } | undefined
-
-  return {
-    output,
-    usage: rawUsage
-      ? {
-          promptTokens: rawUsage.promptTokens,
-          completionTokens: rawUsage.completionTokens,
-          totalTokens: rawUsage.totalTokens,
-          reasoningTokens: rawUsage.outputTokenDetails?.reasoningTokens ?? rawUsage.reasoningTokens ?? 0,
-          visibleTokens: Math.max(0, rawUsage.completionTokens - (rawUsage.outputTokenDetails?.reasoningTokens ?? rawUsage.reasoningTokens ?? 0))
+  try {
+    const { object, usage, finishReason } = await generateObject({
+      model: google(model),
+      system: systemInstruction,
+      prompt: userPrompt,
+      temperature: opts.temperature,
+      maxOutputTokens: opts.maxTokens,
+      abortSignal: opts.abortSignal,
+      schema: analysisResultSchema,
+      providerOptions: {
+        google: {
+          thinkingConfig: {
+            thinkingBudget: Number(process.env.GEMINI_THINKING_BUDGET ?? 0),
+            includeThoughts: false
+          }
         }
-      : undefined,
-    finishReason: finishReason || 'stop'
+      },
+      ...(opts.providerMetadata && Object.keys(opts.providerMetadata).length > 0
+        ? { providerMetadata: opts.providerMetadata }
+        : {})
+    })
+
+    const rawUsage = usage as unknown as {
+      promptTokens: number
+      completionTokens: number
+      totalTokens: number
+      reasoningTokens?: number
+      outputTokenDetails?: { reasoningTokens?: number }
+    } | undefined
+
+    return {
+      output: object,
+      usage: rawUsage
+        ? {
+            promptTokens: rawUsage.promptTokens,
+            completionTokens: rawUsage.completionTokens,
+            totalTokens: rawUsage.totalTokens,
+            reasoningTokens: rawUsage.outputTokenDetails?.reasoningTokens ?? rawUsage.reasoningTokens ?? 0,
+            visibleTokens: Math.max(0, rawUsage.completionTokens - (rawUsage.outputTokenDetails?.reasoningTokens ?? rawUsage.reasoningTokens ?? 0))
+          }
+        : undefined,
+      finishReason: finishReason || 'stop'
+    }
+  } catch (error) {
+    if (NoObjectGeneratedError.isInstance(error)) {
+      if (process.env.NODE_ENV !== 'production') {
+        const rawOutput = error.text || ''
+        const redactedRaw = rawOutput.replace(/(?:AIzaSy[A-Za-z0-9_-]{33}|sk-[A-Za-z0-9_-]{20,})/g, '[REDACTED_SECRET]')
+        console.warn('[MALFORMED OBJECT DIAGNOSTIC]', {
+          finishReason: error.finishReason,
+          cause: error.cause instanceof Error ? error.cause.message : String(error.cause),
+          rawOutput: redactedRaw.slice(0, 500)
+        })
+      }
+    }
+    throw error
   }
 }
 

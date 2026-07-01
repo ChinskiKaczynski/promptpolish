@@ -65,34 +65,34 @@ export function AnalyzeForm() {
 
   const loadingSteps = workingLanguage === 'pl' ? loadingStepsPl : loadingStepsEn
 
-  // Animate mock audit loading checkpoints and redirect dynamically
+  // Animate mock audit loading checkpoints
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isSubmitting && !errorMessage) {
-      if (createdId && currentStepIndex >= loadingSteps.length - 1) {
-        const timer = setTimeout(() => {
-          router.push(`/result/${createdId}`)
-        }, 0)
-        return () => clearTimeout(timer)
+      if (createdId) {
+        setCurrentStepIndex(loadingSteps.length - 1)
+        return
       }
 
       interval = setInterval(() => {
         if (currentStepIndex < loadingSteps.length - 1) {
           if (createdId) {
+            console.info('[INSTRUMENTATION] progress_timer_cleared')
+            clearInterval(interval)
             setCurrentStepIndex(loadingSteps.length - 1)
           } else {
             setCurrentStepIndex((prev) => prev + 1)
           }
-        } else {
-          if (createdId) {
-            clearInterval(interval)
-            router.push(`/result/${createdId}`)
-          }
         }
       }, 750)
     }
-    return () => clearInterval(interval)
-  }, [isSubmitting, createdId, currentStepIndex, errorMessage, router, loadingSteps.length])
+    return () => {
+      if (interval) {
+        console.info('[INSTRUMENTATION] progress_timer_cleared')
+        clearInterval(interval)
+      }
+    }
+  }, [isSubmitting, createdId, currentStepIndex, errorMessage, loadingSteps.length])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -189,6 +189,7 @@ export function AnalyzeForm() {
       }
 
       const data = await response.json()
+      console.info('[INSTRUMENTATION] analyze_response_received_client')
       if (!data.id) {
         throw new Error(
           workingLanguage === 'pl' 
@@ -196,8 +197,12 @@ export function AnalyzeForm() {
             : 'Server did not return a valid result identifier.'
         )
       }
+      console.info('[INSTRUMENTATION] result_id_received', data.id)
 
       setCreatedId(data.id)
+      console.info('[INSTRUMENTATION] client_redirect_start', data.id)
+      router.push(`/result/${data.id}`)
+      console.info('[INSTRUMENTATION] client_redirect_done', data.id)
     } catch (err: unknown) {
       const errorObject = err instanceof Error ? err : new Error(String(err))
       console.error(errorObject)
@@ -213,6 +218,7 @@ export function AnalyzeForm() {
         workingLanguage={workingLanguage}
         currentStepIndex={currentStepIndex}
         loadingSteps={loadingSteps}
+        createdId={createdId}
       />
 
       {/* Main Analyzer Form */}

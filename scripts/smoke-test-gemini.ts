@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { google } from '@ai-sdk/google'
-import { generateText, Output } from 'ai'
+import { generateObject } from 'ai'
 import { analysisResultSchema } from '../lib/ai/schemas'
 import { mvpModelProfiles } from '../lib/ai/model-profiles'
 import { analysisSystemInstruction, constructUserAnalysisPrompt } from '../lib/ai/prompts'
@@ -76,8 +76,14 @@ async function runSmokeTest() {
       attempt++
       try {
         console.log(`Attempt ${attempt}/3...`)
-        const { output, usage } = await generateText({ model: google(modelId), system: systemInstruction, prompt: userPrompt, temperature: 0.1, output: Output.object({ schema: analysisResultSchema }) })
-        const parsed = analysisResultSchema.safeParse(output)
+        const { object, usage } = await generateObject({
+          model: google(modelId),
+          system: systemInstruction,
+          prompt: userPrompt,
+          temperature: 0.1,
+          schema: analysisResultSchema
+        })
+        const parsed = analysisResultSchema.safeParse(object)
         if (!parsed.success) { telemetry.invalidSchemaCount++; console.warn('[WARNING] Schema validation failed:', parsed.error.flatten()) }
         else { success = true; console.log(`[SUCCESS] task=${parsed.data.detected_task_type}`); console.log(`summary: ${parsed.data.overall_summary.slice(0, 80)}...`) }
         if (usage) {

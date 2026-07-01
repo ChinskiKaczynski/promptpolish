@@ -13,6 +13,7 @@ import {
 import { calculateScore, type CalculatedScore } from '@/lib/scoring/calculate-score'
 import { type AnalysisResult, analysisResultSchema } from './schemas'
 import { ProviderError } from './provider-errors'
+import { NoObjectGeneratedError } from 'ai'
 
 import type { ModelProfileRow } from '@/lib/supabase/types'
 
@@ -65,6 +66,115 @@ export function normalizeDbProfile(dbProfile: ModelProfileRow): ModelProfile {
   }
 }
 
+function tryLocalJsonRepair(input: unknown): AnalysisResult | null {
+  if (!input) return null
+
+  let rawText = ''
+  let parsedObj: any = null
+
+  if (input instanceof ProviderError) {
+    if (input.rawError && typeof input.rawError === 'object') {
+      rawText = (input.rawError as any).text || ''
+    }
+  } else if (input && typeof input === 'object' && 'text' in input) {
+    rawText = (input as any).text || ''
+  } else if (typeof input === 'string') {
+    rawText = input
+  } else if (typeof input === 'object') {
+    // If it's already parsed but failed semantic validation, clone it
+    parsedObj = JSON.parse(JSON.stringify(input))
+  }
+
+  if (rawText && rawText.trim() !== '') {
+    try {
+      let jsonText = rawText.trim()
+      if (jsonText.includes('```')) {
+        const match = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+        if (match && match[1]) {
+          jsonText = match[1].trim()
+        }
+      }
+      const firstBrace = jsonText.indexOf('{')
+      const lastBrace = jsonText.lastIndexOf('}')
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonText = jsonText.slice(firstBrace, lastBrace + 1)
+      }
+      parsedObj = JSON.parse(jsonText)
+    } catch (e) {
+      // Ignore parse error, parsedObj remains null
+    }
+  }
+
+  if (parsedObj && typeof parsedObj === 'object') {
+    try {
+      const repaired: any = { ...parsedObj }
+      
+      // Safe coercion of version contract
+      if (!repaired.analysis_schema_version) {
+        repaired.analysis_schema_version = '1.0.0'
+      }
+
+      // Safe string trims
+      if (typeof repaired.overall_summary === 'string') {
+        repaired.overall_summary = repaired.overall_summary.trim()
+      }
+      if (typeof repaired.detected_task_type === 'string') {
+        repaired.detected_task_type = repaired.detected_task_type.trim()
+      }
+      if (typeof repaired.improved_prompt === 'string') {
+        repaired.improved_prompt = repaired.improved_prompt.trim()
+      }
+
+      // Coerce criteria_scores elements safely
+      if (Array.isArray(repaired.criteria_scores)) {
+        repaired.criteria_scores = repaired.criteria_scores.map((item: any) => {
+          if (item && typeof item === 'object') {
+            const newItem = { ...item }
+            if (typeof newItem.raw_score_0_10 === 'string') {
+              const val = parseFloat(newItem.raw_score_0_10)
+              if (!isNaN(val)) newItem.raw_score_0_10 = val
+            }
+            if (typeof newItem.rationale === 'string') {
+              newItem.rationale = newItem.rationale.trim()
+            }
+            if (typeof newItem.improvement_suggestion === 'string') {
+              newItem.improvement_suggestion = newItem.improvement_suggestion.trim()
+            }
+            return newItem
+          }
+          return item
+        })
+      }
+
+      // Safe defaults for empty-allowed optional arrays to prevent Zod failures
+      if (repaired.model_fit_notes === undefined) {
+        repaired.model_fit_notes = []
+      }
+      if (repaired.uncertainty_warnings === undefined) {
+        repaired.uncertainty_warnings = []
+      }
+      if (repaired.safety_notes === undefined) {
+        repaired.safety_notes = []
+      }
+
+      // Validate strictly against the Zod schema
+      const validated = analysisResultSchema.safeParse(repaired)
+      if (validated.success) {
+        console.info('[AI Local Repair Success] Successfully recovered and validated object locally.')
+        return validated.data
+      } else {
+        console.warn('[local_repair_failed_missing_required_fields] Zod validation failed after repair:', validated.error.flatten())
+      }
+    } catch (err) {
+      console.warn('[local_repair_failed_missing_required_fields] Error occurred during repair processing:', err)
+    }
+  } else {
+    console.warn('[local_repair_failed_missing_required_fields] Could not parse raw output as a JSON object.')
+  }
+
+  return null
+}
+
 async function executeAndValidateWithSingleRepairRetry(
   systemInstruction: string,
   userPrompt: string,
@@ -85,6 +195,14 @@ async function executeAndValidateWithSingleRepairRetry(
     initialResponse = await executeOpenRouterAnalysis(systemInstruction, userPrompt, options)
   } catch (error) {
     if (error instanceof ProviderError && error.errorCode === 'malformed_provider_output') {
+      const repaired = tryLocalJsonRepair(error)
+      if (repaired) {
+        return {
+          result: repaired,
+          selectedModel: error.rawError && typeof error.rawError === 'object' && 'modelId' in error.rawError ? (error.rawError as any).modelId : 'gemini-2.5-flash',
+          attempt: 1
+        }
+      }
       isMalformed = true
       lastError = error
     } else {
@@ -100,9 +218,17 @@ async function executeAndValidateWithSingleRepairRetry(
       validatedResult = validateAnalysisResult(initialResponse.output)
     } catch (error) {
       if (error instanceof SemanticValidationError) {
-        // Zod validation failed (i.e. schema parse failure)
         const zodResult = analysisResultSchema.safeParse(initialResponse.output)
         if (!zodResult.success) {
+          const repaired = tryLocalJsonRepair(initialResponse.output)
+          if (repaired) {
+            return {
+              result: repaired,
+              usage: initialResponse.usage,
+              selectedModel: initialResponse.selectedModel,
+              attempt: initialResponse.attempt
+            }
+          }
           isSchemaFailure = true
         }
         lastError = error
@@ -114,6 +240,12 @@ async function executeAndValidateWithSingleRepairRetry(
 
   // A. Retry exactly once for malformed structured output
   if (isMalformed || isSchemaFailure) {
+    console.info('[AI Retry Log]', JSON.stringify({
+      retry_reason: 'malformed_provider_output',
+      isMalformed,
+      isSchemaFailure
+    }))
+
     const elapsed = Date.now() - startTime
     const totalTimeout = options?.timeoutMs ?? 90000
     const remainingTimeout = totalTimeout - elapsed

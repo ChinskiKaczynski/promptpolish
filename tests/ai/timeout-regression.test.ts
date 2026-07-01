@@ -4,40 +4,46 @@ vi.mock('server-only', () => ({}))
 
 vi.mock('ai', async (importOriginal) => {
   const original = await importOriginal<typeof import('ai')>()
+  const mockImplementation = async (options: any) => {
+    const signal = options.abortSignal
+    if (signal?.aborted) {
+      throw signal.reason || new Error('Aborted')
+    }
+    return new Promise((resolve, reject) => {
+      const state = { timer: undefined as ReturnType<typeof setTimeout> | undefined }
+      const onAbort = () => {
+        if (state.timer) clearTimeout(state.timer)
+        reject(signal.reason || new Error('Aborted'))
+      }
+
+      if (signal) {
+        signal.addEventListener('abort', onAbort)
+      }
+
+      state.timer = setTimeout(() => {
+        if (signal) signal.removeEventListener('abort', onAbort)
+        resolve({
+          object: {
+            overall_summary: 'Mocked successful output',
+            criteria_scores: []
+          },
+          output: {
+            overall_summary: 'Mocked successful output',
+            criteria_scores: []
+          },
+          usage: { promptTokens: 10, completionTokens: 10 }
+        })
+      }, 100)
+    })
+  }
   return {
     ...original,
-    generateText: vi.fn().mockImplementation(async (options) => {
-      const signal = options.abortSignal
-      if (signal?.aborted) {
-        throw signal.reason || new Error('Aborted')
-      }
-      return new Promise((resolve, reject) => {
-        const state = { timer: undefined as ReturnType<typeof setTimeout> | undefined }
-        const onAbort = () => {
-          if (state.timer) clearTimeout(state.timer)
-          reject(signal.reason || new Error('Aborted'))
-        }
-
-        if (signal) {
-          signal.addEventListener('abort', onAbort)
-        }
-
-        state.timer = setTimeout(() => {
-          if (signal) signal.removeEventListener('abort', onAbort)
-          resolve({
-            output: {
-              overall_summary: 'Mocked successful output',
-              criteria_scores: []
-            },
-            usage: { promptTokens: 10, completionTokens: 10 }
-          })
-        }, 100)
-      })
-    })
+    generateText: vi.fn().mockImplementation(mockImplementation),
+    generateObject: vi.fn().mockImplementation(mockImplementation)
   }
 })
 
-import { generateText } from 'ai'
+import { generateText, generateObject } from 'ai'
 import { serverEnvSchema } from '@/lib/env/server'
 import { executeOpenRouterAnalysis } from '@/lib/ai/openrouter-client'
 import { isNestedTimeout, normalizeProviderError } from '@/lib/ai/provider-errors'
@@ -211,18 +217,22 @@ describe('Timeout and Abort Regression Suite', () => {
 
     it('executes one successful retry after a transient failure', async () => {
       let calls = 0
-      vi.mocked(generateText).mockImplementation(async () => {
+      vi.mocked(generateObject).mockImplementation(async () => {
         calls++
         if (calls === 1) {
           throw new Error('fetch failed') // Retryable: maps to provider_unavailable
         }
         return {
+          object: {
+            overall_summary: 'Mocked successful output after retry',
+            criteria_scores: []
+          },
           output: {
             overall_summary: 'Mocked successful output after retry',
             criteria_scores: []
           },
           usage: { promptTokens: 10, completionTokens: 10 }
-        } as unknown as Awaited<ReturnType<typeof generateText>>
+        } as unknown as Awaited<ReturnType<typeof generateObject>>
       })
 
       const res = await executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 30000 })
@@ -232,7 +242,7 @@ describe('Timeout and Abort Regression Suite', () => {
 
     it('stops retrying and throws error once retry attempts are exhausted', async () => {
       let calls = 0
-      vi.mocked(generateText).mockImplementation(async () => {
+      vi.mocked(generateObject).mockImplementation(async () => {
         calls++
         throw new Error('fetch failed') // Retryable: maps to provider_unavailable
       })
@@ -243,7 +253,7 @@ describe('Timeout and Abort Regression Suite', () => {
 
     it('does not retry permanent errors (like authorization errors)', async () => {
       let calls = 0
-      vi.mocked(generateText).mockImplementation(async () => {
+      vi.mocked(generateObject).mockImplementation(async () => {
         calls++
         throw new Error('API Key Invalid') // Non-retryable
       })
@@ -267,7 +277,7 @@ describe('Timeout and Abort Regression Suite', () => {
 
     it('uses primary model first, then fallback model on safe errors', async () => {
       const calls: string[] = []
-      vi.mocked(generateText).mockImplementation(async (options: unknown) => {
+      vi.mocked(generateObject).mockImplementation(async (options: unknown) => {
         const opts = options as { model: { modelId: string } }
         const modelId = opts.model.modelId
         calls.push(modelId)
@@ -275,10 +285,11 @@ describe('Timeout and Abort Regression Suite', () => {
           throw new Error('Request aborted after 10000ms') // Timeout error
         }
         return {
+          object: { overall_summary: 'Successful fallback' },
           output: { overall_summary: 'Successful fallback' },
           usage: { promptTokens: 150, completionTokens: 200, outputTokenDetails: { reasoningTokens: 50 } },
           finishReason: 'stop'
-        } as unknown as Awaited<ReturnType<typeof generateText>>
+        } as unknown as Awaited<ReturnType<typeof generateObject>>
       })
 
       const res = await executeOpenRouterAnalysis('system-inst', 'user-prompt', {
@@ -309,14 +320,14 @@ describe('Timeout and Abort Regression Suite', () => {
       expect(res.finishReason).toBe('stop')
 
       // Assert reasoning is passed as provider-neutral metadata
-      expect(generateText).toHaveBeenCalledTimes(2)
-      interface GenerateTextArgs {
+      expect(generateObject).toHaveBeenCalledTimes(2)
+      interface GenerateObjectArgs {
         providerMetadata?: {
           reasoning?: boolean
         }
       }
-      const call1Args = vi.mocked(generateText).mock.calls[0][0] as unknown as GenerateTextArgs
-      const call2Args = vi.mocked(generateText).mock.calls[1][0] as unknown as GenerateTextArgs
+      const call1Args = vi.mocked(generateObject).mock.calls[0][0] as unknown as GenerateObjectArgs
+      const call2Args = vi.mocked(generateObject).mock.calls[1][0] as unknown as GenerateObjectArgs
       expect(call1Args.providerMetadata?.reasoning).toBe(false)
       expect(call2Args.providerMetadata?.reasoning).toBe(false)
 
@@ -345,15 +356,16 @@ describe('Timeout and Abort Regression Suite', () => {
     })
 
     it('bounds fallback timeout based on remaining operation budget', async () => {
-      vi.mocked(generateText).mockImplementation(async (options: unknown) => {
+      vi.mocked(generateObject).mockImplementation(async (options: unknown) => {
         const opts = options as { model: { modelId: string } }
         if (opts.model.modelId === 'gemini-2.5-flash') {
           throw new Error('PROVIDER_TIMEOUT')
         }
         return {
+          object: { overall_summary: 'Success' },
           output: { overall_summary: 'Success' },
           usage: { promptTokens: 10, completionTokens: 10 }
-        } as unknown as Awaited<ReturnType<typeof generateText>>
+        } as unknown as Awaited<ReturnType<typeof generateObject>>
       })
 
       await executeOpenRouterAnalysis('inst', 'prompt', {
@@ -373,9 +385,9 @@ describe('Timeout and Abort Regression Suite', () => {
         }
       })
 
-      // Verification that generateText's signal is monitored or remaining time is calculated
+      // Verification that generateObject's signal is monitored or remaining time is calculated
       // In the mock, we can verify that the second call was initiated.
-      expect(generateText).toHaveBeenCalledTimes(2)
+      expect(generateObject).toHaveBeenCalledTimes(2)
     })
   })
 })

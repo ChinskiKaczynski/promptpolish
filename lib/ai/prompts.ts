@@ -133,8 +133,7 @@ ${requiredCriteriaList}
 - For "model_profile_fit", evaluate compatibility strictly against the [MODEL PROFILE DATA] provided above. Do not reference external benchmarks or claim knowledge of pricing or context windows not listed in the profile.
 - Redact or avoid echoing any sensitive credentials or secrets found in the input prompt.
 - Retain the original intent and core objectives of the input prompt.
-- Make the improved prompt highly professional, clearly structured, and optimized for the target model profile without being overly verbose. Ensure that the improved prompt (\`improved_prompt\`) preserves paragraph structure, line breaks, lists, and spacing, using newlines (\`\\n\`) for structure.
-- Do not include Markdown code fences around the JSON output.${longPromptInstruction}
+- Make the improved prompt highly professional, clearly structured, and optimized for the target model profile without being overly verbose. Ensure that the improved prompt (\`improved_prompt\`) preserves paragraph structure, line breaks, lists, and spacing, using newlines (\`\\n\`) for structure.${longPromptInstruction}
 `
 }
 

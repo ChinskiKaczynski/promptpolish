@@ -1,16 +1,34 @@
+﻿import { useState, useEffect } from 'react'
+
 interface LoaderBackdropProps {
   isSubmitting: boolean
   workingLanguage: 'pl' | 'en'
   currentStepIndex: number
   loadingSteps: string[]
+  createdId?: string | null
 }
 
 export function LoaderBackdrop({
   isSubmitting,
   workingLanguage,
   currentStepIndex,
-  loadingSteps
+  loadingSteps,
+  createdId
 }: LoaderBackdropProps) {
+  const [showFallback, setShowFallback] = useState(false)
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout
+    if (createdId && isSubmitting) {
+      timeout = setTimeout(() => {
+        setShowFallback(true)
+      }, 2000)
+    } else {
+      setShowFallback(false)
+    }
+    return () => clearTimeout(timeout)
+  }, [createdId, isSubmitting])
+
   if (!isSubmitting) return null
 
   const progressPct = Math.round(((currentStepIndex + 1) / loadingSteps.length) * 100)
@@ -70,6 +88,18 @@ export function LoaderBackdrop({
             )
           })}
         </div>
+
+        {/* Fallback direct browser redirect link if client-side navigation gets stuck */}
+        {showFallback && createdId && (
+          <div className="mt-8 border-t border-[#2A2A3A] pt-6 w-80">
+            <a 
+              href={`/result/${createdId}`}
+              className="inline-block w-full text-center px-6 py-3 rounded-lg bg-[#A78BFA] text-[#0C0C10] font-bold hover:bg-[#8B5CF6] active:scale-[0.98] transition duration-200 shadow-lg shadow-[#A78BFA]/25 text-sm"
+            >
+              {workingLanguage === 'pl' ? 'Przejdź do wyniku (Pomiń animację)' : 'Go to result (Skip animation)'}
+            </a>
+          </div>
+        )}
       </div>
     </div>
   )

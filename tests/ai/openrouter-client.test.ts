@@ -7,6 +7,10 @@ vi.mock('ai', async (importOriginal) => {
     generateText: vi.fn().mockResolvedValue({
       output: {},
       usage: { promptTokens: 10, completionTokens: 10 }
+    }),
+    generateObject: vi.fn().mockResolvedValue({
+      object: {},
+      usage: { promptTokens: 10, completionTokens: 10 }
     })
   }
 })
@@ -18,6 +22,7 @@ import { mockAnalysisResult } from '@/lib/ai/mock-analysis'
 import { APICallError, NoObjectGeneratedError } from 'ai'
 import { SemanticValidationError } from '@/lib/ai/semantic-validation'
 import type { AnalysisResult } from '@/lib/ai/schemas'
+import type { ModelProfileRow } from '@/lib/supabase/types'
 
 describe('OpenRouter Analysis Client & Error Normalization', () => {
   describe('executeOpenRouterAnalysis Mocking & Output', () => {
@@ -256,14 +261,14 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
         updated_at: ''
       } as unknown as ModelProfileRow
 
-      const { generateText } = await import('ai')
-      vi.mocked(generateText).mockClear()
+      const { generateObject } = await import('ai')
+      vi.mocked(generateObject).mockClear()
 
       await executeOpenRouterAnalysis('sys instruction', 'user prompt', {
         dbProfile
       })
 
-      expect(generateText).toHaveBeenCalledWith(
+      expect(generateObject).toHaveBeenCalledWith(
         expect.objectContaining({
           temperature: 0.8,
           maxOutputTokens: 1500,
@@ -297,14 +302,14 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
         updated_at: ''
       } as unknown as ModelProfileRow
 
-      const { generateText } = await import('ai')
-      vi.mocked(generateText).mockClear()
+      const { generateObject } = await import('ai')
+      vi.mocked(generateObject).mockClear()
 
       await executeOpenRouterAnalysis('sys instruction', 'user prompt', {
         dbProfile
       })
 
-      expect(generateText).toHaveBeenCalledWith(
+      expect(generateObject).toHaveBeenCalledWith(
         expect.objectContaining({
           providerMetadata: expect.objectContaining({
             reasoning: false
@@ -334,14 +339,14 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
         updated_at: ''
       } as unknown as ModelProfileRow
 
-      const { generateText } = await import('ai')
-      vi.mocked(generateText).mockClear()
+      const { generateObject } = await import('ai')
+      vi.mocked(generateObject).mockClear()
 
       await executeOpenRouterAnalysis('sys instruction', 'user prompt', {
         dbProfile
       })
 
-      expect(generateText).toHaveBeenCalledWith(
+      expect(generateObject).toHaveBeenCalledWith(
         expect.objectContaining({
           providerMetadata: expect.objectContaining({
             reasoning: false

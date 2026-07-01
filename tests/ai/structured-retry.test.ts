@@ -247,4 +247,77 @@ describe('Structured Output Retry and Size Control Tests', () => {
       expect(mockExecuteAnalysis).toHaveBeenCalledTimes(1)
     })
   })
+
+  describe('4. Local JSON Repair Verification', () => {
+    const validParams = {
+      inputPrompt: 'Ta walidacja potrzebuje przynajmniej dwudziestu znaków w swoim body.',
+      workingLanguage: 'pl' as const,
+      selectedProfileSlug: 'openrouter-deepseek-v4-flash' as const
+    }
+
+    it('successfully repairs valid JSON wrapped in markdown code fences and returns it directly without retry', async () => {
+      const outputText = '```json\n' + JSON.stringify(mockAnalysisResult) + '\n```'
+      mockExecuteAnalysis.mockResolvedValueOnce({
+        output: outputText,
+        usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
+        selectedModel: 'openrouter/owl-alpha',
+        attempt: 1,
+        durationMs: 200
+      })
+
+      const res = await analyzePrompt(validParams)
+      expect(mockExecuteAnalysis).toHaveBeenCalledTimes(1)
+      expect(res.attempt).toBe(1)
+      expect(res.analysis.overall_summary).toBe(mockAnalysisResult.overall_summary)
+    })
+
+    it('safely coerces numeric strings in criteria_scores raw_score_0_10 if allowed', async () => {
+      const resultWithNumericStrings = JSON.parse(JSON.stringify(mockAnalysisResult))
+      resultWithNumericStrings.criteria_scores = resultWithNumericStrings.criteria_scores.map((score: any) => ({
+        ...score,
+        raw_score_0_10: '7'
+      }))
+
+      mockExecuteAnalysis.mockResolvedValueOnce({
+        output: JSON.stringify(resultWithNumericStrings),
+        usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
+        selectedModel: 'openrouter/owl-alpha',
+        attempt: 1,
+        durationMs: 200
+      })
+
+      const res = await analyzePrompt(validParams)
+      expect(mockExecuteAnalysis).toHaveBeenCalledTimes(1)
+      expect(res.analysis.criteria_scores[0].raw_score_0_10).toBe(7)
+    })
+
+    it('does NOT silently fill missing required analytical fields and triggers retry', async () => {
+      const invalidJson = {
+        analysis_schema_version: '1.0.0',
+        detected_task_type: 'classification'
+        // missing overall_summary, improved_prompt, top_weaknesses, etc.
+      }
+
+      mockExecuteAnalysis
+        .mockResolvedValueOnce({
+          output: JSON.stringify(invalidJson),
+          usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
+          selectedModel: 'openrouter/owl-alpha',
+          attempt: 1,
+          durationMs: 200
+        })
+        .mockResolvedValueOnce({
+          output: mockAnalysisResult,
+          usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
+          selectedModel: 'openrouter/owl-alpha',
+          attempt: 1,
+          durationMs: 200
+        })
+
+      const res = await analyzePrompt(validParams)
+      // Because fields are missing and cannot be repaired, it must trigger exactly one retry
+      expect(mockExecuteAnalysis).toHaveBeenCalledTimes(2)
+      expect(res.analysis.overall_summary).toBe(mockAnalysisResult.overall_summary)
+    })
+  })
 })
