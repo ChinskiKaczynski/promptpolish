@@ -231,7 +231,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
 
   describe('executeOpenRouterAnalysis with DB Profiles', () => {
     beforeEach(() => {
-      process.env.OPENROUTER_API_KEY = 'mock-api-key'
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'mock-api-key'
     })
 
     it('passes capabilities parameters from dbProfile to generateText', async () => {
@@ -270,9 +270,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
           prompt: 'user prompt',
           system: 'sys instruction',
           providerMetadata: expect.objectContaining({
-            openrouter: expect.objectContaining({
-              reasoning: true
-            })
+            reasoning: true
           })
         })
       )
@@ -309,9 +307,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
           providerMetadata: expect.objectContaining({
-            openrouter: expect.objectContaining({
-              reasoning: false
-            })
+            reasoning: false
           })
         })
       )
@@ -348,9 +344,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
           providerMetadata: expect.objectContaining({
-            openrouter: expect.objectContaining({
-              reasoning: false
-            })
+            reasoning: false
           })
         })
       )

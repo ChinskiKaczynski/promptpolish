@@ -47,10 +47,8 @@ describe('Timeout and Abort Regression Suite', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    process.env.OPENROUTER_MODEL_ID = 'openrouter/owl-alpha'
-    process.env.OPENROUTER_API_KEY = 'mock-key'
-    // Fallback is disabled globally by default
-    delete process.env.OPENROUTER_FALLBACK_MODEL_ID
+    process.env.GEMINI_MODEL_ID = 'gemini-2.5-flash'
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'mock-google-key'
   })
 
   afterEach(() => {
@@ -207,7 +205,8 @@ describe('Timeout and Abort Regression Suite', () => {
 
   describe('4. Transient Retry & Remaining Timeout Mechanics', () => {
     beforeEach(() => {
-      process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openai/gpt-4o-mini'
+      process.env.AI_MODEL_ALIAS = 'cheap'
+      process.env.GEMINI_MODEL_ID = 'openai/gpt-4o-mini'
     })
 
     it('executes one successful retry after a transient failure', async () => {
@@ -258,7 +257,7 @@ describe('Timeout and Abort Regression Suite', () => {
     let spyConsoleInfo: ReturnType<typeof vi.spyOn>
 
     beforeEach(() => {
-      process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openai/gpt-4o-mini'
+      // Fallback via dbProfile capabilities_json (new mechanism)
       spyConsoleInfo = vi.spyOn(console, 'info').mockImplementation(() => {})
     })
 
@@ -266,7 +265,7 @@ describe('Timeout and Abort Regression Suite', () => {
       spyConsoleInfo.mockRestore()
     })
 
-    it('uses primary model first, then fallback model on safe errors with require_parameters: true', async () => {
+    it('uses primary model first, then fallback model on safe errors', async () => {
       const calls: string[] = []
       vi.mocked(generateText).mockImplementation(async (options: unknown) => {
         const opts = options as { model: { modelId: string } }
@@ -284,40 +283,42 @@ describe('Timeout and Abort Regression Suite', () => {
 
       const res = await executeOpenRouterAnalysis('system-inst', 'user-prompt', {
         timeoutMs: 30000,
-        requestId: 'test-req-id'
+        requestId: 'test-req-id',
+        dbProfile: {
+          id: 'test',
+          slug: 'general-llm',
+          display_name: 'General LLM',
+          provider: 'google',
+          verification_status: 'unverified',
+          confidence_level: 'medium',
+          profile_version: '1.0.0',
+          is_active: true,
+          capabilities_json: {
+            fallback_model_id: 'gemini-2.5-flash-lite'
+          },
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        }
       })
 
-      expect(calls).toEqual(['openrouter/owl-alpha', 'openai/gpt-4o-mini'])
-      expect(res.selectedModel).toBe('openai/gpt-4o-mini')
+      expect(calls).toEqual(['gemini-2.5-flash', 'gemini-2.5-flash-lite'])
+      expect(res.selectedModel).toBe('gemini-2.5-flash-lite')
       expect(res.attempt).toBe(2)
       expect(res.usage?.reasoningTokens).toBe(50)
       expect(res.usage?.visibleTokens).toBe(150)
       expect(res.finishReason).toBe('stop')
 
-      // Assert require_parameters: true is passed to generateText on each attempt
+      // Assert reasoning is passed as provider-neutral metadata
       expect(generateText).toHaveBeenCalledTimes(2)
       interface GenerateTextArgs {
-        model: {
-          settings: {
-            provider: {
-              require_parameters: boolean
-            }
-          }
-        }
         providerMetadata?: {
-          openrouter?: {
-            reasoning?: boolean
-          }
+          reasoning?: boolean
         }
       }
       const call1Args = vi.mocked(generateText).mock.calls[0][0] as unknown as GenerateTextArgs
       const call2Args = vi.mocked(generateText).mock.calls[1][0] as unknown as GenerateTextArgs
-      expect(call1Args.model.settings.provider.require_parameters).toBe(true)
-      expect(call2Args.model.settings.provider.require_parameters).toBe(true)
-
-      // Assert reasoning is false by default
-      expect(call1Args.providerMetadata?.openrouter?.reasoning).toBe(false)
-      expect(call2Args.providerMetadata?.openrouter?.reasoning).toBe(false)
+      expect(call1Args.providerMetadata?.reasoning).toBe(false)
+      expect(call2Args.providerMetadata?.reasoning).toBe(false)
 
       // Assert sanitized logging occurred
       expect(spyConsoleInfo).toHaveBeenCalled()
@@ -325,13 +326,13 @@ describe('Timeout and Abort Regression Suite', () => {
       expect(logLines[0]).toMatchObject({
         requestId: 'test-req-id',
         attempt: 1,
-        selectedModel: 'openrouter/owl-alpha',
+        selectedModel: 'gemini-2.5-flash',
         errorCategory: 'upstream_provider_error'
       })
       expect(logLines[1]).toMatchObject({
         requestId: 'test-req-id',
         attempt: 2,
-        selectedModel: 'openai/gpt-4o-mini',
+        selectedModel: 'gemini-2.5-flash-lite',
         finishReason: 'stop',
         visibleOutputTokens: 150,
         reasoningTokens: 50,
@@ -346,7 +347,7 @@ describe('Timeout and Abort Regression Suite', () => {
     it('bounds fallback timeout based on remaining operation budget', async () => {
       vi.mocked(generateText).mockImplementation(async (options: unknown) => {
         const opts = options as { model: { modelId: string } }
-        if (opts.model.modelId === 'openrouter/owl-alpha') {
+        if (opts.model.modelId === 'gemini-2.5-flash') {
           throw new Error('PROVIDER_TIMEOUT')
         }
         return {
@@ -355,7 +356,22 @@ describe('Timeout and Abort Regression Suite', () => {
         } as unknown as Awaited<ReturnType<typeof generateText>>
       })
 
-      await executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 20000 })
+      await executeOpenRouterAnalysis('inst', 'prompt', {
+        timeoutMs: 20000,
+        dbProfile: {
+          id: 'test',
+          slug: 'general-llm',
+          display_name: 'General LLM',
+          provider: 'google',
+          verification_status: 'unverified',
+          confidence_level: 'medium',
+          profile_version: '1.0.0',
+          is_active: true,
+          capabilities_json: { fallback_model_id: 'gemini-2.5-flash-lite' },
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z'
+        }
+      })
 
       // Verification that generateText's signal is monitored or remaining time is calculated
       // In the mock, we can verify that the second call was initiated.

@@ -22,7 +22,7 @@ describe('Production Readiness Env Safeguards', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const env = process.env as any
     env.NODE_ENV = 'development'
-    delete env.OPENROUTER_API_KEY
+    delete env.GOOGLE_GENERATIVE_AI_API_KEY
     delete env.SUPABASE_SECRET_KEY
     
     const result = checkProductionEnv()
@@ -34,14 +34,14 @@ describe('Production Readiness Env Safeguards', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const env = process.env as any
     env.NODE_ENV = 'production'
-    delete env.OPENROUTER_API_KEY
+    delete env.GOOGLE_GENERATIVE_AI_API_KEY
     delete env.SUPABASE_SECRET_KEY
     delete env.NEXT_PUBLIC_SUPABASE_URL
     delete env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
     const result = checkProductionEnv()
     expect(result.valid).toBe(false)
-    expect(result.missing).toContain('OPENROUTER_API_KEY')
+    expect(result.missing).toContain('GOOGLE_GENERATIVE_AI_API_KEY')
     expect(result.missing).toContain('SUPABASE_SECRET_KEY')
     expect(result.missing).toContain('NEXT_PUBLIC_SUPABASE_URL')
     expect(result.missing).toContain('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
@@ -51,7 +51,7 @@ describe('Production Readiness Env Safeguards', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const env = process.env as any
     env.NODE_ENV = 'production'
-    env.OPENROUTER_API_KEY = 'test-key'
+    env.GOOGLE_GENERATIVE_AI_API_KEY = 'test-google-key'
     env.SUPABASE_SECRET_KEY = 'test-secret'
     env.NEXT_PUBLIC_SUPABASE_URL = 'https://example.supabase.co'
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-pub-key'

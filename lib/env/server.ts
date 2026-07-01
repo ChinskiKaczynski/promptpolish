@@ -15,8 +15,12 @@ const strictBool = z.preprocess((val) => {
 
 export const serverEnvSchema = z.object({
   APP_URL: z.string().url().default('http://localhost:3000'),
+  // Google Gemini (primary AI provider)
+  GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
+  GEMINI_MODEL_ID: z.string().default('gemini-2.5-flash'),
+  // OpenRouter (optional — legacy eval scripts only)
   OPENROUTER_API_KEY: z.string().optional(),
-  OPENROUTER_MODEL_ID: z.string().default('openrouter/owl-alpha'),
+  OPENROUTER_MODEL_ID: z.string().optional(),
   OPENROUTER_FALLBACK_MODEL_ID: z.string().optional(),
   OPENROUTER_SITE_URL: z.string().optional(),
   OPENROUTER_APP_NAME: z.string().optional(),
@@ -71,8 +75,8 @@ export const serverEnv = parsedEnv
 export function checkProductionEnv() {
   if (process.env.NODE_ENV === 'production') {
     const missing: string[] = []
-    if (!process.env.OPENROUTER_API_KEY) {
-      missing.push('OPENROUTER_API_KEY')
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      missing.push('GOOGLE_GENERATIVE_AI_API_KEY')
     }
     if (!process.env.SUPABASE_SECRET_KEY) {
       missing.push('SUPABASE_SECRET_KEY')

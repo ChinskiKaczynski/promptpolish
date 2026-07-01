@@ -41,6 +41,28 @@ describe('detectSensitiveData - Security Preflights', () => {
     expect(finding.redactedValue).toContain('or-v…6n5o')
   })
 
+  it('detects AIzaSy... Google API key pattern (google-api-key rule)', () => {
+    // Real-looking Google API key (33 chars after AIzaSy)
+    const rawKey = 'AIzaSyABCDEFGHIJKLMNOPQRSTUVWXYZ1234567'
+    const payload = `My Google key is ${rawKey} — do not share!`
+    const result = detectSensitiveData(payload)
+
+    expect(result.riskLevel).toBe('high')
+    const finding = result.findings.find(f => f.type === 'provider_api_key')!
+    expect(finding).toBeDefined()
+    expect(finding.message).toContain('AIzaSy')
+  })
+
+  it('does NOT flag AIzaSy placeholder strings that are too short', () => {
+    // AIzaSy prefix but only 5 chars after — below the 33-char minimum
+    const payload = 'Set GOOGLE_GENERATIVE_AI_API_KEY=AIzaSy12345'
+    const result = detectSensitiveData(payload)
+    // The env-var rule uses a whitelist-based placeholder check,
+    // and the google-api-key pattern requires exactly 33 chars after AIzaSy
+    const googleKeyFindings = result.findings.filter(f => f.type === 'provider_api_key' && f.message?.includes('AIzaSy'))
+    expect(googleKeyFindings.length).toBe(0)
+  })
+
   it('detects SUPABASE_SECRET_KEY', () => {
     const rawSecret = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.supersecretvaluehere.abcdefg'
     const payload = `SUPABASE_SECRET_KEY=${rawSecret}`

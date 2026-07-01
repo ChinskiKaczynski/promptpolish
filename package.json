@@ -15,9 +15,11 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:live:fallback": "vitest run --config vitest.live.config.ts scripts/live-ai/run-fallback-route-check.live.test.ts",
-    "test:live:calibration": "vitest run --config vitest.live.config.ts scripts/live-ai/run-calibration.live.test.ts"
+    "test:live:calibration": "vitest run --config vitest.live.config.ts scripts/live-ai/run-calibration.live.test.ts",
+    "smoke:gemini": "npx tsx scripts/smoke-test-gemini.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.5",
     "@openrouter/ai-sdk-provider": "2.9.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "2.106.1",

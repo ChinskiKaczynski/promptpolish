@@ -4,8 +4,7 @@ export function validateLiveAiEnvironment(env: Record<string, string | undefined
 } {
   const runLive = env.RUN_LIVE_AI_TESTS === 'true'
   const nodeEnv = env.NODE_ENV
-  const apiKey = env.OPENROUTER_API_KEY
-  const fallbackModel = env.OPENROUTER_FALLBACK_MODEL_ID
+  const apiKey = env.GOOGLE_GENERATIVE_AI_API_KEY
   const appUrl = env.APP_URL || ''
   const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL || ''
 
@@ -17,8 +16,7 @@ export function validateLiveAiEnvironment(env: Record<string, string | undefined
   const reasons: string[] = []
   if (nodeEnv === 'production') reasons.push('NODE_ENV is production')
   if (!runLive) reasons.push('RUN_LIVE_AI_TESTS is not true')
-  if (!apiKey || apiKey.trim() === '') reasons.push('OPENROUTER_API_KEY is missing')
-  if (!fallbackModel || fallbackModel.trim() === '') reasons.push('OPENROUTER_FALLBACK_MODEL_ID is missing')
+  if (!apiKey || apiKey.trim() === '') reasons.push('GOOGLE_GENERATIVE_AI_API_KEY is missing')
   if (isProductionSupabase) reasons.push('Supabase URL points to production')
   if (isProductionApp) reasons.push('App URL points to production')
 

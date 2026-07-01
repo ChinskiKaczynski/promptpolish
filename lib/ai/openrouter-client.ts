@@ -1,4 +1,4 @@
-import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { google } from '@ai-sdk/google'
 import { generateText, Output } from 'ai'
 import { analysisResultSchema, type AnalysisResult } from './schemas'
 import { normalizeProviderError, ProviderError } from './provider-errors'
@@ -36,32 +36,17 @@ export const defaultTextGenerator: TextGenerator = async (
   userPrompt,
   opts
 ) => {
-  const apiKey = process.env.OPENROUTER_API_KEY
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   if (!apiKey || apiKey.trim() === '') {
     throw new ProviderError(
-      'Missing OpenRouter API Key',
+      'Missing Google Generative AI API Key',
       'The prompt analysis engine is not configured with an API key. Please check your system environment.',
-      new Error('OPENROUTER_API_KEY is not defined in environment variables.')
+      new Error('GOOGLE_GENERATIVE_AI_API_KEY is not defined in environment variables.')
     )
   }
 
-  const siteUrl = process.env.OPENROUTER_SITE_URL
-  const appName = process.env.OPENROUTER_APP_NAME
-
-  const openrouter = createOpenRouter({
-    apiKey,
-    headers: {
-      ...(siteUrl ? { 'HTTP-Referer': siteUrl } : {}),
-      ...(appName ? { 'X-Title': appName } : {}),
-    },
-  })
-
   const { output, usage, finishReason } = await generateText({
-    model: openrouter.chat(model, {
-      provider: {
-        require_parameters: true
-      }
-    }),
+    model: google(model) as any,
     system: systemInstruction,
     prompt: userPrompt,
     temperature: opts.temperature,
@@ -173,14 +158,10 @@ export async function executeOpenRouterAnalysis(
 
   const rawFallback = (capabilities.fallback_model_id as string | undefined) ||
                     (capabilities.fallbackModelId as string | undefined) ||
-                    process.env.OPENROUTER_FALLBACK_MODEL_ID
+                    process.env.GEMINI_MODEL_ID
 
   const fallbackModelId = (rawFallback && rawFallback.trim() !== '') ? rawFallback.trim() : null
-  const isMalformed = fallbackModelId !== null && !fallbackModelId.includes('/')
-  if (isMalformed) {
-    console.warn(`[executeOpenRouterAnalysis] Fallback model ID "${fallbackModelId}" is malformed. Disabling fallback.`)
-  }
-  const isFallbackEnabled = fallbackModelId !== null && fallbackModelId !== primaryModelId && !isMalformed
+  const isFallbackEnabled = fallbackModelId !== null && fallbackModelId !== primaryModelId
   const effectiveTemperature = capabilities.temperature !== undefined ? (capabilities.temperature as number) : (temperature ?? 0.1)
   const maxTokens = capabilities.max_tokens !== undefined ? (capabilities.max_tokens as number) : 4000
 
@@ -269,9 +250,8 @@ export async function executeOpenRouterAnalysis(
       }
 
       if (finalReasoning !== undefined) {
-        providerMetadata.openrouter = {
-          reasoning: finalReasoning
-        }
+        // Provider-neutral reasoning hint — ignored by providers that don't support it
+        providerMetadata.reasoning = finalReasoning
       }
 
       const { output, usage, finishReason } = await generator(
@@ -309,7 +289,7 @@ export async function executeOpenRouterAnalysis(
         requestId: requestId || 'N/A',
         attempt,
         selectedModel,
-        provider: dbProfile?.provider || 'openrouter',
+        provider: dbProfile?.provider || 'google',
         durationMs,
         remainingBudgetMs: totalTimeout - (Date.now() - startTime),
         errorCategory: undefined,
@@ -376,7 +356,7 @@ export async function executeOpenRouterAnalysis(
         requestId: requestId || 'N/A',
         attempt,
         selectedModel,
-        provider: dbProfile?.provider || 'openrouter',
+        provider: dbProfile?.provider || 'google',
         durationMs,
         remainingBudgetMs: remainingBudgetNow,
         errorCategory: normalizedError.errorCode || 'unknown_error',
@@ -408,7 +388,7 @@ export async function executeOpenRouterAnalysis(
       if (attempt === 1 && isFallbackEnabled && isFallbackSafe && remainingBudgetNow > 5000) {
         attempt++
         lastError = normalizedError
-        console.warn(`[executeOpenRouterAnalysis] Attempt 1 failed. Error: ${normalizedError.message}. Initiating fallback to ${fallbackModelId} in ${remainingBudgetNow}ms...`)
+        console.warn(`[executeGeminiAnalysis] Attempt 1 failed. Error: ${normalizedError.message}. Initiating fallback to ${fallbackModelId} in ${remainingBudgetNow}ms...`)
         continue
       }
 

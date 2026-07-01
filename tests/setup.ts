@@ -35,7 +35,7 @@ try {
 // Force test environment defaults to match standard contract expectations
 process.env.ANONYMOUS_DAILY_LIMIT = '3'
 
-// Global external network guard for OpenRouter in normal (offline) tests
+// Global external network guard for AI providers in normal (offline) tests
 let originalFetch: typeof globalThis.fetch;
 
 beforeAll(() => {
@@ -45,6 +45,12 @@ beforeAll(() => {
 
     if (urlString.includes('openrouter.ai') && process.env.RUN_LIVE_AI_TESTS !== 'true') {
       const errorMsg = `[SECURITY BLOCK] Attempted external network request to OpenRouter during offline tests: ${urlString}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    if (urlString.includes('generativelanguage.googleapis.com') && process.env.RUN_LIVE_AI_TESTS !== 'true') {
+      const errorMsg = `[SECURITY BLOCK] Attempted external network request to Google AI API during offline tests: ${urlString}`;
       console.error(errorMsg);
       throw new Error(errorMsg);
     }

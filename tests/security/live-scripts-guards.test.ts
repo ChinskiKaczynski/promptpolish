@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach, type Mock, type MockInstance } from 'vitest'
+﻿import { describe, expect, it, vi, beforeEach, afterEach, type Mock, type MockInstance } from 'vitest'
 import { validateLiveAiEnvironment } from '../../scripts/live-ai/live-guard'
 import * as openrouterClient from '@/lib/ai/openrouter-client'
 
@@ -6,8 +6,7 @@ describe('Live Scripts Environment Validation Unit Tests', () => {
   const baseEnv = {
     RUN_LIVE_AI_TESTS: 'true',
     NODE_ENV: 'development',
-    OPENROUTER_API_KEY: 'mock-key',
-    OPENROUTER_FALLBACK_MODEL_ID: 'mock-fallback',
+    GOOGLE_GENERATIVE_AI_API_KEY: 'mock-google-key',
     APP_URL: 'http://localhost:3000',
     NEXT_PUBLIC_SUPABASE_URL: 'https://local-supabase.supabase.co'
   }
@@ -34,24 +33,14 @@ describe('Live Scripts Environment Validation Unit Tests', () => {
     expect(res2.reasons).toContain('RUN_LIVE_AI_TESTS is not true')
   })
 
-  it('blocks if OPENROUTER_API_KEY is missing or empty', () => {
-    const res = validateLiveAiEnvironment({ ...baseEnv, OPENROUTER_API_KEY: '' })
+  it('blocks if GOOGLE_GENERATIVE_AI_API_KEY is missing or empty', () => {
+    const res = validateLiveAiEnvironment({ ...baseEnv, GOOGLE_GENERATIVE_AI_API_KEY: '' })
     expect(res.allowed).toBe(false)
-    expect(res.reasons).toContain('OPENROUTER_API_KEY is missing')
+    expect(res.reasons).toContain('GOOGLE_GENERATIVE_AI_API_KEY is missing')
 
-    const res2 = validateLiveAiEnvironment({ ...baseEnv, OPENROUTER_API_KEY: undefined })
+    const res2 = validateLiveAiEnvironment({ ...baseEnv, GOOGLE_GENERATIVE_AI_API_KEY: undefined })
     expect(res2.allowed).toBe(false)
-    expect(res2.reasons).toContain('OPENROUTER_API_KEY is missing')
-  })
-
-  it('blocks if OPENROUTER_FALLBACK_MODEL_ID is missing or empty', () => {
-    const res = validateLiveAiEnvironment({ ...baseEnv, OPENROUTER_FALLBACK_MODEL_ID: '' })
-    expect(res.allowed).toBe(false)
-    expect(res.reasons).toContain('OPENROUTER_FALLBACK_MODEL_ID is missing')
-
-    const res2 = validateLiveAiEnvironment({ ...baseEnv, OPENROUTER_FALLBACK_MODEL_ID: undefined })
-    expect(res2.allowed).toBe(false)
-    expect(res2.reasons).toContain('OPENROUTER_FALLBACK_MODEL_ID is missing')
+    expect(res2.reasons).toContain('GOOGLE_GENERATIVE_AI_API_KEY is missing')
   })
 
   it('blocks if APP_URL is a production URL', () => {
@@ -126,13 +115,8 @@ describe('Live Scripts Script-Load Guard Integration Tests', () => {
       script: '../../scripts/live-ai/run-calibration.live.test'
     },
     {
-      name: 'exits if OPENROUTER_API_KEY is missing for calibration',
-      env: { RUN_LIVE_AI_TESTS: 'true', NODE_ENV: 'development', OPENROUTER_API_KEY: '' },
-      script: '../../scripts/live-ai/run-calibration.live.test'
-    },
-    {
-      name: 'exits if OPENROUTER_FALLBACK_MODEL_ID is missing for calibration',
-      env: { RUN_LIVE_AI_TESTS: 'true', NODE_ENV: 'development', OPENROUTER_FALLBACK_MODEL_ID: '' },
+      name: 'exits if GOOGLE_GENERATIVE_AI_API_KEY is missing for calibration',
+      env: { RUN_LIVE_AI_TESTS: 'true', NODE_ENV: 'development', GOOGLE_GENERATIVE_AI_API_KEY: '' },
       script: '../../scripts/live-ai/run-calibration.live.test'
     },
     {

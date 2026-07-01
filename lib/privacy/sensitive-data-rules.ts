@@ -20,8 +20,15 @@ export const sensitiveDataRules: SensitiveDataRule[] = [
     id: 'env-secret-key',
     type: 'env_secret_key',
     riskLevel: 'high',
-    pattern: /\b(?:OPENAI_API_KEY|OPENROUTER_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)\s*=\s*[^\s]+/i,
+    pattern: /\b(?:OPENAI_API_KEY|OPENROUTER_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|GOOGLE_API_KEY|GEMINI_API_KEY|SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)\s*=\s*[^\s]+/i,
     message: 'Wykryto przypisanie klucza API w formacie zmiennej środowiskowej (.env secret).'
+  },
+  {
+    id: 'google-api-key',
+    type: 'provider_api_key',
+    riskLevel: 'high',
+    pattern: /\bAIzaSy[A-Za-z0-9_-]{33}\b/,
+    message: 'Wykryto klucz Google API (AIzaSy...). Nigdy nie udostępniaj kluczy API.'
   },
   {
     id: 'bearer-token',

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+﻿import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { executeOpenRouterAnalysis, type TextGenerator } from '@/lib/ai/openrouter-client'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import type { AnalysisResult } from '@/lib/ai/schemas'
@@ -7,8 +7,9 @@ describe('Fallback Classification & Configuration Tests', () => {
   const originalEnv = { ...process.env }
 
   beforeEach(() => {
-    process.env.OPENROUTER_MODEL_ID = 'openrouter/owl-alpha'
-    process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openai/gpt-4o-mini'
+    process.env.AI_MODEL_ALIAS = 'cheap'
+    process.env.GEMINI_MODEL_ID = 'openai/gpt-4o-mini'
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'mock-google-key'
     process.env.NODE_ENV = 'test'
   })
 
@@ -69,7 +70,7 @@ describe('Fallback Classification & Configuration Tests', () => {
   })
 
   it('disables fallback when fallback ID is equal to primary ID', async () => {
-    process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openrouter/owl-alpha' // identical to default primary
+    process.env.GEMINI_MODEL_ID = 'gemini-2.5-flash' // identical to cheap alias
 
     let callCount = 0
     const mockGenerator: TextGenerator = async () => {
@@ -90,28 +91,7 @@ describe('Fallback Classification & Configuration Tests', () => {
   })
 
   it('disables fallback when fallback configuration is empty or absent', async () => {
-    process.env.OPENROUTER_FALLBACK_MODEL_ID = '   ' // blank/whitespace
-
-    let callCount = 0
-    const mockGenerator: TextGenerator = async () => {
-      callCount++
-      throw new ProviderError(
-        'PROVIDER_TIMEOUT: Simulated transient failure',
-        'Timeout',
-        new Error('Simulated upstream timeout'),
-        504,
-        'provider_timeout'
-      )
-    }
-
-    await expect(
-      executeOpenRouterAnalysis('sys', 'user', { textGenerator: mockGenerator })
-    ).rejects.toThrow(/PROVIDER_TIMEOUT/)
-    expect(callCount).toBe(1)
-  })
-
-  it('disables fallback when fallback ID is malformed (missing slash)', async () => {
-    process.env.OPENROUTER_FALLBACK_MODEL_ID = 'gpt-4o-mini-malformed' // malformed
+    process.env.GEMINI_MODEL_ID = '   ' // blank/whitespace
 
     let callCount = 0
     const mockGenerator: TextGenerator = async () => {
@@ -155,7 +135,7 @@ describe('Fallback Classification & Configuration Tests', () => {
 
     await expect(
       executeOpenRouterAnalysis('sys', 'user', { textGenerator: mockGenerator })
-    ).rejects.toThrow(/PROVIDER_TIMEOUT: Simulated transient failure for fallback/)
+    ).rejects.toThrow(/PROVIDER_TIMEOUT \(UPSTREAM_TIMEOUT\): PROVIDER_TIMEOUT: Simulated transient failure for fallback/)
     expect(callCount).toBe(2)
   })
 })
