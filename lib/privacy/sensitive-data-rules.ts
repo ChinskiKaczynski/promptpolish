@@ -55,7 +55,7 @@ export const sensitiveDataRules: SensitiveDataRule[] = [
     id: 'database-url',
     type: 'database_url',
     riskLevel: 'high',
-    pattern: /\b(?:postgresql|postgres|mongodb|mysql|redis):\/\/[A-Za-z0-9_.-]+:[^\s@]+@[A-Za-z0-9_.-]+(?::\d+)?\/[A-Za-z0-9_.-]*\b/i,
+    pattern: /\b(?:postgresql|postgres|mongodb|mysql|redis):\/\/[^\s@:]+:[^\s]+@[A-Za-z0-9_.-]+(?::\d+)?\/[A-Za-z0-9_.-]*\b/i,
     message: 'Wykryto dane uwierzytelniające bazy danych w formacie URL (Database URL).'
   },
   {

@@ -54,8 +54,9 @@ function extractSecretValue(match: string, ruleId: string): string {
     return match.replace(/^Bearer\s+/i, '').trim()
   }
   if (ruleId === 'database-url') {
-    // Extract everything after the :// and before the @ (the password)
-    const matches = match.match(/:\/\/([^:]+):([^@]+)@/)
+    // Match up to the LAST @ (which separates credentials from host).
+    // Using .+ (greedy) for password ensures P@ssw0rd!-style passwords are captured fully.
+    const matches = match.match(/:\/\/([^:]+):(.+)@[A-Za-z0-9_.-]+/)
     if (matches && matches[2]) {
       return matches[2].trim()
     }
@@ -77,7 +78,9 @@ export function redactSecret(value: string, ruleId?: string): string {
   }
 
   if (ruleId === 'database-url') {
-    return value.replace(/(:\/\/[^:]+:)[^@]+(@)/, '$1[redacted]$2')
+    // Replace everything between the last colon (before password) and last @ with [redacted]
+    // Using a greedy match ensures passwords containing @ are fully redacted
+    return value.replace(/(:\/\/[^:]+:).+(@[A-Za-z0-9_.-]+)/, '$1[redacted]$2')
   }
 
   const secretValue = extractSecretValue(value, ruleId)

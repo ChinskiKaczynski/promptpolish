@@ -302,9 +302,9 @@ export default async function AccountPage() {
                 </div>
 
                 <p className="text-xs text-[#94A3B8] max-w-xl leading-relaxed">
-                  Twój limit to 20 analiz miesięcznie bez możliwości eksportu do PDF/Markdown
-                  oraz zbiorczego audytu promptów. Odblokuj pełne możliwości platformy,
-                  przechodząc na plan Pro.
+                  Twój limit to 20 analiz miesięcznie bez eksportu do PDF (dostępny w Pro)
+                  oraz zbiorczego audytu promptów. Eksport do Markdown/TXT jest dostępny na każdym planie.
+                  Odblokuj pełne możliwości platformy, przechodząc na plan Pro.
                 </p>
               </div>
 

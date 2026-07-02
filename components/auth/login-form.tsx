@@ -60,8 +60,26 @@ export function LoginForm() {
       }
     } catch (err: unknown) {
       console.error('Auth error:', err)
-      const message = err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd logowania.'
-      setErrorMsg(message)
+      if (isSignUp) {
+        const isAlreadyRegistered =
+          err instanceof Error &&
+          (/already registered/i.test(err.message) ||
+            ('code' in err && (err as { code?: string }).code === 'user_already_exists'))
+
+        if (isAlreadyRegistered) {
+          setErrorMsg(
+            'Nie udało się utworzyć konta. Spróbuj ponownie lub zaloguj się, jeśli masz już konto.'
+          )
+        } else {
+          const message =
+            err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd rejestracji.'
+          setErrorMsg(message)
+        }
+      } else {
+        const message =
+          err instanceof Error ? err.message : 'Wystąpił nieoczekiwany błąd logowania.'
+        setErrorMsg(message)
+      }
     } finally {
       setLoading(false)
     }

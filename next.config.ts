@@ -2,6 +2,7 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   experimental: {},
+  poweredByHeader: false,
   async headers() {
     const isProd = process.env.NODE_ENV === 'production'
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
