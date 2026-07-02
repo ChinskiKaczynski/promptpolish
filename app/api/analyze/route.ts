@@ -26,6 +26,17 @@ import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
 export const runtime = "nodejs";
 export const maxDuration = 220
 
+/**
+ * All values the `acquire_usage_reservation` DB procedure can return.
+ * Derived from supabase/migrations/20260612210000_usage_reservations.sql.
+ * If a new value is ever added to the procedure, TypeScript will force handling it here.
+ */
+type ReservationResult =
+  | 'success:reserved'
+  | 'success:completed'  // idempotent retry — reservation already existed
+  | 'daily_limit_reached'
+  | 'monthly_limit_reached'
+
 // Input validation schema using Zod.
 // input_prompt uses an absolute transport ceiling of 25,000 chars — larger than
 // any valid plan limit (Pro: 24,000). Per-plan enforcement happens AFTER identity
@@ -173,19 +184,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Log analysis_started immediately after validation and owner resolution
-    await createUsageEvent({
-      owner_anonymous_id: ownerAnonymousId,
-      user_id: userId,
-      event_type: 'analysis_started',
-      metadata_json: {
-        profile_slug: selected_profile_slug,
-        working_language: working_language
-      },
-      ip_hash: ipHash,
-      user_agent_hash: userAgentHash
-    })
-
     // 3. Run sensitive-data detection server-side on all user-controlled text fields
     const scanResult = scanRequestFields({
       input_prompt,
@@ -260,9 +258,9 @@ export async function POST(request: Request) {
 
     // 6. Check plan-based daily abuse and monthly usage limits using atomic reservation ledger.
     requestId = randomUUID()
-    let reservationResult: string
+    let reservationResult: ReservationResult
     try {
-      reservationResult = await acquireReservation(requestId, ownerAnonymousId, userId)
+      reservationResult = await acquireReservation(requestId, ownerAnonymousId, userId) as ReservationResult
     } catch (dbError) {
       console.error('[POST /api/analyze Reservation DB Error]:', dbError)
       return NextResponse.json(
@@ -331,9 +329,35 @@ export async function POST(request: Request) {
       }
     }
 
+    // Exhaustiveness guard: any value from the DB other than the known success variants
+    // must never silently fall through as "ok". If the DB procedure gains a new return
+    // value (e.g. 'abuse_block'), TypeScript will catch it at compile-time here, and
+    // at runtime the check below provides a hard safety net.
+    if (reservationResult !== 'success:reserved' && reservationResult !== 'success:completed') {
+      // At this point TypeScript knows reservationResult is `never` if the union is
+      // exhaustive. If it is somehow NOT never at runtime, it means the DB returned an
+      // unknown value — treat that as an internal error, never allow the analysis through.
+      const _exhaustiveCheck: never = reservationResult
+      console.error('[POST /api/analyze] Unknown reservationResult from DB:', _exhaustiveCheck)
+      throw new Error(`Unknown reservationResult from DB: ${String(_exhaustiveCheck)}`)
+    }
+
     // Mark that we have successfully reserved quota for this request
     reservationAcquired = true
 
+    // Log analysis_started only after confirmed quota reservation — prevents bots from
+    // generating fake funnel events without consuming a real rate-limit slot.
+    await createUsageEvent({
+      owner_anonymous_id: ownerAnonymousId,
+      user_id: userId,
+      event_type: 'analysis_started',
+      metadata_json: {
+        profile_slug: selected_profile_slug,
+        working_language: working_language
+      },
+      ip_hash: ipHash,
+      user_agent_hash: userAgentHash
+    })
 
     // 7. Load selected model profile from database
     const dbProfile = await getModelProfileBySlug(selected_profile_slug)

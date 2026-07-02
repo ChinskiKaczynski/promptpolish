@@ -1,4 +1,5 @@
 import 'server-only'
+import { serverEnv } from '../env/server'
 import { getUserProfile } from '../supabase/queries'
 
 export type PlanSlug = 'anonymous' | 'free' | 'pro'
@@ -53,7 +54,7 @@ export const PLAN_LIMITS: Record<PlanSlug, PlanConfig> = {
     slug: 'anonymous',
     name: 'Anonymous',
     monthlyAnalyses: 10,
-    dailyAnalyses: Number(process.env.ANONYMOUS_DAILY_LIMIT ?? 3),
+    dailyAnalyses: serverEnv.ANONYMOUS_DAILY_LIMIT,
     maxPromptChars: 12000,
     exportMarkdown: true,
     exportText: true,

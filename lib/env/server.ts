@@ -28,7 +28,7 @@ export const serverEnvSchema = z.object({
   SUPABASE_SECRET_KEY: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
-  ANONYMOUS_DAILY_LIMIT: z.coerce.number().int().positive().default(3),
+  ANONYMOUS_DAILY_LIMIT: z.coerce.number().int().positive().max(50).default(3),
   MAX_PROMPT_CHARS: z.coerce.number().int().positive().default(12000),
   MIN_PROMPT_CHARS: z.coerce.number().int().positive().default(20),
   SENSITIVE_DATA_BLOCK_HIGH_RISK: strictBool.default(true),
