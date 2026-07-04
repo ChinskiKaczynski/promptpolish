@@ -286,7 +286,7 @@ describe('Stripe Billing Foundation API Suite', () => {
           metadata: { userId: 'user_uuid_1' }
         }),
         expect.objectContaining({
-          idempotencyKey: 'stripe-customer-creation-user_uuid_1'
+          idempotencyKey: expect.stringContaining('stripe-customer-creation-user_uuid_1')
         })
       )
       expect(saveStripeCustomer).toHaveBeenCalledWith('user_uuid_1', 'cus_new_123')
@@ -328,6 +328,7 @@ describe('Stripe Billing Foundation API Suite', () => {
         created_at: '',
         updated_at: ''
       })
+      mockStripeInstances.customers.retrieve.mockResolvedValue({ id: 'cus_existing_999' })
       mockStripeInstances.checkout.sessions.create.mockResolvedValue({ url: 'https://checkout.stripe.com/pay/cs_test' })
 
       const response = await checkoutHandler()
@@ -505,6 +506,107 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(data.status).toBe('existing_subscription')
       expect(data.portalUrl).toBe('https://billing.stripe.com/portal/mock_session_id')
       expect(mockStripeInstances.checkout.sessions.create).not.toHaveBeenCalled()
+    })
+
+    it('creates a new customer and updates Supabase if the existing customer is stale (resource_missing)', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({
+        id: 'user_stale_uuid',
+        email: 'stale@promptpolish.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: ''
+      })
+      vi.mocked(getStripeCustomer).mockResolvedValue({
+        user_id: 'user_stale_uuid',
+        stripe_customer_id: 'cus_stale_123',
+        created_at: '',
+        updated_at: ''
+      })
+      
+      const retrieveError = new Error('No such customer')
+      Object.assign(retrieveError, { code: 'resource_missing', statusCode: 404 })
+      mockStripeInstances.customers.retrieve.mockRejectedValueOnce(retrieveError)
+
+      mockStripeInstances.customers.create.mockResolvedValue({ id: 'cus_fresh_777' })
+      mockStripeInstances.checkout.sessions.create.mockResolvedValue({ url: 'https://checkout.stripe.com/pay/cs_fresh' })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_fresh')
+      expect(mockStripeInstances.customers.retrieve).toHaveBeenCalledWith('cus_stale_123')
+      expect(mockStripeInstances.customers.create).toHaveBeenCalled()
+      expect(saveStripeCustomer).toHaveBeenCalledWith('user_stale_uuid', 'cus_fresh_777')
+    })
+
+    it('retries checkout session creation once if checkout.sessions.create fails with resource_missing for customer', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({
+        id: 'user_retry_uuid',
+        email: 'retry@promptpolish.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: ''
+      })
+      vi.mocked(getStripeCustomer).mockResolvedValue({
+        user_id: 'user_retry_uuid',
+        stripe_customer_id: 'cus_stale_again',
+        created_at: '',
+        updated_at: ''
+      })
+
+      mockStripeInstances.customers.retrieve.mockResolvedValue({ id: 'cus_stale_again' })
+
+      const checkoutError = new Error('No such customer')
+      Object.assign(checkoutError, { code: 'resource_missing', param: 'customer', statusCode: 404 })
+      mockStripeInstances.checkout.sessions.create
+        .mockRejectedValueOnce(checkoutError)
+        .mockResolvedValueOnce({ url: 'https://checkout.stripe.com/pay/cs_retry_success' })
+
+      mockStripeInstances.customers.create.mockResolvedValue({ id: 'cus_retry_fresh' })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_retry_success')
+      expect(mockStripeInstances.customers.create).toHaveBeenCalled()
+      expect(saveStripeCustomer).toHaveBeenCalledWith('user_retry_uuid', 'cus_retry_fresh')
+      expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledTimes(2)
+    })
+
+    it('returns a safe 502 error if checkout retry also fails', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({
+        id: 'user_fail_twice',
+        email: 'failtwice@promptpolish.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: ''
+      })
+      vi.mocked(getStripeCustomer).mockResolvedValue({
+        user_id: 'user_fail_twice',
+        stripe_customer_id: 'cus_stale_twice',
+        created_at: '',
+        updated_at: ''
+      })
+
+      mockStripeInstances.customers.retrieve.mockResolvedValue({ id: 'cus_stale_twice' })
+
+      const checkoutError = new Error('No such customer')
+      Object.assign(checkoutError, { code: 'resource_missing', param: 'customer', statusCode: 404 })
+      
+      mockStripeInstances.checkout.sessions.create.mockRejectedValue(checkoutError)
+      mockStripeInstances.customers.create.mockResolvedValue({ id: 'cus_twice_fresh' })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(502)
+      expect(data.error).toBe('stripe_error')
+      expect(data.message).toBe('Nie udało się rozpocząć płatności w Stripe. Spróbuj ponownie za chwilę.')
     })
   })
 

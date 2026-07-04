@@ -75,6 +75,36 @@ export async function POST() {
     // Resolve or initialize customer mapping on the fly
     const customerRow = await getStripeCustomer(user.id)
     let stripeCustomerId = customerRow?.stripe_customer_id || null
+    let isStaleCustomer = false
+    let newCustomerCreated = false
+    const oldCustomerIdExisted = !!stripeCustomerId
+
+    if (stripeCustomerId) {
+      try {
+        const customer = await stripe.customers.retrieve(stripeCustomerId)
+        if ('deleted' in customer && customer.deleted) {
+          isStaleCustomer = true
+        }
+      } catch (err: unknown) {
+        const errorObj = err as { code?: string; statusCode?: number; status?: number; message?: string }
+        const isResourceMissing = 
+          errorObj.code === 'resource_missing' || 
+          errorObj.statusCode === 404 || 
+          errorObj.status === 404 || 
+          (errorObj.message && errorObj.message.includes('No such customer'))
+        
+        if (isResourceMissing) {
+          isStaleCustomer = true
+        } else {
+          throw err
+        }
+      }
+    }
+
+    if (isStaleCustomer) {
+      stripeCustomerId = null
+      console.log(`[Stripe Checkout] Stale customer detected: true. Old customer ID existed: ${oldCustomerIdExisted}.`)
+    }
 
     // Detect existing active-equivalent subscription
     const existingSub = await getSubscriptionByUserId(user.id)
@@ -116,9 +146,10 @@ export async function POST() {
           email: user.email || '',
           metadata: { userId: user.id }
         }, {
-          idempotencyKey: `stripe-customer-creation-${user.id}`
+          idempotencyKey: `stripe-customer-creation-${user.id}-${isStaleCustomer ? Date.now() : 'initial'}`
         })
         stripeCustomerId = customer.id
+        newCustomerCreated = true
         
         // Persist and verify customer mapping in the local database before starting checkout
         const saved = await saveStripeCustomer(user.id, stripeCustomerId)
@@ -203,10 +234,12 @@ export async function POST() {
     }
 
     let session: Stripe.Checkout.Session
-    try {
+    let checkoutRetriedOnce = false
+
+    const createSessionHelper = async (customerIdToUse: string) => {
       const sessionOpts: Stripe.Checkout.SessionCreateParams = {
         mode: 'subscription',
-        customer: stripeCustomerId,
+        customer: customerIdToUse,
         client_reference_id: user.id,
         metadata: {
           user_id: user.id,
@@ -228,10 +261,47 @@ export async function POST() {
         cancel_url: `${appUrl}/pricing?upgrade=cancel`
       }
 
-      // Stripe Session Idempotency Key is derived strictly from the server-controlled attempt ID
-      session = await stripe.checkout.sessions.create(sessionOpts, {
-        idempotencyKey: `checkout-session-${finalClaim.attempt_id}`
+      return await stripe.checkout.sessions.create(sessionOpts, {
+        idempotencyKey: `checkout-session-${finalClaim.attempt_id}${checkoutRetriedOnce ? '-retry' : ''}`
       })
+    }
+
+    try {
+      try {
+        session = await createSessionHelper(stripeCustomerId)
+      } catch (err: unknown) {
+        const errorObj = err as { code?: string; statusCode?: number; status?: number; message?: string; param?: string }
+        const isCustomerMissing = 
+          errorObj.code === 'resource_missing' || 
+          errorObj.statusCode === 404 || 
+          (errorObj.message && errorObj.message.includes('No such customer')) ||
+          errorObj.param === 'customer'
+
+        if (isCustomerMissing && !checkoutRetriedOnce) {
+          checkoutRetriedOnce = true
+          isStaleCustomer = true
+          console.warn(`[Stripe Checkout] Session creation failed for customer ${stripeCustomerId} (resource_missing). Recreating customer and retrying.`)
+
+          const customer = await stripe.customers.create({
+            email: user.email || '',
+            metadata: { userId: user.id }
+          }, {
+            idempotencyKey: `stripe-customer-creation-retry-${user.id}-${Date.now()}`
+          })
+          stripeCustomerId = customer.id
+          newCustomerCreated = true
+
+          const saved = await saveStripeCustomer(user.id, stripeCustomerId)
+          if (!saved) {
+            throw new Error('Failed to save Stripe customer mapping to local database on retry.')
+          }
+
+          // Retry session creation once
+          session = await createSessionHelper(stripeCustomerId)
+        } else {
+          throw err
+        }
+      }
 
       if (!session.url) {
         throw new Error('Stripe failed to return a valid Checkout redirect URL.')
@@ -244,13 +314,26 @@ export async function POST() {
         session_id: session.id
       })
 
-    } catch (err) {
+      console.log(`[Stripe Checkout] Session created successfully. Details: ` +
+        `staleCustomerDetected=${isStaleCustomer}, ` +
+        `oldCustomerIdExisted=${oldCustomerIdExisted}, ` +
+        `newCustomerCreated=${newCustomerCreated}, ` +
+        `checkoutRetriedOnce=${checkoutRetriedOnce}`)
+
+    } catch (err: unknown) {
       // Release or fail the attempt in DB so user can retry
       await updateCheckoutAttemptStatus({
         attempt_id: finalClaim.attempt_id,
         status: 'failed',
         failure_code: err instanceof Error ? err.message : String(err)
       })
+
+      console.error(`[Stripe Checkout] Session creation failed terminally. Details: ` +
+        `staleCustomerDetected=${isStaleCustomer}, ` +
+        `oldCustomerIdExisted=${oldCustomerIdExisted}, ` +
+        `newCustomerCreated=${newCustomerCreated}, ` +
+        `checkoutRetriedOnce=${checkoutRetriedOnce}`, err)
+
       throw err
     }
 
@@ -269,14 +352,18 @@ export async function POST() {
 
     return NextResponse.json({ checkoutUrl: session.url })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('[POST /api/billing/checkout Error]:', error)
+    const errorObj = error as { type?: string; raw?: { type?: string }; statusCode?: number }
+    const isStripeError = errorObj && (errorObj.type?.startsWith('Stripe') || errorObj.raw?.type?.startsWith('Stripe') || typeof errorObj.statusCode === 'number')
     return NextResponse.json(
       {
-        error: 'internal_error',
-        message: 'Wystąpił nieoczekiwany błąd serwera. Spróbuj ponownie później.'
+        error: isStripeError ? 'stripe_error' : 'internal_error',
+        message: isStripeError 
+          ? 'Nie udało się rozpocząć płatności w Stripe. Spróbuj ponownie za chwilę.' 
+          : 'Wystąpił nieoczekiwany błąd serwera. Spróbuj ponownie później.'
       },
-      { status: 500 }
+      { status: isStripeError ? 502 : 500 }
     )
   }
 }
