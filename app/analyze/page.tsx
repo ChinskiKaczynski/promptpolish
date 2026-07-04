@@ -44,7 +44,10 @@ export default async function AnalyzePage() {
     }
   }
 
-  const stripeEnabled = process.env.STRIPE_ENABLED === 'true'
+  const stripeEnabled =
+    process.env.STRIPE_ENABLED === 'true' &&
+    !!process.env.STRIPE_SECRET_KEY &&
+    !!process.env.STRIPE_PRICE_ID_PRO
   const showMeter = usagePct >= 80 || monthlyCount >= monthlyLimit
 
   return (

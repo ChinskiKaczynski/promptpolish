@@ -176,9 +176,9 @@ export default function PrivacyPage() {
               </p>
               <ul className="list-none space-y-2 text-sm text-[#94A3B8]">
                 <li><strong className="text-[#E2E8F0]">E-mail wsparcia i prywatności:</strong> <a href="mailto:kontakt@promptpolish.pl" className="text-[#A78BFA] hover:text-[#C4B5FD] transition-colors underline">kontakt@promptpolish.pl</a></li>
-                <li><strong className="text-[#E2E8F0]">Nazwa podmiotu (Administrator):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[Nazwa firmy do uzupełnienia]</code></li>
-                <li><strong className="text-[#E2E8F0]">Adres rejestrowy:</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[Adres rejestrowy do uzupełnienia]</code></li>
-                <li><strong className="text-[#E2E8F0]">Dane rejestrowe (NIP/KRS/REGON):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[NIP/KRS/REGON do uzupełnienia]</code></li>
+                <li><strong className="text-[#E2E8F0]">Nazwa podmiotu (Administrator):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">PromptPolish Project</code></li>
+                <li><strong className="text-[#E2E8F0]">Adres rejestrowy:</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">Warszawa, Polska (Online Service)</code></li>
+                <li><strong className="text-[#E2E8F0]">Dane rejestrowe (NIP/KRS/REGON):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">Brak (Projekt MVP w fazie testów)</code></li>
               </ul>
             </section>
 

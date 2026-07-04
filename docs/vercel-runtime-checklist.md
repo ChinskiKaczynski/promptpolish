@@ -9,9 +9,24 @@ This checklist contains critical operational environment settings and runtime ve
 | Variable | Deployment Role | Recommended State | Notes |
 |---|---|---|---|
 | **`OPENROUTER_FALLBACK_MODEL_ID`** | Optional Fallback ID | **Unset (Empty)** | Production fallback must remain disabled until a suitable model is approved. |
-| **`STRIPE_ENABLED`** | Stripe Integration | **`false`** | Stripe billing remains disabled. |
+| **`STRIPE_ENABLED`** | Stripe Integration | **`false`** (Production) | Stripe billing remains disabled on prod. Set to `true` in Vercel Preview for test mode. |
 | **`AI_MOCK_MODE`** | AI Provider Mocking | **`false`** | Live calls only in production environments. |
 | **`AI_PROVIDER_TIMEOUT_MS`** | Provider Request Budget | **`55000`** (55s) | Hard abort limit for provider completions. |
+
+---
+
+## 1.5 Stripe Test Mode on Vercel Preview
+
+To enable Stripe Test Mode checkout on Vercel Preview, you must set the following environment variables in Vercel Project settings under the **Preview** environment scope:
+
+- **`STRIPE_ENABLED`**: `true`
+- **`STRIPE_SECRET_KEY`**: `sk_test_...` (Your Stripe Test Mode secret key)
+- **`STRIPE_PRICE_ID_PRO`**: `price_...` (Your Stripe Test Mode Pro price ID)
+- **`STRIPE_WEBHOOK_SECRET`**: `whsec_...` (Your Stripe Test Mode webhook signing secret)
+- **`APP_URL`**: `https://preview-url.vercel.app` (The Vercel preview deployment URL)
+
+> [!CAUTION]
+> Never configure live keys (`sk_live_...`) or enable Stripe billing on the production environment branch. Keep Stripe billing disabled (`STRIPE_ENABLED=false`) in production.
 
 ---
 

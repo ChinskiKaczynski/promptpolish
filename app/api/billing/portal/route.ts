@@ -8,7 +8,12 @@ import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 
 export async function POST() {
   try {
-    if (process.env.STRIPE_ENABLED !== 'true') {
+    const stripeEnabled =
+      process.env.STRIPE_ENABLED === 'true' &&
+      !!process.env.STRIPE_SECRET_KEY &&
+      !!process.env.STRIPE_PRICE_ID_PRO
+
+    if (!stripeEnabled) {
       return NextResponse.json(
         {
           error: 'billing_disabled',

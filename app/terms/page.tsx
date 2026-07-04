@@ -68,7 +68,7 @@ export default function TermsPage() {
               </p>
               <div className="rounded-xl border border-[#A78BFA]/20 bg-[#A78BFA]/5 p-4 text-xs space-y-2 font-semibold text-[#94A3B8]">
                 <p>
-                  <strong className="text-[#E2E8F0]">Cennik i waluta:</strong> Opłaty za usługi świadczone w ramach planów płatnych są naliczane zgodnie z aktualnym cennikiem dostępnym na stronie usługi w kwocie <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[Waluta i cena do uzupełnienia]</code>.
+                  <strong className="text-[#E2E8F0]">Cennik i waluta:</strong> Opłaty za usługi świadczone w ramach planów płatnych są naliczane zgodnie z aktualnym cennikiem dostępnym na stronie usługi w kwocie <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">19 PLN / miesiąc</code>.
                 </p>
                 <p>
                   <strong className="text-[#E2E8F0]">Obsługa płatności:</strong> Wszystkie płatności, faktury i transakcje są obsługiwane za pośrednictwem certyfikowanego procesora <strong className="text-[#E2E8F0]">Stripe, Inc.</strong> z wykorzystaniem Stripe Checkout. Serwis nie przechowuje ani nie przetwarza danych kart płatniczych użytkowników.
@@ -93,7 +93,7 @@ export default function TermsPage() {
               </p>
               <div className="rounded-xl border border-[#A78BFA]/20 bg-[#A78BFA]/5 p-4 text-xs font-semibold text-[#94A3B8] space-y-2">
                 <p>
-                  <strong className="text-[#E2E8F0]">Warunki zwrotu środków:</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[Zasady zwrotów do uzupełnienia]</code>
+                  <strong className="text-[#E2E8F0]">Warunki zwrotu środków:</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">Zwroty realizowane są do 14 dni od zakupu w przypadku braku wykorzystania limitu analiz w danym okresie rozliczeniowym.</code>
                 </p>
                 <p>
                   Wszelkie wnioski reklamacyjne oraz zgłoszenia dotyczące zwrotów płatności prosimy kierować na adres e-mail: <a href="mailto:kontakt@promptpolish.pl" className="text-[#A78BFA] hover:text-[#C4B5FD] transition-colors underline">kontakt@promptpolish.pl</a>.
@@ -140,7 +140,7 @@ export default function TermsPage() {
                 Wszelkie spory wynikające ze świadczenia usług na rzecz użytkowników będą rozstrzygane polubownie, a w przypadku braku porozumienia — przez sąd właściwy dla jurysdykcji:
               </p>
               <p className="font-semibold">
-                <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[Prawo właściwe i sąd do uzupełnienia]</code>
+                <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">Prawo polskie, a spory rozstrzygane będą przez sąd powszechny właściwy dla siedziby Administratora.</code>
               </p>
             </section>
 
@@ -151,9 +151,9 @@ export default function TermsPage() {
               </p>
               <ul className="list-none space-y-2 text-sm text-[#94A3B8]">
                 <li><strong className="text-[#E2E8F0]">E-mail wsparcia i zapytania prawne:</strong> <a href="mailto:kontakt@promptpolish.pl" className="text-[#A78BFA] hover:text-[#C4B5FD] transition-colors underline">kontakt@promptpolish.pl</a></li>
-                <li><strong className="text-[#E2E8F0]">Nazwa podmiotu (Usługodawca):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[Nazwa firmy do uzupełnienia]</code></li>
-                <li><strong className="text-[#E2E8F0]">Adres rejestrowy:</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[Adres rejestrowy do uzupełnienia]</code></li>
-                <li><strong className="text-[#E2E8F0]">Dane rejestrowe (NIP/KRS/REGON):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">[NIP/KRS/REGON do uzupełnienia]</code></li>
+                <li><strong className="text-[#E2E8F0]">Nazwa podmiotu (Usługodawca):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">PromptPolish Project</code></li>
+                <li><strong className="text-[#E2E8F0]">Adres rejestrowy:</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">Warszawa, Polska (Online Service)</code></li>
+                <li><strong className="text-[#E2E8F0]">Dane rejestrowe (NIP/KRS/REGON):</strong> <code className="text-[#E2E8F0] bg-[#1C1C27] px-1.5 py-0.5 rounded font-mono text-xs">Brak (Projekt MVP w fazie testów)</code></li>
               </ul>
             </section>
 

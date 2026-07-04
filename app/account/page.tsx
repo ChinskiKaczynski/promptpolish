@@ -70,7 +70,10 @@ export default async function AccountPage() {
   }
 
   // 5. Fetch subscription only when Stripe is active.
-  const stripeEnabled = process.env.STRIPE_ENABLED === 'true'
+  const stripeEnabled =
+    process.env.STRIPE_ENABLED === 'true' &&
+    !!process.env.STRIPE_SECRET_KEY &&
+    !!process.env.STRIPE_PRICE_ID_PRO
   const subscription = stripeEnabled ? await getSubscriptionByUserId(user.id) : null
 
   // 6. Calculate monthly usage metrics
@@ -275,9 +278,9 @@ export default async function AccountPage() {
                 </div>
 
                 <p className="text-xs text-[#94A3B8] max-w-xl leading-relaxed">
-                  Korzystasz z dostępu Pro w ramach zamkniętych testów beta. Płatności Stripe
-                  zostaną aktywowane wkrótce — do tego czasu wszystkie funkcje Pro są dostępne
-                  bez opłat.
+                  Korzystasz z dostępu Pro w ramach otwartych testów (Public Beta). Płatności
+                  realizowane są w trybie testowym Stripe (Test Mode). Wszystkie funkcje Pro
+                  są aktywne.
                 </p>
               </div>
 

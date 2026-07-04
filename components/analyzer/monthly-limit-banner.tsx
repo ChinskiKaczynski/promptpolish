@@ -43,8 +43,8 @@ export function MonthlyLimitBanner({
           </h4>
           <p className="text-xs text-[#94A3B8] leading-relaxed">
             {workingLanguage === 'pl'
-              ? `Wykorzystałeś miesięczny limit analiz (${monthlyLimitFromApi ?? '—'}/miesiąc) na Twoim planie. Przejdź na Pro, aby uzyskać do 500 analiz miesięcznie, eksport PDF/Markdown, wyższy limit znaków (24 000) i zbiorczy audyt. Zakup Pro jest niedostępny w becie — dostępny wkrótce po uruchomieniu Stripe.`
-              : `You have reached the monthly analysis limit (${monthlyLimitFromApi ?? '—'}/month) for your plan. Upgrade to Pro for 500 monthly analyses, PDF/Markdown exports, higher character limits (24k), and batch audits. Pro purchase is unavailable in beta — available soon after Stripe activation.`}
+              ? `Wykorzystałeś miesięczny limit analiz (${monthlyLimitFromApi ?? '—'}/miesiąc) na Twoim planie. Przejdź na Pro, aby uzyskać do 500 analiz miesięcznie, eksport PDF/Markdown, wyższy limit znaków (24 000) i zbiorczy audyt. Możesz aktywować plan Pro w trybie testowym Stripe.`
+              : `You have reached the monthly analysis limit (${monthlyLimitFromApi ?? '—'}/month) for your plan. Upgrade to Pro for 500 monthly analyses, PDF/Markdown exports, higher character limits (24k), and batch audits. You can activate the Pro plan in Stripe Test Mode.`}
           </p>
           <div className="pt-2 flex flex-wrap items-center gap-2">
             <Link

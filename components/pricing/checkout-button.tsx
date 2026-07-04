@@ -4,9 +4,10 @@ import { useState } from 'react'
 
 interface CheckoutButtonProps {
   lang?: 'pl' | 'en'
+  label?: string
 }
 
-export function CheckoutButton({ lang = 'pl' }: CheckoutButtonProps) {
+export function CheckoutButton({ lang = 'pl', label }: CheckoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,7 +61,7 @@ export function CheckoutButton({ lang = 'pl' }: CheckoutButtonProps) {
             <span>{lang === 'pl' ? 'Przekierowywanie...' : 'Redirecting...'}</span>
           </>
         ) : (
-          <span>{lang === 'pl' ? 'Aktywuj Pro z Stripe' : 'Activate Pro with Stripe'}</span>
+          <span>{label || (lang === 'pl' ? 'Aktywuj Pro z Stripe' : 'Activate Pro with Stripe')}</span>
         )}
       </button>
 

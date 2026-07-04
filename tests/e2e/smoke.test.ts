@@ -8,7 +8,7 @@ test.describe('PromptPolish E2E Smoke Journey', () => {
     await expect(page.locator('header')).toContainText('PromptPolish')
 
     // 2. Click through to the Analyze form
-    const startButton = page.locator('text=Rozpocznij analizę')
+    const startButton = page.locator('text=Rozpocznij bezpłatnie')
     await expect(startButton).toBeVisible()
     await startButton.click()
 

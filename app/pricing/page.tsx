@@ -14,7 +14,10 @@ export const dynamic = 'force-dynamic'
 
 export default async function PricingPage() {
   const user = await getAuthUser()
-  const stripeEnabled = process.env.STRIPE_ENABLED === 'true'
+  const stripeEnabled =
+    process.env.STRIPE_ENABLED === 'true' &&
+    !!process.env.STRIPE_SECRET_KEY &&
+    !!process.env.STRIPE_PRICE_ID_PRO
   let profile = null
 
   if (user) {
@@ -148,10 +151,8 @@ export default async function PricingPage() {
                 )}
               </div>
               <div className="mt-6 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold font-mono text-[#E2E8F0]">Cena TBD</span>
-                <span className="rounded-full bg-[#1C1C27] border border-[#2A2A3A] px-2.5 py-0.5 text-[9px] font-black text-[#A78BFA] uppercase tracking-widest">
-                  Lista oczekujących
-                </span>
+                <span className="text-3xl font-extrabold font-mono text-[#E2E8F0]">19 PLN</span>
+                <span className="ml-1.5 text-xs font-bold text-[#8290A2]">/ miesiąc</span>
               </div>
 
               <div className="mt-8 border-t border-[#2A2A3A]/50 pt-6 space-y-4">
@@ -188,25 +189,25 @@ export default async function PricingPage() {
                 </div>
               ) : user && stripeEnabled ? (
                 <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <CheckoutButton lang="pl" />
+                  <CheckoutButton lang="pl" label="Przejdź do płatności testowej" />
+                  <p className="text-[10px] text-[#A78BFA] text-center leading-relaxed font-semibold">
+                    Płatność testowa Stripe — karta nie zostanie obciążona.
+                  </p>
                 </div>
-              ) : user && !stripeEnabled ? (
+              ) : !stripeEnabled ? (
                 <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="rounded-lg border border-[#F59E0B]/20 bg-[#F59E0B]/5 px-4 py-3 text-center text-xs font-semibold text-[#F59E0B]">
-                    Zakup Pro niedostępny w becie.
-                  </div>
                   <WaitlistForm lang="pl" />
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <Link
                     href="/login?redirectTo=/pricing"
                     className="block text-center w-full rounded-lg gradient-btn text-white font-bold py-3.5 text-xs active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    Zaloguj się, aby odblokować Pro
+                    Przejdź do płatności testowej
                   </Link>
-                  <p className="text-[10px] text-[#8290A2] text-center leading-relaxed">
-                    Konta są darmowe i bezpieczne.
+                  <p className="text-[10px] text-[#A78BFA] text-center leading-relaxed font-semibold">
+                    Płatność testowa Stripe — karta nie zostanie obciążona.
                   </p>
                 </div>
               )}
@@ -229,7 +230,7 @@ export default async function PricingPage() {
             <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-2">
               <h4 className="text-sm font-bold text-[#E2E8F0] font-heading">Kiedy płatności będą w pełni aktywne?</h4>
               <p className="text-xs text-[#94A3B8] leading-relaxed">
-                Obecnie PromptPolish jest w fazie zamkniętych testów beta. Pracujemy nad integracją Stripe — dokładny termin ogłosimy wkrótce.
+                Obecnie PromptPolish jest w fazie otwartych testów (Public Beta). Wszystkie płatności realizowane są w trybie testowym Stripe (Test Mode).
               </p>
             </div>
 

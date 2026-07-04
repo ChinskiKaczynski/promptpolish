@@ -14,7 +14,10 @@ export async function POST() {
     }
 
     const isDev = process.env.NODE_ENV === 'development'
-    const isStripeEnabled = process.env.STRIPE_ENABLED === 'true'
+    const isStripeEnabled =
+      process.env.STRIPE_ENABLED === 'true' &&
+      !!process.env.STRIPE_SECRET_KEY &&
+      !!process.env.STRIPE_PRICE_ID_PRO
 
     if (!isDev || isStripeEnabled) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
