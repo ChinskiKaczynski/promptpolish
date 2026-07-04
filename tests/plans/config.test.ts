@@ -6,6 +6,12 @@ vi.mock('@/lib/supabase/queries', () => ({
   getUserProfile: vi.fn()
 }))
 
+vi.mock('@/lib/supabase/billing', () => ({
+  getSubscriptionByUserId: vi.fn().mockResolvedValue(null)
+}))
+
+import { getSubscriptionByUserId } from '@/lib/supabase/billing'
+
 import {
   PLAN_LIMITS,
   canAnalyzePrompt,
@@ -17,7 +23,7 @@ import {
   getPlanSlugForUser
 } from '@/lib/plans/config'
 import { getUserProfile } from '@/lib/supabase/queries'
-import type { UserProfileRow } from '@/lib/supabase/types'
+import type { UserProfileRow, SubscriptionRow } from '@/lib/supabase/types'
 
 describe('Plans Configuration and Capability Engine', () => {
   beforeEach(() => {
@@ -149,10 +155,42 @@ describe('Plans Configuration and Capability Engine', () => {
       expect(result).toBe('free')
     })
 
-    it('falls back to free plan slug when database profile plan slug is unknown', async () => {
-      vi.mocked(getUserProfile).mockResolvedValue({ plan_slug: 'custom-unrecognized' } as unknown as UserProfileRow)
-      const result = await getPlanSlugForUser('user-id-4')
-      expect(result).toBe('free')
+    it('resolves pro plan slug when active subscription is pro and STRIPE_ENABLED is true', async () => {
+      const originalEnv = process.env.STRIPE_ENABLED
+      process.env.STRIPE_ENABLED = 'true'
+      
+      try {
+        vi.mocked(getSubscriptionByUserId).mockResolvedValue({
+          plan_slug: 'pro',
+          status: 'active'
+        } as unknown as SubscriptionRow)
+
+        const result = await getPlanSlugForUser('user-active-sub')
+        expect(result).toBe('pro')
+        expect(getSubscriptionByUserId).toHaveBeenCalledWith('user-active-sub')
+      } finally {
+        process.env.STRIPE_ENABLED = originalEnv
+      }
+    })
+
+    it('falls back to user profile when subscription is inactive or canceled', async () => {
+      const originalEnv = process.env.STRIPE_ENABLED
+      process.env.STRIPE_ENABLED = 'true'
+      
+      try {
+        vi.mocked(getSubscriptionByUserId).mockResolvedValue({
+          plan_slug: 'pro',
+          status: 'canceled'
+        } as unknown as SubscriptionRow)
+        vi.mocked(getUserProfile).mockResolvedValue({
+          plan_slug: 'free'
+        } as unknown as UserProfileRow)
+
+        const result = await getPlanSlugForUser('user-canceled-sub')
+        expect(result).toBe('free')
+      } finally {
+        process.env.STRIPE_ENABLED = originalEnv
+      }
     })
   })
 })

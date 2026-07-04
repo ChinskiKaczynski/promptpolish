@@ -131,6 +131,12 @@ export async function POST(request: Request) {
       await updateWebhookEventStatus({ event_id: eventId, status: 'ignored' })
       return NextResponse.json({ received: true, ignored: true })
     }
+    let hasUserId = false
+    let customerUpsertSuccess = false
+    let subscriptionUpsertSuccess = false
+    let resolvedPlanSlug = 'free'
+    let resolvedStatus = 'inactive'
+
     switch (eventType) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
@@ -158,44 +164,58 @@ export async function POST(request: Request) {
           return new NextResponse('Missing customer ID', { status: 400 })
         }
 
+        if (!subscriptionId) {
+          console.warn(`[Stripe Webhook] checkout.session.completed event ${eventId} missing subscription ID.`);
+          await updateWebhookEventStatus({
+            event_id: eventId,
+            status: 'failed_terminal',
+            failure_message: 'Missing subscription ID in checkout session.'
+          })
+          return new NextResponse('Missing subscription ID', { status: 400 })
+        }
+
         // Upsert stripe_customers mapping
         const customerUpsert = await saveStripeCustomer(userId, customerId)
-        const customerUpsertSuccess = !!customerUpsert
-        console.log(`[Stripe Webhook] saveStripeCustomer upsert completed: success=${customerUpsertSuccess}, userId=${userId}, customerId=${customerId}`)
+        const customerUpsertSuccessVar = !!customerUpsert
+        console.log(`[Stripe Webhook] saveStripeCustomer upsert completed: success=${customerUpsertSuccessVar}, userId=${userId}, customerId=${customerId}`)
 
-        if (subscriptionId) {
-          const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-          const stripePriceId = subscription.items.data[0]?.price.id || ''
-          const planSlug = 'pro'
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+          expand: ['items.data.price']
+        })
+        const stripePriceId = subscription.items.data[0]?.price.id || ''
+        const planSlug = 'pro'
 
-          const subscriptionRaw = subscription as unknown as {
-            current_period_start: number
-            current_period_end: number
-          }
-
-          const saved = await saveSubscription({
-            user_id: userId,
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            stripe_price_id: stripePriceId,
-            plan_slug: planSlug,
-            status: subscription.status,
-            current_period_start: new Date(subscriptionRaw.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscriptionRaw.current_period_end * 1000).toISOString(),
-            cancel_at_period_end: subscription.cancel_at_period_end,
-            last_event_created: stripeCreated,
-            last_event_id: eventId
-          })
-
-          const saveSubscriptionSuccess = !!saved
-          console.log(`[Stripe Webhook] saveSubscription completed: success=${saveSubscriptionSuccess}, userId=${userId}, subscriptionId=${subscriptionId}`)
-
-          if (!saved) {
-            throw new Error('Database write failed inside saveSubscription.')
-          }
-        } else {
-          console.warn(`[Stripe Webhook] checkout.session.completed event ${eventId} has no subscription ID.`)
+        const subscriptionRaw = subscription as unknown as {
+          current_period_start: number
+          current_period_end: number
         }
+
+        const saved = await saveSubscription({
+          user_id: userId,
+          stripe_customer_id: customerId,
+          stripe_subscription_id: subscriptionId,
+          stripe_price_id: stripePriceId,
+          plan_slug: planSlug,
+          status: subscription.status,
+          current_period_start: new Date(subscriptionRaw.current_period_start * 1000).toISOString(),
+          current_period_end: new Date(subscriptionRaw.current_period_end * 1000).toISOString(),
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          last_event_created: stripeCreated,
+          last_event_id: eventId
+        })
+
+        const saveSubscriptionSuccess = !!saved
+        console.log(`[Stripe Webhook] saveSubscription completed: success=${saveSubscriptionSuccess}, userId=${userId}, subscriptionId=${subscriptionId}`)
+
+        if (!saved) {
+          throw new Error('Database write failed inside saveSubscription.')
+        }
+
+        hasUserId = !!userId
+        customerUpsertSuccess = customerUpsertSuccessVar
+        subscriptionUpsertSuccess = saveSubscriptionSuccess
+        resolvedPlanSlug = planSlug
+        resolvedStatus = subscription.status
 
         // Mark checkout attempt completed
         await completeCheckoutAttempt(session.id)
@@ -222,24 +242,16 @@ export async function POST(request: Request) {
           return new NextResponse('Missing customer ID', { status: 400 })
         }
 
-        const userId = await getUserIdByStripeCustomerId(customerId)
-        console.log(`[Stripe Webhook] processing subscription event (${eventType}): eventId=${eventId}, customerId=${customerId}, subscriptionId=${subscriptionId}, userIdFound=${!!userId}`)
-
-        if (!userId) {
-          console.warn(`[Stripe Webhook] Unmapped customer ID ${customerId} in subscription event. Retrying.`);
-          await updateWebhookEventStatus({
-            event_id: eventId,
-            status: 'failed_retryable',
-            failure_message: 'Unmapped customer ID.'
-          })
-          return new NextResponse('Unmapped customer ID', { status: 502 })
-        }
+        // Try to map by stripe_customer_id in stripe_customers
+        let userId = await getUserIdByStripeCustomerId(customerId)
 
         // Retrieve current subscription object from Stripe using stripe.subscriptions.retrieve
         let subscription: Stripe.Subscription
         try {
-          subscription = await stripe.subscriptions.retrieve(subscriptionId)
-        } catch (err) {
+          subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+            expand: ['items.data.price']
+          })
+        } catch (err: unknown) {
           const errorObj = err as {
             code?: string
             statusCode?: number
@@ -263,7 +275,26 @@ export async function POST(request: Request) {
             if (!ok) {
               throw new Error('Database write failed inside cancelSubscriptionInDatabase for missing resource.')
             }
+
+            hasUserId = false
+            customerUpsertSuccess = false
+            subscriptionUpsertSuccess = cancelSuccess
+            resolvedPlanSlug = 'free'
+            resolvedStatus = 'canceled'
+
             await updateWebhookEventStatus({ event_id: eventId, status: 'processed' })
+
+            console.log(`[Stripe Webhook Logs] Processing finished successfully: ` +
+              `eventType=${eventType}, ` +
+              `eventId=${eventId}, ` +
+              `hasUserId=${hasUserId}, ` +
+              `customerId=${customerId || 'none'}, ` +
+              `subscriptionId=${subscriptionId || 'none'}, ` +
+              `customerUpsertSuccess=${customerUpsertSuccess}, ` +
+              `subscriptionUpsertSuccess=${subscriptionUpsertSuccess}, ` +
+              `resolvedPlanSlug=${resolvedPlanSlug}, ` +
+              `resolvedStatus=${resolvedStatus}`
+            )
             return NextResponse.json({ received: true })
           } else {
             const errorCategory = errorObj.type || errorObj.rawType || 'StripeRetrievalError'
@@ -275,6 +306,29 @@ export async function POST(request: Request) {
             })
             return new NextResponse('Stripe retrieval failed, retry scheduled', { status: 503 })
           }
+        }
+
+        // If mapping does not exist, use subscription.metadata.user_id if available
+        if (!userId) {
+          userId = (subscription.metadata?.user_id as string) || null
+          if (userId) {
+            const customerUpsert = await saveStripeCustomer(userId, customerId)
+            customerUpsertSuccess = !!customerUpsert
+          }
+        } else {
+          customerUpsertSuccess = true
+        }
+
+        console.log(`[Stripe Webhook] processing subscription event (${eventType}): eventId=${eventId}, customerId=${customerId}, subscriptionId=${subscriptionId}, userIdFound=${!!userId}`)
+
+        if (!userId) {
+          console.warn(`[Stripe Webhook] Unmapped customer ID ${customerId} in subscription event and no user_id in metadata. Skipping permanent entitlement grant/drop.`);
+          await updateWebhookEventStatus({
+            event_id: eventId,
+            status: 'failed_retryable',
+            failure_message: 'Unmapped customer ID and missing user_id in subscription metadata.'
+          })
+          return new NextResponse('Unmapped customer ID and missing user_id in metadata', { status: 502 })
         }
 
         const stripePriceId = subscription.items.data[0]?.price.id || ''
@@ -304,6 +358,11 @@ export async function POST(request: Request) {
         if (!saved) {
           throw new Error('Database write failed inside saveSubscription.')
         }
+
+        hasUserId = !!userId
+        subscriptionUpsertSuccess = saveSuccess
+        resolvedPlanSlug = planSlug
+        resolvedStatus = subscription.status
         break
       }
 
@@ -322,6 +381,12 @@ export async function POST(request: Request) {
         if (!ok) {
           throw new Error('Database write failed inside cancelSubscriptionInDatabase.')
         }
+
+        hasUserId = true
+        customerUpsertSuccess = false
+        subscriptionUpsertSuccess = cancelSuccess
+        resolvedPlanSlug = 'free'
+        resolvedStatus = 'canceled'
         break
       }
 
@@ -332,6 +397,18 @@ export async function POST(request: Request) {
 
     // Mark event processed successfully
     await updateWebhookEventStatus({ event_id: eventId, status: 'processed' })
+
+    console.log(`[Stripe Webhook Logs] Processing finished successfully: ` +
+      `eventType=${eventType}, ` +
+      `eventId=${eventId}, ` +
+      `hasUserId=${hasUserId}, ` +
+      `customerId=${customerId || 'none'}, ` +
+      `subscriptionId=${subscriptionId || 'none'}, ` +
+      `customerUpsertSuccess=${customerUpsertSuccess}, ` +
+      `subscriptionUpsertSuccess=${subscriptionUpsertSuccess}, ` +
+      `resolvedPlanSlug=${resolvedPlanSlug}, ` +
+      `resolvedStatus=${resolvedStatus}`
+    )
 
     return NextResponse.json({ received: true })
 

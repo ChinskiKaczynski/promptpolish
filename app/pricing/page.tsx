@@ -3,7 +3,7 @@ import nextDynamic from 'next/dynamic'
 import { getAuthUser } from '@/lib/identity/auth'
 import { ensureUserProfile, createUsageEvent } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
-import { PLAN_LIMITS } from '@/lib/plans/config'
+import { PLAN_LIMITS, getPlanSlugForUser } from '@/lib/plans/config'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
 import { getSubscriptionByUserId } from '@/lib/supabase/billing'
@@ -47,7 +47,8 @@ export default async function PricingPage() {
       display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || null,
     })
     subscription = stripeEnabled ? await getSubscriptionByUserId(user.id) : null
-    hasActiveProSub = subscription ? ['active', 'trialing'].includes(subscription.status) : false
+    const planSlug = await getPlanSlugForUser(user.id)
+    hasActiveProSub = planSlug === 'pro' || (subscription ? ['active', 'trialing'].includes(subscription.status) : false)
   }
 
   const ownerAnonymousId = await getOwnerIdFromCookies()
@@ -106,7 +107,7 @@ export default async function PricingPage() {
                   <h3 className="text-xl font-bold text-[#E2E8F0] font-heading">{freeLimits.name}</h3>
                   <p className="mt-2 text-xs text-[#8290A2]">Dla hobbystów i osób testujących narzędzie.</p>
                 </div>
-                {(!profile || profile.plan_slug === 'free') && (
+                {(!profile || (profile.plan_slug === 'free' && !hasActiveProSub)) && (
                   <span className="rounded-full bg-[#1C1C27] border border-[#2A2A3A] px-3 py-1 text-[10px] font-black text-[#A78BFA] uppercase tracking-wider">
                     Twój aktualny plan
                   </span>
@@ -166,7 +167,7 @@ export default async function PricingPage() {
                   <h3 className="text-xl font-bold text-[#E2E8F0] font-heading">{proLimits.name} Tier</h3>
                   <p className="mt-2 text-xs text-[#8290A2]">Dla zaawansowanych twórców i profesjonalistów.</p>
                 </div>
-                {profile?.plan_slug === 'pro' && (
+                {(profile?.plan_slug === 'pro' || hasActiveProSub) && (
                   <span className="rounded-full bg-[#1C1C27] border border-[#A78BFA]/30 px-3 py-1 text-[10px] font-black text-[#A78BFA] uppercase tracking-wider">
                     Twój aktualny plan
                   </span>

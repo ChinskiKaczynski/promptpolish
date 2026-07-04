@@ -920,7 +920,10 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(response.status).toBe(200)
 
       expect(saveStripeCustomer).toHaveBeenCalledWith('user_mapped_uuid_checkout', 'cus_test_123')
-      expect(mockStripeInstances.subscriptions.retrieve).toHaveBeenCalledWith('sub_test_123')
+      expect(mockStripeInstances.subscriptions.retrieve).toHaveBeenCalledWith(
+        'sub_test_123',
+        expect.objectContaining({ expand: ['items.data.price'] })
+      )
       expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
         user_id: 'user_mapped_uuid_checkout',
         stripe_customer_id: 'cus_test_123',
@@ -956,6 +959,89 @@ describe('Stripe Billing Foundation API Suite', () => {
 
       expect(saveSubscription).not.toHaveBeenCalled()
       expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('is missing user_id'))
+      loggerSpy.mockRestore()
+    })
+
+    it('customer.subscription.created maps to subscription.metadata.user_id if no user mapping exists in database', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.created',
+        id: 'evt_metadata_user_test',
+        data: {
+          object: {
+            id: 'sub_metadata_123',
+            customer: 'cus_metadata_123',
+            status: 'active',
+            current_period_start: 1700000000,
+            current_period_end: 1703000000,
+            cancel_at_period_end: false,
+            metadata: {
+              user_id: 'user_resolved_from_meta'
+            },
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue(mockEvent.data.object)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue(null)
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveStripeCustomer).toHaveBeenCalledWith('user_resolved_from_meta', 'cus_metadata_123')
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        user_id: 'user_resolved_from_meta',
+        stripe_customer_id: 'cus_metadata_123',
+        stripe_subscription_id: 'sub_metadata_123'
+      }))
+    })
+
+    it('customer.subscription.created fails/retries if no user mapping exists in database and metadata is missing', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.created',
+        id: 'evt_no_mapping_no_meta_test',
+        data: {
+          object: {
+            id: 'sub_nometa_123',
+            customer: 'cus_nometa_123',
+            status: 'active',
+            current_period_start: 1700000000,
+            current_period_end: 1703000000,
+            cancel_at_period_end: false,
+            metadata: {},
+            items: {
+              data: [
+                {
+                  price: {
+                    id: 'price_1234_pro'
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue(mockEvent.data.object)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue(null)
+
+      const loggerSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(502)
+
+      expect(saveSubscription).not.toHaveBeenCalled()
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Skipping permanent entitlement grant/drop'))
       loggerSpy.mockRestore()
     })
 

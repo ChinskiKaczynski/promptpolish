@@ -1,6 +1,7 @@
 import 'server-only'
 import { serverEnv } from '../env/server'
 import { getUserProfile } from '../supabase/queries'
+import { getSubscriptionByUserId } from '../supabase/billing'
 
 export type PlanSlug = 'anonymous' | 'free' | 'pro'
 
@@ -178,6 +179,21 @@ export function canUseBatchAudit(planSlug: PlanSlug): boolean {
  */
 export async function getPlanSlugForUser(userId: string | null): Promise<PlanSlug> {
   if (!userId) return 'anonymous'
+
+  if (process.env.STRIPE_ENABLED === 'true') {
+    try {
+      const subscription = await getSubscriptionByUserId(userId)
+      if (subscription) {
+        const isActiveOrTrialing = ['active', 'trialing'].includes(subscription.status)
+        if (subscription.plan_slug === 'pro' && isActiveOrTrialing) {
+          return 'pro'
+        }
+      }
+    } catch (err) {
+      console.error('Error resolving plan slug from subscription:', err)
+    }
+  }
+
   const profile = await getUserProfile(userId)
   if (profile?.plan_slug === 'pro') return 'pro'
   if (profile?.plan_slug === 'free') return 'free'

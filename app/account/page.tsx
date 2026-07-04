@@ -14,7 +14,7 @@ import { getSubscriptionByUserId } from '@/lib/supabase/billing'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
 import { PortalButton } from '@/components/billing/portal-button'
-import { PLAN_LIMITS } from '@/lib/plans/config'
+import { PLAN_LIMITS, getPlanSlugForUser } from '@/lib/plans/config'
 import { UsageMeter } from '@/components/plans/usage-meter'
 
 export const dynamic = 'force-dynamic'
@@ -51,7 +51,7 @@ export default async function AccountPage() {
     })
   }
 
-  const planSlug = profile?.plan_slug === 'pro' ? 'pro' : 'free'
+  const planSlug = await getPlanSlugForUser(user.id)
 
   // 3. Resolve history count combining user_id and current anonymous owner ID.
   const ownerAnonymousId = await getOwnerIdFromCookies()

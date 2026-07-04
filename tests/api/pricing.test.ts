@@ -14,7 +14,10 @@ vi.mock('@/lib/identity/anonymous', () => ({
 vi.mock('@/lib/supabase/queries', () => ({
   ensureUserProfile: vi.fn(),
   createUsageEvent: vi.fn().mockResolvedValue(null),
+  getUserProfile: vi.fn()
 }))
+
+import { ensureUserProfile, createUsageEvent, getUserProfile } from '@/lib/supabase/queries'
 
 vi.mock('@/lib/supabase/billing', () => ({
   getSubscriptionByUserId: vi.fn().mockResolvedValue(null),
@@ -42,7 +45,6 @@ vi.mock('@/components/layout/app-footer', () => ({
 
 import PricingPage from '@/app/pricing/page'
 import { getAuthUser } from '@/lib/identity/auth'
-import { ensureUserProfile, createUsageEvent } from '@/lib/supabase/queries'
 import type { UserProfileRow } from '@/lib/supabase/types'
 
 describe('PricingPage — pricing_viewed event & beta state', () => {
@@ -85,6 +87,15 @@ describe('PricingPage — pricing_viewed event & beta state', () => {
       email: 'user@test.com',
     } as User)
 
+    vi.mocked(getUserProfile).mockResolvedValue({
+      user_id: 'user-123',
+      email: 'user@test.com',
+      plan_slug: 'free',
+      display_name: null,
+      created_at: '',
+      updated_at: '',
+    } as UserProfileRow)
+
     vi.mocked(ensureUserProfile).mockResolvedValue({
       user_id: 'user-123',
       email: 'user@test.com',
@@ -113,6 +124,15 @@ describe('PricingPage — pricing_viewed event & beta state', () => {
       id: 'user-pro',
       email: 'pro@test.com',
     } as User)
+
+    vi.mocked(getUserProfile).mockResolvedValue({
+      user_id: 'user-pro',
+      email: 'pro@test.com',
+      plan_slug: 'pro',
+      display_name: null,
+      created_at: '',
+      updated_at: '',
+    } as UserProfileRow)
 
     vi.mocked(ensureUserProfile).mockResolvedValue({
       user_id: 'user-pro',

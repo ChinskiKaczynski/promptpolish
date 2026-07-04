@@ -3,7 +3,6 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 // Mock server-only sentinel
 vi.mock('server-only', () => ({}))
 
-// Mock queries
 vi.mock('@/lib/supabase/queries', () => ({
   getUserProfile: vi.fn(),
   getUsageCountTodayForUser: vi.fn(),
@@ -11,9 +10,15 @@ vi.mock('@/lib/supabase/queries', () => ({
   createUsageEvent: vi.fn()
 }))
 
+vi.mock('@/lib/supabase/billing', () => ({
+  getSubscriptionByUserId: vi.fn().mockResolvedValue(null)
+}))
+
+import { getSubscriptionByUserId } from '@/lib/supabase/billing'
+
 import { PLAN_LIMITS, canAnalyzePrompt, canExportMarkdown, canExportPdf, canUseBatchAudit, getPlanSlugForUser } from '@/lib/plans/config'
 import { getUserProfile } from '@/lib/supabase/queries'
-import type { UserProfileRow } from '@/lib/supabase/types'
+import type { UserProfileRow, SubscriptionRow } from '@/lib/supabase/types'
 
 describe('Plan Entitlements Logic', () => {
   it('has correct static limits configured', () => {
@@ -196,5 +201,31 @@ describe('getPlanSlugForUser — STRIPE_ENABLED behaviour', () => {
     expect(plan).toBe('pro')
     expect(canExportMarkdown(plan)).toBe(true)
     expect(canExportPdf(plan)).toBe(true)
+  })
+
+  it('STRIPE_ENABLED=true + active subscription → returns "pro"', async () => {
+    process.env.STRIPE_ENABLED = 'true'
+    vi.mocked(getSubscriptionByUserId).mockResolvedValue({
+      plan_slug: 'pro',
+      status: 'active'
+    } as unknown as SubscriptionRow)
+
+    const result = await getPlanSlugForUser('user-active-sub')
+    expect(result).toBe('pro')
+    expect(getSubscriptionByUserId).toHaveBeenCalledWith('user-active-sub')
+  })
+
+  it('STRIPE_ENABLED=true + canceled subscription → falls back to user profile', async () => {
+    process.env.STRIPE_ENABLED = 'true'
+    vi.mocked(getSubscriptionByUserId).mockResolvedValue({
+      plan_slug: 'pro',
+      status: 'canceled'
+    } as unknown as SubscriptionRow)
+    vi.mocked(getUserProfile).mockResolvedValue({
+      plan_slug: 'free'
+    } as unknown as UserProfileRow)
+
+    const result = await getPlanSlugForUser('user-canceled-sub')
+    expect(result).toBe('free')
   })
 })
