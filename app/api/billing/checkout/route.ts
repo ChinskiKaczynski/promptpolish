@@ -207,13 +207,24 @@ export async function POST() {
       const sessionOpts: Stripe.Checkout.SessionCreateParams = {
         mode: 'subscription',
         customer: stripeCustomerId,
+        client_reference_id: user.id,
+        metadata: {
+          user_id: user.id,
+          plan_slug: 'pro'
+        },
+        subscription_data: {
+          metadata: {
+            user_id: user.id,
+            plan_slug: 'pro'
+          }
+        },
         line_items: [
           {
             price: stripePriceId,
             quantity: 1
           }
         ],
-        success_url: `${appUrl}/pricing?session_id={CHECKOUT_SESSION_ID}&upgrade=success`,
+        success_url: `${appUrl}/account?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${appUrl}/pricing?upgrade=cancel`
       }
 

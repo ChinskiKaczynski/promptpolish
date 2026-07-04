@@ -6,9 +6,11 @@ import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { PLAN_LIMITS } from '@/lib/plans/config'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
+import { getSubscriptionByUserId } from '@/lib/supabase/billing'
 
 const CheckoutButton = nextDynamic(() => import('@/components/pricing/checkout-button').then((mod) => mod.CheckoutButton))
 const WaitlistForm = nextDynamic(() => import('@/components/pricing/waitlist-form').then((mod) => mod.WaitlistForm))
+const PortalButton = nextDynamic(() => import('@/components/billing/portal-button').then((mod) => mod.PortalButton))
 
 export const dynamic = 'force-dynamic'
 
@@ -35,6 +37,8 @@ export default async function PricingPage() {
   }
 
   let profile = null
+  let subscription = null
+  let hasActiveProSub = false
 
   if (user) {
     profile = await ensureUserProfile({
@@ -42,6 +46,8 @@ export default async function PricingPage() {
       email: user.email || '',
       display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || null,
     })
+    subscription = stripeEnabled ? await getSubscriptionByUserId(user.id) : null
+    hasActiveProSub = subscription ? ['active', 'trialing'].includes(subscription.status) : false
   }
 
   const ownerAnonymousId = await getOwnerIdFromCookies()
@@ -191,17 +197,29 @@ export default async function PricingPage() {
             </div>
 
             <div className="mt-8 pt-4 space-y-4">
-              {profile?.plan_slug === 'pro' ? (
+              {profile?.plan_slug === 'pro' || hasActiveProSub ? (
                 <div className="space-y-3">
-                  <div className="text-center text-xs font-bold text-[#6EE7B7] bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 py-3 rounded-lg animate-pulse">
-                    🎉 Masz aktywny plan Pro!
+                  <div className="text-center text-xs font-bold text-[#6EE7B7] bg-[#6EE7B7]/10 border border-[#6EE7B7]/20 py-3 rounded-lg">
+                    🎉 Masz już Pro
                   </div>
-                  <Link
-                    href="/account"
-                    className="block text-center w-full rounded-lg border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#22223A] text-[#94A3B8] font-semibold py-3.5 text-sm active:scale-[0.98] transition-all cursor-pointer"
-                  >
-                    Przejdź do panelu konta
-                  </Link>
+                  {subscription && stripeEnabled ? (
+                    <div className="flex flex-col gap-2">
+                      <PortalButton lang="pl" />
+                      <Link
+                        href="/account"
+                        className="block text-center w-full rounded-lg border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#22223A] text-[#94A3B8] font-semibold py-3.5 text-sm active:scale-[0.98] transition-all cursor-pointer"
+                      >
+                        Przejdź do panelu konta
+                      </Link>
+                    </div>
+                  ) : (
+                    <Link
+                      href="/account"
+                      className="block text-center w-full rounded-lg border border-[#2A2A3A] bg-[#1C1C27] hover:bg-[#22223A] text-[#94A3B8] font-semibold py-3.5 text-sm active:scale-[0.98] transition-all cursor-pointer"
+                    >
+                      Przejdź do panelu konta
+                    </Link>
+                  )}
                 </div>
               ) : user && stripeEnabled ? (
                 <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">

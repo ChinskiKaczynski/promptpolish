@@ -16,6 +16,10 @@ vi.mock('@/lib/supabase/queries', () => ({
   createUsageEvent: vi.fn().mockResolvedValue(null),
 }))
 
+vi.mock('@/lib/supabase/billing', () => ({
+  getSubscriptionByUserId: vi.fn().mockResolvedValue(null),
+}))
+
 vi.mock('@/components/pricing/checkout-button', () => ({
   CheckoutButton: vi.fn(() => null),
 }))

@@ -6,7 +6,8 @@ import {
   cancelSubscriptionInDatabase,
   claimWebhookEvent,
   updateWebhookEventStatus,
-  completeCheckoutAttempt
+  completeCheckoutAttempt,
+  saveStripeCustomer
 } from '@/lib/supabase/billing'
 import { recordStripeWebhookFailure } from '@/lib/monitoring/observability'
 
@@ -89,6 +90,8 @@ export async function POST(request: Request) {
     }
   }
 
+  console.log(`[Stripe Webhook] Received event: eventId=${eventId}, eventType=${eventType}, customerId=${customerId}, subscriptionId=${subscriptionId}`)
+
   try {
     // Atomically claim the event in the webhook inbox
     const claimResult = await claimWebhookEvent({
@@ -130,8 +133,23 @@ export async function POST(request: Request) {
     }
     switch (eventType) {
       case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session
+        const userId = session.metadata?.user_id || session.client_reference_id || null
+
+        console.log(`[Stripe Webhook] processing checkout.session.completed: eventId=${eventId}, customerId=${customerId}, subscriptionId=${subscriptionId}, userIdFound=${!!userId}`)
+
+        if (!userId) {
+          console.warn(`[Stripe Webhook] checkout.session.completed event ${eventId} is missing user_id in metadata and client_reference_id. customer: ${customerId}, subscription: ${subscriptionId}`)
+          await updateWebhookEventStatus({
+            event_id: eventId,
+            status: 'failed_terminal',
+            failure_message: 'Missing user_id in checkout session metadata and client_reference_id.'
+          })
+          return NextResponse.json({ received: true, error: 'missing_user_id' })
+        }
+
         if (!customerId) {
-          console.warn('[Stripe Webhook] checkout.session.completed missing customer ID.');
+          console.warn(`[Stripe Webhook] checkout.session.completed event ${eventId} missing customer ID.`);
           await updateWebhookEventStatus({
             event_id: eventId,
             status: 'failed_terminal',
@@ -140,21 +158,15 @@ export async function POST(request: Request) {
           return new NextResponse('Missing customer ID', { status: 400 })
         }
 
-        const userId = await getUserIdByStripeCustomerId(customerId)
-        if (!userId) {
-          console.warn(`[Stripe Webhook] Unmapped customer ID ${customerId} in checkout.session.completed. Retrying.`);
-          await updateWebhookEventStatus({
-            event_id: eventId,
-            status: 'failed_retryable',
-            failure_message: 'Unmapped customer ID.'
-          })
-          return new NextResponse('Unmapped customer ID', { status: 502 })
-        }
+        // Upsert stripe_customers mapping
+        const customerUpsert = await saveStripeCustomer(userId, customerId)
+        const customerUpsertSuccess = !!customerUpsert
+        console.log(`[Stripe Webhook] saveStripeCustomer upsert completed: success=${customerUpsertSuccess}, userId=${userId}, customerId=${customerId}`)
 
         if (subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
           const stripePriceId = subscription.items.data[0]?.price.id || ''
-          const planSlug = resolvePlanSlug(stripePriceId, subscription.status, stripePriceIdPro)
+          const planSlug = 'pro'
 
           const subscriptionRaw = subscription as unknown as {
             current_period_start: number
@@ -175,14 +187,18 @@ export async function POST(request: Request) {
             last_event_id: eventId
           })
 
+          const saveSubscriptionSuccess = !!saved
+          console.log(`[Stripe Webhook] saveSubscription completed: success=${saveSubscriptionSuccess}, userId=${userId}, subscriptionId=${subscriptionId}`)
+
           if (!saved) {
             throw new Error('Database write failed inside saveSubscription.')
           }
+        } else {
+          console.warn(`[Stripe Webhook] checkout.session.completed event ${eventId} has no subscription ID.`)
         }
 
         // Mark checkout attempt completed
-        const sessionObj = event.data.object as Stripe.Checkout.Session
-        await completeCheckoutAttempt(sessionObj.id)
+        await completeCheckoutAttempt(session.id)
         break
       }
 
@@ -207,6 +223,8 @@ export async function POST(request: Request) {
         }
 
         const userId = await getUserIdByStripeCustomerId(customerId)
+        console.log(`[Stripe Webhook] processing subscription event (${eventType}): eventId=${eventId}, customerId=${customerId}, subscriptionId=${subscriptionId}, userIdFound=${!!userId}`)
+
         if (!userId) {
           console.warn(`[Stripe Webhook] Unmapped customer ID ${customerId} in subscription event. Retrying.`);
           await updateWebhookEventStatus({
@@ -240,6 +258,8 @@ export async function POST(request: Request) {
           if (isResourceMissing) {
             console.log(`[Stripe Webhook] Subscription ${subscriptionId} missing on Stripe, handling as canceled.`);
             const ok = await cancelSubscriptionInDatabase(subscriptionId, stripeCreated, eventId)
+            const cancelSuccess = !!ok
+            console.log(`[Stripe Webhook] cancelSubscriptionInDatabase completed: success=${cancelSuccess}, subscriptionId=${subscriptionId}`)
             if (!ok) {
               throw new Error('Database write failed inside cancelSubscriptionInDatabase for missing resource.')
             }
@@ -278,6 +298,9 @@ export async function POST(request: Request) {
           last_event_id: eventId
         })
 
+        const saveSuccess = !!saved
+        console.log(`[Stripe Webhook] saveSubscription completed: success=${saveSuccess}, userId=${userId}, subscriptionId=${subscriptionId}`)
+
         if (!saved) {
           throw new Error('Database write failed inside saveSubscription.')
         }
@@ -294,6 +317,8 @@ export async function POST(request: Request) {
           return new NextResponse('Missing subscription ID', { status: 400 })
         }
         const ok = await cancelSubscriptionInDatabase(subscriptionId, stripeCreated, eventId)
+        const cancelSuccess = !!ok
+        console.log(`[Stripe Webhook] cancelSubscriptionInDatabase completed: success=${cancelSuccess}, subscriptionId=${subscriptionId}`)
         if (!ok) {
           throw new Error('Database write failed inside cancelSubscriptionInDatabase.')
         }

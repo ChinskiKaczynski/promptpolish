@@ -165,4 +165,48 @@ describe('AccountPage Beta & Plan Limitations UI', () => {
     expect(usageMeterProps?.monthlyLimit).toBe(500) // PLAN_LIMITS.pro.monthlyAnalyses
     expect(usageMeterProps?.isSimulatedPro).toBe(true) // pro plan + Stripe disabled = simulated
   })
+
+  it('active subscription makes /account show Pro and displays subscription details', async () => {
+    process.env.STRIPE_ENABLED = 'true'
+    process.env.STRIPE_SECRET_KEY = 'sk_test_mock'
+    process.env.STRIPE_PRICE_ID_PRO = 'price_1234_pro'
+
+    vi.mocked(getAuthUser).mockResolvedValue({
+      id: 'user-pro-sub',
+      email: 'pro-sub@test.com',
+    } as unknown as User)
+    vi.mocked(getUserProfile).mockResolvedValue({
+      user_id: 'user-pro-sub',
+      email: 'pro-sub@test.com',
+      display_name: 'Pro Sub User',
+      plan_slug: 'pro',
+      created_at: '',
+      updated_at: '',
+    })
+
+    const { getSubscriptionByUserId } = await import('@/lib/supabase/billing')
+    vi.mocked(getSubscriptionByUserId).mockResolvedValue({
+      user_id: 'user-pro-sub',
+      stripe_customer_id: 'cus_test_pro',
+      stripe_subscription_id: 'sub_test_pro',
+      stripe_price_id: 'price_1234_pro',
+      plan_slug: 'pro',
+      status: 'active',
+      current_period_start: '2026-07-01T00:00:00Z',
+      current_period_end: '2026-08-01T00:00:00Z',
+      cancel_at_period_end: false,
+      created_at: '',
+      updated_at: '',
+      last_event_created: null,
+      last_event_id: null,
+    })
+
+    const jsx = await AccountPage()
+    expect(jsx).toBeDefined()
+
+    const usageMeterProps = findElementProps(jsx, UsageMeter as unknown as React.ComponentType<unknown>)
+    expect(usageMeterProps).not.toBeNull()
+    expect(usageMeterProps?.planSlug).toBe('pro')
+    expect(usageMeterProps?.isSimulatedPro).toBe(false)
+  })
 })

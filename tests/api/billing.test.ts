@@ -294,8 +294,19 @@ describe('Stripe Billing Foundation API Suite', () => {
         expect.objectContaining({
           mode: 'subscription',
           customer: 'cus_new_123',
+          client_reference_id: 'user_uuid_1',
+          metadata: {
+            user_id: 'user_uuid_1',
+            plan_slug: 'pro'
+          },
+          subscription_data: {
+            metadata: {
+              user_id: 'user_uuid_1',
+              plan_slug: 'pro'
+            }
+          },
           line_items: [{ price: 'price_1234_pro', quantity: 1 }],
-          success_url: 'http://localhost:3000/pricing?session_id={CHECKOUT_SESSION_ID}&upgrade=success',
+          success_url: 'http://localhost:3000/account?checkout=success&session_id={CHECKOUT_SESSION_ID}',
           cancel_url: 'http://localhost:3000/pricing?upgrade=cancel'
         }),
         expect.any(Object)
@@ -326,7 +337,19 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(mockStripeInstances.customers.create).not.toHaveBeenCalled()
       expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          customer: 'cus_existing_999'
+          customer: 'cus_existing_999',
+          client_reference_id: 'user_uuid_2',
+          metadata: {
+            user_id: 'user_uuid_2',
+            plan_slug: 'pro'
+          },
+          subscription_data: {
+            metadata: {
+              user_id: 'user_uuid_2',
+              plan_slug: 'pro'
+            }
+          },
+          success_url: 'http://localhost:3000/account?checkout=success&session_id={CHECKOUT_SESSION_ID}'
         }),
         expect.any(Object)
       )
@@ -436,6 +459,52 @@ describe('Stripe Billing Foundation API Suite', () => {
         status: 'ready',
         session_id: 'cs_test_777'
       })
+    })
+
+    it('active Pro user cannot create duplicate checkout', async () => {
+      vi.mocked(getAuthUser).mockResolvedValue({
+        id: 'user_pro_existing',
+        email: 'pro-exist@promptpolish.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: ''
+      })
+
+      // Mock subscription to be active
+      vi.mocked(getSubscriptionByUserId).mockResolvedValue({
+        user_id: 'user_pro_existing',
+        stripe_customer_id: 'cus_exist_123',
+        stripe_subscription_id: 'sub_exist_123',
+        stripe_price_id: 'price_1234_pro',
+        plan_slug: 'pro',
+        status: 'active',
+        current_period_start: '2026-07-01T00:00:00Z',
+        current_period_end: '2026-08-01T00:00:00Z',
+        cancel_at_period_end: false,
+        created_at: '',
+        updated_at: '',
+        last_event_created: null,
+        last_event_id: null,
+      })
+      vi.mocked(getStripeCustomer).mockResolvedValue({
+        user_id: 'user_pro_existing',
+        stripe_customer_id: 'cus_exist_123',
+        created_at: '',
+        updated_at: '',
+      })
+
+      mockStripeInstances.billingPortal.sessions.create.mockResolvedValue({
+        url: 'https://billing.stripe.com/portal/mock_session_id'
+      })
+
+      const response = await checkoutHandler()
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data.status).toBe('existing_subscription')
+      expect(data.portalUrl).toBe('https://billing.stripe.com/portal/mock_session_id')
+      expect(mockStripeInstances.checkout.sessions.create).not.toHaveBeenCalled()
     })
   })
 
@@ -713,7 +782,12 @@ describe('Stripe Billing Foundation API Suite', () => {
             id: 'cs_test_123',
             customer: 'cus_test_123',
             subscription: 'sub_test_123',
-            mode: 'subscription'
+            mode: 'subscription',
+            client_reference_id: 'user_mapped_uuid_checkout',
+            metadata: {
+              user_id: 'user_mapped_uuid_checkout',
+              plan_slug: 'pro'
+            }
           }
         }
       }
@@ -743,7 +817,7 @@ describe('Stripe Billing Foundation API Suite', () => {
       const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
       expect(response.status).toBe(200)
 
-      expect(getUserIdByStripeCustomerId).toHaveBeenCalledWith('cus_test_123')
+      expect(saveStripeCustomer).toHaveBeenCalledWith('user_mapped_uuid_checkout', 'cus_test_123')
       expect(mockStripeInstances.subscriptions.retrieve).toHaveBeenCalledWith('sub_test_123')
       expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
         user_id: 'user_mapped_uuid_checkout',
@@ -756,6 +830,31 @@ describe('Stripe Billing Foundation API Suite', () => {
         current_period_end: new Date(1703000000 * 1000).toISOString(),
         cancel_at_period_end: false
       }))
+    })
+
+    it('checkout.session.completed without user_id does not upgrade anyone and logs safe warning', async () => {
+      const mockEvent = {
+        type: 'checkout.session.completed',
+        id: 'evt_checkout_completed_no_user',
+        data: {
+          object: {
+            id: 'cs_test_no_user',
+            customer: 'cus_test_123',
+            subscription: 'sub_test_123',
+            mode: 'subscription'
+          }
+        }
+      }
+
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      const loggerSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).not.toHaveBeenCalled()
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('is missing user_id'))
+      loggerSpy.mockRestore()
     })
 
     it('duplicate webhook delivery is safe because subscription upsert is stable', async () => {
