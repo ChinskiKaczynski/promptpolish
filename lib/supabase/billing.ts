@@ -119,6 +119,14 @@ export async function getSubscriptionByUserId(
   return data ? (data as unknown as SubscriptionRow) : null
 }
 
+export class StaleEventError extends Error {
+  code = 'STALE_EVENT'
+  constructor(message: string) {
+    super(message)
+    this.name = 'StaleEventError'
+  }
+}
+
 /**
  * Upserts a subscription record and synchronizes the user's plan.
  * This function should only run when Stripe is enabled.
@@ -169,7 +177,7 @@ export async function saveSubscription(insertData: {
       if (existingRow.status === 'canceled') {
         if (incomingTime < existingTime) {
           console.log(`[Stripe Webhook] Stale update skipped for canceled subscription ${insertData.stripe_subscription_id}`)
-          return existingRow
+          throw new StaleEventError(`Stale update skipped for canceled subscription ${insertData.stripe_subscription_id}`)
         }
         if (incomingTime === existingTime) {
           console.log(`[Stripe Webhook] Canceled subscription cannot be reactivated by same-second event ${insertData.stripe_subscription_id}`)
@@ -179,7 +187,7 @@ export async function saveSubscription(insertData: {
 
       if (incomingTime < existingTime) {
         console.log(`[Stripe Webhook] Stale update skipped for subscription ${insertData.stripe_subscription_id}`)
-        return existingRow
+        throw new StaleEventError(`Stale update skipped for subscription ${insertData.stripe_subscription_id}`)
       }
       
       // Removed lexical comparison on last_event_id. Same-timestamp created/updated events will win and proceed.
@@ -191,6 +199,8 @@ export async function saveSubscription(insertData: {
     .upsert(
       {
         ...insertData,
+        last_event_created: insertData.last_event_created || null,
+        last_event_id: insertData.last_event_id || null,
         updated_at: new Date().toISOString(),
       },
       {
@@ -267,7 +277,7 @@ export async function cancelSubscriptionInDatabase(
 
     if (incomingTime < existingTime) {
       console.log(`[Stripe Webhook] Stale cancel skipped for subscription ${stripeSubscriptionId}`)
-      return true
+      throw new StaleEventError(`Stale cancel skipped for subscription ${stripeSubscriptionId}`)
     }
     if (incomingTime === existingTime) {
       if (existing.status === 'canceled') {

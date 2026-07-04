@@ -95,9 +95,11 @@ async function main() {
       stripe_price_id: stripePriceId,
       plan_slug: planSlug,
       status: activeSub.status,
-      current_period_start: new Date(activeSub.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(activeSub.current_period_end * 1000).toISOString(),
+      current_period_start: new Date((activeSub.items.data[0]?.current_period_start || activeSub.start_date || activeSub.created) * 1000).toISOString(),
+      current_period_end: new Date((activeSub.items.data[0]?.current_period_end || activeSub.start_date || activeSub.created) * 1000).toISOString(),
       cancel_at_period_end: activeSub.cancel_at_period_end,
+      last_event_created: new Date((activeSub.created || Math.floor(Date.now() / 1000)) * 1000).toISOString(),
+      last_event_id: `repair-initial-${activeSub.id}`,
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'stripe_subscription_id'

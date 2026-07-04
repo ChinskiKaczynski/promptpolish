@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 // Mock server-only since it doesn't resolve in Node/Vitest
 vi.mock('server-only', () => ({}))
 
-import { saveSubscription, cancelSubscriptionInDatabase } from '@/lib/supabase/billing'
+import { saveSubscription, cancelSubscriptionInDatabase, StaleEventError } from '@/lib/supabase/billing'
 import { getSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getUserProfile, setUserPlanSlug } from '@/lib/supabase/queries'
 
@@ -353,6 +353,57 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
       )
 
       expect(result).toBe(true)
+      expect(mockUpdate).not.toHaveBeenCalled()
+    })
+
+    it('9. older event (incomingTime < existingTime) throws StaleEventError in saveSubscription', async () => {
+      // Existing in DB is newer (2026-06-12T20:00:00)
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          stripe_subscription_id: 'sub_test_123',
+          status: 'active',
+          last_event_created: '2026-06-12T20:00:00.000Z',
+          last_event_id: 'evt_newer_1'
+        },
+        error: null
+      })
+
+      // Try calling with older event time (2026-06-12T19:59:59)
+      await expect(
+        saveSubscription({
+          ...mockInputBase,
+          plan_slug: 'pro',
+          status: 'active',
+          last_event_created: '2026-06-12T19:59:59.000Z',
+          last_event_id: 'evt_older_1'
+        })
+      ).rejects.toThrow(StaleEventError)
+
+      expect(mockUpsert).not.toHaveBeenCalled()
+    })
+
+    it('10. older event (incomingTime < existingTime) throws StaleEventError in cancelSubscriptionInDatabase', async () => {
+      // Existing in DB is newer (2026-06-12T20:00:00)
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          user_id: 'user-uuid-123',
+          stripe_subscription_id: 'sub_test_123',
+          status: 'active',
+          last_event_created: '2026-06-12T20:00:00.000Z',
+          last_event_id: 'evt_newer_1'
+        },
+        error: null
+      })
+
+      // Try calling cancel with older event time (2026-06-12T19:59:59)
+      await expect(
+        cancelSubscriptionInDatabase(
+          'sub_test_123',
+          '2026-06-12T19:59:59.000Z',
+          'evt_older_1'
+        )
+      ).rejects.toThrow(StaleEventError)
+
       expect(mockUpdate).not.toHaveBeenCalled()
     })
   })
