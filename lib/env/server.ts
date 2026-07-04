@@ -18,12 +18,6 @@ export const serverEnvSchema = z.object({
   // Google Gemini (primary AI provider)
   GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
   GEMINI_MODEL_ID: z.string().default('gemini-2.5-flash'),
-  // OpenRouter (optional — legacy eval scripts only)
-  OPENROUTER_API_KEY: z.string().optional(),
-  OPENROUTER_MODEL_ID: z.string().optional(),
-  OPENROUTER_FALLBACK_MODEL_ID: z.string().optional(),
-  OPENROUTER_SITE_URL: z.string().optional(),
-  OPENROUTER_APP_NAME: z.string().optional(),
   AI_MOCK_MODE: strictBool.default(false),
   SUPABASE_SECRET_KEY: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),

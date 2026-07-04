@@ -125,7 +125,7 @@ export default function TermsPage() {
             <section className="space-y-3">
               <h2 className="text-lg font-bold text-[#E2E8F0] font-heading border-b border-[#2A2A3A] pb-2 mt-8 mb-4">9. Wyłączenie Odpowiedzialności i Brak Gwarancji AI</h2>
               <p>
-                PromptPolish korzysta z zewnętrznych modeli sztucznej inteligencji (za pośrednictwem platformy OpenRouter). Użytkownik przyjmuje do wiadomości, że:
+                PromptPolish korzysta z zewnętrznych modeli sztucznej inteligencji (Google Gemini API). Użytkownik przyjmuje do wiadomości, że:
               </p>
               <ul className="list-disc pl-5 space-y-2 text-sm text-[#94A3B8]">
                 <li>Wyniki działania algorytmów AI mogą być niepełne, niedokładne lub zawierać tzw. halucynacje.</li>

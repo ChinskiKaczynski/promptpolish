@@ -1,5 +1,5 @@
-﻿import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { executeOpenRouterAnalysis, type TextGenerator } from '@/lib/ai/openrouter-client'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { executeGeminiAnalysis, type TextGenerator } from '@/lib/ai/gemini-client'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 
@@ -8,7 +8,7 @@ describe('Fallback Classification & Configuration Tests', () => {
 
   beforeEach(() => {
     process.env.AI_MODEL_ALIAS = 'cheap'
-    process.env.GEMINI_MODEL_ID = 'openai/gpt-4o-mini'
+    process.env.GEMINI_MODEL_ID = 'gemini-2.0-flash-lite'
     process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'mock-google-key'
     process.env.NODE_ENV = 'test'
   })
@@ -41,11 +41,11 @@ describe('Fallback Classification & Configuration Tests', () => {
       }
     }
 
-    const result = await executeOpenRouterAnalysis('sys', 'user', {
+    const result = await executeGeminiAnalysis('sys', 'user', {
       textGenerator: mockGenerator
     })
     expect(result.attempt).toBe(2)
-    expect(result.selectedModel).toBe('openai/gpt-4o-mini')
+    expect(result.selectedModel).toBe('gemini-2.0-flash-lite')
     expect(result.output.overall_summary).toBe('Test summary')
     expect(callCount).toBe(2)
   })
@@ -64,7 +64,7 @@ describe('Fallback Classification & Configuration Tests', () => {
     }
 
     await expect(
-      executeOpenRouterAnalysis('sys', 'user', { textGenerator: mockGenerator })
+      executeGeminiAnalysis('sys', 'user', { textGenerator: mockGenerator })
     ).rejects.toThrow(/Simulated non-transient failure/)
     expect(callCount).toBe(1)
   })
@@ -85,7 +85,7 @@ describe('Fallback Classification & Configuration Tests', () => {
     }
 
     await expect(
-      executeOpenRouterAnalysis('sys', 'user', { textGenerator: mockGenerator })
+      executeGeminiAnalysis('sys', 'user', { textGenerator: mockGenerator })
     ).rejects.toThrow(/PROVIDER_TIMEOUT/)
     expect(callCount).toBe(1)
   })
@@ -106,7 +106,7 @@ describe('Fallback Classification & Configuration Tests', () => {
     }
 
     await expect(
-      executeOpenRouterAnalysis('sys', 'user', { textGenerator: mockGenerator })
+      executeGeminiAnalysis('sys', 'user', { textGenerator: mockGenerator })
     ).rejects.toThrow(/PROVIDER_TIMEOUT/)
     expect(callCount).toBe(1)
   })
@@ -134,7 +134,7 @@ describe('Fallback Classification & Configuration Tests', () => {
     }
 
     await expect(
-      executeOpenRouterAnalysis('sys', 'user', { textGenerator: mockGenerator })
+      executeGeminiAnalysis('sys', 'user', { textGenerator: mockGenerator })
     ).rejects.toThrow(/PROVIDER_TIMEOUT \(UPSTREAM_TIMEOUT\): PROVIDER_TIMEOUT: Simulated transient failure for fallback/)
     expect(callCount).toBe(2)
   })

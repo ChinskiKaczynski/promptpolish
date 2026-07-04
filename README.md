@@ -31,7 +31,7 @@ pnpm build
 
 ## Ważne
 
-Projekt integruje się z OpenRouter API (korzystając z modelu `openrouter/owl-alpha` za pośrednictwem Vercel AI SDK) oraz bazą danych Supabase. Do uruchomienia i przetestowania aplikacji wymagane jest skonfigurowanie kluczy dostępowych w pliku `.env.local`. Decyzje architektoniczne i szczegóły wdrożenia znajdują się w pliku [docs/decision-log.md](file:///d:/AI/promptpolish/docs/decision-log.md).
+Projekt integruje się z **Google Gemini API** (model `gemini-2.5-flash` za pośrednictwem Vercel AI SDK) oraz bazą danych Supabase. Do uruchomienia i przetestowania aplikacji wymagane jest skonfigurowanie kluczy dostępowych w pliku `.env.local`. Decyzje architektoniczne i szczegóły wdrożenia znajdują się w pliku [docs/decision-log.md](file:///d:/AI/promptpolish/docs/decision-log.md).
 
 ## Funkcjonalności V1 Beta (User History & Account)
 

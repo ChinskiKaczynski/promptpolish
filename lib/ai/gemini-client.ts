@@ -104,16 +104,16 @@ export const defaultTextGenerator: TextGenerator = async (
   }
 }
 
-export interface OpenRouterClientOptions {
+export interface GeminiClientOptions {
   mockMode?: boolean
   mockResponse?: AnalysisResult
   temperature?: number
   /** AbortSignal to cancel the in-flight request (e.g. from an external AbortController). */
   abortSignal?: AbortSignal
   /**
-   * Hard deadline in milliseconds.  When set (and no external abortSignal is
+   * Hard deadline in milliseconds. When set (and no external abortSignal is
    * provided) the client creates its own AbortController and cancels the
-   * request after this many ms.  Defaults to no timeout when omitted.
+   * request after this many ms. Defaults to no timeout when omitted.
    */
   timeoutMs?: number
   dbProfile?: ModelProfileRow | null
@@ -121,7 +121,7 @@ export interface OpenRouterClientOptions {
   textGenerator?: TextGenerator
 }
 
-export interface OpenRouterAnalysisResponse {
+export interface GeminiAnalysisResponse {
   output: AnalysisResult
   usage?: {
     promptTokens: number
@@ -137,18 +137,20 @@ export interface OpenRouterAnalysisResponse {
 }
 
 /**
- * Low-level OpenRouter client that wraps Vercel AI SDK generateText with
- * strictly typed Output.object JSON structured validation.
+ * Low-level Gemini client that wraps Vercel AI SDK generateObject with
+ * strictly typed structured JSON validation via Zod schema.
  * Supports mocked responses directly for testing and local environments.
+ * Supports a single model fallback when a fallback_model_id is configured
+ * in the dbProfile capabilities_json.
  */
-export async function executeOpenRouterAnalysis(
+export async function executeGeminiAnalysis(
   systemInstruction: string,
   userPrompt: string,
-  options: OpenRouterClientOptions = {}
-): Promise<OpenRouterAnalysisResponse> {
+  options: GeminiClientOptions = {}
+): Promise<GeminiAnalysisResponse> {
   const { mockMode = false, mockResponse, temperature, abortSignal, timeoutMs, dbProfile, requestId } = options
 
-  // 1. Check and return Mock response if mock mode is active
+  // 1. Return Mock response if mock mode is active
   if (mockMode || mockResponse) {
     let mockOut = mockResponse
     if (!mockOut) {
@@ -156,7 +158,7 @@ export async function executeOpenRouterAnalysis(
       const { mockAnalysisResult } = await import('./mock-analysis')
       mockOut = mockAnalysisResult
     }
-    
+
     return {
       output: mockOut,
       usage: {
@@ -173,7 +175,7 @@ export async function executeOpenRouterAnalysis(
     }
   }
 
-  // 2. Resolve model ID and additional metadata headers from environment variables / dbProfile
+  // 2. Resolve model ID from dbProfile capabilities or env
   const capabilities = (dbProfile?.capabilities_json || {}) as Record<string, unknown>
   const primaryModelId = (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
 
@@ -203,9 +205,6 @@ export async function executeOpenRouterAnalysis(
     }
 
     if (attempt === 2 && !fallbackModelId) {
-      // Should be unreachable: isFallbackEnabled guard above prevents entering attempt 2
-      // without a valid fallbackModelId, but we defend explicitly to never invoke an
-      // unapproved / hardcoded model.
       throw lastError || new Error('Fallback attempt reached without a configured fallback model.')
     }
     const selectedModel = attempt === 1 ? primaryModelId : fallbackModelId!
@@ -305,7 +304,6 @@ export async function executeOpenRouterAnalysis(
 
       const durationMs = Date.now() - attemptStartTime
 
-      // Log success attempt
       console.info('[AI Reliability Log]', JSON.stringify({
         requestId: requestId || 'N/A',
         attempt,
@@ -372,7 +370,6 @@ export async function executeOpenRouterAnalysis(
       const elapsedNow = Date.now() - startTime
       const remainingBudgetNow = totalTimeout - elapsedNow
 
-      // Log failed attempt
       console.info('[AI Reliability Log]', JSON.stringify({
         requestId: requestId || 'N/A',
         attempt,

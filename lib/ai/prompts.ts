@@ -69,7 +69,7 @@ export interface ConstructPromptParams {
 }
 
 /**
- * Constructs the rich, context-aware prompt instructions for the OpenRouter API call.
+ * Constructs the rich, context-aware prompt instructions for the Gemini API call.
  * Integrates optional user constraints, goals, audit mode, and the exact model profile.
  */
 export function constructUserAnalysisPrompt(params: ConstructPromptParams): string {

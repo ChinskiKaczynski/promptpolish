@@ -15,7 +15,7 @@ describe('Standard Test Network Block', () => {
 
   it('does not block localhost requests', async () => {
     try {
-      await fetch('http://localhost:3000/api/health')
+      await fetch('http://localhost:3000/api/health', { signal: AbortSignal.timeout(100) })
     } catch (err) {
       const error = err as Error
       expect(error.message).not.toContain('[SECURITY BLOCK]')

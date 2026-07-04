@@ -39,7 +39,7 @@ const mockAnalysisRecord: PromptAnalysisRow = {
   user_id: null,
   input_prompt: 'Prosty prompt testowy',
   working_language: 'pl',
-  selected_profile_slug: 'openrouter-deepseek-v4-flash',
+  selected_profile_slug: 'general-llm',
   audit_mode: null,
   task_goal: 'Test',
   task_type: 'simple',
@@ -126,7 +126,7 @@ describe('Export v1 API Dynamic Routes', () => {
     expect(text).toContain('4 czerwca 2026') // Date formatted in PL locale
     expect(text).toContain('85 / 100')
     expect(text).toContain('Bardzo dobry')
-    expect(text).toContain('Model zaawansowany (DeepSeek v4 Flash)')
+    expect(text).toContain('Model uniwersalny (General LLM)')
     expect(text).toContain('Swietne podsumowanie.')
     expect(text).toContain('Poprawiony prompt testowy')
     expect(text).toContain('Jasny cel.')
@@ -169,7 +169,7 @@ describe('Export v1 API Dynamic Routes', () => {
     expect(text).toContain('4 czerwca 2026')
     expect(text).toContain('85 / 100')
     expect(text).toContain('BARDZO DOBRY')
-    expect(text).toContain('Model zaawansowany (DeepSeek v4 Flash)')
+    expect(text).toContain('Model uniwersalny (General LLM)')
     expect(text).toContain('Poprawiony prompt testowy')
     expect(text).toContain('Analiza: Jasny cel.')
     expect(text).toContain('Sugerowane ulepszenie: Drobne poprawki.')

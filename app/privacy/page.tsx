@@ -87,7 +87,7 @@ export default function PrivacyPage() {
                   <strong className="text-[#E2E8F0]">Stripe, Inc. (Obsługa płatności)</strong>: Odpowiada za bezpieczne procesowanie transakcji płatniczych oraz obsługę subskrypcji. Serwis nie przechowuje ani nie ma wglądu w dane kart płatniczych użytkowników.
                 </li>
                 <li>
-                  <strong className="text-[#E2E8F0]">OpenRouter (Silnik AI / Analiza promptów)</strong>: Pośredniczy w przesyłaniu treści promptów do wybranego modelu językowego (LLM) w celu przeprowadzenia audytu i optymalizacji. Zapytania są przetwarzane z poszanowaniem zasad poufności i nie są wykorzystywane do trenowania modeli publicznych.
+                  <strong className="text-[#E2E8F0]">Google Gemini API (Silnik AI / Analiza promptów)</strong>: Przetwarza treści promptów za pomocą modelu Gemini 2.5 Flash w celu przeprowadzenia audytu i optymalizacji. Zapytania są przetwarzane zgodnie z polityką prywatności Google i nie są wykorzystywane do trenowania modeli bez zgody.
                 </li>
               </ul>
             </section>

@@ -129,7 +129,6 @@ export function HistoryFilters({
           >
             <option value="all" className="bg-[#1C1C27] text-[#E2E8F0]">Wszystkie profile</option>
             <option value="general-llm" className="bg-[#1C1C27] text-[#E2E8F0]">Uniwersalny model AI</option>
-            <option value="openrouter-deepseek-v4-flash" className="bg-[#1C1C27] text-[#E2E8F0]">Zaawansowany model AI</option>
           </select>
         </div>
 

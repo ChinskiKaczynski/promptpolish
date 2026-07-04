@@ -154,7 +154,7 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
 
       await getPromptAnalysesForUser(MOCK_USER_ID, MOCK_OWNER_ID, {
         lang: 'pl',
-        profile: 'openrouter-deepseek-v4-flash'
+        profile: 'general-llm'
       })
 
       expect(mockRpc).toHaveBeenCalledWith('search_user_prompt_history', {
@@ -162,7 +162,7 @@ describe('Supabase Prompt History Actions & Filters Integration', () => {
         p_owner_anonymous_id: MOCK_OWNER_ID,
         p_search_term: '',
         p_lang: 'pl',
-        p_profile: 'openrouter-deepseek-v4-flash',
+        p_profile: 'general-llm',
         p_task_type: 'all',
         p_is_favorite: null,
         p_sort_by: 'newest',

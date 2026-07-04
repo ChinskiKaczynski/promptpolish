@@ -89,7 +89,7 @@ async function runLiveCheck() {
         body: JSON.stringify({
           input_prompt: p.input_prompt,
           working_language: p.working_language,
-          selected_profile_slug: 'openrouter-deepseek-v4-flash',
+          selected_profile_slug: 'general-llm',
           audit_mode: 'universal'
         })
       })
@@ -131,7 +131,7 @@ async function runLiveCheck() {
       body: JSON.stringify({
         input_prompt: longPrompt,
         working_language: 'pl',
-        selected_profile_slug: 'openrouter-deepseek-v4-flash',
+        selected_profile_slug: 'general-llm',
         audit_mode: 'universal'
       })
     })

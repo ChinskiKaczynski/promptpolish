@@ -228,9 +228,7 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
                           {analysis.working_language === 'pl' ? 'Polski (PL)' : 'Angielski (EN)'}
                         </span>
                         <span className="inline-flex items-center rounded-full bg-[#A78BFA]/10 border border-[#A78BFA]/20 px-2.5 py-0.5 text-xs font-bold uppercase text-[#A78BFA]">
-                          {analysis.selected_profile_slug === 'openrouter-deepseek-v4-flash'
-                            ? (analysis.working_language === 'pl' ? 'Zaawansowany model AI' : 'Advanced AI model')
-                            : (analysis.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model')}
+                          {analysis.working_language === 'pl' ? 'Uniwersalny model AI' : 'Universal AI model'}
                         </span>
                         {analysis.audit_mode && (
                           <span className="inline-flex items-center rounded-full bg-[#1C1C27] border border-[#2A2A3A] px-2.5 py-0.5 text-xs font-bold uppercase text-[#94A3B8]">

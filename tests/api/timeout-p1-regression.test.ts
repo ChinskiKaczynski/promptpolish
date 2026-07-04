@@ -32,17 +32,17 @@ const mockReservations = new Map<string, { status: string }>()
 vi.mock('@/lib/supabase/queries', () => ({
   getModelProfileBySlug: vi.fn().mockResolvedValue({
     id: 'profile-uuid',
-    slug: 'openrouter-deepseek-v4-flash',
-    display_name: 'DeepSeek v4 Flash',
-    provider: 'openrouter',
-    model_family: 'deepseek',
+    slug: 'general-llm',
+    display_name: 'General LLM',
+    provider: 'google',
+    model_family: 'gemini',
     profile_type: 'provider_model',
     source_type: 'internal',
     verification_status: 'verified',
     confidence_level: 'high',
     stale_after_days: 30,
     capabilities_json: {
-      model_id: 'openrouter/owl-alpha',
+      model_id: 'gemini-2.5-flash',
       enabled: true
     },
     profile_version: '1.0.0',
@@ -94,7 +94,7 @@ import { releaseReservation, createPromptAnalysis } from '@/lib/supabase/queries
 const VALID_PAYLOAD = {
   input_prompt: 'To jest w pełni poprawny prompt testowy o minimalnej długości dwudziestu znaków.',
   working_language: 'pl' as const,
-  selected_profile_slug: 'openrouter-deepseek-v4-flash' as const
+  selected_profile_slug: 'general-llm' as const
 }
 
 function makeRequest(body: Record<string, unknown>) {
@@ -223,7 +223,7 @@ describe('P1 Timeout Regression: /api/analyze', () => {
         analysis: mockAnalysisResult,
         scores: { overallScore: 72, scoreLevel: 'decent' },
         usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
-        selectedModel: 'openrouter/owl-alpha',
+        selectedModel: 'gemini-2.5-flash',
         attempt: 1
       })
 
@@ -262,11 +262,11 @@ describe('P1 Timeout Regression: /api/analyze', () => {
 
   // ─── REQ 9: No hardcoded gpt-4o-mini in lib ─────────────────────────────────
   describe('Requirement 9: No hardcoded gpt-4o-mini in lib source', () => {
-    it('lib/ai/openrouter-client.ts does not hardcode gpt-4o-mini', async () => {
+    it('lib/ai/gemini-client.ts does not hardcode gpt-4o-mini', async () => {
       // Import the real module source text and scan for hardcoded model IDs
       const fs = await import('node:fs')
       const path = await import('node:path')
-      const clientPath = path.resolve('lib/ai/openrouter-client.ts')
+      const clientPath = path.resolve('lib/ai/gemini-client.ts')
       const source = fs.readFileSync(clientPath, 'utf8')
       // gpt-4o-mini must not appear as a string literal anywhere in the production client
       expect(source).not.toContain('gpt-4o-mini')
@@ -306,7 +306,7 @@ describe('P1 Timeout Regression: /api/analyze', () => {
         analysis: mockAnalysisResult,
         scores: { overallScore: 72, scoreLevel: 'decent' },
         usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
-        selectedModel: 'openrouter/owl-alpha',
+        selectedModel: 'gemini-2.5-flash',
         attempt: 1
       })
 

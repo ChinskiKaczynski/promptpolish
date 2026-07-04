@@ -104,7 +104,7 @@
     "id": "weak-pl-04",
     "input_prompt": "Napisz kod w Pythonie do sortowania listy.",
     "working_language": "pl",
-    "profile_slug": "openrouter-deepseek-v4-flash",
+    "profile_slug": "general-llm",
     "task_type": "coding",
     "expected_score_range": [
       15,

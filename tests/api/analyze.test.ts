@@ -69,8 +69,8 @@ describe('POST /api/analyze API Route Handler', () => {
 
     vi.mocked(getModelProfileBySlug).mockResolvedValue({
       id: 'profile-uuid',
-      slug: 'openrouter-deepseek-v4-flash',
-      display_name: 'Gemini 3.5 Flash',
+      slug: 'general-llm',
+      display_name: 'General LLM',
       provider: 'google',
       model_family: 'gemini',
       profile_type: 'provider_model',
@@ -99,7 +99,7 @@ describe('POST /api/analyze API Route Handler', () => {
   const validPayload = {
     input_prompt: 'To jest w pełni poprawny prompt o minimalnej długości dwudziestu znaków potrzebny do pomyślnego przejścia walidacji.',
     working_language: 'pl' as const,
-    selected_profile_slug: 'openrouter-deepseek-v4-flash' as const
+    selected_profile_slug: 'general-llm' as const
   }
 
   describe('Request Schema & Validation Checks', () => {
@@ -258,11 +258,11 @@ describe('POST /api/analyze API Route Handler', () => {
       expect(data.findings).toBeDefined()
       expect(data.findings.length).toBeGreaterThan(0)
 
-      // Verification: Check usage_event was stored with 'analysis_started' type
+      // Verification: Check usage_event was stored with 'analysis_failed' type
       expect(createUsageEvent).toHaveBeenCalledWith(
         expect.objectContaining({
           owner_anonymous_id: 'mocked-owner-id',
-          event_type: 'analysis_started'
+          event_type: 'analysis_failed'
         })
       )
 

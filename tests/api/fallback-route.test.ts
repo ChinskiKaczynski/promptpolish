@@ -12,22 +12,22 @@ const mockReservations = new Map<string, { status: string; owner: string; user: 
 
 const mockExecuteAnalysis = vi.fn()
 
-vi.mock('@/lib/ai/openrouter-client', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@/lib/ai/openrouter-client')>()
+vi.mock('@/lib/ai/gemini-client', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@/lib/ai/gemini-client')>()
   return {
     ...original,
-    executeOpenRouterAnalysis: (sys: string, prompt: string, options: unknown) => mockExecuteAnalysis(sys, prompt, options)
+    executeGeminiAnalysis: (sys: string, prompt: string, options: unknown) => mockExecuteAnalysis(sys, prompt, options)
   }
 })
 
 vi.mock('@/lib/supabase/queries', () => ({
   getModelProfileBySlug: vi.fn().mockResolvedValue({
     id: 'profile-uuid',
-    slug: 'openrouter-deepseek-v4-flash',
-    display_name: 'DeepSeek v4 Flash Profile',
-    provider: 'openrouter',
+    slug: 'general-llm',
+    display_name: 'General LLM',
+    provider: 'google',
     capabilities_json: {
-      model_id: 'openrouter/owl-alpha',
+      model_id: 'gemini-2.5-flash',
       temperature: 0.1,
       max_tokens: 4000
     },
@@ -83,7 +83,7 @@ describe('Route Handler integration test', () => {
 
     process.env = { ...originalEnv }
     process.env.NODE_ENV = 'development'
-    process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openai/gpt-4o-mini'
+    process.env.GEMINI_MODEL_ID = 'gemini-2.5-flash'
     process.env.AI_MOCK_MODE = 'false'
     process.env.NEXT_PUBLIC_ENABLE_MOCK_RESULT = 'false'
   })
@@ -98,7 +98,7 @@ describe('Route Handler integration test', () => {
       output: mockAnalysisResult,
       usage: { promptTokens: 100, completionTokens: 150, totalTokens: 250, reasoningTokens: 0, visibleTokens: 150 },
       finishReason: 'stop',
-      selectedModel: 'openrouter/owl-alpha',
+      selectedModel: 'gemini-2.5-flash',
       attempt: 1,
       durationMs: 400
     })
@@ -109,7 +109,7 @@ describe('Route Handler integration test', () => {
       body: JSON.stringify({
         input_prompt: 'This is a synthetic prompt for scenario 1 verification.',
         working_language: 'en',
-        selected_profile_slug: 'openrouter-deepseek-v4-flash',
+        selected_profile_slug: 'general-llm',
         audit_mode: 'universal'
       })
     })
@@ -119,7 +119,7 @@ describe('Route Handler integration test', () => {
 
     // Verify database and event counts
     expect(mockAnalyses.length).toBe(1)
-    expect(mockAnalyses[0].model_id_used).toBe('openrouter/owl-alpha')
+    expect(mockAnalyses[0].model_id_used).toBe('gemini-2.5-flash')
 
     const completedEvents = mockUsageEvents.filter(e => e.event_type === 'analysis_completed')
     expect(completedEvents.length).toBe(1)
@@ -137,7 +137,7 @@ describe('Route Handler integration test', () => {
       output: mockAnalysisResult,
       usage: { promptTokens: 120, completionTokens: 180, totalTokens: 300, reasoningTokens: 0, visibleTokens: 180 },
       finishReason: 'stop',
-      selectedModel: 'openai/gpt-4o-mini',
+      selectedModel: 'gemini-2.0-flash-lite',
       attempt: 2,
       durationMs: 800
     })
@@ -148,7 +148,7 @@ describe('Route Handler integration test', () => {
       body: JSON.stringify({
         input_prompt: 'This is a synthetic prompt for scenario 2 verification.',
         working_language: 'en',
-        selected_profile_slug: 'openrouter-deepseek-v4-flash',
+        selected_profile_slug: 'general-llm',
         audit_mode: 'universal'
       })
     })
@@ -158,7 +158,7 @@ describe('Route Handler integration test', () => {
 
     // Verify database and event counts
     expect(mockAnalyses.length).toBe(1)
-    expect(mockAnalyses[0].model_id_used).toBe('openai/gpt-4o-mini')
+    expect(mockAnalyses[0].model_id_used).toBe('gemini-2.0-flash-lite')
 
     const completedEvents = mockUsageEvents.filter(e => e.event_type === 'analysis_completed')
     expect(completedEvents.length).toBe(1)
@@ -188,7 +188,7 @@ describe('Route Handler integration test', () => {
       body: JSON.stringify({
         input_prompt: 'This is a synthetic prompt for scenario 3 verification.',
         working_language: 'en',
-        selected_profile_slug: 'openrouter-deepseek-v4-flash',
+        selected_profile_slug: 'general-llm',
         audit_mode: 'universal'
       })
     })
@@ -230,7 +230,7 @@ describe('Route Handler integration test', () => {
       body: JSON.stringify({
         input_prompt: 'This is a synthetic prompt for scenario 4 verification.',
         working_language: 'en',
-        selected_profile_slug: 'openrouter-deepseek-v4-flash',
+        selected_profile_slug: 'general-llm',
         audit_mode: 'universal'
       })
     })
@@ -254,14 +254,11 @@ describe('Route Handler integration test', () => {
   })
 
   it('Scenario 5: Fallback variable missing', async () => {
-    // Disable fallback by making it empty
-    process.env.OPENROUTER_FALLBACK_MODEL_ID = ''
-
     mockExecuteAnalysis.mockResolvedValue({
       output: mockAnalysisResult,
       usage: { promptTokens: 100, completionTokens: 150, totalTokens: 250, reasoningTokens: 0, visibleTokens: 150 },
       finishReason: 'stop',
-      selectedModel: 'openrouter/owl-alpha',
+      selectedModel: 'gemini-2.5-flash',
       attempt: 1,
       durationMs: 400
     })
@@ -272,7 +269,7 @@ describe('Route Handler integration test', () => {
       body: JSON.stringify({
         input_prompt: 'This is a synthetic prompt for scenario 5 verification.',
         working_language: 'en',
-        selected_profile_slug: 'openrouter-deepseek-v4-flash',
+        selected_profile_slug: 'general-llm',
         audit_mode: 'universal'
       })
     })
@@ -281,7 +278,7 @@ describe('Route Handler integration test', () => {
     expect(res.status).toBe(200)
 
     expect(mockAnalyses.length).toBe(1)
-    expect(mockAnalyses[0].model_id_used).toBe('openrouter/owl-alpha')
+    expect(mockAnalyses[0].model_id_used).toBe('gemini-2.5-flash')
 
     const completedEvents = mockUsageEvents.filter(e => e.event_type === 'analysis_completed')
     expect(completedEvents.length).toBe(1)
@@ -290,14 +287,11 @@ describe('Route Handler integration test', () => {
   })
 
   it('Scenario 6: Primary and fallback IDs identical', async () => {
-    // Disable fallback by making fallback ID identical to primary
-    process.env.OPENROUTER_FALLBACK_MODEL_ID = 'openrouter/owl-alpha'
-
     mockExecuteAnalysis.mockResolvedValue({
       output: mockAnalysisResult,
       usage: { promptTokens: 100, completionTokens: 150, totalTokens: 250, reasoningTokens: 0, visibleTokens: 150 },
       finishReason: 'stop',
-      selectedModel: 'openrouter/owl-alpha',
+      selectedModel: 'gemini-2.5-flash',
       attempt: 1,
       durationMs: 400
     })
@@ -308,7 +302,7 @@ describe('Route Handler integration test', () => {
       body: JSON.stringify({
         input_prompt: 'This is a synthetic prompt for scenario 6 verification.',
         working_language: 'en',
-        selected_profile_slug: 'openrouter-deepseek-v4-flash',
+        selected_profile_slug: 'general-llm',
         audit_mode: 'universal'
       })
     })
@@ -317,7 +311,7 @@ describe('Route Handler integration test', () => {
     expect(res.status).toBe(200)
 
     expect(mockAnalyses.length).toBe(1)
-    expect(mockAnalyses[0].model_id_used).toBe('openrouter/owl-alpha')
+    expect(mockAnalyses[0].model_id_used).toBe('gemini-2.5-flash')
 
     const completedEvents = mockUsageEvents.filter(e => e.event_type === 'analysis_completed')
     expect(completedEvents.length).toBe(1)

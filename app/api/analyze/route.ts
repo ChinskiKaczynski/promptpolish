@@ -44,7 +44,7 @@ type ReservationResult =
 const analyzeRequestSchema = z.object({
   input_prompt: z.string().max(25000, 'Prompt exceeds maximum transport length.'),
   working_language: z.enum(['pl', 'en']),
-  selected_profile_slug: z.enum(['general-llm', 'openrouter-deepseek-v4-flash']),
+  selected_profile_slug: z.enum(['general-llm']),
   audit_mode: z.enum(['universal', 'seo_content', 'coding', 'data_analysis', 'research', 'marketing_sales', 'agent_workflow']).default('universal'),
   task_goal: z.string().max(2000).optional().nullable(),
   task_type: z.string().max(200).optional().nullable(),
@@ -409,7 +409,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // 8-12. Build prompt, call OpenRouter, validate response, and calculate weighted score
+    // 8-12. Build prompt, call Gemini, validate response, and calculate weighted score
     const isMockMode = process.env.AI_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test'
 
     // AI provider timeout budget.
@@ -482,7 +482,7 @@ export async function POST(request: Request) {
       analysis_json: analysisResult.analysis,
       improved_prompt: analysisResult.analysis.improved_prompt,
       model_id_used: analysisResult.selectedModel || (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId(),
-      provider_used: dbProfile.provider || 'openrouter',
+      provider_used: dbProfile.provider || 'google',
       analysis_schema_version: process.env.ANALYSIS_SCHEMA_VERSION || '1.0.0',
       scoring_version: process.env.SCORING_VERSION || '1.0.0',
       model_profile_version: dbProfile.profile_version || '1.0.0',
@@ -550,7 +550,7 @@ export async function POST(request: Request) {
 
     const primaryModelId = (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
     const modelId = analysisResult.selectedModel || primaryModelId
-    const providerUsed = dbProfile.provider || 'openrouter'
+    const providerUsed = dbProfile.provider || 'google'
     const fallbackUsed = analysisResult.attempt > 1
     const attemptNumber = analysisResult.attempt
     const calculatedCost = usageStatus !== 'unavailable'

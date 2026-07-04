@@ -8,8 +8,8 @@ import { validateAnalysisResult } from '@/lib/ai/semantic-validation'
 describe('Usage and Cost Accounting', () => {
   it('correctly calculates cost for known models with exact token counts (measured known-price)', () => {
     const cost = calculateUsageCost(
-      'openrouter',
-      'openrouter/owl-alpha',
+      'google',
+      'gemini-2.5-flash',
       1000,
       2000
     )
@@ -23,8 +23,8 @@ describe('Usage and Cost Accounting', () => {
 
   it('returns null for negative token counts (negative usage)', () => {
     const cost = calculateUsageCost(
-      'openrouter',
-      'openrouter/owl-alpha',
+      'google',
+      'gemini-2.5-flash',
       -100,
       500
     )
@@ -33,16 +33,16 @@ describe('Usage and Cost Accounting', () => {
 
   it('returns null for NaN or infinite token counts (NaN/infinite usage)', () => {
     const costNaN = calculateUsageCost(
-      'openrouter',
-      'openrouter/owl-alpha',
+      'google',
+      'gemini-2.5-flash',
       NaN,
       500
     )
     expect(costNaN).toBeNull()
 
     const costInf = calculateUsageCost(
-      'openrouter',
-      'openrouter/owl-alpha',
+      'google',
+      'gemini-2.5-flash',
       Infinity,
       500
     )
@@ -51,8 +51,8 @@ describe('Usage and Cost Accounting', () => {
 
   it('handles zero tokens correctly', () => {
     const cost = calculateUsageCost(
-      'openrouter',
-      'openrouter/owl-alpha',
+      'google',
+      'gemini-2.5-flash',
       0,
       0
     )

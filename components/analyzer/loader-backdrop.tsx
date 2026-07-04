@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 
 interface LoaderBackdropProps {
   isSubmitting: boolean
@@ -24,7 +24,9 @@ export function LoaderBackdrop({
         setShowFallback(true)
       }, 2000)
     } else {
-      setShowFallback(false)
+      Promise.resolve().then(() => {
+        setShowFallback(false)
+      })
     }
     return () => clearTimeout(timeout)
   }, [createdId, isSubmitting])

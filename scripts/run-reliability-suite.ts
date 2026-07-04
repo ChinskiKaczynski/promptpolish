@@ -188,7 +188,7 @@ async function runSingleRequest(
       body: JSON.stringify({
         input_prompt: prompt,
         working_language: lang,
-        selected_profile_slug: 'openrouter-deepseek-v4-flash',
+        selected_profile_slug: 'general-llm',
         audit_mode: 'universal'
       })
     })
@@ -216,7 +216,7 @@ async function runSingleRequest(
     const data = await response.json()
     const analysisId = data.id
 
-    let modelUsed = 'openrouter/owl-alpha'
+    let modelUsed = 'gemini-2.5-flash'
     let promptTokens = 0
     let completionTokens = 0
     const reasoningTokens = 0

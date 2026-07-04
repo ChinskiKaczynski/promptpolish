@@ -205,11 +205,8 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   </h3>
                 </div>
                 
-                <div className="space-y-3">
                   <p className="text-xs leading-relaxed text-[#94A3B8]">
-                    {profile?.slug === 'openrouter-deepseek-v4-flash'
-                      ? 'Analiza ocenia prompt pod kątem zaawansowanego modelu DeepSeek v4 Flash, weryfikując precyzję, jasność i instrukcje warunkowe.'
-                      : 'Analiza ocenia prompt według ogólnych, uniwersalnych zasad przejrzystości, kontekstu i struktury dla LLM.'}
+                    Analiza ocenia prompt według ogólnych, uniwersalnych zasad przejrzystości, kontekstu i struktury dla LLM.
                   </p>
                   
                   {isStaleOrUnverified && (
@@ -229,9 +226,8 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   </div>
                 </div>
               </div>
-            </div>
-          )
-        })()}
+            )
+          })()}
       </div>
 
       {/* Main Two-Column Breakdown Dashboard */}

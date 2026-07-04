@@ -28,13 +28,14 @@ Revisit When: [Conditions under which we should reconsider this choice]
 - **Risk & Mitigation**: Share link might lead to user privacy confusion. **Mitigation**: Sharing is strictly disabled by default; prominent UI warnings advise users not to paste credentials and remind them that share links are publicly viewable.
 - **Revisit When**: Upon completing validation of initial MVP metrics (e.g., target copy rate and repeat user checks).
 
-### 2. Tech Stack and Provider Choices (2026-05-23)
+### 2. Tech Stack and Provider Choices (2026-05-23) — ⚠️ PARTIALLY SUPERSEDED by Decision #9
 
 - **Decision**: Adopt Next.js App Router, TypeScript, Tailwind CSS, Supabase, and Vercel AI SDK with OpenRouter (using `@openrouter/ai-sdk-provider` targeting the DeepSeek v4 Flash model).
 - **Reason**: Next.js App Router provides optimal server-side preflights and cookie-based ownership. Vercel AI SDK provides high-quality structured JSON output APIs (`Output.object`) that integrate smoothly with Zod schemas.
 - **Alternatives Considered**: Raw REST calls to the Gemini API, langchain/llamaindex abstractions, or direct provider integrations.
 - **Risk & Mitigation**: Breaking changes in fast-moving AI SDK and provider APIs. **Mitigation**: Lock dependency versions in `package.json` and enforce **Context7** document checks before provider integration.
 - **Revisit When**: AI SDK major version updates or provider transitions.
+- **Note**: The OpenRouter/DeepSeek provider choice was superseded in Decision #9. The rest of the stack (Next.js, TypeScript, Tailwind, Supabase, Vercel) remains active.
 
 ### 3. ESLint 10 Native Flat Config Migration (2026-05-23)
 
@@ -45,14 +46,14 @@ Revisit When: [Conditions under which we should reconsider this choice]
 - **Sources & Docs**: ESLint 10 deprecation guides and Next.js flat configuration codemods.
 - **Revisit When**: Next.js releases full official built-in Next 16 ESLint 10 flat presets.
 
-### 4. OpenRouter API Integration & Structured Output (2026-05-24)
+### 4. OpenRouter API Integration & Structured Output (2026-05-24) — ⚠️ SUPERSEDED by Decision #9
 
 - **Decision**: Standardize on Vercel AI SDK 6+ integration using `generateText` or `streamText` with `output: Output.object({ schema })` using `@openrouter/ai-sdk-provider` and target model `openrouter/owl-alpha`.
 - **Reason**: Allows high-performance, stateless prompt evaluations with consistent JSON outputs.
 - **Alternatives Considered**: Direct Google Gemini API integrations or LangChain wrappers.
-- **Risk & Mitigation**: Breaking changes in schema options or model ID structures. **Mitigation**: Checked documentation via Context7 and locked imports to Vercel AI SDK. Added a dynamic evaluation pipeline verification suite (`scripts/run-evaluation.ts`) to check integration before production rollout.
-- **Sources & Docs**: Context7 library docs for `/vercel/ai` and `@openrouter/ai-sdk-provider`.
-- **Revisit When**: Model architecture shifts or provider API transitions.
+- **Risk & Mitigation**: Breaking changes in schema options or model ID structures. **Mitigation**: Checked documentation via Context7 and locked imports to Vercel AI SDK.
+- **Sources & Docs**: `archive/openrouter-integration-decision.md`.
+- **Revisit When**: Superseded — see Decision #9.
 
 ### 5. Data Retention Cleanup Engine & Active Shared Links Exemption (2026-05-23)
 
@@ -81,10 +82,22 @@ Revisit When: [Conditions under which we should reconsider this choice]
 - **Sources & Docs**: `archive/billing-decision.md`, Context7 documentation for `/websites/stripe`, `/supabase/supabase`, `/websites/vercel`.
 - **Revisit When**: Upon successful integration of Supabase Auth (Stage 1 of SaaS Roadmap) and acquisition of stable premium waitlist telemetry.
 
-### 8. Migration to OpenRouter and DeepSeek v4 Flash (2026-05-24)
+### 8. Migration to OpenRouter and DeepSeek v4 Flash (2026-05-24) — 🗄️ ARCHIVED by Decision #9
 
 - **Decision**: Migrated the production AI model engine from Google Gemini to OpenRouter utilizing the Vercel AI SDK and the target model `openrouter/owl-alpha`.
 - **Reason**: DeepSeek v4 Flash provides exceptional cost-to-performance efficiency and outstanding capabilities in understanding PL/EN prompt calibrations while maintaining low response latency.
-- **Alternatives Considered**: Direct Google Gemini API integration (decommissioned due to target model preferences).
+- **Alternatives Considered**: Direct Google Gemini API integration (decommissioned at that time due to target model preferences).
 - **Risk & Mitigation**: Remote provider latency or key rotation requirements. **Mitigation**: Standardized key rotation processes documented in SOP-01, and dynamic model profile resolution through database configs.
 - **Sources & Docs**: `@openrouter/ai-sdk-provider` documentation and `archive/openrouter-integration-decision.md`.
+- **Note**: This decision was reversed in Decision #9. OpenRouter and DeepSeek are no longer used in the active runtime.
+
+---
+
+### 9. Migration to Google Gemini 2.5 Flash (2026-07-04)
+
+- **Decision**: Adopt Google Gemini 2.5 Flash (`gemini-2.5-flash`) as the sole active AI provider, replacing all OpenRouter/DeepSeek/Owl runtime references. The application uses `@ai-sdk/google` via Vercel AI SDK with `generateObject` for structured JSON output. The `@openrouter/ai-sdk-provider` package was removed from `package.json`. The single product profile slug is `general-llm`.
+- **Reason**: Consolidates the AI integration to a single, stable, well-documented provider. Removes the operational overhead and billing complexity of OpenRouter. Aligns the actual runtime code (which was already using Gemini) with the project naming conventions, documentation, and type definitions.
+- **Alternatives Considered**: Keeping OpenRouter as a secondary fallback provider; multi-provider routing. Both rejected for MVP scope.
+- **Risk & Mitigation**: Single-provider lock-in risk. **Mitigation**: The `lib/ai/gemini-client.ts` supports a `fallback_model_id` capability in the DB profile for intra-Gemini fallback. The architecture is provider-neutral enough to add a second provider later.
+- **Sources & Docs**: `docs/gemini-integration-decision.md`, `lib/ai/gemini-client.ts`, `AGENTS.md`.
+- **Revisit When**: If Gemini API SLAs degrade, if pricing becomes prohibitive, or if a compelling multi-provider use case emerges.

@@ -15,7 +15,7 @@ vi.mock('ai', async (importOriginal) => {
   }
 })
 
-import { executeOpenRouterAnalysis } from '@/lib/ai/openrouter-client'
+import { executeGeminiAnalysis } from '@/lib/ai/gemini-client'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { normalizeProviderError, ProviderError, isNestedTimeout } from '@/lib/ai/provider-errors'
 import { mockAnalysisResult } from '@/lib/ai/mock-analysis'
@@ -24,10 +24,10 @@ import { SemanticValidationError } from '@/lib/ai/semantic-validation'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 import type { ModelProfileRow } from '@/lib/supabase/types'
 
-describe('OpenRouter Analysis Client & Error Normalization', () => {
-  describe('executeOpenRouterAnalysis Mocking & Output', () => {
+describe('Gemini Analysis Client & Error Normalization', () => {
+  describe('executeGeminiAnalysis Mocking & Output', () => {
     it('successfully resolves a mocked analysis result when mockMode is enabled', async () => {
-      const result = await executeOpenRouterAnalysis(
+      const result = await executeGeminiAnalysis(
         'system instruction',
         'polished prompt',
         { mockMode: true }
@@ -42,7 +42,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
         ...mockAnalysisResult,
         overall_summary: 'Custom test summary'
       }
-      const result = await executeOpenRouterAnalysis(
+      const result = await executeGeminiAnalysis(
         'system instruction',
         'polished prompt',
         { mockResponse: customMock }
@@ -56,7 +56,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       const params = {
         inputPrompt: 'To jest testowy prompt o długości przynajmniej dwudziestu znaków.',
         workingLanguage: 'pl' as const,
-        selectedProfileSlug: 'general-llm' as const, // Default profile slug
+        selectedProfileSlug: 'general-llm' as const,
         taskGoal: 'Test goal',
         taskType: 'Translation'
       }
@@ -93,7 +93,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       const apiError = new APICallError({
         statusCode: 429,
         cause: new Error('Rate limit exceeded'),
-        url: 'https://openrouter.ai/api/v1/chat/completions',
+        url: 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent',
         message: 'Rate limit hit',
         requestBodyValues: {}
       })
@@ -109,7 +109,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       const apiError = new APICallError({
         statusCode: 503,
         cause: new Error('Overloaded'),
-        url: 'https://openrouter.ai/api/v1/chat/completions',
+        url: 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent',
         message: 'Server overloaded',
         requestBodyValues: {}
       })
@@ -125,7 +125,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       const apiError = new APICallError({
         statusCode: 400,
         cause: new Error('Invalid parameter'),
-        url: 'https://openrouter.ai/api/v1/chat/completions',
+        url: 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent',
         message: 'Invalid request parameter',
         requestBodyValues: {}
       })
@@ -198,7 +198,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       const apiError = new APICallError({
         statusCode: 200,
         cause: new Error('Request aborted after 60000ms'),
-        url: 'https://openrouter.ai/api/v1/chat/completions',
+        url: 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent',
         message: 'Request failed',
         requestBodyValues: {}
       })
@@ -234,24 +234,24 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
     })
   })
 
-  describe('executeOpenRouterAnalysis with DB Profiles', () => {
+  describe('executeGeminiAnalysis with DB Profiles', () => {
     beforeEach(() => {
       process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'mock-api-key'
     })
 
-    it('passes capabilities parameters from dbProfile to generateText', async () => {
+    it('passes capabilities parameters from dbProfile to generateObject', async () => {
       const dbProfile = {
         id: 'p1',
-        slug: 'openrouter-deepseek-v4-flash',
-        display_name: 'Test Profile',
-        provider: 'openrouter',
-        model_family: 'deepseek',
+        slug: 'general-llm',
+        display_name: 'General LLM',
+        provider: 'google',
+        model_family: 'gemini',
         profile_type: 'provider_model',
         source_type: 'internal',
         verification_status: 'verified',
         confidence_level: 'high',
         capabilities_json: {
-          model_id: 'custom-model-123',
+          model_id: 'gemini-2.5-flash',
           temperature: 0.8,
           max_tokens: 1500,
           reasoning: true
@@ -264,7 +264,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       const { generateObject } = await import('ai')
       vi.mocked(generateObject).mockClear()
 
-      await executeOpenRouterAnalysis('sys instruction', 'user prompt', {
+      await executeGeminiAnalysis('sys instruction', 'user prompt', {
         dbProfile
       })
 
@@ -281,56 +281,19 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       )
     })
 
-    it('defaults reasoning to false for deepseek models when not explicitly provided in capabilities', async () => {
-      const dbProfile = {
-        id: 'p1',
-        slug: 'openrouter-deepseek-v4-flash',
-        display_name: 'Test Profile',
-        provider: 'openrouter',
-        model_family: 'deepseek',
-        profile_type: 'provider_model',
-        source_type: 'internal',
-        verification_status: 'verified',
-        confidence_level: 'high',
-        capabilities_json: {
-          model_id: 'openrouter/owl-alpha',
-          temperature: 0.8,
-          max_tokens: 1500
-        },
-        profile_version: '1.0.0',
-        created_at: '',
-        updated_at: ''
-      } as unknown as ModelProfileRow
-
-      const { generateObject } = await import('ai')
-      vi.mocked(generateObject).mockClear()
-
-      await executeOpenRouterAnalysis('sys instruction', 'user prompt', {
-        dbProfile
-      })
-
-      expect(generateObject).toHaveBeenCalledWith(
-        expect.objectContaining({
-          providerMetadata: expect.objectContaining({
-            reasoning: false
-          })
-        })
-      )
-    })
-
-    it('defaults reasoning to false for non-deepseek models when not explicitly provided', async () => {
+    it('defaults reasoning to false when not explicitly provided in capabilities', async () => {
       const dbProfile = {
         id: 'p1',
         slug: 'general-llm',
-        display_name: 'Test Profile',
-        provider: 'openrouter',
-        model_family: 'openai',
+        display_name: 'General LLM',
+        provider: 'google',
+        model_family: 'gemini',
         profile_type: 'provider_model',
         source_type: 'internal',
         verification_status: 'verified',
         confidence_level: 'high',
         capabilities_json: {
-          model_id: 'openai/gpt-4o-mini',
+          model_id: 'gemini-2.5-flash',
           temperature: 0.8,
           max_tokens: 1500
         },
@@ -342,7 +305,7 @@ describe('OpenRouter Analysis Client & Error Normalization', () => {
       const { generateObject } = await import('ai')
       vi.mocked(generateObject).mockClear()
 
-      await executeOpenRouterAnalysis('sys instruction', 'user prompt', {
+      await executeGeminiAnalysis('sys instruction', 'user prompt', {
         dbProfile
       })
 

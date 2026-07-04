@@ -82,11 +82,6 @@ const TRANSLATIONS = {
 } as const
 
 function getModelProfileLabel(slug: string, lang: 'pl' | 'en'): string {
-  if (slug === 'openrouter-deepseek-v4-flash') {
-    return lang === 'pl'
-      ? 'Model zaawansowany (DeepSeek v4 Flash)'
-      : 'Advanced Model (DeepSeek v4 Flash)'
-  }
   if (slug === 'general-llm') {
     return lang === 'pl'
       ? 'Model uniwersalny (General LLM)'

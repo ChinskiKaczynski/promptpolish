@@ -118,11 +118,11 @@ describe('AI Score Calibration Runner (Live)', () => {
       
       const dbProfilePrimary = {
         id: 'p-primary',
-        slug: 'openrouter-deepseek-v4-flash',
+        slug: 'general-llm',
         display_name: 'DeepSeek v4 Flash Profile',
         provider: 'openrouter',
         capabilities_json: {
-          model_id: 'openrouter/owl-alpha',
+          model_id: 'gemini-2.5-flash',
           temperature: 0.1,
           max_tokens: 4000
         },
@@ -131,7 +131,7 @@ describe('AI Score Calibration Runner (Live)', () => {
 
       const dbProfileFallback = {
         id: 'p-fallback',
-        slug: 'openrouter-deepseek-v4-flash',
+        slug: 'general-llm',
         display_name: 'DeepSeek v4 Flash Profile',
         provider: 'openrouter',
         capabilities_json: {
@@ -147,14 +147,14 @@ describe('AI Score Calibration Runner (Live)', () => {
         analyzePrompt({
           inputPrompt: p.text,
           workingLanguage: p.lang,
-          selectedProfileSlug: 'openrouter-deepseek-v4-flash',
+          selectedProfileSlug: 'general-llm',
           auditMode: 'universal',
           dbProfile: dbProfilePrimary
         }, { mockMode: false }),
         analyzePrompt({
           inputPrompt: p.text,
           workingLanguage: p.lang,
-          selectedProfileSlug: 'openrouter-deepseek-v4-flash',
+          selectedProfileSlug: 'general-llm',
           auditMode: 'universal',
           dbProfile: dbProfileFallback
         }, { mockMode: false })

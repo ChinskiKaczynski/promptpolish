@@ -7,13 +7,15 @@ export interface ModelPricing {
   outputCostPerMillion: number // in micro-dollars
 }
 
-// Trusted server-side pricing configuration keyed by provider and model
+// Trusted server-side pricing configuration keyed by provider and model.
+// ⚠ APPROXIMATION ONLY — data may be stale. Never display pricing figures to users.
+// Source: https://ai.google.dev/pricing (verify before using for billing).
 export const PRICING_CONFIG: Record<string, ModelPricing> = {
-  'openrouter:openrouter/owl-alpha': {
-    provider: 'openrouter',
-    modelId: 'openrouter/owl-alpha',
-    inputCostPerMillion: 75000,   // $0.075 per 1,000,000 tokens
-    outputCostPerMillion: 300000  // $0.30 per 1,000,000 tokens
+  'google:gemini-2.5-flash': {
+    provider: 'google',
+    modelId: 'gemini-2.5-flash',
+    inputCostPerMillion: 75000,   // ~$0.075 per 1M tokens (unverified approximation)
+    outputCostPerMillion: 300000  // ~$0.30 per 1M tokens (unverified approximation)
   }
 }
 

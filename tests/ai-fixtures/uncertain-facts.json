@@ -63,7 +63,7 @@
     "id": "uncertain-03",
     "input_prompt": "Napisz porównanie wyników benchmarków MMLU, GSM8K i HumanEval dla modeli Gemini 1.5 Pro, Llama 3 70B oraz GPT-4o.",
     "working_language": "pl",
-    "profile_slug": "openrouter-deepseek-v4-flash",
+    "profile_slug": "general-llm",
     "task_type": "uncertain-facts",
     "expected_score_range": [
       40,

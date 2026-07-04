@@ -52,11 +52,11 @@ const mockUsageEvents: Record<string, unknown>[] = []
 vi.mock('@/lib/supabase/queries', () => ({
   getModelProfileBySlug: vi.fn().mockResolvedValue({
     id: 'profile-uuid',
-    slug: 'openrouter-deepseek-v4-flash',
+    slug: 'general-llm',
     display_name: 'DeepSeek v4 Flash Profile',
     provider: 'openrouter',
     capabilities_json: {
-      model_id: 'openrouter/owl-alpha',
+      model_id: 'gemini-2.5-flash',
       temperature: 0.1,
       max_tokens: 4000
     },
@@ -94,7 +94,7 @@ vi.mock('ai', async (importOriginal) => {
     generateText: vi.fn().mockImplementation(async (options: unknown) => {
       const opts = options as { model: { modelId: string } }
       const modelId = opts.model.modelId
-      if (modelId === 'openrouter/owl-alpha') {
+      if (modelId === 'gemini-2.5-flash') {
         console.log(`[Live Check] Simulating primary model failure for: ${modelId}`)
         throw new Error('PROVIDER_TIMEOUT: Request aborted after 55000ms')
       }
@@ -137,7 +137,7 @@ describe('Live Route Handler Fallback Verification', () => {
       body: JSON.stringify({
         input_prompt: 'Polished marketing email for organic coffee. Short and catchy.',
         working_language: 'en',
-        selected_profile_slug: 'openrouter-deepseek-v4-flash',
+        selected_profile_slug: 'general-llm',
         audit_mode: 'marketing_sales'
       })
     })

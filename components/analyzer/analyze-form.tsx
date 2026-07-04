@@ -69,10 +69,10 @@ export function AnalyzeForm() {
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isSubmitting && !errorMessage) {
-      if (createdId) {
-        setCurrentStepIndex(loadingSteps.length - 1)
+        Promise.resolve().then(() => {
+          setCurrentStepIndex(loadingSteps.length - 1)
+        })
         return
-      }
 
       interval = setInterval(() => {
         if (currentStepIndex < loadingSteps.length - 1) {

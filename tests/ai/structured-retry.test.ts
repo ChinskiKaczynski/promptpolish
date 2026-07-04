@@ -4,11 +4,11 @@ vi.mock('server-only', () => ({}))
 
 const mockExecuteAnalysis = vi.fn()
 
-vi.mock('@/lib/ai/openrouter-client', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@/lib/ai/openrouter-client')>()
+vi.mock('@/lib/ai/gemini-client', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@/lib/ai/gemini-client')>()
   return {
     ...original,
-    executeOpenRouterAnalysis: (sys: string, prompt: string, options: unknown) => mockExecuteAnalysis(sys, prompt, options)
+    executeGeminiAnalysis: (sys: string, prompt: string, options: unknown) => mockExecuteAnalysis(sys, prompt, options)
   }
 })
 
@@ -29,9 +29,9 @@ describe('Structured Output Retry and Size Control Tests', () => {
         inputPrompt: longInput,
         workingLanguage: 'pl',
         modelProfile: {
-          slug: 'openrouter-deepseek-v4-flash',
-          displayName: 'DeepSeek v4 Flash Profile',
-          provider: 'openrouter',
+          slug: 'general-llm',
+          displayName: 'General LLM',
+          provider: 'google',
           verificationStatus: 'unverified',
           confidenceLevel: 'low',
           profileVersion: '1.0.0'
@@ -46,9 +46,9 @@ describe('Structured Output Retry and Size Control Tests', () => {
         inputPrompt: longInput,
         workingLanguage: 'en',
         modelProfile: {
-          slug: 'openrouter-deepseek-v4-flash',
-          displayName: 'DeepSeek v4 Flash Profile',
-          provider: 'openrouter',
+          slug: 'general-llm',
+          displayName: 'General LLM',
+          provider: 'google',
           verificationStatus: 'unverified',
           confidenceLevel: 'low',
           profileVersion: '1.0.0'
@@ -63,9 +63,9 @@ describe('Structured Output Retry and Size Control Tests', () => {
         inputPrompt: shortInput,
         workingLanguage: 'en',
         modelProfile: {
-          slug: 'openrouter-deepseek-v4-flash',
-          displayName: 'DeepSeek v4 Flash Profile',
-          provider: 'openrouter',
+          slug: 'general-llm',
+          displayName: 'General LLM',
+          provider: 'google',
           verificationStatus: 'unverified',
           confidenceLevel: 'low',
           profileVersion: '1.0.0'
@@ -79,10 +79,10 @@ describe('Structured Output Retry and Size Control Tests', () => {
     const validParams = {
       inputPrompt: 'Ta walidacja potrzebuje przynajmniej dwudziestu znaków w swoim body.',
       workingLanguage: 'pl' as const,
-      selectedProfileSlug: 'openrouter-deepseek-v4-flash' as const
+      selectedProfileSlug: 'general-llm' as const
     }
 
-    it('retries exactly once when executeOpenRouterAnalysis throws malformed_provider_output, and returns result if retry succeeds', async () => {
+    it('retries exactly once when executeGeminiAnalysis throws malformed_provider_output, and returns result if retry succeeds', async () => {
       mockExecuteAnalysis
         .mockRejectedValueOnce(
           new ProviderError(
@@ -96,7 +96,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
         .mockResolvedValueOnce({
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'openrouter/owl-alpha',
+          selectedModel: 'gemini-2.5-flash',
           attempt: 1,
           durationMs: 200
         })
@@ -123,14 +123,14 @@ describe('Structured Output Retry and Size Control Tests', () => {
         .mockResolvedValueOnce({
           output: invalidJson,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'openrouter/owl-alpha',
+          selectedModel: 'gemini-2.5-flash',
           attempt: 1,
           durationMs: 200
         })
         .mockResolvedValueOnce({
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'openrouter/owl-alpha',
+          selectedModel: 'gemini-2.5-flash',
           attempt: 1,
           durationMs: 200
         })
@@ -170,7 +170,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
       expect(mockExecuteAnalysis).toHaveBeenCalledTimes(2)
     })
 
-    it('does not trigger fallback to other models during retry (stays on openrouter/owl-alpha)', async () => {
+    it('does not trigger fallback to other models during retry (stays on gemini-2.5-flash)', async () => {
       mockExecuteAnalysis
         .mockRejectedValueOnce(
           new ProviderError(
@@ -184,14 +184,14 @@ describe('Structured Output Retry and Size Control Tests', () => {
         .mockResolvedValueOnce({
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'openrouter/owl-alpha',
+          selectedModel: 'gemini-2.5-flash',
           attempt: 1,
           durationMs: 200
         })
 
       const res = await analyzePrompt(validParams)
       expect(mockExecuteAnalysis).toHaveBeenCalledTimes(2)
-      expect(res.selectedModel).toBe('openrouter/owl-alpha')
+      expect(res.selectedModel).toBe('gemini-2.5-flash')
     })
   })
 
@@ -199,10 +199,10 @@ describe('Structured Output Retry and Size Control Tests', () => {
     const validParams = {
       inputPrompt: 'Ta walidacja potrzebuje przynajmniej dwudziestu znaków w swoim body.',
       workingLanguage: 'pl' as const,
-      selectedProfileSlug: 'openrouter-deepseek-v4-flash' as const
+      selectedProfileSlug: 'general-llm' as const
     }
 
-    it('does not retry when executeOpenRouterAnalysis throws a timeout error', async () => {
+    it('does not retry when executeGeminiAnalysis throws a timeout error', async () => {
       mockExecuteAnalysis.mockRejectedValueOnce(
         new ProviderError(
           'Timeout occurred',
@@ -217,7 +217,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
       expect(mockExecuteAnalysis).toHaveBeenCalledTimes(1)
     })
 
-    it('does not retry when executeOpenRouterAnalysis throws a rate limit error', async () => {
+    it('does not retry when executeGeminiAnalysis throws a rate limit error', async () => {
       mockExecuteAnalysis.mockRejectedValueOnce(
         new ProviderError(
           'Quota exceeded',
@@ -232,7 +232,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
       expect(mockExecuteAnalysis).toHaveBeenCalledTimes(1)
     })
 
-    it('does not retry when executeOpenRouterAnalysis throws an authentication/authorization error', async () => {
+    it('does not retry when executeGeminiAnalysis throws an authentication/authorization error', async () => {
       mockExecuteAnalysis.mockRejectedValueOnce(
         new ProviderError(
           'Invalid credentials',
@@ -252,7 +252,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
     const validParams = {
       inputPrompt: 'Ta walidacja potrzebuje przynajmniej dwudziestu znaków w swoim body.',
       workingLanguage: 'pl' as const,
-      selectedProfileSlug: 'openrouter-deepseek-v4-flash' as const
+      selectedProfileSlug: 'general-llm' as const
     }
 
     it('successfully repairs valid JSON wrapped in markdown code fences and returns it directly without retry', async () => {
@@ -260,7 +260,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
       mockExecuteAnalysis.mockResolvedValueOnce({
         output: outputText,
         usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-        selectedModel: 'openrouter/owl-alpha',
+        selectedModel: 'gemini-2.5-flash',
         attempt: 1,
         durationMs: 200
       })
@@ -273,7 +273,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
 
     it('safely coerces numeric strings in criteria_scores raw_score_0_10 if allowed', async () => {
       const resultWithNumericStrings = JSON.parse(JSON.stringify(mockAnalysisResult))
-      resultWithNumericStrings.criteria_scores = resultWithNumericStrings.criteria_scores.map((score: any) => ({
+      resultWithNumericStrings.criteria_scores = resultWithNumericStrings.criteria_scores.map((score: Record<string, unknown>) => ({
         ...score,
         raw_score_0_10: '7'
       }))
@@ -281,7 +281,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
       mockExecuteAnalysis.mockResolvedValueOnce({
         output: JSON.stringify(resultWithNumericStrings),
         usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-        selectedModel: 'openrouter/owl-alpha',
+        selectedModel: 'gemini-2.5-flash',
         attempt: 1,
         durationMs: 200
       })
@@ -302,14 +302,14 @@ describe('Structured Output Retry and Size Control Tests', () => {
         .mockResolvedValueOnce({
           output: JSON.stringify(invalidJson),
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'openrouter/owl-alpha',
+          selectedModel: 'gemini-2.5-flash',
           attempt: 1,
           durationMs: 200
         })
         .mockResolvedValueOnce({
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
-          selectedModel: 'openrouter/owl-alpha',
+          selectedModel: 'gemini-2.5-flash',
           attempt: 1,
           durationMs: 200
         })

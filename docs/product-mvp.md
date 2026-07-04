@@ -32,17 +32,17 @@ graph TD
 ### 2.2 The `/analyze` Form & Safe Preflight
 *   **Prompt Text Input**: A clean textarea optimized for pasting multi-line prompts.
 *   **Working Language Toggle**: Polish (PL) or English (EN).
-*   **Model Profile Selector**: Supporting only `general-llm` and `openrouter-deepseek-v4-flash`.
+*   **Model Profile**: Using a single product profile `general-llm` pointing to `gemini-2.5-flash` in the backend. No selector is shown.
 *   **Sensitive Data Preflight Warning**:
     *   A prominent disclaimer warning against pasting API keys, access tokens, customer names, passwords, and private data.
     *   Client-side pre-checks that look for structural markers of credentials (e.g., standard key prefixes, high entropy strings) before submission.
-*   **Option Fields**: Inputs to optionally define custom prompt goals, target task types, output formats, and structural constraints.
+    *   **Option Fields**: Inputs to optionally define custom prompt goals, target task types, output formats, and structural constraints.
 
 ### 2.3 The `/api/analyze` Pipeline
 *   **Zod Request Validator**: Enforces strict schema rules on request headers, prompt text lengths, and choices.
 *   **IP & Cookie Rate-Limiter**: Validates that the anonymous user hasn't exceeded the free daily analysis quota (e.g., 5 analyses per IP per day).
 *   **Backend Sensitive-Data Detector**: Performs a deeper verification on the prompt content. Blocks any submission containing raw credentials or high-risk secrets. **Crucial rule**: Under no circumstance is a blocked prompt saved in the database or sent to the AI provider.
-*   **Vercel AI SDK Structured Engine**: Prompts the OpenRouter model using the strict `Output.object` format to gather structured criterion scores and critiques.
+*   **Vercel AI SDK Structured Engine**: Prompts the Gemini model using Vercel AI SDK `generateObject` to gather structured criterion scores and critiques.
 *   **Semantic Scoring Calculation**: The final score is computed by a backend formula based on weighted criteria, preventing provider hallucinations or manipulation from skewing results.
 
 ### 2.4 Private `/result/[id]`

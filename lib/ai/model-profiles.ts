@@ -1,5 +1,5 @@
 export type ModelProfile = {
-  slug: 'general-llm' | 'openrouter-deepseek-v4-flash'
+  slug: 'general-llm'
   displayName: string
   provider: string
   verificationStatus: 'verified' | 'unverified' | 'stale'
@@ -13,17 +13,9 @@ export const mvpModelProfiles: ModelProfile[] = [
   {
     slug: 'general-llm',
     displayName: 'General LLM',
-    provider: 'generic',
+    provider: 'google',
     verificationStatus: 'unverified',
     confidenceLevel: 'medium',
-    profileVersion: '1.0.0'
-  },
-  {
-    slug: 'openrouter-deepseek-v4-flash',
-    displayName: 'DeepSeek v4 Flash Profile',
-    provider: 'openrouter',
-    verificationStatus: 'unverified',
-    confidenceLevel: 'low',
     profileVersion: '1.0.0'
   }
 ]

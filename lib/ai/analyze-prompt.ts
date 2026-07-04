@@ -4,7 +4,7 @@ import {
   constructRepairPrompt,
   constructUserAnalysisPrompt
 } from './prompts'
-import { executeOpenRouterAnalysis, type OpenRouterClientOptions, type OpenRouterAnalysisResponse } from './openrouter-client'
+import { executeGeminiAnalysis, type GeminiClientOptions, type GeminiAnalysisResponse } from './gemini-client'
 import {
   formatValidationErrors,
   SemanticValidationError,
@@ -13,14 +13,13 @@ import {
 import { calculateScore, type CalculatedScore } from '@/lib/scoring/calculate-score'
 import { type AnalysisResult, analysisResultSchema } from './schemas'
 import { ProviderError } from './provider-errors'
-import { NoObjectGeneratedError } from 'ai'
 
 import type { ModelProfileRow } from '@/lib/supabase/types'
 
 export interface AnalyzePromptParams {
   inputPrompt: string
   workingLanguage: 'pl' | 'en'
-  selectedProfileSlug?: 'general-llm' | 'openrouter-deepseek-v4-flash'
+  selectedProfileSlug?: 'general-llm'
   auditMode?: string | null
   taskGoal?: string | null
   taskType?: string | null
@@ -42,9 +41,9 @@ export type AnalysisServiceResult = {
 }
 
 function mergeUsage(
-  firstUsage: OpenRouterAnalysisResponse['usage'],
-  secondUsage: OpenRouterAnalysisResponse['usage']
-): OpenRouterAnalysisResponse['usage'] {
+  firstUsage: GeminiAnalysisResponse['usage'],
+  secondUsage: GeminiAnalysisResponse['usage']
+): GeminiAnalysisResponse['usage'] {
   if (!firstUsage) return secondUsage
   if (!secondUsage) return firstUsage
 
@@ -57,7 +56,7 @@ function mergeUsage(
 
 export function normalizeDbProfile(dbProfile: ModelProfileRow): ModelProfile {
   return {
-    slug: dbProfile.slug as 'general-llm' | 'openrouter-deepseek-v4-flash',
+    slug: dbProfile.slug as 'general-llm',
     displayName: dbProfile.display_name,
     provider: dbProfile.provider,
     verificationStatus: dbProfile.verification_status,
@@ -70,14 +69,14 @@ function tryLocalJsonRepair(input: unknown): AnalysisResult | null {
   if (!input) return null
 
   let rawText = ''
-  let parsedObj: any = null
+  let parsedObj: Record<string, unknown> | null = null
 
   if (input instanceof ProviderError) {
     if (input.rawError && typeof input.rawError === 'object') {
-      rawText = (input.rawError as any).text || ''
+      rawText = (input.rawError as Record<string, unknown>).text as string || ''
     }
   } else if (input && typeof input === 'object' && 'text' in input) {
-    rawText = (input as any).text || ''
+    rawText = (input as Record<string, unknown>).text as string || ''
   } else if (typeof input === 'string') {
     rawText = input
   } else if (typeof input === 'object') {
@@ -100,14 +99,14 @@ function tryLocalJsonRepair(input: unknown): AnalysisResult | null {
         jsonText = jsonText.slice(firstBrace, lastBrace + 1)
       }
       parsedObj = JSON.parse(jsonText)
-    } catch (e) {
+    } catch {
       // Ignore parse error, parsedObj remains null
     }
   }
 
   if (parsedObj && typeof parsedObj === 'object') {
     try {
-      const repaired: any = { ...parsedObj }
+      const repaired: Record<string, unknown> = { ...parsedObj }
       
       // Safe coercion of version contract
       if (!repaired.analysis_schema_version) {
@@ -127,9 +126,9 @@ function tryLocalJsonRepair(input: unknown): AnalysisResult | null {
 
       // Coerce criteria_scores elements safely
       if (Array.isArray(repaired.criteria_scores)) {
-        repaired.criteria_scores = repaired.criteria_scores.map((item: any) => {
+        repaired.criteria_scores = repaired.criteria_scores.map((item: unknown) => {
           if (item && typeof item === 'object') {
-            const newItem = { ...item }
+            const newItem = { ...item } as Record<string, unknown>
             if (typeof newItem.raw_score_0_10 === 'string') {
               const val = parseFloat(newItem.raw_score_0_10)
               if (!isNaN(val)) newItem.raw_score_0_10 = val
@@ -179,7 +178,7 @@ async function executeAndValidateWithSingleRepairRetry(
   systemInstruction: string,
   userPrompt: string,
   workingLanguage: 'pl' | 'en',
-  options?: OpenRouterClientOptions
+  options?: GeminiClientOptions
 ): Promise<{
   result: AnalysisResult
   usage?: AnalysisServiceResult['usage']
@@ -187,19 +186,19 @@ async function executeAndValidateWithSingleRepairRetry(
   attempt: number
 }> {
   const startTime = Date.now()
-  let initialResponse: OpenRouterAnalysisResponse | undefined
+  let initialResponse: GeminiAnalysisResponse | undefined
   let isMalformed = false
   let lastError: unknown = null
 
   try {
-    initialResponse = await executeOpenRouterAnalysis(systemInstruction, userPrompt, options)
+    initialResponse = await executeGeminiAnalysis(systemInstruction, userPrompt, options)
   } catch (error) {
     if (error instanceof ProviderError && error.errorCode === 'malformed_provider_output') {
       const repaired = tryLocalJsonRepair(error)
       if (repaired) {
         return {
           result: repaired,
-          selectedModel: error.rawError && typeof error.rawError === 'object' && 'modelId' in error.rawError ? (error.rawError as any).modelId : 'gemini-2.5-flash',
+          selectedModel: error.rawError && typeof error.rawError === 'object' && 'modelId' in error.rawError ? ((error.rawError as Record<string, unknown>).modelId as string) : 'gemini-2.5-flash',
           attempt: 1
         }
       }
@@ -261,7 +260,7 @@ async function executeAndValidateWithSingleRepairRetry(
 
     const retryPrompt = userPrompt + retryInstructions
 
-    const retryResponse = await executeOpenRouterAnalysis(
+    const retryResponse = await executeGeminiAnalysis(
       systemInstruction,
       retryPrompt,
       {
@@ -297,7 +296,7 @@ async function executeAndValidateWithSingleRepairRetry(
       workingLanguage
     })
 
-    const repairedResponse = await executeOpenRouterAnalysis(
+    const repairedResponse = await executeGeminiAnalysis(
       systemInstruction,
       repairPrompt,
       {
@@ -333,7 +332,7 @@ async function executeAndValidateWithSingleRepairRetry(
  */
 export async function analyzePrompt(
   params: AnalyzePromptParams,
-  options?: OpenRouterClientOptions
+  options?: GeminiClientOptions
 ): Promise<AnalysisServiceResult> {
   const {
     inputPrompt,

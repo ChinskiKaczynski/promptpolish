@@ -55,7 +55,7 @@ const fixtureSchema = z.object({
   id: z.string().min(1),
   input_prompt: z.string().min(1),
   working_language: z.enum(['pl', 'en']),
-  profile_slug: z.enum(['general-llm', 'openrouter-deepseek-v4-flash']),
+  profile_slug: z.enum(['general-llm', 'general-llm']),
   task_type: z.string().min(1),
   expected_score_range: z.array(z.number().int().min(0).max(100)).length(2),
   expected_strengths: z.array(z.string()).optional(),
@@ -478,7 +478,7 @@ async function main() {
   if (limit) console.log(`Evaluation Limit: First ${limit} items per fixture category`)
 
   const apiKey = process.env.OPENROUTER_API_KEY
-  const targetModelId = process.env.OPENROUTER_MODEL_ID || 'openrouter/owl-alpha'
+  const targetModelId = process.env.GEMINI_MODEL_ID || 'gemini-2.5-flash'
 
   if (isLive && (!apiKey || apiKey.trim() === '')) {
     console.error('[ERROR] LIVE mode requested, but OPENROUTER_API_KEY is not defined in .env.local.')

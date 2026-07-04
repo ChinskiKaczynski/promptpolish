@@ -35,7 +35,7 @@
     "id": "coding-02",
     "input_prompt": "Act as a senior TypeScript developer. Optimize this function under strict O(N) runtime and O(1) space constraints. Input code: `const dedup = (arr: number[]) => Array.from(new Set(arr));` Output should include a markdown block of the code and explanation of complexity.",
     "working_language": "en",
-    "profile_slug": "openrouter-deepseek-v4-flash",
+    "profile_slug": "general-llm",
     "task_type": "coding",
     "expected_score_range": [
       50,

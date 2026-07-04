@@ -38,7 +38,7 @@
     "id": "strong-en-02",
     "input_prompt": "Act as a senior Python developer and systems architect. Refactor the following Python function to improve readability, efficiency, and full compliance with PEP 8. Here is the code to audit:\n```python\ndef f(l):\n  r = []\n  for i in l:\n    if i % 2 == 0:\n      r.append(i * 2)\n  return r\n```\nOutput layout: 1. Refactored function in a code block with explicit type hinting, 2. Bullet list of 3 key improvements and their technical justification, 3. Big O time and space complexity notes. Constraints: do not import third-party libraries, preserve the original list-comprehension equivalent logic.",
     "working_language": "en",
-    "profile_slug": "openrouter-deepseek-v4-flash",
+    "profile_slug": "general-llm",
     "task_type": "coding",
     "expected_score_range": [
       75,
@@ -175,7 +175,7 @@
     "id": "strong-en-06",
     "input_prompt": "Act as a senior technical writer. Rewrite and simplify the following technical API documentation paragraph. Goal: eliminate passive voice, improve actionability, and organize key requirements as a numbered list. Text:\n[For a payment charge transaction to be initiated by an integrator, a POST request must be transmitted to the /v1/charge endpoint, to which must be attached an authorization header and a valid JSON payload containing currency and amount.]\nOutput: 1. Revised active voice paragraph, 2. Numbered step-by-step checklist, 3. Mock curl block showing headers.",
     "working_language": "en",
-    "profile_slug": "openrouter-deepseek-v4-flash",
+    "profile_slug": "general-llm",
     "task_type": "coding",
     "expected_score_range": [
       80,
@@ -209,7 +209,7 @@
     "id": "strong-en-07",
     "input_prompt": "Act as an expert PostgreSQL database administrator. Optimize the following slow SQL query executed on a table with 10 million rows. Query:\n```sql\nSELECT * FROM orders WHERE status = 'completed' AND EXTRACT(YEAR FROM created_at) = 2025;\n```\nOutput layout: 1. Optimized SQL query, 2. DDL statement for creating index with explanation of why EXTRACT prevents standard index usage, 3. Date range filtering alternatives. Constraints: compatible with PostgreSQL 15, do not use proprietary vendor extensions.",
     "working_language": "en",
-    "profile_slug": "openrouter-deepseek-v4-flash",
+    "profile_slug": "general-llm",
     "task_type": "coding",
     "expected_score_range": [
       85,

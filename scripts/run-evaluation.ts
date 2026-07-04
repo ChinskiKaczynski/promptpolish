@@ -33,7 +33,7 @@ const fixtureSchema = z.object({
   id: z.string(),
   input_prompt: z.string(),
   working_language: z.enum(['pl', 'en']),
-  profile_slug: z.enum(['general-llm', 'openrouter-deepseek-v4-flash']),
+  profile_slug: z.enum(['general-llm', 'general-llm']),
   expected_score_range: z.array(z.number()),
   expected_strengths: z.array(z.string()),
   expected_weaknesses: z.array(z.string()),
@@ -73,7 +73,7 @@ interface EvaluationResultItem {
 
 async function runEvaluation() {
   const apiKey = process.env.OPENROUTER_API_KEY
-  const modelId = process.env.OPENROUTER_MODEL_ID || 'openrouter/owl-alpha'
+  const modelId = process.env.GEMINI_MODEL_ID || 'gemini-2.5-flash'
   const docsDir = path.join(process.cwd(), 'docs')
   const reportPath = path.join(docsDir, 'evaluation-results.md')
 

@@ -4,7 +4,7 @@ vi.mock('server-only', () => ({}))
 
 vi.mock('ai', async (importOriginal) => {
   const original = await importOriginal<typeof import('ai')>()
-  const mockImplementation = async (options: any) => {
+  const mockImplementation = async (options: { abortSignal?: AbortSignal }) => {
     const signal = options.abortSignal
     if (signal?.aborted) {
       throw signal.reason || new Error('Aborted')
@@ -43,9 +43,9 @@ vi.mock('ai', async (importOriginal) => {
   }
 })
 
-import { generateText, generateObject } from 'ai'
+import { generateObject } from 'ai'
 import { serverEnvSchema } from '@/lib/env/server'
-import { executeOpenRouterAnalysis } from '@/lib/ai/openrouter-client'
+import { executeGeminiAnalysis } from '@/lib/ai/gemini-client'
 import { isNestedTimeout, normalizeProviderError } from '@/lib/ai/provider-errors'
 
 describe('Timeout and Abort Regression Suite', () => {
@@ -91,9 +91,9 @@ describe('Timeout and Abort Regression Suite', () => {
     })
   })
 
-  describe('2. executeOpenRouterAnalysis Timeout & Abort Mechanics', () => {
+  describe('2. executeGeminiAnalysis Timeout & Abort Mechanics', () => {
     it('aborts internally on timeoutMs and includes the configured limit in error message (provider_timeout)', async () => {
-      const promise = executeOpenRouterAnalysis(
+      const promise = executeGeminiAnalysis(
         'instruction',
         'prompt',
         { timeoutMs: 10, mockMode: false }
@@ -111,7 +111,7 @@ describe('Timeout and Abort Regression Suite', () => {
     it('handles client cancellation via abortSignal and throws CLIENT_CLOSED', async () => {
       const controller = new AbortController()
       
-      const promise = executeOpenRouterAnalysis(
+      const promise = executeGeminiAnalysis(
         'instruction',
         'prompt',
         { abortSignal: controller.signal, timeoutMs: 30000, mockMode: false }
@@ -126,7 +126,7 @@ describe('Timeout and Abort Regression Suite', () => {
       const controller = new AbortController()
       controller.abort(new Error('CLIENT_CLOSED'))
 
-      const promise = executeOpenRouterAnalysis(
+      const promise = executeGeminiAnalysis(
         'instruction',
         'prompt',
         { abortSignal: controller.signal, timeoutMs: 30000, mockMode: false }
@@ -137,7 +137,7 @@ describe('Timeout and Abort Regression Suite', () => {
 
     it('cleans up timeout timers on success', async () => {
       const spyClearTimeout = vi.spyOn(global, 'clearTimeout')
-      await executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 20000 })
+      await executeGeminiAnalysis('inst', 'prompt', { timeoutMs: 20000 })
       expect(spyClearTimeout).toHaveBeenCalled()
       spyClearTimeout.mockRestore()
     })
@@ -146,7 +146,7 @@ describe('Timeout and Abort Regression Suite', () => {
       const controller = new AbortController()
       const spyRemoveEventListener = vi.spyOn(controller.signal, 'removeEventListener')
       
-      await executeOpenRouterAnalysis('inst', 'prompt', { abortSignal: controller.signal, timeoutMs: 20000 })
+      await executeGeminiAnalysis('inst', 'prompt', { abortSignal: controller.signal, timeoutMs: 20000 })
       
       expect(spyRemoveEventListener).toHaveBeenCalledWith('abort', expect.any(Function))
       spyRemoveEventListener.mockRestore()
@@ -158,7 +158,7 @@ describe('Timeout and Abort Regression Suite', () => {
       const spyRemoveEventListener = vi.spyOn(controller.signal, 'removeEventListener')
 
       try {
-        await executeOpenRouterAnalysis('inst', 'prompt', { abortSignal: controller.signal, timeoutMs: 5 })
+        await executeGeminiAnalysis('inst', 'prompt', { abortSignal: controller.signal, timeoutMs: 5 })
       } catch {
         // expected timeout
       }
@@ -235,7 +235,7 @@ describe('Timeout and Abort Regression Suite', () => {
         } as unknown as Awaited<ReturnType<typeof generateObject>>
       })
 
-      const res = await executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 30000 })
+      const res = await executeGeminiAnalysis('inst', 'prompt', { timeoutMs: 30000 })
       expect(calls).toBe(2)
       expect(res.output.overall_summary).toBe('Mocked successful output after retry')
     })
@@ -247,7 +247,7 @@ describe('Timeout and Abort Regression Suite', () => {
         throw new Error('fetch failed') // Retryable: maps to provider_unavailable
       })
 
-      await expect(executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 30000 })).rejects.toThrowError('fetch failed')
+      await expect(executeGeminiAnalysis('inst', 'prompt', { timeoutMs: 30000 })).rejects.toThrowError('fetch failed')
       expect(calls).toBe(2)
     })
 
@@ -258,7 +258,7 @@ describe('Timeout and Abort Regression Suite', () => {
         throw new Error('API Key Invalid') // Non-retryable
       })
 
-      await expect(executeOpenRouterAnalysis('inst', 'prompt', { timeoutMs: 30000 })).rejects.toThrowError('API Key Invalid')
+      await expect(executeGeminiAnalysis('inst', 'prompt', { timeoutMs: 30000 })).rejects.toThrowError('API Key Invalid')
       expect(calls).toBe(1)
     })
   })
@@ -292,7 +292,7 @@ describe('Timeout and Abort Regression Suite', () => {
         } as unknown as Awaited<ReturnType<typeof generateObject>>
       })
 
-      const res = await executeOpenRouterAnalysis('system-inst', 'user-prompt', {
+      const res = await executeGeminiAnalysis('system-inst', 'user-prompt', {
         timeoutMs: 30000,
         requestId: 'test-req-id',
         dbProfile: {
@@ -368,7 +368,7 @@ describe('Timeout and Abort Regression Suite', () => {
         } as unknown as Awaited<ReturnType<typeof generateObject>>
       })
 
-      await executeOpenRouterAnalysis('inst', 'prompt', {
+      await executeGeminiAnalysis('inst', 'prompt', {
         timeoutMs: 20000,
         dbProfile: {
           id: 'test',

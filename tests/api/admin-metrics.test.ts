@@ -86,7 +86,7 @@ const SAFE_METRICS: AggregatedMetrics = {
   promptCharacteristics: {
     total_prompt_analyses: 80,
     analyses_by_working_language: { en: 60, pl: 20 },
-    analyses_by_selected_profile_slug: { 'general-llm': 50, 'openrouter-deepseek-v4-flash': 30 },
+    analyses_by_selected_profile_slug: { 'general-llm': 80 },
     analyses_by_score_level: { decent: 40, strong: 25, excellent: 10, needs_work: 4, weak: 1 },
     average_overall_score: 72.5,
     median_overall_score: 74,

@@ -46,10 +46,10 @@ describe('Analyze Route Timeout & Abort integration', () => {
 
     vi.mocked(getModelProfileBySlug).mockResolvedValue({
       id: 'profile-uuid',
-      slug: 'openrouter-deepseek-v4-flash',
-      display_name: 'Test Profile',
-      provider: 'openrouter',
-      model_family: 'deepseek',
+      slug: 'general-llm',
+      display_name: 'General LLM',
+      provider: 'google',
+      model_family: 'gemini',
       profile_type: 'provider_model',
       source_type: 'internal',
       verification_status: 'verified',
@@ -87,7 +87,7 @@ describe('Analyze Route Timeout & Abort integration', () => {
     const payload = {
       input_prompt: 'To jest w pełni poprawny prompt o minimalnej długości dwudziestu znaków.',
       working_language: 'pl',
-      selected_profile_slug: 'openrouter-deepseek-v4-flash'
+      selected_profile_slug: 'general-llm'
     }
 
     const request = new Request('http://localhost/api/analyze', {

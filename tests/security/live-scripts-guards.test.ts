@@ -1,6 +1,6 @@
-﻿import { describe, expect, it, vi, beforeEach, afterEach, type Mock, type MockInstance } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach, type Mock, type MockInstance } from 'vitest'
 import { validateLiveAiEnvironment } from '../../scripts/live-ai/live-guard'
-import * as openrouterClient from '@/lib/ai/openrouter-client'
+import * as geminiClient from '@/lib/ai/gemini-client'
 
 describe('Live Scripts Environment Validation Unit Tests', () => {
   const baseEnv = {
@@ -71,7 +71,7 @@ describe('Live Scripts Script-Load Guard Integration Tests', () => {
     process.env = { ...originalEnv }
     processExitSpy = vi.fn() as unknown as Mock
     process.exit = processExitSpy as unknown as (code?: number | string | null) => never
-    providerExecutorSpy = vi.spyOn(openrouterClient, 'executeOpenRouterAnalysis').mockImplementation(async () => {
+    providerExecutorSpy = vi.spyOn(geminiClient, 'executeGeminiAnalysis').mockImplementation(async () => {
       return {
         output: {
           overall_score: 100,

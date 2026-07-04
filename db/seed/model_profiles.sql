@@ -12,6 +12,5 @@ insert into model_profiles (
   source_notes,
   profile_version
 ) values
-  ('general-llm', 'General LLM', 'generic', 'generic-llm', 'general', 'internal_policy', 'unverified', 'medium', 'Generic MVP profile.', '1.0.0'),
-  ('openrouter-deepseek-v4-flash', 'DeepSeek v4 Flash Profile', 'openrouter', 'deepseek', 'provider_model', 'pending_verification', 'unverified', 'low', 'Verify before provider implementation.', '1.0.0')
+  ('general-llm', 'General LLM', 'generic', 'generic-llm', 'general', 'internal_policy', 'unverified', 'medium', 'Generic MVP profile.', '1.0.0')
 on conflict (slug) do nothing;

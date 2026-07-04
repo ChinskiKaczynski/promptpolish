@@ -44,7 +44,7 @@ const FULL_DB_ROW = {
   // --- ALLOWED fields (safe to expose publicly) ---
   input_prompt: 'Summarize this contract',
   working_language: 'en',
-  selected_profile_slug: 'openrouter-deepseek-v4-flash',
+  selected_profile_slug: 'general-llm',
   overall_score: 78,
   score_level: 'decent',
   analysis_json: { overall_summary: 'Decent prompt', criteria_scores: [] },
@@ -54,7 +54,7 @@ const FULL_DB_ROW = {
 
 const DB_RETURNED_ROW = {
   working_language: 'en',
-  selected_profile_slug: 'openrouter-deepseek-v4-flash',
+  selected_profile_slug: 'general-llm',
   overall_score: 78,
   score_level: 'decent',
   analysis_json: { overall_summary: 'Decent prompt', criteria_scores: [] },
@@ -150,7 +150,7 @@ describe('getSharedPromptAnalysis — Public Share Privacy Snapshot', () => {
 
     expect(result).toEqual({
       working_language: 'en',
-      selected_profile_slug: 'openrouter-deepseek-v4-flash',
+      selected_profile_slug: 'general-llm',
       overall_score: 78,
       score_level: 'decent',
       analysis_json: { overall_summary: 'Decent prompt', criteria_scores: [] },
