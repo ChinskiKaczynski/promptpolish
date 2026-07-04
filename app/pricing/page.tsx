@@ -18,6 +18,22 @@ export default async function PricingPage() {
     process.env.STRIPE_ENABLED === 'true' &&
     !!process.env.STRIPE_SECRET_KEY &&
     !!process.env.STRIPE_PRICE_ID_PRO
+
+  const isNotProduction = process.env.VERCEL_ENV !== 'production'
+  const isNotTest = process.env.NODE_ENV !== 'test'
+  const shouldRenderDiagnostics = isNotTest && isNotProduction
+
+  // Safe server-side debug output for preview/dev environments
+  if (shouldRenderDiagnostics) {
+    console.info('[Stripe Debug - Pricing]:', {
+      STRIPE_ENABLED_is_true: process.env.STRIPE_ENABLED === 'true',
+      has_STRIPE_SECRET_KEY: !!process.env.STRIPE_SECRET_KEY,
+      has_STRIPE_PRICE_ID_PRO: !!process.env.STRIPE_PRICE_ID_PRO,
+      has_APP_URL: !!process.env.APP_URL,
+      stripeEnabledResolved: stripeEnabled
+    })
+  }
+
   let profile = null
 
   if (user) {
@@ -243,6 +259,19 @@ export default async function PricingPage() {
           </div>
         </div>
       </main>
+      
+      {shouldRenderDiagnostics && (
+        <div
+          id="stripe-debug-diagnostics"
+          className="hidden"
+          data-stripe-enabled-env={process.env.STRIPE_ENABLED}
+          data-stripe-enabled-is-true={process.env.STRIPE_ENABLED === 'true'}
+          data-stripe-secret-key-configured={!!process.env.STRIPE_SECRET_KEY}
+          data-stripe-price-id-configured={!!process.env.STRIPE_PRICE_ID_PRO}
+          data-stripe-enabled-resolved={stripeEnabled}
+          data-app-url-configured={!!process.env.APP_URL}
+        />
+      )}
 
       <AppFooter />
     </div>
