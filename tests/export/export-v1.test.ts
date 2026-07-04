@@ -28,6 +28,7 @@ import { getAuthUser } from '@/lib/identity/auth'
 import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
 import { getPlanSlugForUser, canExportPdf, canExportMarkdown, canExportText } from '@/lib/plans/config'
 import type { PromptAnalysisRow } from '@/lib/supabase/types'
+import { formatAnalysis } from '@/lib/export/format-analysis'
 
 const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
 const OWNER_ID = 'owner-anon-uuid'
@@ -329,5 +330,15 @@ describe('Export v1 API Dynamic Routes', () => {
     expect(json.error).toBe('entitlement_denied')
     expect(json.feature).toBe('exportText')
     expect(createUsageEvent).not.toHaveBeenCalled()
+  })
+
+  it('correctly handles nested backticks in markdown export fencing', () => {
+    const testRecord = {
+      ...mockAnalysisRecord,
+      improved_prompt: 'Code:\n```javascript\nconsole.log("hello");\n```\nNested:\n````\nfour backticks\n````'
+    }
+    const md = formatAnalysis(testRecord, 'markdown')
+    // Should wrap with 5 backticks because the content contains up to 4 backticks
+    expect(md).toContain('`````text\nCode:\n```javascript\nconsole.log("hello");\n```\nNested:\n````\nfour backticks\n````\n`````')
   })
 })

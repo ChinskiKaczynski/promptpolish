@@ -128,8 +128,15 @@ export function formatAnalysis(record: PromptAnalysisRow, format: 'markdown' | '
     })
     md += `\n`
 
+    const fence = (() => {
+      const matches = improvedPrompt.match(/`+/g)
+      if (!matches) return '```'
+      const maxLen = Math.max(...matches.map(m => m.length))
+      return '`'.repeat(Math.max(3, maxLen + 1))
+    })()
+
     md += `## ${t.improvedPrompt}\n\n`
-    md += `\`\`\`text\n${improvedPrompt}\n\`\`\`\n\n`
+    md += `${fence}text\n${improvedPrompt}\n${fence}\n\n`
 
     md += `## ${t.criteria}\n\n`
     analysis.criteria_scores.forEach(item => {
