@@ -18,8 +18,13 @@ export function ShareSettings({
   const [isShareLinkCopied, setIsShareLinkCopied] = useState(false)
   const [shareError, setShareError] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  const shareUrl = typeof window !== 'undefined' && shareToken
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const shareUrl = mounted && shareToken
     ? `${window.location.origin}/share/${shareToken}`
     : ''
 
