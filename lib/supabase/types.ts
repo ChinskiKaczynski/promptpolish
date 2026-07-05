@@ -113,6 +113,11 @@ export interface SubscriptionRow {
   current_period_start: string
   current_period_end: string
   cancel_at_period_end: boolean
+  cancel_at: string | null
+  canceled_at: string | null
+  ended_at: string | null
+  cancellation_reason: string | null
+  cancellation_feedback: string | null
   last_event_created: string | null
   last_event_id: string | null
   created_at: string
@@ -387,6 +392,11 @@ export interface Database {
           current_period_start: string
           current_period_end: string
           cancel_at_period_end?: boolean
+          cancel_at?: string | null
+          canceled_at?: string | null
+          ended_at?: string | null
+          cancellation_reason?: string | null
+          cancellation_feedback?: string | null
           last_event_created?: string | null
           last_event_id?: string | null
           created_at?: string
@@ -403,6 +413,11 @@ export interface Database {
           current_period_start?: string
           current_period_end?: string
           cancel_at_period_end?: boolean
+          cancel_at?: string | null
+          canceled_at?: string | null
+          ended_at?: string | null
+          cancellation_reason?: string | null
+          cancellation_feedback?: string | null
           last_event_created?: string | null
           last_event_id?: string | null
           created_at?: string

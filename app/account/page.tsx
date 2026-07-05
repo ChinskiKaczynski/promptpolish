@@ -81,6 +81,20 @@ export default async function AccountPage() {
   const limits = PLAN_LIMITS[planSlug]
   const monthlyLimit = limits.monthlyAnalyses
 
+  const accessUntilDate = subscription?.cancel_at
+    ? new Date(subscription.cancel_at)
+    : subscription?.current_period_end
+      ? new Date(subscription.current_period_end)
+      : null
+
+  const isScheduledToCancel =
+    subscription &&
+    subscription.status === 'active' &&
+    Boolean(subscription.cancel_at) &&
+    !subscription.ended_at
+
+  const showCancellationNotice = subscription && (subscription.cancel_at_period_end || isScheduledToCancel)
+
   return (
     <div className="flex min-h-screen flex-col bg-[#0C0C10] text-[#E2E8F0] selection:bg-[#A78BFA]/20 antialiased font-sans">
       <AppHeader />
@@ -166,7 +180,7 @@ export default async function AccountPage() {
 
                   <div className="mt-2 flex items-center gap-2">
                     {subscription.status === 'active' || subscription.status === 'trialing' ? (
-                      subscription.cancel_at_period_end ? (
+                      showCancellationNotice ? (
                         <>
                           <span className="h-2 w-2 rounded-full bg-[#F59E0B] animate-pulse" />
                           <span className="text-xs font-bold text-[#F59E0B]">
@@ -218,24 +232,25 @@ export default async function AccountPage() {
 
                 <div className="rounded-lg border border-[#2A2A3A] bg-[#0C0C10] p-4">
                   <span className="text-xs font-semibold uppercase tracking-wider text-[#8290A2] block">
-                    {subscription.cancel_at_period_end
+                    {showCancellationNotice
                       ? 'Wygaśnięcie subskrypcji'
                       : 'Następna płatność'}
                   </span>
                   <span className="mt-2 text-xs font-bold text-[#94A3B8] block">
-                    {new Date(subscription.current_period_end).toLocaleDateString('pl-PL')}
+                    {accessUntilDate ? accessUntilDate.toLocaleDateString('pl-PL') : '–'}
                   </span>
                 </div>
               </div>
 
-              {subscription.cancel_at_period_end && (
+              {showCancellationNotice && accessUntilDate && (
                 <div className="rounded-lg border border-[#F59E0B]/25 bg-[#F59E0B]/6 p-4 text-xs text-[#F59E0B] leading-relaxed font-semibold">
-                  <strong>Uwaga:</strong> Twoja subskrypcja została anulowana i wygaśnie dnia{' '}
-                  <strong>
-                    {new Date(subscription.current_period_end).toLocaleDateString('pl-PL')}
-                  </strong>
-                  . Do tego czasu masz pełny dostęp do wszystkich funkcji Pro. Żadne kolejne
-                  opłaty nie zostaną pobrane.
+                  Subskrypcja zostanie anulowana{' '}
+                  {accessUntilDate.toLocaleDateString('pl-PL', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                  . Do tego czasu zachowujesz dostęp Pro.
                 </div>
               )}
 

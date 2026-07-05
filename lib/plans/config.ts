@@ -184,8 +184,11 @@ export async function getPlanSlugForUser(userId: string | null): Promise<PlanSlu
     try {
       const subscription = await getSubscriptionByUserId(userId)
       if (subscription) {
-        const isActiveOrTrialing = ['active', 'trialing'].includes(subscription.status)
-        if (subscription.plan_slug === 'pro' && isActiveOrTrialing) {
+        const hasPro =
+          subscription.plan_slug === 'pro' &&
+          ['active', 'trialing', 'past_due'].includes(subscription.status) &&
+          !subscription.ended_at
+        if (hasPro) {
           return 'pro'
         }
       }

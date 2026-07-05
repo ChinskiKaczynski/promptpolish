@@ -1,4 +1,5 @@
 import 'server-only'
+import type Stripe from 'stripe'
 import { getSupabaseAdminClient } from './admin'
 import { getUserProfile, setUserPlanSlug } from './queries'
 import type { StripeCustomerRow, SubscriptionRow } from './types'
@@ -128,6 +129,85 @@ export class StaleEventError extends Error {
 }
 
 /**
+ * Centralized helper to extract subscription details from a Stripe Subscription object.
+ */
+export function extractSubscriptionData(
+  subscription: Stripe.Subscription,
+  userId: string,
+  proPriceId: string
+) {
+  const stripeSubscriptionId = subscription.id
+  const stripeCustomerId = typeof subscription.customer === 'string'
+    ? subscription.customer
+    : subscription.customer.id
+
+  const stripePriceId = subscription.items?.data?.[0]?.price?.id || ''
+  const isProPrice = stripePriceId === proPriceId
+  const isActiveStatus = ['active', 'trialing', 'past_due'].includes(subscription.status) && !subscription.ended_at
+  const planSlug = (isProPrice && isActiveStatus) ? 'pro' : 'free'
+  const status = subscription.status
+
+  const subRaw = subscription as unknown as Record<string, unknown>
+
+  // Fallback order for current_period_start
+  let currentPeriodStartRaw: number | null | undefined = subRaw.current_period_start as number | undefined
+  if (currentPeriodStartRaw === undefined || currentPeriodStartRaw === null) {
+    const item = subscription.items?.data?.[0] as unknown as Record<string, unknown> | undefined
+    currentPeriodStartRaw = item?.current_period_start as number | undefined
+  }
+
+  // Fallback order for current_period_end
+  let currentPeriodEndRaw: number | null | undefined = subRaw.current_period_end as number | undefined
+  if (currentPeriodEndRaw === undefined || currentPeriodEndRaw === null) {
+    const item = subscription.items?.data?.[0] as unknown as Record<string, unknown> | undefined
+    currentPeriodEndRaw = item?.current_period_end as number | undefined
+  }
+  if (currentPeriodEndRaw === undefined || currentPeriodEndRaw === null) {
+    currentPeriodEndRaw = subscription.cancel_at
+  }
+
+  const toISOStringOrNull = (timestamp: number | null | undefined): string | null => {
+    if (timestamp === null || timestamp === undefined) return null
+    return new Date(timestamp * 1000).toISOString()
+  }
+
+  const current_period_start = toISOStringOrNull(currentPeriodStartRaw) || new Date().toISOString()
+  const current_period_end = toISOStringOrNull(currentPeriodEndRaw) || new Date().toISOString()
+
+  const isScheduledToCancel =
+    subscription.status === 'active' &&
+    Boolean(subscription.cancel_at) &&
+    !subscription.ended_at
+
+  const effectiveCancelAtPeriodEnd =
+    Boolean(subscription.cancel_at_period_end) || isScheduledToCancel
+
+  const cancel_at = toISOStringOrNull(subscription.cancel_at)
+  const canceled_at = toISOStringOrNull(subscription.canceled_at)
+  const ended_at = toISOStringOrNull(subscription.ended_at)
+
+  const cancellation_reason = subscription.cancellation_details?.reason ?? null
+  const cancellation_feedback = subscription.cancellation_details?.feedback ?? null
+
+  return {
+    user_id: userId,
+    stripe_customer_id: stripeCustomerId,
+    stripe_subscription_id: stripeSubscriptionId,
+    stripe_price_id: stripePriceId,
+    plan_slug: planSlug,
+    status,
+    current_period_start,
+    current_period_end,
+    cancel_at_period_end: effectiveCancelAtPeriodEnd,
+    cancel_at,
+    canceled_at,
+    ended_at,
+    cancellation_reason,
+    cancellation_feedback,
+  }
+}
+
+/**
  * Upserts a subscription record and synchronizes the user's plan.
  * This function should only run when Stripe is enabled.
  */
@@ -141,8 +221,13 @@ export async function saveSubscription(insertData: {
   current_period_start: string
   current_period_end: string
   cancel_at_period_end?: boolean
-  last_event_created?: string
-  last_event_id?: string
+  cancel_at?: string | null
+  canceled_at?: string | null
+  ended_at?: string | null
+  cancellation_reason?: string | null
+  cancellation_feedback?: string | null
+  last_event_created?: string | null
+  last_event_id?: string | null
 }): Promise<SubscriptionRow | null> {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return null
@@ -164,33 +249,41 @@ export async function saveSubscription(insertData: {
 
   if (existing) {
     const existingRow = existing as unknown as SubscriptionRow
-    if (insertData.last_event_created && existingRow.last_event_created) {
-      const existingTime = new Date(existingRow.last_event_created).getTime()
-      const incomingTime = new Date(insertData.last_event_created).getTime()
-      
-      // Idempotency: exact same event ID is skipped
-      if (insertData.last_event_id && existingRow.last_event_id && insertData.last_event_id === existingRow.last_event_id) {
-        console.log(`[Stripe Webhook] Idempotent update skipped for subscription ${insertData.stripe_subscription_id}`)
-        return existingRow
-      }
 
-      if (existingRow.status === 'canceled') {
-        if (incomingTime < existingTime) {
-          console.log(`[Stripe Webhook] Stale update skipped for canceled subscription ${insertData.stripe_subscription_id}`)
-          throw new StaleEventError(`Stale update skipped for canceled subscription ${insertData.stripe_subscription_id}`)
-        }
-        if (incomingTime === existingTime) {
-          console.log(`[Stripe Webhook] Canceled subscription cannot be reactivated by same-second event ${insertData.stripe_subscription_id}`)
+    // Check if the existing record has a real Stripe event ID (starts with "evt_")
+    const existingIsReal = typeof existingRow.last_event_id === 'string' && existingRow.last_event_id.startsWith('evt_')
+    const incomingIsReal = typeof insertData.last_event_id === 'string' && insertData.last_event_id.startsWith('evt_')
+
+    // If the incoming event is a real Stripe event:
+    if (incomingIsReal) {
+      // If the existing record is NOT a real Stripe event (i.e. null or repair marker),
+      // we allow the update unconditionally. Otherwise, we enforce out-of-order protection.
+      if (existingIsReal && existingRow.last_event_created && insertData.last_event_created) {
+        const existingTime = new Date(existingRow.last_event_created).getTime()
+        const incomingTime = new Date(insertData.last_event_created).getTime()
+        
+        // Idempotency: exact same event ID is skipped
+        if (insertData.last_event_id === existingRow.last_event_id) {
+          console.log(`[Stripe Webhook] Idempotent update skipped for subscription ${insertData.stripe_subscription_id}`)
           return existingRow
         }
-      }
 
-      if (incomingTime < existingTime) {
-        console.log(`[Stripe Webhook] Stale update skipped for subscription ${insertData.stripe_subscription_id}`)
-        throw new StaleEventError(`Stale update skipped for subscription ${insertData.stripe_subscription_id}`)
+        if (existingRow.status === 'canceled') {
+          if (incomingTime < existingTime) {
+            console.log(`[Stripe Webhook] Stale update skipped for canceled subscription ${insertData.stripe_subscription_id}`)
+            throw new StaleEventError(`Stale update skipped for canceled subscription ${insertData.stripe_subscription_id}`)
+          }
+          if (incomingTime === existingTime) {
+            console.log(`[Stripe Webhook] Canceled subscription cannot be reactivated by same-second event ${insertData.stripe_subscription_id}`)
+            return existingRow
+          }
+        }
+
+        if (incomingTime < existingTime) {
+          console.log(`[Stripe Webhook] Stale update skipped for subscription ${insertData.stripe_subscription_id}`)
+          throw new StaleEventError(`Stale update skipped for subscription ${insertData.stripe_subscription_id}`)
+        }
       }
-      
-      // Removed lexical comparison on last_event_id. Same-timestamp created/updated events will win and proceed.
     }
   }
 
@@ -215,11 +308,17 @@ export async function saveSubscription(insertData: {
     return null
   }
 
-  const isActivePro =
+  // A user has Pro when:
+  // - subscription.user_id matches current user
+  // - plan_slug = "pro"
+  // - status is "active" or "trialing"
+  // - ended_at is null
+  const hasPro =
     insertData.plan_slug === 'pro' &&
-    ['active', 'trialing', 'past_due'].includes(insertData.status)
+    ['active', 'trialing', 'past_due'].includes(insertData.status) &&
+    !insertData.ended_at
 
-  const resolvedPlanSlug = isActivePro ? 'pro' : 'free'
+  const resolvedPlanSlug = hasPro ? 'pro' : 'free'
   const currentProfile = await getUserProfile(insertData.user_id)
 
   const updatedProfile = await setUserPlanSlug({
@@ -265,26 +364,30 @@ export async function cancelSubscriptionInDatabase(
 
   const existing = subData as unknown as SubscriptionRow
 
-  if (eventCreated && existing.last_event_created) {
-    const existingTime = new Date(existing.last_event_created).getTime()
-    const incomingTime = new Date(eventCreated).getTime()
+  const existingIsReal = typeof existing.last_event_id === 'string' && existing.last_event_id.startsWith('evt_')
+  const incomingIsReal = typeof eventId === 'string' && eventId.startsWith('evt_')
 
-    // Idempotency: exact same event ID is skipped
-    if (eventId && existing.last_event_id && eventId === existing.last_event_id) {
-      console.log(`[Stripe Webhook] Idempotent cancel skipped for subscription ${stripeSubscriptionId}`)
-      return true
-    }
+  if (incomingIsReal) {
+    if (existingIsReal && existing.last_event_created && eventCreated) {
+      const existingTime = new Date(existing.last_event_created).getTime()
+      const incomingTime = new Date(eventCreated).getTime()
 
-    if (incomingTime < existingTime) {
-      console.log(`[Stripe Webhook] Stale cancel skipped for subscription ${stripeSubscriptionId}`)
-      throw new StaleEventError(`Stale cancel skipped for subscription ${stripeSubscriptionId}`)
-    }
-    if (incomingTime === existingTime) {
-      if (existing.status === 'canceled') {
-        console.log(`[Stripe Webhook] Subscription is already canceled at same timestamp ${stripeSubscriptionId}`)
+      // Idempotency: exact same event ID is skipped
+      if (eventId === existing.last_event_id) {
+        console.log(`[Stripe Webhook] Idempotent cancel skipped for subscription ${stripeSubscriptionId}`)
         return true
       }
-      // Removed lexical comparison on eventId.
+
+      if (incomingTime < existingTime) {
+        console.log(`[Stripe Webhook] Stale cancel skipped for subscription ${stripeSubscriptionId}`)
+        throw new StaleEventError(`Stale cancel skipped for subscription ${stripeSubscriptionId}`)
+      }
+      if (incomingTime === existingTime) {
+        if (existing.status === 'canceled') {
+          console.log(`[Stripe Webhook] Subscription is already canceled at same timestamp ${stripeSubscriptionId}`)
+          return true
+        }
+      }
     }
   }
 
@@ -294,6 +397,8 @@ export async function cancelSubscriptionInDatabase(
     .from('subscriptions')
     .update({
       status: 'canceled',
+      ended_at: eventCreated || new Date().toISOString(),
+      canceled_at: eventCreated || new Date().toISOString(),
       last_event_created: eventCreated || new Date().toISOString(),
       last_event_id: eventId || null,
       updated_at: new Date().toISOString(),

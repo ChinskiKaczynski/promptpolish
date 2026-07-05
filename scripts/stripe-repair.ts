@@ -1,7 +1,18 @@
+/* eslint-disable @typescript-eslint/no-require-imports, prefer-rest-params */
 import fs from 'fs'
 import path from 'path'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
+
+// Mock 'server-only' to prevent it from throwing when imported in the node CLI script
+const Module = require('module')
+const originalRequire = Module.prototype.require
+Module.prototype.require = function (id: string) {
+  if (id === 'server-only') {
+    return {}
+  }
+  return originalRequire.apply(this, arguments)
+}
 
 function loadEnv() {
   const envPath = path.resolve(process.cwd(), '.env.local')
@@ -23,15 +34,14 @@ function loadEnv() {
   }
 }
 
+// 1. Load env before imports
 loadEnv()
 
 async function main() {
-  const userId = 'a2b3f340-0f7b-49ed-98a3-ce067860f9e0'
-  const customerId = 'cus_UpF9NhpsOm3L3z'
-
   const stripeKey = process.env.STRIPE_SECRET_KEY
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SECRET_KEY
+  const proPriceId = process.env.STRIPE_PRICE_ID_PRO
 
   if (!stripeKey) {
     console.error('Missing STRIPE_SECRET_KEY in env')
@@ -41,93 +51,88 @@ async function main() {
     console.error('Missing Supabase credentials in env')
     process.exit(1)
   }
+  if (!proPriceId) {
+    console.error('Missing STRIPE_PRICE_ID_PRO in env')
+    process.exit(1)
+  }
+
+  // Use command line argument or default test subscription
+  const subscriptionId = process.argv[2] || 'sub_1TpagCKbdD0nmGG45s1Li6RE'
+  console.log(`Starting subscription repair/sync for ID: ${subscriptionId}`)
 
   const stripe = new Stripe(stripeKey)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  console.log(`Checking Stripe subscriptions for customer: ${customerId}`)
-  const subscriptionsList = await stripe.subscriptions.list({
-    customer: customerId,
-    limit: 5,
-    status: 'all'
+  // 2. Retrieve subscription from Stripe
+  let subscription: Stripe.Subscription
+  try {
+    subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ['items.data.price']
+    })
+  } catch (err) {
+    console.error(`Failed to retrieve subscription ${subscriptionId} from Stripe:`, err)
+    process.exit(1)
+  }
+
+  const customerId = typeof subscription.customer === 'string'
+    ? subscription.customer
+    : subscription.customer.id
+
+  console.log(`Retrieved subscription ${subscriptionId} (status=${subscription.status}, customer=${customerId})`)
+
+  // 3. Resolve user_id from subscription metadata or stripe_customers table
+  let userId = (subscription.metadata?.user_id as string) || null
+
+  if (!userId) {
+    console.log(`No user_id in subscription metadata. Querying stripe_customers for customer ID: ${customerId}...`)
+    const { data: customerRow, error: customerError } = await supabase
+      .from('stripe_customers')
+      .select('user_id')
+      .eq('stripe_customer_id', customerId)
+      .maybeSingle()
+
+    if (customerError) {
+      console.error('Failed to query stripe_customers:', customerError)
+      process.exit(1)
+    }
+
+    if (customerRow?.user_id) {
+      userId = customerRow.user_id
+      console.log(`Resolved user_id ${userId} from stripe_customers mapping.`)
+    }
+  } else {
+    console.log(`Resolved user_id ${userId} from subscription metadata.`)
+  }
+
+  if (!userId) {
+    console.error(`Could not resolve user_id for customer ${customerId}. Sync aborted.`)
+    process.exit(1)
+  }
+
+  // 4. Dynamically import database helpers to ensure environment variables are applied first
+  console.log('Loading database billing helpers...')
+  const { extractSubscriptionData, saveSubscription } = await import('../lib/supabase/billing')
+
+  // 5. Extract and upsert subscription details
+  const extracted = extractSubscriptionData(subscription, userId, proPriceId)
+
+  // Use a repair marker as the event ID so real Stripe events can overwrite it
+  const repairEventId = `repair-initial-${subscriptionId}`
+  const repairEventCreated = new Date((subscription.created || Math.floor(Date.now() / 1000)) * 1000).toISOString()
+
+  console.log(`Upserting subscription data into Supabase (userId: ${userId})...`)
+  const result = await saveSubscription({
+    ...extracted,
+    last_event_id: repairEventId,
+    last_event_created: repairEventCreated
   })
 
-  if (subscriptionsList.data.length === 0) {
-    console.warn(`No subscriptions found in Stripe for customer ${customerId}`)
-    process.exit(0)
-  }
-
-  const activeSub = subscriptionsList.data.find(s => ['active', 'trialing', 'past_due'].includes(s.status)) 
-    || subscriptionsList.data[0]
-
-  console.log(`Found subscription: ${activeSub.id} [status=${activeSub.status}]`)
-
-  // 1. Upsert stripe_customers
-  console.log(`Upserting stripe_customers mapping...`)
-  const { error: custError } = await supabase
-    .from('stripe_customers')
-    .upsert({
-      user_id: userId,
-      stripe_customer_id: customerId,
-      updated_at: new Date().toISOString()
-    }, {
-      onConflict: 'user_id'
-    })
-
-  if (custError) {
-    console.error('Failed to upsert stripe_customer mapping:', custError)
-    process.exit(1)
-  }
-  console.log(`Successfully mapped customer ${customerId} to user ${userId}.`)
-
-  // 2. Upsert subscriptions
-  const stripePriceId = activeSub.items.data[0]?.price.id || ''
-  const isActivePro = ['active', 'trialing', 'past_due'].includes(activeSub.status)
-  const planSlug = 'pro'
-
-  console.log(`Upserting subscription ${activeSub.id} into database...`)
-  const { error: subError } = await supabase
-    .from('subscriptions')
-    .upsert({
-      user_id: userId,
-      stripe_customer_id: customerId,
-      stripe_subscription_id: activeSub.id,
-      stripe_price_id: stripePriceId,
-      plan_slug: planSlug,
-      status: activeSub.status,
-      current_period_start: new Date((activeSub.items.data[0]?.current_period_start || activeSub.start_date || activeSub.created) * 1000).toISOString(),
-      current_period_end: new Date((activeSub.items.data[0]?.current_period_end || activeSub.start_date || activeSub.created) * 1000).toISOString(),
-      cancel_at_period_end: activeSub.cancel_at_period_end,
-      last_event_created: new Date((activeSub.created || Math.floor(Date.now() / 1000)) * 1000).toISOString(),
-      last_event_id: `repair-initial-${activeSub.id}`,
-      updated_at: new Date().toISOString()
-    }, {
-      onConflict: 'stripe_subscription_id'
-    })
-
-  if (subError) {
-    console.error('Failed to upsert subscription:', subError)
-    process.exit(1)
-  }
-  console.log(`Successfully upserted subscription record.`)
-
-  // 3. Synchronize user profile plan_slug to pro or free
-  const resolvedPlanSlug = isActivePro ? 'pro' : 'free'
-  console.log(`Syncing user profile plan_slug to: ${resolvedPlanSlug}...`)
-  const { error: profError } = await supabase
-    .from('user_profiles')
-    .update({
-      plan_slug: resolvedPlanSlug,
-      updated_at: new Date().toISOString()
-    })
-    .eq('user_id', userId)
-
-  if (profError) {
-    console.error('Failed to update user profile plan_slug:', profError)
+  if (!result) {
+    console.error('Failed to upsert subscription in database.')
     process.exit(1)
   }
 
-  console.log(`Successfully completed repair script. User ${userId} is now ${resolvedPlanSlug}.`)
+  console.log(`Sync completed successfully! Subscription status: ${result.status}, plan_slug: ${result.plan_slug}.`)
 }
 
 main().catch(err => {

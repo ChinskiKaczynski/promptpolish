@@ -45,19 +45,23 @@ vi.mock('stripe', () => {
 const mockStripeInstances = stripeMocks
 
 // Mock all supabase mappings and queries
-vi.mock('@/lib/supabase/billing', () => ({
-  getStripeCustomer: vi.fn(),
-  saveStripeCustomer: vi.fn(),
-  getUserIdByStripeCustomerId: vi.fn(),
-  getSubscriptionByUserId: vi.fn(),
-  saveSubscription: vi.fn(),
-  cancelSubscriptionInDatabase: vi.fn(),
-  claimWebhookEvent: vi.fn(),
-  updateWebhookEventStatus: vi.fn(),
-  claimCheckoutAttempt: vi.fn(),
-  updateCheckoutAttemptStatus: vi.fn(),
-  completeCheckoutAttempt: vi.fn()
-}))
+vi.mock('@/lib/supabase/billing', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/supabase/billing')>()
+  return {
+    ...actual,
+    getStripeCustomer: vi.fn(),
+    saveStripeCustomer: vi.fn(),
+    getUserIdByStripeCustomerId: vi.fn(),
+    getSubscriptionByUserId: vi.fn(),
+    saveSubscription: vi.fn(),
+    cancelSubscriptionInDatabase: vi.fn(),
+    claimWebhookEvent: vi.fn(),
+    updateWebhookEventStatus: vi.fn(),
+    claimCheckoutAttempt: vi.fn(),
+    updateCheckoutAttemptStatus: vi.fn(),
+    completeCheckoutAttempt: vi.fn()
+  }
+})
 
 vi.mock('@/lib/supabase/queries', () => ({
   getUserProfile: vi.fn(),
@@ -128,7 +132,8 @@ describe('Stripe Billing Foundation API Suite', () => {
     vi.mocked(saveSubscription).mockImplementation(async (insertData) => {
       const isActivePro =
         insertData.plan_slug === 'pro' &&
-        ['active', 'trialing', 'past_due'].includes(insertData.status)
+        ['active', 'trialing', 'past_due'].includes(insertData.status) &&
+        !insertData.ended_at
       const resolvedPlanSlug = isActivePro ? 'pro' : 'free'
       await setUserPlanSlug({
         user_id: insertData.user_id,
@@ -758,7 +763,12 @@ describe('Stripe Billing Foundation API Suite', () => {
       const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
       expect(response.status).toBe(200)
 
-      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith('sub_test_456', expect.any(String), 'evt_test_2')
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        stripe_subscription_id: 'sub_test_456',
+        status: 'canceled',
+        plan_slug: 'free',
+        last_event_id: 'evt_test_2'
+      }))
     })
 
     it('processes customer.subscription.updated with active status', async () => {
@@ -1197,7 +1207,12 @@ describe('Stripe Billing Foundation API Suite', () => {
 
       const response1 = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEventDeleted), 't=123,v1=sig'))
       expect(response1.status).toBe(200)
-      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith('sub_deleted_test', expect.any(String), 'evt_deleted_entitlement_test')
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        stripe_subscription_id: 'sub_deleted_test',
+        status: 'canceled',
+        plan_slug: 'free',
+        last_event_id: 'evt_deleted_entitlement_test'
+      }))
 
       // Proves that cancelSubscriptionInDatabase resolved status 'canceled' to plan_slug 'free' on the profile
       expect(setUserPlanSlug).toHaveBeenCalledWith(
@@ -1957,11 +1972,13 @@ describe('Stripe Billing Foundation API Suite', () => {
       mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
       const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
       expect(response.status).toBe(200)
-      expect(cancelSubscriptionInDatabase).toHaveBeenCalledWith(
-        'sub_active_first',
-        new Date(1700000000 * 1000).toISOString(),
-        'evt_del_same_time'
-      )
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        stripe_subscription_id: 'sub_active_first',
+        status: 'canceled',
+        plan_slug: 'free',
+        last_event_id: 'evt_del_same_time',
+        last_event_created: new Date(1700000000 * 1000).toISOString()
+      }))
     })
 
     it('8. exact duplicate event ID remains idempotent', async () => {
@@ -2136,6 +2153,159 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(response.status).toBe(400)
       const text = await response.text()
       expect(text).toBe('Webhook signature verification failed')
+    })
+
+    it('15. customer.subscription.updated with scheduled cancellation (cancel_at set, cancel_at_period_end=false, ended_at=null) stores values and keeps Pro', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_scheduled_cancel_test',
+        data: {
+          object: {
+            id: 'sub_sch_cancel',
+            customer: 'cus_sch_cancel',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_sch_cancel')
+
+      const nowSeconds = Math.floor(Date.now() / 1000)
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_sch_cancel',
+        customer: 'cus_sch_cancel',
+        status: 'active',
+        current_period_start: nowSeconds,
+        current_period_end: nowSeconds + 2592000,
+        cancel_at_period_end: false,
+        cancel_at: nowSeconds + 2592000,
+        canceled_at: nowSeconds,
+        ended_at: null,
+        cancellation_details: { reason: 'cancellation_reason_test', feedback: 'cancellation_feedback_test' },
+        items: { data: [{ price: { id: 'price_1234_pro' } }] }
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'active',
+        cancel_at_period_end: true, // effective cancel_at_period_end
+        cancel_at: new Date((nowSeconds + 2592000) * 1000).toISOString(),
+        canceled_at: new Date(nowSeconds * 1000).toISOString(),
+        ended_at: null,
+        cancellation_reason: 'cancellation_reason_test',
+        cancellation_feedback: 'cancellation_feedback_test',
+        plan_slug: 'pro' // keeps Pro entitlement
+      }))
+    })
+
+    it('16. customer.subscription.updated with cancel_at_period_end=true still works', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_cancel_at_period_end_test',
+        data: {
+          object: {
+            id: 'sub_cancel_at_period_end',
+            customer: 'cus_cancel_at_period_end',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_cancel_at_period_end')
+
+      const nowSeconds = Math.floor(Date.now() / 1000)
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_cancel_at_period_end',
+        customer: 'cus_cancel_at_period_end',
+        status: 'active',
+        current_period_start: nowSeconds,
+        current_period_end: nowSeconds + 2592000,
+        cancel_at_period_end: true,
+        cancel_at: nowSeconds + 2592000,
+        ended_at: null,
+        items: { data: [{ price: { id: 'price_1234_pro' } }] }
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'active',
+        cancel_at_period_end: true,
+        plan_slug: 'pro'
+      }))
+    })
+
+    it('17. customer.subscription.deleted removes Pro entitlement', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.deleted',
+        id: 'evt_deleted_test_new',
+        data: {
+          object: {
+            id: 'sub_deleted_test_new',
+            customer: 'cus_deleted_test_new',
+            status: 'canceled',
+            ended_at: Math.floor(Date.now() / 1000),
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_deleted_test_new')
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'canceled',
+        plan_slug: 'free' // removes Pro entitlement
+      }))
+    })
+
+    it('18. fallback from subscription.items.data[0] for periods works', async () => {
+      const mockEvent = {
+        type: 'customer.subscription.updated',
+        id: 'evt_fallback_period_test',
+        data: {
+          object: {
+            id: 'sub_fallback_period',
+            customer: 'cus_fallback_period',
+            status: 'active',
+            items: { data: [{ price: { id: 'price_1234_pro' } }] }
+          }
+        }
+      }
+      mockStripeInstances.webhooks.constructEvent.mockReturnValue(mockEvent)
+      vi.mocked(getUserIdByStripeCustomerId).mockResolvedValue('user_fallback_period')
+
+      const nowSeconds = Math.floor(Date.now() / 1000)
+      // Omit top-level current_period_start and current_period_end, put them on items.data[0]
+      mockStripeInstances.subscriptions.retrieve.mockResolvedValue({
+        id: 'sub_fallback_period',
+        customer: 'cus_fallback_period',
+        status: 'active',
+        cancel_at_period_end: false,
+        ended_at: null,
+        items: {
+          data: [{
+            price: { id: 'price_1234_pro' },
+            current_period_start: nowSeconds,
+            current_period_end: nowSeconds + 2592000
+          }]
+        }
+      })
+
+      const response = await webhookHandler(makeRequestWithHeader(JSON.stringify(mockEvent), 't=123,v1=sig'))
+      expect(response.status).toBe(200)
+
+      expect(saveSubscription).toHaveBeenCalledWith(expect.objectContaining({
+        current_period_start: new Date(nowSeconds * 1000).toISOString(),
+        current_period_end: new Date((nowSeconds + 2592000) * 1000).toISOString()
+      }))
     })
   })
 })

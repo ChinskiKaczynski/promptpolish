@@ -7,15 +7,10 @@ import {
   claimWebhookEvent,
   updateWebhookEventStatus,
   completeCheckoutAttempt,
-  saveStripeCustomer
+  saveStripeCustomer,
+  extractSubscriptionData
 } from '@/lib/supabase/billing'
 import { recordStripeWebhookFailure } from '@/lib/monitoring/observability'
-
-function resolvePlanSlug(priceId: string, status: string, proPriceId: string): string {
-  const isProPrice = priceId === proPriceId
-  const isActiveStatus = ['active', 'trialing', 'past_due'].includes(status)
-  return (isProPrice && isActiveStatus) ? 'pro' : 'free'
-}
 
 export async function POST(request: Request) {
   const stripeEnabled =
@@ -182,24 +177,11 @@ export async function POST(request: Request) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
           expand: ['items.data.price']
         })
-        const stripePriceId = subscription.items.data[0]?.price.id || ''
-        const planSlug = 'pro'
 
-        const subscriptionRaw = subscription as unknown as {
-          current_period_start: number
-          current_period_end: number
-        }
+        const extracted = extractSubscriptionData(subscription, userId, stripePriceIdPro)
 
         const saved = await saveSubscription({
-          user_id: userId,
-          stripe_customer_id: customerId,
-          stripe_subscription_id: subscriptionId,
-          stripe_price_id: stripePriceId,
-          plan_slug: planSlug,
-          status: subscription.status,
-          current_period_start: new Date(subscriptionRaw.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(subscriptionRaw.current_period_end * 1000).toISOString(),
-          cancel_at_period_end: subscription.cancel_at_period_end,
+          ...extracted,
           last_event_created: stripeCreated,
           last_event_id: eventId
         })
@@ -214,7 +196,7 @@ export async function POST(request: Request) {
         hasUserId = !!userId
         customerUpsertSuccess = customerUpsertSuccessVar
         subscriptionUpsertSuccess = saveSubscriptionSuccess
-        resolvedPlanSlug = planSlug
+        resolvedPlanSlug = extracted.plan_slug
         resolvedStatus = subscription.status
 
         // Mark checkout attempt completed
@@ -331,23 +313,10 @@ export async function POST(request: Request) {
           return new NextResponse('Unmapped customer ID and missing user_id in metadata', { status: 502 })
         }
 
-        const stripePriceId = subscription.items.data[0]?.price.id || ''
-        const planSlug = resolvePlanSlug(stripePriceId, subscription.status, stripePriceIdPro)
-        const subscriptionRaw = subscription as unknown as {
-          current_period_start: number
-          current_period_end: number
-        }
+        const extracted = extractSubscriptionData(subscription, userId, stripePriceIdPro)
 
         const saved = await saveSubscription({
-          user_id: userId,
-          stripe_customer_id: customerId,
-          stripe_subscription_id: subscriptionId,
-          stripe_price_id: stripePriceId,
-          plan_slug: planSlug,
-          status: subscription.status,
-          current_period_start: new Date(subscriptionRaw.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(subscriptionRaw.current_period_end * 1000).toISOString(),
-          cancel_at_period_end: subscription.cancel_at_period_end,
+          ...extracted,
           last_event_created: stripeCreated,
           last_event_id: eventId
         })
@@ -361,7 +330,7 @@ export async function POST(request: Request) {
 
         hasUserId = !!userId
         subscriptionUpsertSuccess = saveSuccess
-        resolvedPlanSlug = planSlug
+        resolvedPlanSlug = extracted.plan_slug
         resolvedStatus = subscription.status
         break
       }
@@ -375,18 +344,54 @@ export async function POST(request: Request) {
           })
           return new NextResponse('Missing subscription ID', { status: 400 })
         }
-        const ok = await cancelSubscriptionInDatabase(subscriptionId, stripeCreated, eventId)
-        const cancelSuccess = !!ok
-        console.log(`[Stripe Webhook] cancelSubscriptionInDatabase completed: success=${cancelSuccess}, subscriptionId=${subscriptionId}`)
-        if (!ok) {
-          throw new Error('Database write failed inside cancelSubscriptionInDatabase.')
+
+        if (!customerId) {
+          await updateWebhookEventStatus({
+            event_id: eventId,
+            status: 'failed_terminal',
+            failure_message: 'Missing customer ID.'
+          })
+          return new NextResponse('Missing customer ID', { status: 400 })
+        }
+
+        const subscription = event.data.object as Stripe.Subscription
+
+        // Resolve user ID by customer ID or fallback to metadata
+        let userId = await getUserIdByStripeCustomerId(customerId)
+        if (!userId) {
+          userId = (subscription.metadata?.user_id as string) || null
+        }
+
+        if (!userId) {
+          console.warn(`[Stripe Webhook] Unmapped customer ID ${customerId} in subscription deletion event and no user_id in metadata.`);
+          await updateWebhookEventStatus({
+            event_id: eventId,
+            status: 'failed_retryable',
+            failure_message: 'Unmapped customer ID and missing user_id in subscription metadata.'
+          })
+          return new NextResponse('Unmapped customer ID and missing user_id in metadata', { status: 502 })
+        }
+
+        const extracted = extractSubscriptionData(subscription, userId, stripePriceIdPro)
+
+        const saved = await saveSubscription({
+          ...extracted,
+          last_event_created: stripeCreated,
+          last_event_id: eventId
+        })
+
+        const saveSuccess = !!saved
+        console.log(`[Stripe Webhook] customer.subscription.deleted saveSubscription completed: success=${saveSuccess}, userId=${userId}, subscriptionId=${subscriptionId}`)
+
+        if (!saved) {
+          throw new Error('Database write failed inside saveSubscription.')
         }
 
         hasUserId = true
         customerUpsertSuccess = false
-        subscriptionUpsertSuccess = cancelSuccess
+        subscriptionUpsertSuccess = saveSuccess
         resolvedPlanSlug = 'free'
-        resolvedStatus = 'canceled'
+        resolvedStatus = subscription.status
         break
       }
 

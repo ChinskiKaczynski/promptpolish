@@ -48,7 +48,10 @@ export default async function PricingPage() {
     })
     subscription = stripeEnabled ? await getSubscriptionByUserId(user.id) : null
     const planSlug = await getPlanSlugForUser(user.id)
-    hasActiveProSub = planSlug === 'pro' || (subscription ? ['active', 'trialing'].includes(subscription.status) : false)
+    const isSubActiveOrTrialing = subscription
+      ? ['active', 'trialing'].includes(subscription.status) && !subscription.ended_at
+      : false
+    hasActiveProSub = planSlug === 'pro' || isSubActiveOrTrialing
   }
 
   const ownerAnonymousId = await getOwnerIdFromCookies()

@@ -406,5 +406,57 @@ describe('Supabase Billing & Entitlement Layer Unit Tests', () => {
 
       expect(mockUpdate).not.toHaveBeenCalled()
     })
+
+    it('11. real evt_ update is not blocked by last_event_id repair-initial-sub_...', async () => {
+      // Existing in DB is a repair marker
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          stripe_subscription_id: 'sub_test_123',
+          status: 'active',
+          last_event_created: '2026-06-12T20:00:00.000Z',
+          last_event_id: 'repair-initial-sub_test_123'
+        },
+        error: null
+      })
+      mockSingle.mockResolvedValue({ data: {}, error: null })
+
+      // Call saveSubscription with a real event ID (evt_) even if it has an older or same timestamp
+      await saveSubscription({
+        ...mockInputBase,
+        plan_slug: 'pro',
+        status: 'active',
+        last_event_created: '2026-06-12T19:00:00.000Z', // older timestamp
+        last_event_id: 'evt_real_event_1'
+      })
+
+      // The update proceeds (not blocked by repair marker)
+      expect(mockUpsert).toHaveBeenCalled()
+    })
+
+    it('12. older Stripe event does not overwrite newer event state', async () => {
+      // Existing in DB is a newer real event
+      mockMaybeSingle.mockResolvedValueOnce({
+        data: {
+          stripe_subscription_id: 'sub_test_123',
+          status: 'active',
+          last_event_created: '2026-06-12T20:00:00.000Z',
+          last_event_id: 'evt_newer_real'
+        },
+        error: null
+      })
+
+      // Try calling saveSubscription with an older real event
+      await expect(
+        saveSubscription({
+          ...mockInputBase,
+          plan_slug: 'pro',
+          status: 'active',
+          last_event_created: '2026-06-12T19:59:00.000Z',
+          last_event_id: 'evt_older_real'
+        })
+      ).rejects.toThrow(StaleEventError)
+
+      expect(mockUpsert).not.toHaveBeenCalled()
+    })
   })
 })
