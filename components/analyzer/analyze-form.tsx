@@ -12,6 +12,19 @@ const MIN_PROMPT_CHARS = 20
 const MAX_PROMPT_CHARS = 12000
 const WARN_PROMPT_CHARS = 11000
 
+export const integerFormatter = {
+  format(val: number): string {
+    const formatter = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 0 })
+    const formatted = formatter.format(val)
+    if (val >= 1000 && formatted.length === Math.floor(val).toString().length) {
+      // ICU data is missing in Node, use custom regex with non-breaking space
+      return Math.floor(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+    }
+    // Normalize any spacing to standard non-breaking space (\u00A0)
+    return formatted.replace(/\s/g, ' ')
+  }
+}
+
 const loadingStepsPl = [
   'Uruchamianie preflighta bezpieczeństwa...',
   'Sprawdzanie limitów użytkowania...',
@@ -287,7 +300,7 @@ export function AnalyzeForm() {
               {workingLanguage === 'pl' ? 'Prompt do audytu (Wymagany)' : 'Prompt to audit (Required)'}
             </label>
             <span className={`text-xs font-mono font-medium ${isTooLong ? 'text-[#F87171]' : isApproachingLimit ? 'text-[#F97316]' : 'text-[#8290A2]'}`}>
-              {inputPrompt.length.toLocaleString()} / {MAX_PROMPT_CHARS.toLocaleString()} {workingLanguage === 'pl' ? 'znaków' : 'characters'}
+              {integerFormatter.format(inputPrompt.length)} / {integerFormatter.format(MAX_PROMPT_CHARS)} {workingLanguage === 'pl' ? 'znaków' : 'characters'}
             </span>
           </div>
           <textarea
@@ -318,15 +331,15 @@ export function AnalyzeForm() {
         {isApproachingLimit && (
           <p id="warn-approaching-limit" role="status" aria-live="polite" className="text-xs font-semibold text-amber-700 flex items-center gap-1.5 animate-pulse">
             ⚠️ {workingLanguage === 'pl' 
-              ? `Zbliżasz się do maksymalnego limitu ${MAX_PROMPT_CHARS.toLocaleString()} znaków. Ogranicz tekst.`
-              : `You are approaching the limit of ${MAX_PROMPT_CHARS.toLocaleString()} characters. Please trim the text.`}
+              ? `Zbliżasz się do maksymalnego limitu ${integerFormatter.format(MAX_PROMPT_CHARS)} znaków. Ogranicz tekst.`
+              : `You are approaching the limit of ${integerFormatter.format(MAX_PROMPT_CHARS)} characters. Please trim the text.`}
           </p>
         )}
         {isTooLong && (
           <p id="error-too-long" role="alert" className="text-xs font-semibold text-red-700 flex items-center gap-1.5">
             ❌ {workingLanguage === 'pl'
-              ? `Błąd: Twój prompt przekracza maksymalny dopuszczalny limit ${MAX_PROMPT_CHARS.toLocaleString()} znaków (obecnie ${inputPrompt.length.toLocaleString()}).`
-              : `Error: Your prompt exceeds the maximum allowed limit of ${MAX_PROMPT_CHARS.toLocaleString()} characters (currently ${inputPrompt.length.toLocaleString()}).`}
+              ? `Błąd: Twój prompt przekracza maksymalny dopuszczalny limit ${integerFormatter.format(MAX_PROMPT_CHARS)} znaków (obecnie ${integerFormatter.format(inputPrompt.length)}).`
+              : `Error: Your prompt exceeds the maximum allowed limit of ${integerFormatter.format(MAX_PROMPT_CHARS)} characters (currently ${integerFormatter.format(inputPrompt.length)}).`}
           </p>
         )}
 

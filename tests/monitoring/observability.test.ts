@@ -1,4 +1,5 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
+import { fakeStripeSecretKey, fakeStripePublishableKey } from '../helpers/fake-secrets'
 import {
   scrubSensitiveData,
   recordProviderError,
@@ -26,8 +27,10 @@ describe('Operational Observability Telemetry Tests', () => {
     })
 
     test('redacts Stripe secret and publishable keys correctly', () => {
-      const dirty1 = 'Failed to connect using sk_test_51NxXxXxXxXxXxXxXyYyYyYyY'
-      const dirty2 = 'Failed to connect using pk_live_51NxXxXxXxXxXxXxXzZzZzZzZ'
+      const fakeTestSecret = fakeStripeSecretKey('test')
+      const fakeLivePub = fakeStripePublishableKey('live')
+      const dirty1 = `Failed to connect using ${fakeTestSecret}`
+      const dirty2 = `Failed to connect using ${fakeLivePub}`
       expect(scrubSensitiveData(dirty1)).toContain('[REDACTED_STRIPE_KEY]')
       expect(scrubSensitiveData(dirty2)).toContain('[REDACTED_STRIPE_KEY]')
     })
@@ -103,13 +106,14 @@ describe('Operational Observability Telemetry Tests', () => {
     })
 
     test('scrubs sensitive credentials from webhook failure log strings', () => {
-      const testError = new Error('Failed with secret key sk_live_someSecretStripeKeyGoesHere')
+      const fakeLiveSecret = fakeStripeSecretKey('live')
+      const testError = new Error(`Failed with secret key ${fakeLiveSecret}`)
       recordStripeWebhookFailure('invoice.payment_succeeded', testError)
 
       const output = consoleErrorSpy.mock.calls[0][0]
       expect(output).toContain('[STRIPE_WEBHOOK_FAILURE]')
       expect(output).toContain('[REDACTED_STRIPE_KEY]')
-      expect(output).not.toContain('sk_live_someSecretStripeKeyGoesHere')
+      expect(output).not.toContain(fakeLiveSecret)
     })
   })
 })

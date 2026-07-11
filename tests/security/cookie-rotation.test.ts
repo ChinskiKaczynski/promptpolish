@@ -76,7 +76,7 @@ vi.mock('@/lib/supabase/admin', () => {
 })
 
 import { signId, verifyAndExtractId } from '@/lib/identity/anonymous'
-import { middleware } from '@/middleware'
+import { proxy } from '@/proxy'
 import {
   getPromptAnalysisForOwner,
   getUsageCountThisMonthForUser,
@@ -109,7 +109,7 @@ describe('Identity & Cookie Security Integration Suite', () => {
   // 1. first anonymous visit with no cookie
   it('1. provisions a new signed cookie on first anonymous visit', async () => {
     const request = new NextRequest('http://localhost/')
-    const response = await middleware(request)
+    const response = await proxy(request)
 
     const cookie = response.cookies.get('owner_anonymous_id')
     expect(cookie).toBeDefined()
@@ -127,7 +127,7 @@ describe('Identity & Cookie Security Integration Suite', () => {
     const request = new NextRequest('http://localhost/')
     request.cookies.set('owner_anonymous_id', signedValue)
     
-    const response = await middleware(request)
+    const response = await proxy(request)
     const cookie = response.cookies.get('owner_anonymous_id')
     // Middleware should not set/overwrite the cookie if it is already valid
     expect(cookie).toBeUndefined()
@@ -144,7 +144,7 @@ describe('Identity & Cookie Security Integration Suite', () => {
     const request = new NextRequest('http://localhost/')
     request.cookies.set('owner_anonymous_id', signedWithOldSecret)
     
-    const response = await middleware(request)
+    const response = await proxy(request)
     const cookie = response.cookies.get('owner_anonymous_id')
     expect(cookie).toBeDefined()
     
@@ -160,7 +160,7 @@ describe('Identity & Cookie Security Integration Suite', () => {
     const request = new NextRequest('http://localhost/')
     request.cookies.set('owner_anonymous_id', 'not-a-valid-format-or-signature')
     
-    const response = await middleware(request)
+    const response = await proxy(request)
     const cookie = response.cookies.get('owner_anonymous_id')
     expect(cookie).toBeDefined()
     
@@ -174,7 +174,7 @@ describe('Identity & Cookie Security Integration Suite', () => {
     mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null })
     
     const request = new NextRequest('http://localhost/')
-    const response = await middleware(request)
+    const response = await proxy(request)
     
     const cookie = response.cookies.get('owner_anonymous_id')
     expect(cookie).toBeDefined() // still gets provisioned for RLS consistency!
@@ -198,7 +198,7 @@ describe('Identity & Cookie Security Integration Suite', () => {
     const request = new NextRequest('http://localhost/')
     request.cookies.set('owner_anonymous_id', 'invalid-signature')
     
-    const response = await middleware(request)
+    const response = await proxy(request)
     const cookie = response.cookies.get('owner_anonymous_id')
     expect(cookie).toBeDefined()
     expect(await verifyAndExtractId(cookie!.value)).not.toBeNull()
@@ -330,7 +330,7 @@ describe('Identity & Cookie Security Integration Suite', () => {
       return { data: { user: null }, error: null }
     })
 
-    const response = await middleware(request)
+    const response = await proxy(request)
     
     // Response should have BOTH owner_anonymous_id and sb-access-token
     expect(response.cookies.get('owner_anonymous_id')).toBeDefined()

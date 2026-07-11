@@ -3,8 +3,8 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { verifyAndExtractId, signId } from '@/lib/identity/anonymous'
 
-export async function middleware(request: NextRequest) {
-  // Defense-in-depth: immediately bypass middleware for M2M endpoints
+export async function proxy(request: NextRequest) {
+  // Defense-in-depth: immediately bypass proxy for M2M endpoints
   const { pathname } = request.nextUrl
   if (
     pathname.startsWith('/api/webhooks') ||

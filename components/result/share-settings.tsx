@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 
 interface ShareSettingsProps {
   analysisId?: string
   isShareEnabledInitially: boolean
   shareTokenInitially: string | null
 }
+
+const emptySubscribe = () => () => {}
 
 export function ShareSettings({
   analysisId,
@@ -18,14 +20,15 @@ export function ShareSettings({
   const [isShareLinkCopied, setIsShareLinkCopied] = useState(false)
   const [shareError, setShareError] = useState<string | null>(null)
   const [isPending, setIsPending] = useState(false)
-  const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const origin = useSyncExternalStore(
+    emptySubscribe,
+    () => window.location.origin,
+    () => ''
+  )
 
-  const shareUrl = mounted && shareToken
-    ? `${window.location.origin}/share/${shareToken}`
+  const shareUrl = origin && shareToken
+    ? `${origin}/share/${shareToken}`
     : ''
 
   const handleCopyShareLink = async () => {

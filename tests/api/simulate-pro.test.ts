@@ -23,11 +23,15 @@ import type { User } from '@supabase/supabase-js'
 describe('POST /api/entitlements/simulate-pro', () => {
   const originalEnv = process.env.NODE_ENV
   const originalStripe = process.env.STRIPE_ENABLED
+  const originalSimulation = process.env.ENABLE_DEV_PRO_SIMULATION
+  const originalAdminEmails = process.env.ADMIN_EMAILS
 
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.NODE_ENV = 'development'
     process.env.STRIPE_ENABLED = 'false'
+    process.env.ENABLE_DEV_PRO_SIMULATION = 'true'
+    process.env.ADMIN_EMAILS = 'user@test.com,admin1@test.com'
 
     // Default: successful upsert returning plan_slug = 'pro'
     vi.mocked(setUserPlanSlug).mockResolvedValue({
@@ -43,6 +47,8 @@ describe('POST /api/entitlements/simulate-pro', () => {
   afterEach(() => {
     process.env.NODE_ENV = originalEnv
     process.env.STRIPE_ENABLED = originalStripe
+    process.env.ENABLE_DEV_PRO_SIMULATION = originalSimulation
+    process.env.ADMIN_EMAILS = originalAdminEmails
   })
 
   // ── Auth / Access ──────────────────────────────────────────────────────────
@@ -73,6 +79,29 @@ describe('POST /api/entitlements/simulate-pro', () => {
   it('returns 403 JSON when STRIPE_ENABLED is true even in development', async () => {
     process.env.STRIPE_ENABLED = 'true'
     vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'admin1@test.com' } as User)
+
+    const response = await POST()
+    const data = await response.json()
+
+    expect(response.status).toBe(403)
+    expect(data.error).toBe('Forbidden')
+    expect(setUserPlanSlug).not.toHaveBeenCalled()
+  })
+
+  it('returns 403 JSON when ENABLE_DEV_PRO_SIMULATION is false or absent', async () => {
+    process.env.ENABLE_DEV_PRO_SIMULATION = 'false'
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'admin1@test.com' } as User)
+
+    const response = await POST()
+    const data = await response.json()
+
+    expect(response.status).toBe(403)
+    expect(data.error).toBe('Forbidden')
+    expect(setUserPlanSlug).not.toHaveBeenCalled()
+  })
+
+  it('returns 403 JSON when user email is not listed in ADMIN_EMAILS', async () => {
+    vi.mocked(getAuthUser).mockResolvedValue({ id: 'user-123', email: 'non-admin@test.com' } as User)
 
     const response = await POST()
     const data = await response.json()

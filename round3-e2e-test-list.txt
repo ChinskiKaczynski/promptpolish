@@ -1,0 +1,39 @@
+Listing tests:
+  [setup] ÔÇ║ auth.setup.ts:7:6 ÔÇ║ setup free user
+  [setup] ÔÇ║ auth.setup.ts:36:6 ÔÇ║ setup pro user
+  [chromium-free] ÔÇ║ authenticated-flows.test.ts:146:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Free: dashboard shows Free plan and session persists
+  [chromium-free] ÔÇ║ authenticated-flows.test.ts:163:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Free: PDF shows gate/upgrade and does not download
+  [chromium-free] ÔÇ║ authenticated-flows.test.ts:176:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Isolation: Free cannot open Pro result
+  [chromium-free] ÔÇ║ authenticated-flows.test.ts:184:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Free: logout clears session and denies access
+  [chromium-free] ÔÇ║ authenticated-flows.test.ts:200:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Pro: dashboard shows Pro plan and session persists
+  [chromium-free] ÔÇ║ authenticated-flows.test.ts:216:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Pro: PDF export downloads file successfully
+  [chromium-free] ÔÇ║ authenticated-flows.test.ts:232:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Isolation: Pro cannot open Free result
+  [chromium-free] ÔÇ║ authenticated-flows.test.ts:240:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Pro: logout clears session
+  [chromium-free] ÔÇ║ authenticated-flows.test.ts:256:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Isolation: anonymous cannot open Free or Pro private result
+  [chromium-pro] ÔÇ║ authenticated-flows.test.ts:146:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Free: dashboard shows Free plan and session persists
+  [chromium-pro] ÔÇ║ authenticated-flows.test.ts:163:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Free: PDF shows gate/upgrade and does not download
+  [chromium-pro] ÔÇ║ authenticated-flows.test.ts:176:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Isolation: Free cannot open Pro result
+  [chromium-pro] ÔÇ║ authenticated-flows.test.ts:184:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Free: logout clears session and denies access
+  [chromium-pro] ÔÇ║ authenticated-flows.test.ts:200:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Pro: dashboard shows Pro plan and session persists
+  [chromium-pro] ÔÇ║ authenticated-flows.test.ts:216:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Pro: PDF export downloads file successfully
+  [chromium-pro] ÔÇ║ authenticated-flows.test.ts:232:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Isolation: Pro cannot open Free result
+  [chromium-pro] ÔÇ║ authenticated-flows.test.ts:240:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Pro: logout clears session
+  [chromium-pro] ÔÇ║ authenticated-flows.test.ts:256:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Isolation: anonymous cannot open Free or Pro private result
+  [chromium] ÔÇ║ authenticated-flows.test.ts:146:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Free: dashboard shows Free plan and session persists
+  [chromium] ÔÇ║ authenticated-flows.test.ts:163:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Free: PDF shows gate/upgrade and does not download
+  [chromium] ÔÇ║ authenticated-flows.test.ts:176:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Isolation: Free cannot open Pro result
+  [chromium] ÔÇ║ authenticated-flows.test.ts:184:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Free: logout clears session and denies access
+  [chromium] ÔÇ║ authenticated-flows.test.ts:200:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Pro: dashboard shows Pro plan and session persists
+  [chromium] ÔÇ║ authenticated-flows.test.ts:216:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Pro: PDF export downloads file successfully
+  [chromium] ÔÇ║ authenticated-flows.test.ts:232:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Isolation: Pro cannot open Free result
+  [chromium] ÔÇ║ authenticated-flows.test.ts:240:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Pro: logout clears session
+  [chromium] ÔÇ║ authenticated-flows.test.ts:256:7 ÔÇ║ Authenticated E2E & Data Isolation Flows ÔÇ║ Isolation: anonymous cannot open Free or Pro private result
+  [chromium] ÔÇ║ extended-flows.test.ts:61:7 ÔÇ║ 1. Anonymous User Flow ÔÇ║ 1.1 landing page loads with key UI elements
+  [chromium] ÔÇ║ extended-flows.test.ts:68:7 ÔÇ║ 1. Anonymous User Flow ÔÇ║ 1.2 full anonymous analysis journey: / Ôćĺ /analyze Ôćĺ /result
+  [chromium] ÔÇ║ extended-flows.test.ts:100:7 ÔÇ║ 1. Anonymous User Flow ÔÇ║ 1.3 analyze form: submit disabled for short prompt, enabled for valid prompt
+  [chromium] ÔÇ║ extended-flows.test.ts:135:7 ÔÇ║ 2. Security Flow ÔÇ║ 2.1 client-side sensitive data detection: prompt with API key disables submit button
+  [chromium] ÔÇ║ extended-flows.test.ts:160:7 ÔÇ║ 2. Security Flow ÔÇ║ 2.2 XML injection: clean prompt with XML chars is submitted safely
+  [chromium] ÔÇ║ extended-flows.test.ts:197:7 ÔÇ║ 3. Free Plan Limits Flow ÔÇ║ 3.1 validation: submit is disabled when prompt is shorter than 20 characters
+  [chromium] ÔÇ║ extended-flows.test.ts:217:7 ÔÇ║ 3. Free Plan Limits Flow ÔÇ║ 3.2 rate-limit response (429): app stays on analyze page, does NOT crash
+  [chromium] ÔÇ║ smoke.test.ts:19:7 ÔÇ║ PromptPolish E2E Smoke Journey ÔÇ║ successfully navigates from / to /analyze and displays mock results
+Total: 37 tests in 4 files

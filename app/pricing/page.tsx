@@ -108,7 +108,7 @@ export default async function PricingPage() {
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-bold text-[#E2E8F0] font-heading">{freeLimits.name}</h3>
-                  <p className="mt-2 text-xs text-[#8290A2]">Dla hobbystów i osób testujących narzędzie.</p>
+                  <p className="mt-2 text-xs text-[#8290A2]">Dla osób, które chcą regularnie ulepszać prompty i sprawdzić pełny workflow PromptPolish.</p>
                 </div>
                 {(!profile || (profile.plan_slug === 'free' && !hasActiveProSub)) && (
                   <span className="rounded-full bg-[#1C1C27] border border-[#2A2A3A] px-3 py-1 text-[10px] font-black text-[#A78BFA] uppercase tracking-wider">
@@ -275,7 +275,7 @@ export default async function PricingPage() {
             <div className="rounded-xl border border-[#2A2A3A] bg-[#13131A] p-5 space-y-2">
               <h4 className="text-sm font-bold text-[#E2E8F0] font-heading">Czy moje dane są bezpieczne?</h4>
               <p className="text-xs text-[#94A3B8] leading-relaxed">
-                Zdecydowanie. Nasz wbudowany bezpieczny skaner danych preflight natychmiast blokuje i uniemożliwia zapisywanie promptów zawierających wrażliwe dane lub sekrety (jak klucze API).
+                Zdecydowanie. Nasz wbudowany bezpieczny skaner danych preflight wykrywa i blokuje popularne formaty kluczy API i innych danych wrażliwych (jak hasła czy adresy e-mail) przed wysłaniem promptu do modelu AI.
               </p>
             </div>
           </div>

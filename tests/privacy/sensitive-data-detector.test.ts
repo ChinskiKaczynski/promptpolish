@@ -191,7 +191,7 @@ MIIEowIBAAKCAQEA0yGz7V+abc123xyz
     const result = scanRequestFields(fields)
 
     expect(result.riskLevel).toBe('high')
-    expect(result.findings.length).toBe(3)
+    expect(result.findings.length).toBe(2)
     
     const goalFinding = result.findings.find(f => f.field === 'task_goal')!
     expect(goalFinding).toBeDefined()
@@ -200,5 +200,51 @@ MIIEowIBAAKCAQEA0yGz7V+abc123xyz
     const constraintsFinding = result.findings.find(f => f.field === 'constraints')!
     expect(constraintsFinding).toBeDefined()
     expect(constraintsFinding.type).toBe('bearer_token')
+  })
+
+  it('detects GitHub PAT tokens', () => {
+    const rawGhp = 'ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+    const result = detectSensitiveData(`Here is my token: ${rawGhp}`)
+    expect(result.riskLevel).toBe('high')
+    expect(result.findings.some(f => f.type === 'github_pat')).toBe(true)
+  })
+
+  it('detects Hugging Face tokens', () => {
+    const rawHf = 'hf_ABCDEFGHIJKLMNOPQRSTUVWXYZ12345678'
+    const result = detectSensitiveData(`My HF token is ${rawHf}`)
+    expect(result.riskLevel).toBe('high')
+    expect(result.findings.some(f => f.type === 'huggingface_token')).toBe(true)
+  })
+
+  it('detects Stripe webhook secrets', () => {
+    const rawWhsec = 'whsec_ABCDEFGHIJKLMNOPQRSTUVWXYZ123456'
+    const result = detectSensitiveData(`Webhook: ${rawWhsec}`)
+    expect(result.riskLevel).toBe('high')
+    expect(result.findings.some(f => f.type === 'stripe_webhook_secret')).toBe(true)
+  })
+
+  it('detects npm tokens', () => {
+    const rawNpm = 'npm_ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
+    const result = detectSensitiveData(`npm: ${rawNpm}`)
+    expect(result.riskLevel).toBe('high')
+    expect(result.findings.some(f => f.type === 'npm_token')).toBe(true)
+  })
+
+  it('detects Slack bot/user tokens', () => {
+    const rawSlack = 'xoxb-1234567890-abcdefghijkl'
+    const result = detectSensitiveData(`slack: ${rawSlack}`)
+    expect(result.riskLevel).toBe('high')
+    expect(result.findings.some(f => f.type === 'slack_token')).toBe(true)
+  })
+
+  it('prevents false-positive phone number matches inside API keys', () => {
+    // OpenAI test key containing 10 consecutive digits
+    const payload = 'OPENAI_API_KEY=sk-test1234567890abcdefghijklmnopqrstuv'
+    const result = detectSensitiveData(payload)
+    
+    // Should detect env_secret_key, but NOT phone_number
+    expect(result.riskLevel).toBe('high')
+    const phoneFindings = result.findings.filter(f => f.type === 'phone_number')
+    expect(phoneFindings.length).toBe(0)
   })
 })

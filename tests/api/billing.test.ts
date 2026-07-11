@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { fakeStripeSecretKey } from '../helpers/fake-secrets'
 
 vi.mock('server-only', () => ({}))
 
@@ -122,7 +123,7 @@ describe('Stripe Billing Foundation API Suite', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const env = process.env as any
     env.APP_URL = 'http://localhost:3000'
-    env.STRIPE_SECRET_KEY = 'sk_test_mock_stripe_key'
+    env.STRIPE_SECRET_KEY = fakeStripeSecretKey('test')
     env.STRIPE_WEBHOOK_SECRET = 'whsec_mock_webhook_key'
     env.STRIPE_PRICE_ID_PRO = 'price_1234_pro'
     env.NODE_ENV = 'development'

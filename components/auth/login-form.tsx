@@ -1,12 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { supabaseClient } from '@/lib/supabase/client'
 import { LogoIcon } from '@/components/ui/logo'
 
 export function LoginForm() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -55,8 +53,6 @@ export function LoginForm() {
           password
         })
         if (error) throw error
-        router.push('/account')
-        router.refresh()
       }
     } catch (err: unknown) {
       console.error('Auth error:', err)

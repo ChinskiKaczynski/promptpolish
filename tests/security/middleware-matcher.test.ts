@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { NextRequest } from 'next/server'
-import { config, middleware } from '@/middleware'
+import { config, proxy } from '@/proxy'
 
 describe('Middleware Matcher & Routing Security Suite', () => {
   describe('Matcher Configuration Patterns', () => {
@@ -43,7 +43,7 @@ describe('Middleware Matcher & Routing Security Suite', () => {
           'stripe-signature': 'sig_123'
         }
       })
-      const response = await middleware(request)
+      const response = await proxy(request)
       // Assert that no cookies are modified/set on the response
       expect(response.headers.get('set-cookie')).toBeNull()
     })
@@ -55,14 +55,14 @@ describe('Middleware Matcher & Routing Security Suite', () => {
           'Authorization': 'Bearer test-secret'
         }
       })
-      const response = await middleware(request)
+      const response = await proxy(request)
       // Assert that no cookies are modified/set on the response
       expect(response.headers.get('set-cookie')).toBeNull()
     })
 
     it('does NOT bypass browser routes (e.g. /analyze) and provisions cookies', async () => {
       const request = new NextRequest('http://localhost/analyze')
-      const response = await middleware(request)
+      const response = await proxy(request)
       // Assert that cookie generation is triggered
       expect(response.headers.get('set-cookie')).not.toBeNull()
       expect(response.cookies.get('owner_anonymous_id')).toBeDefined()

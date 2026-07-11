@@ -2,6 +2,20 @@ import { test, expect } from '@playwright/test'
 
 test.describe('PromptPolish E2E Smoke Journey', () => {
 
+  test.beforeEach(async ({ page }) => {
+    page.on('console', (msg) => {
+      const text = msg.text()
+      if (
+        msg.type() === 'error' &&
+        (text.includes('hydration') ||
+          text.includes('did not match') ||
+          text.includes('server rendered HTML'))
+      ) {
+        throw new Error(`CRITICAL HYDRATION ERROR DETECTED: ${text}`)
+      }
+    })
+  })
+
   test('successfully navigates from / to /analyze and displays mock results', async ({ page }) => {
     // 1. Visit Landing Page
     await page.goto('/')

@@ -12,6 +12,7 @@ dist
 
 test-results/
 playwright-report/
+playwright/.auth/
 tsconfig.tsbuildinfo
 .antigravity
 gemini-leftovers.txt

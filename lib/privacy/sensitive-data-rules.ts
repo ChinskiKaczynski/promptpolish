@@ -52,6 +52,41 @@ export const sensitiveDataRules: SensitiveDataRule[] = [
     message: 'Wykryto poufny klucz API powiązany z dostawcą AI (AI Provider API Key).'
   },
   {
+    id: 'github-pat',
+    type: 'github_pat',
+    riskLevel: 'high',
+    pattern: /\b(?:ghp_[A-Za-z0-9_]{36,255}|github_pat_[A-Za-z0-9_]{82,255})\b/,
+    message: 'Wykryto osobisty token dostępu GitHub (GitHub Personal Access Token).'
+  },
+  {
+    id: 'huggingface-token',
+    type: 'huggingface_token',
+    riskLevel: 'high',
+    pattern: /\bhf_[A-Za-z0-9]{34,255}\b/,
+    message: 'Wykryto token dostępu Hugging Face.'
+  },
+  {
+    id: 'stripe-webhook-secret',
+    type: 'stripe_webhook_secret',
+    riskLevel: 'high',
+    pattern: /\bwhsec_[A-Za-z0-9_]{32,255}\b/,
+    message: 'Wykryto klucz Stripe Webhook Secret (whsec_...).'
+  },
+  {
+    id: 'npm-token',
+    type: 'npm_token',
+    riskLevel: 'high',
+    pattern: /\bnpm_[A-Za-z0-9_]{36,255}\b/,
+    message: 'Wykryto token pakietów npm (npm_...).'
+  },
+  {
+    id: 'slack-token',
+    type: 'slack_token',
+    riskLevel: 'high',
+    pattern: /\bxox[bprs]-[A-Za-z0-9-]{10,255}\b/,
+    message: 'Wykryto token autoryzacyjny Slack.'
+  },
+  {
     id: 'database-url',
     type: 'database_url',
     riskLevel: 'high',
@@ -64,6 +99,20 @@ export const sensitiveDataRules: SensitiveDataRule[] = [
     riskLevel: 'medium',
     pattern: /\b[A-Za-z0-9_-]*(?:password|passwd|pwd)\s*[:=]\s*[^\s]{6,}/i,
     message: 'Wykryto przypisanie hasła lub frazy dostępowej (Password assignment).'
+  },
+  {
+    id: 'stripe-api-key',
+    type: 'stripe_api_key',
+    riskLevel: 'high',
+    pattern: /\b(?:sk|pk)_(?:test|live)_[A-Za-z0-9]{24,255}\b/,
+    message: 'Wykryto klucz Stripe API (sk_test_... lub pk_test_...).'
+  },
+  {
+    id: 'credit-card',
+    type: 'credit_card',
+    riskLevel: 'high',
+    pattern: /\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{1,4}\b/,
+    message: 'Zidentyfikowano potencjalny numer karty płatniczej.'
   },
   {
     id: 'email-address',

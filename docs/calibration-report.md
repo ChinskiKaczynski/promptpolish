@@ -1,6 +1,9 @@
-# Primary/Fallback Score Calibration Report
+# [ARCHIVED / HISTORICAL CONTEXT] Primary/Fallback Score Calibration Report
 
-This document records the observed calibration runs for the prompt optimization engine fallback pairing.
+> [!IMPORTANT]
+> **ARCHIVED WORK**: This document represents legacy OpenRouter (owl-alpha and gpt-4o-mini) calibration experiments. In the active production runtime, OpenRouter has been removed, and Google Gemini (gemini-2.5-flash) is the active provider. This report is preserved solely for historical context.
+
+This document records the historical observed calibration runs for the prompt optimization engine fallback pairing.
 
 > [!NOTE]
 > These results represent specific observed calibration runs under non-deterministic LLM generations. They are not permanent benchmarks, but serve as empirical evidence for fallback model suitability.

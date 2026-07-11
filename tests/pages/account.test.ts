@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { fakeStripeSecretKey } from '../helpers/fake-secrets'
 import type { User } from '@supabase/supabase-js'
 import React from 'react'
 
@@ -168,7 +169,7 @@ describe('AccountPage Beta & Plan Limitations UI', () => {
 
   it('active subscription makes /account show Pro and displays subscription details', async () => {
     process.env.STRIPE_ENABLED = 'true'
-    process.env.STRIPE_SECRET_KEY = 'sk_test_mock'
+    process.env.STRIPE_SECRET_KEY = fakeStripeSecretKey('test')
     process.env.STRIPE_PRICE_ID_PRO = 'price_1234_pro'
 
     vi.mocked(getAuthUser).mockResolvedValue({

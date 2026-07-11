@@ -115,10 +115,11 @@ export function detectSensitiveData(
   const findings: SensitiveDataFinding[] = []
   let riskLevel: SensitiveRiskLevel = 'none'
 
-  // Apply configuration overrides: filter rules by enabledRuleIds
   const rulesToApply = config?.enabledRuleIds
     ? sensitiveDataRules.filter((r) => config.enabledRuleIds!.includes(r.id))
     : sensitiveDataRules
+
+  let workingInput = input
 
   for (const rule of rulesToApply) {
     // If high risk rules are config-blocked, skip executing them entirely
@@ -126,19 +127,23 @@ export function detectSensitiveData(
       continue
     }
 
-    const matches =
-      input.match(
-        new RegExp(
-          rule.pattern.source,
-          rule.pattern.flags.includes('g') ? rule.pattern.flags : `${rule.pattern.flags}g`
-        )
-      ) ?? []
+    const regex = new RegExp(
+      rule.pattern.source,
+      rule.pattern.flags.includes('g') ? rule.pattern.flags : `${rule.pattern.flags}g`
+    )
 
-    for (const match of matches) {
-      const secretVal = extractSecretValue(match, rule.id)
+    let match: RegExpExecArray | null
+    regex.lastIndex = 0
+
+    while ((match = regex.exec(workingInput)) !== null) {
+      const matchStr = match[0]
+      const secretVal = extractSecretValue(matchStr, rule.id)
 
       // Skip obvious test examples / placeholder values
       if (isPlaceholderValue(secretVal)) {
+        if (regex.lastIndex === match.index) {
+          regex.lastIndex++
+        }
         continue
       }
 
@@ -146,12 +151,23 @@ export function detectSensitiveData(
         type: rule.type,
         riskLevel: rule.riskLevel,
         message: rule.message,
-        redactedValue: redactSecret(match, rule.id)
+        redactedValue: redactSecret(matchStr, rule.id)
       })
 
       if (riskRank[rule.riskLevel] > riskRank[riskLevel]) {
         riskLevel = rule.riskLevel
       }
+
+      // Mask out the matched portion with spaces of equal length in workingInput
+      const startIndex = match.index
+      const len = matchStr.length
+      workingInput =
+        workingInput.substring(0, startIndex) +
+        ' '.repeat(len) +
+        workingInput.substring(startIndex + len)
+
+      // Reposition lastIndex to the end of the masked segment
+      regex.lastIndex = startIndex + len
     }
   }
 

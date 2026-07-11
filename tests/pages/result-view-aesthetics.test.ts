@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { criterionTranslations } from '@/components/result/result-view'
+import { criterionTranslations, criterionDescriptions } from '@/components/result/result-view'
 
 describe('Result Page Aesthetics & Polish UI Consistency', () => {
   it('translates all criterion keys to clean Polish without English parenthetical subtitles', () => {
@@ -11,6 +11,21 @@ describe('Result Page Aesthetics & Polish UI Consistency', () => {
     for (const key in criterionTranslations) {
       expect(criterionTranslations[key]).not.toContain('(')
       expect(criterionTranslations[key]).not.toContain(')')
+    }
+  })
+
+  it('contains clear Polish descriptions for all scoring criteria (tooltips)', () => {
+    expect(criterionDescriptions).toBeDefined()
+    expect(criterionDescriptions.testability).toBeDefined()
+    expect(criterionDescriptions.cost_efficiency).toBeDefined()
+    expect(criterionDescriptions.model_profile_fit).toBeDefined()
+    expect(criterionDescriptions.resistance_to_misinterpretation).toBeDefined()
+    expect(criterionDescriptions.safety).toBeDefined()
+
+    // Verify format and that they are not empty
+    for (const key in criterionDescriptions) {
+      expect(criterionDescriptions[key].length).toBeGreaterThan(15)
+      expect(criterionDescriptions[key]).toContain(':') // contains name prefix
     }
   })
 })

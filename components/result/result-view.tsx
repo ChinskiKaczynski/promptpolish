@@ -84,6 +84,19 @@ export const criterionTranslations: Record<string, string> = {
   testability: 'Testowalność i ocena'
 }
 
+export const criterionDescriptions: Record<string, string> = {
+  goal_clarity: 'Jasność celu: Określa, jak precyzyjnie sformułowano główne zadanie dla modelu.',
+  context_completeness: 'Kompletność kontekstu: Ocenia, czy podano wszystkie niezbędne informacje i tło.',
+  structure: 'Struktura promptu: Mierzy stopień zorganizowania i podziału tekstu na logiczne sekcje.',
+  constraints: 'Definicje ograniczeń: Sprawdza obecność jasnych wytycznych dotyczących tego, czego model ma NIE robić.',
+  output_format: 'Format wyniku: Weryfikuje precyzję opisu oczekiwanej struktury odpowiedzi (np. JSON, tabela).',
+  model_profile_fit: 'Dopasowanie do profilu audytu: Ocenia wykorzystanie specyficznych cech i limitów wybranego modelu.',
+  resistance_to_misinterpretation: 'Odporność na błędy interpretacji: Mierzy jednoznaczność sformułowań i brak sprzeczności.',
+  cost_efficiency: 'Efektywność kosztowa: Sprawdza zwięzłość promptu pod kątem oszczędności tokenów (opłat).',
+  safety: 'Filtry bezpieczeństwa: Weryfikuje brak wycieków danych wrażliwych i podatności na prompt injection.',
+  testability: 'Testowalność i ocena: Ocenia łatwość weryfikacji i oceny poprawności wygenerowanej odpowiedzi.'
+}
+
 export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -384,6 +397,11 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   {/* Expandable Details Container */}
                   <div className="mt-3.5 transition-all duration-300">
                     <div className="rounded-xl bg-[#1C1C27] border border-[#2A2A3A] p-4 space-y-3">
+                      {criterionDescriptions[item.criterion] && (
+                        <div className="text-[11px] text-[#8290A2] italic border-b border-[#2A2A3A]/50 pb-2">
+                          {criterionDescriptions[item.criterion]}
+                        </div>
+                      )}
                       <div>
                         <p className="text-xs font-bold uppercase tracking-wider text-[#8290A2]">Analiza słabości:</p>
                         <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed font-semibold">{item.rationale}</p>

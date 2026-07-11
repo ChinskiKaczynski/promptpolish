@@ -37,7 +37,8 @@ export const serverEnvSchema = z.object({
   STRIPE_ENABLED: strictBool.default(false),
   ADMIN_EMAILS: z.string().optional(),
   RATE_LIMIT_HMAC_SECRET: z.string().optional(),
-  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(5000).max(120000).default(55000)
+  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().min(5000).max(120000).default(55000),
+  COOKIE_SIGNING_SECRET: z.string().optional()
 })
 
 let parsedEnv: z.infer<typeof serverEnvSchema>
@@ -95,6 +96,18 @@ export function checkProductionEnv() {
     if (!process.env.RATE_LIMIT_HMAC_SECRET) {
       missing.push('RATE_LIMIT_HMAC_SECRET')
     }
+    
+    const cookieSecret = process.env.COOKIE_SIGNING_SECRET
+    if (!cookieSecret) {
+      missing.push('COOKIE_SIGNING_SECRET')
+    } else if (cookieSecret.length < 32) {
+      return {
+        valid: false,
+        error: `Błąd konfiguracji serwera: COOKIE_SIGNING_SECRET jest zbyt krótki (wymagane minimum 32 znaki).`,
+        missing: ['COOKIE_SIGNING_SECRET']
+      }
+    }
+
     if (missing.length > 0) {
       return {
         valid: false,

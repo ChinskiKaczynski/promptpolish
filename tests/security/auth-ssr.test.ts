@@ -57,7 +57,7 @@ vi.mock('@/lib/identity/anonymous', () => ({
 }))
 
 import { getAuthUser } from '@/lib/identity/auth'
-import { middleware } from '@/middleware'
+import { proxy } from '@/proxy'
 import { POST as sessionPOST, DELETE as sessionDELETE } from '@/app/api/auth/session/route'
 
 describe('Supabase Auth SSR & Route/Middleware Behavior', () => {
@@ -159,7 +159,7 @@ describe('Supabase Auth SSR & Route/Middleware Behavior', () => {
       })
 
       const request = new NextRequest('http://localhost/')
-      const response = await middleware(request)
+      const response = await proxy(request)
 
       expect(response.cookies.get('sb-ref-auth-token')?.value).toBe('refreshed-token')
     })

@@ -396,6 +396,33 @@ export async function POST(request: Request) {
       }
 
       case 'invoice.payment_failed': {
+        // ACCEPTED_BILLING_POLICY (Variant A):
+        // We intentionally do NOT immediately revoke Pro access on invoice.payment_failed.
+        //
+        // Rationale:
+        // - Stripe automatically retries failed payments according to the subscription's
+        //   Smart Retries / retry schedule (typically 3-4 attempts over 7-14 days).
+        // - During this retry window Stripe places the subscription into `past_due` status,
+        //   which is propagated to our database via `customer.subscription.updated` events.
+        // - If all retries fail, Stripe fires `customer.subscription.deleted` which our handler
+        //   converts into a `cancelSubscriptionInDatabase()` call — downgrading the user to Free.
+        //
+        // What this handler does: emit structured telemetry for alerting and SRE dashboards only.
+        // No customer PII is logged; only billing-infrastructure identifiers are emitted.
+        const invoice = event.data.object as Stripe.Invoice & { subscription?: string | Stripe.Subscription | null }
+        const attemptCount = (invoice as { attempt_count?: number }).attempt_count ?? null
+
+        console.warn(
+          `[Stripe Webhook] invoice.payment_failed received — no immediate Pro revocation (ACCEPTED_BILLING_POLICY). ` +
+          `eventId=${eventId}, subscriptionId=${subscriptionId ?? 'unknown'}, attemptCount=${attemptCount ?? 'unknown'}. ` +
+          `Stripe will retry automatically; subsequent customer.subscription.updated or customer.subscription.deleted events will reflect final status.`
+        )
+
+        // Telemetry: mark as acknowledged / processed (no DB entitlement changes)
+        subscriptionUpsertSuccess = false
+        customerUpsertSuccess = false
+        resolvedPlanSlug = 'unchanged'
+        resolvedStatus = 'past_due_retry_pending'
         break
       }
     }

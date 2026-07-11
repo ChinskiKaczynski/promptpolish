@@ -7,19 +7,30 @@ export const dynamic = 'force-dynamic'
 
 export async function POST() {
   try {
-    const user = await getAuthUser()
-
-    if (!user?.id || !user.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const isDev = process.env.NODE_ENV === 'development'
     const isStripeEnabled =
       process.env.STRIPE_ENABLED === 'true' &&
       !!process.env.STRIPE_SECRET_KEY &&
       !!process.env.STRIPE_PRICE_ID_PRO
 
-    if (!isDev || isStripeEnabled) {
+    if (!isDev || isStripeEnabled || process.env.ENABLE_DEV_PRO_SIMULATION !== 'true') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const user = await getAuthUser()
+
+    if (!user?.id || !user.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rawAdminEmails = process.env.ADMIN_EMAILS || ''
+    const adminEmails = rawAdminEmails
+      .split(',')
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean)
+
+    const isEmailAdmin = adminEmails.includes(user.email.trim().toLowerCase())
+    if (!isEmailAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -60,10 +71,6 @@ export async function POST() {
       {
         ok: true,
         plan: 'pro',
-        userId: updated.user_id,
-        email: updated.email,
-        dbPlan: updated.plan_slug,
-        debugVersion: 'simulate-pro-set-user-plan-slug-v1',
       },
       { status: 200 },
     )

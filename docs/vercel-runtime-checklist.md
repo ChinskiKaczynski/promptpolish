@@ -8,7 +8,7 @@ This checklist contains critical operational environment settings and runtime ve
 
 | Variable | Deployment Role | Recommended State | Notes |
 |---|---|---|---|
-| **`OPENROUTER_FALLBACK_MODEL_ID`** | Optional Fallback ID | **Unset (Empty)** | Production fallback must remain disabled until a suitable model is approved. |
+| **`GEMINI_MODEL_ID`** | Default Fallback/Direct ID | **`gemini-2.5-flash`** | Default model used for prompt analysis and as fallback. |
 | **`STRIPE_ENABLED`** | Stripe Integration | **`false`** (Production) | Stripe billing remains disabled on prod. Set to `true` in Vercel Preview for test mode. |
 | **`AI_MOCK_MODE`** | AI Provider Mocking | **`false`** | Live calls only in production environments. |
 | **`AI_PROVIDER_TIMEOUT_MS`** | Provider Request Budget | **`55000`** (55s) | Hard abort limit for provider completions. |

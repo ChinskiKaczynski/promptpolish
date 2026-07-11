@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { Logo } from '@/components/ui/logo'
 
 interface AppHeaderClientProps {
@@ -16,7 +16,6 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _ = theme
   const pathname = usePathname()
-  const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
@@ -27,9 +26,6 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
       if (supabaseClient) {
         await supabaseClient.auth.signOut()
       }
-      await fetch('/api/auth/session', { method: 'DELETE' })
-      router.push('/')
-      router.refresh()
     } catch (err) {
       console.error('Logout failed:', err)
     } finally {
