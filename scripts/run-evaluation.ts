@@ -285,9 +285,9 @@ function generateStaticReport(modelId: string): string {
   return `# AI Quality Evaluation Pass Results — PromptPolish
 
 > [!WARNING]
-> **LIVE AI EVALUATION NOT RUN**: The live evaluation pass against the actual OpenRouter API (target: \`${modelId}\`) was skipped because the \`OPENROUTER_API_KEY\` is not configured in your \`.env.local\` file.
+> **LIVE AI EVALUATION NOT RUN**: The live evaluation pass against the actual API (target: \`${modelId}\`) was skipped because the \`GOOGLE_GENERATIVE_AI_API_KEY\` is not configured in your \`.env.local\` file.
 >
-> An automated evaluation script has been prepared at [scripts/run-evaluation.ts](file:///d:/AI/promptpolish/scripts/run-evaluation.ts). Follow the setup instructions below to execute the live suite.
+> An automated evaluation script has been prepared at [scripts/run-evaluation.ts](scripts/run-evaluation.ts). Follow the setup instructions below to execute the live suite.
 
 ---
 
@@ -296,22 +296,22 @@ function generateStaticReport(modelId: string): string {
 To perform the live quality evaluation pass, execute the following steps in your terminal:
 
 1. Open your local configurations file:
-   [**\`.env.local\`**](file:///d:/AI/promptpolish/.env.local)
-2. Provide your valid OpenRouter API Key:
+   [**\`.env.local\`**](.env.local)
+2. Provide your valid Google Gemini API Key:
    \`\`\`bash
-   OPENROUTER_API_KEY=sk-or-v1-YourActualKeyHere
+   GOOGLE_GENERATIVE_AI_API_KEY=YourActualKeyHere
    \`\`\`
 3. Run the automated evaluation suite using \`tsx\`:
    \`\`\`bash
    npx tsx scripts/run-evaluation.ts
    \`\`\`
-4. The script will automatically connect to the OpenRouter API, evaluate all 46 calibration prompts, calculate scoring deviations, detect leaks, audit uncertainty warnings, and overwrite this file (\`docs/evaluation-results.md\`) with live telemetry.
+4. The script will automatically connect to the Gemini API, evaluate all 46 calibration prompts, calculate scoring deviations, detect leaks, audit uncertainty warnings, and overwrite this file (\`docs/evaluation-results.md\`) with live telemetry.
 
 ---
 
 ## 2. Static Quality Audit of Prompt System Instructions
 
-We performed a rigorous static code review of the core system prompt templates ([**\`lib/ai/prompts.ts\`**](file:///d:/AI/promptpolish/lib/ai/prompts.ts)) and structured schemas ([**\`lib/ai/schemas.ts\`**](file:///d:/AI/promptpolish/lib/ai/schemas.ts)) against the AI quality evaluation guidelines.
+We performed a rigorous static code review of the core system prompt templates ([**\`lib/ai/prompts.ts\`**](lib/ai/prompts.ts)) and structured schemas ([**\`lib/ai/schemas.ts\`**](lib/ai/schemas.ts)) against the AI quality evaluation guidelines.
 
 ### A. Polished Prompt Length Control
 * **System Prompt Guardrail**: Rule 4 states: *"Do not make the improved prompt unnecessarily long. Keep it concise, functional, and efficient."*
@@ -324,7 +324,7 @@ We performed a rigorous static code review of the core system prompt templates (
   2. *"Absolutely DO NOT invent or assume any unverified model capabilities, pricing structures, context windows, token limits, benchmark scores, or provider recommendations."*
   3. *"If model profile data is missing or marked unverified/stale, treat it as unknown/unverified. Do not suggest or assert specifications."*
 * **User Prompt Guardrail**: *"For 'model_profile_fit', evaluate compatibility strictly against the [MODEL PROFILE DATA] provided above. Do not reference external benchmarks or claim knowledge of pricing or context windows not listed in the profile."*
-* **Evaluation**: Excellent. This prevents the model from fabricating benchmark scores or quoting outdated pricing structures.
+* **Evaluation**: Excellent. This prevents the model from fabricating benchmark scores or quoting pricing structures.
 
 ### C. Uncertainty Warnings Generation
 * **System Prompt Guardrail**: Rule 9 commands: *"To combat hallucination, always include anti-hallucination guardrails and instructions in the generated improved prompt, instructing the model to reject ungrounded assumptions or state when information is unavailable."*
@@ -334,13 +334,13 @@ We performed a rigorous static code review of the core system prompt templates (
 ### D. Safety Notes & Secrets Leak Prevention
 * **System Prompt Guardrail**: Rule 8 commands: *"Under no circumstances should you repeat full secret values (such as passwords, API keys, tokens, or private database keys) if the input contains sensitive data. Redact them or speak about them generally without copying the sensitive value itself."*
 * **Evaluation**: Outstanding. This addresses the danger of "confidentiality mirroring" where the assistant regurgitates credentials back in its analysis notes or within the "improved prompt".
-* **Active Defense**: Supported by server-side preflight scans in [**\`lib/privacy/sensitive-data-detector.ts\`**](file:///d:/AI/promptpolish/lib/privacy/sensitive-data-detector.ts) which blocks high-risk secrets before sending any data to the model.
+* **Active Defense**: Supported by server-side preflight scans in [**\`lib/privacy/sensitive-data-detector.ts\`**](lib/privacy/sensitive-data-detector.ts) which blocks high-risk secrets before sending any data to the model.
 
 ---
 
 ## 3. Calibration Fixture Expectations & Target Ranges
 
-The calibration suite contains **46 prompts** categorized into 6 JSON files under [**\`tests/ai-fixtures/\`**](file:///d:/AI/promptpolish/tests/ai-fixtures):
+The calibration suite contains **46 prompts** categorized into 6 JSON files under [**\`tests/ai-fixtures/\`**](tests/ai-fixtures):
 
 | Fixture File | Items | Target Language | Expected Scores | Expected Security & Hallucination Actions |
 | :--- | :---: | :---: | :---: | :--- |
@@ -370,7 +370,7 @@ Based on the static analysis audit, we recommend applying the following isolated
 
 ### 💡 Recommendation 3: Add Preflight API Key Masking
 * **Problem**: If high-risk credentials are block-disabled, the user gets blocked. If we only show warning, secrets might go to the provider.
-* **Suggested Action**: Continue relying on the robust server-side preflight block (\`SENSITIVE_DATA_BLOCK_HIGH_RISK=true\`) which completely prevents any secret-bearing prompts from making API calls to OpenRouter.
+* **Suggested Action**: Continue relying on the robust server-side preflight block (\`SENSITIVE_DATA_BLOCK_HIGH_RISK=true\`) which completely prevents any secret-bearing prompts from making API calls in production.
 `
 }
 

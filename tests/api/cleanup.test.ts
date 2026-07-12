@@ -15,7 +15,7 @@ vi.mock('@/lib/env/server', () => ({
   }
 }))
 
-import { GET, POST } from '@/app/api/cron/cleanup/route'
+import { POST } from '@/app/api/cron/cleanup/route'
 import { runRetentionCleanup } from '@/lib/privacy/retention'
 
 describe('Scheduled Cron Endpoint: /api/cron/cleanup', () => {
@@ -56,8 +56,7 @@ describe('Scheduled Cron Endpoint: /api/cron/cleanup', () => {
     })
 
     it('returns 500 Misconfigured when CRON_SECRET is missing in production', async () => {
-      const originalNodeEnv = process.env.NODE_ENV
-      process.env.NODE_ENV = 'production'
+      vi.stubEnv('NODE_ENV', 'production')
 
       const { serverEnv } = await import('@/lib/env/server')
       const originalSecret = serverEnv.CRON_SECRET
@@ -72,7 +71,7 @@ describe('Scheduled Cron Endpoint: /api/cron/cleanup', () => {
         expect(data.error).toBe('misconfigured')
         expect(runRetentionCleanup).not.toHaveBeenCalled()
       } finally {
-        process.env.NODE_ENV = originalNodeEnv
+        vi.unstubAllEnvs()
         serverEnv.CRON_SECRET = originalSecret
       }
     })
@@ -106,8 +105,8 @@ describe('Scheduled Cron Endpoint: /api/cron/cleanup', () => {
         feedbackEventsDeleted: 4
       })
 
-      const request = makeCronRequest('http://localhost/api/cron/cleanup?dryRun=true', 'super-secret-cron-token-xyz', 'GET')
-      const response = await GET(request)
+      const request = makeCronRequest('http://localhost/api/cron/cleanup?dryRun=true', 'super-secret-cron-token-xyz', 'POST')
+      const response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(200)

@@ -7,12 +7,19 @@ import { checkProductionEnv } from '@/lib/env/server'
 
 export const dynamic = 'force-dynamic'
 
+import { validateSameOrigin } from '@/lib/security/csrf'
+
 const shareRequestSchema = z.object({
   analysis_id: z.string().uuid()
 })
 
 export async function POST(request: Request) {
   try {
+    // CSRF Same-Origin validation
+    if (!(await validateSameOrigin())) {
+      return NextResponse.json({ error: 'CSRF validation failed.' }, { status: 403 })
+    }
+
     const envCheck = checkProductionEnv()
     if (!envCheck.valid) {
       return NextResponse.json(

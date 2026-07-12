@@ -58,10 +58,6 @@ async function handleCleanup(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
-  return handleCleanup(request)
-}
-
 export async function POST(request: Request) {
   return handleCleanup(request)
 }

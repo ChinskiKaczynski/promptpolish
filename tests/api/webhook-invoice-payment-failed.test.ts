@@ -69,7 +69,7 @@ function makeInvoicePaymentFailedEvent(attemptCount = 1): Stripe.Event {
         attempt_count: attemptCount
       }
     },
-    api_version: '2022-11-15' as Stripe.LatestApiVersion,
+    api_version: '2022-11-15' as unknown as Stripe.Event['api_version'],
     pending_webhooks: 0,
     request: null
   } as unknown as Stripe.Event

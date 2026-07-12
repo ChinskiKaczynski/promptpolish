@@ -19,7 +19,8 @@ vi.mock('@/lib/supabase/queries', () => ({
   getUsageCountThisMonthForUser: vi.fn().mockResolvedValue(0),
   acquireReservation: vi.fn().mockResolvedValue('success:reserved'),
   completeReservation: vi.fn().mockResolvedValue(true),
-  releaseReservation: vi.fn().mockResolvedValue(true)
+  releaseReservation: vi.fn().mockResolvedValue(true),
+  saveAnalysisAndCompleteReservation: vi.fn().mockResolvedValue(true)
 }))
 
 vi.mock('@/lib/ai/analyze-prompt', () => ({

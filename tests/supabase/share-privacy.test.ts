@@ -27,7 +27,7 @@ const FULL_DB_ROW = {
   id: MOCK_ANALYSIS_ID,
   owner_anonymous_id: MOCK_OWNER_ID,
   user_id: null,
-  sensitive_data_findings_json: [{ type: 'api_key', riskLevel: 'high', redactedValue: 'sk-***' }],
+  sensitive_data_findings_json: [{ type: 'api_key', riskLevel: 'high' }],
   model_id_used: 'gemini-2.0-flash',
   provider_used: 'google',
   analysis_schema_version: '1.0.0',

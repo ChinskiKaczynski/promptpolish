@@ -2,3 +2,9 @@ allowBuilds:
   core-js: false
   sharp: true
   unrs-resolver: true
+
+overrides:
+  dompurify: "^3.4.11"
+  "@babel/core": "^7.29.1"
+  "@ai-sdk/provider-utils": "^5.0.7"
+  postcss: "^8.5.15"

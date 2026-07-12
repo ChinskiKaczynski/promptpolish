@@ -59,7 +59,7 @@ export function SensitiveDataAlert({ detection, workingLanguage }: SensitiveData
                 }`}>
                   {finding.riskLevel === 'high' ? (workingLanguage === 'pl' ? 'Krytyczne' : 'Critical') : finding.riskLevel === 'medium' ? (workingLanguage === 'pl' ? 'Ostrzeżenie' : 'Warning') : 'Info'}
                 </span>
-                <span className="font-mono text-xs font-bold text-[#E2E8F0] break-all">{finding.redactedValue}</span>
+                <span className="font-mono text-xs font-bold text-[#E2E8F0] break-all">{finding.type}</span>
               </div>
               <p className="text-xs text-[#94A3B8] leading-normal font-medium">{finding.message}</p>
             </li>

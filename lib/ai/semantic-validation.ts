@@ -43,7 +43,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export function validateAnalysisResult(data: unknown): AnalysisResult {
   const errors: ValidationErrorDetail[] = []
 
-  const result = analysisResultSchema.safeParse(data)
+  let cleanData = data
+  if (isRecord(data)) {
+    const rest = { ...data }
+    delete rest.id
+    delete rest.overallScore
+    delete rest.scoreLevel
+    cleanData = rest
+  }
+
+  const result = analysisResultSchema.safeParse(cleanData)
   if (!result.success) {
     const zodErrors = result.error.issues.map((err) => ({
       path: err.path.join('.') || 'root',
@@ -52,7 +61,7 @@ export function validateAnalysisResult(data: unknown): AnalysisResult {
     errors.push(...zodErrors)
   }
 
-  const parsedData = result.success ? result.data : (data as Partial<AnalysisResult> | null)
+  const parsedData = result.success ? result.data : (cleanData as Partial<AnalysisResult> | null)
 
   if (!isRecord(parsedData)) {
     errors.push({

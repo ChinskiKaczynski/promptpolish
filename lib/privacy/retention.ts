@@ -63,116 +63,37 @@ export async function runRetentionCleanup(options?: {
   const usageCutoff = new Date(now.getTime() - usageDays * 24 * 60 * 60 * 1000).toISOString()
   const feedbackCutoff = new Date(now.getTime() - feedbackDays * 24 * 60 * 60 * 1000).toISOString()
 
-  if (dryRun) {
-    // Count candidates using the exact same predicates as the active delete.
-    //
-    // Analysis predicate (MUST match active delete below exactly):
-    //   user_id IS NULL
-    //   AND is_favorite = false
-    //   AND is_share_enabled = false
-    //   AND deleted_at IS NULL
-    //   AND created_at < analysisCutoff
-    const analysisQuery = adminClient
-      .from('prompt_analyses')
-      .select('*', { count: 'exact', head: true })
-      .is('user_id', null)
-      .eq('is_favorite', false)
-      .eq('is_share_enabled', false)
-      .is('deleted_at', null)
-      .lt('created_at', analysisCutoff)
+  const rpcFn = adminClient.rpc as unknown as (
+    fnName: string,
+    args: Record<string, unknown>
+  ) => Promise<{ data: unknown; error: unknown }>
 
-    const usageQuery = adminClient
-      .from('usage_events')
-      .select('*', { count: 'exact', head: true })
-      .lt('created_at', usageCutoff)
+  const { data, error } = await rpcFn('run_retention_cleanup', {
+    p_analysis_cutoff: analysisCutoff,
+    p_usage_cutoff: usageCutoff,
+    p_feedback_cutoff: feedbackCutoff,
+    p_dry_run: dryRun
+  })
 
-    const feedbackQuery = adminClient
-      .from('feedback_events')
-      .select('*', { count: 'exact', head: true })
-      .lt('created_at', feedbackCutoff)
-
-    const [analysisRes, usageRes, feedbackRes] = await Promise.all([
-      analysisQuery,
-      usageQuery,
-      feedbackQuery
-    ])
-
-    // Fail visibly — never report success on DB error
-    if (analysisRes.error) {
-      console.error('[Retention] Error fetching prompt analyses count for dry run:', analysisRes.error)
-      throw new Error(`Dry run failed for prompt analyses: ${analysisRes.error.message}`)
-    }
-    if (usageRes.error) {
-      console.error('[Retention] Error fetching usage events count for dry run:', usageRes.error)
-      throw new Error(`Dry run failed for usage events: ${usageRes.error.message}`)
-    }
-    if (feedbackRes.error) {
-      console.error('[Retention] Error fetching feedback events count for dry run:', feedbackRes.error)
-      throw new Error(`Dry run failed for feedback events: ${feedbackRes.error.message}`)
-    }
-
-    return {
-      dryRun: true,
-      promptAnalysesDeleted: analysisRes.count ?? 0,
-      usageEventsDeleted: usageRes.count ?? 0,
-      feedbackEventsDeleted: feedbackRes.count ?? 0
-    }
+  if (error) {
+    console.error('[Retention] Error running retention cleanup via RPC:', error)
+    const msg = error && typeof error === 'object' && 'message' in error
+      ? String((error as Record<string, unknown>).message)
+      : String(error)
+    throw new Error(`Database error: ${msg}`)
   }
 
-  // Active execution: delete using the exact same predicates as dry-run above.
-  //
-  // Analysis predicate (MUST match dry-run count above exactly):
-  //   user_id IS NULL
-  //   AND is_favorite = false
-  //   AND is_share_enabled = false
-  //   AND deleted_at IS NULL
-  //   AND created_at < analysisCutoff
-  const deleteAnalysis = adminClient
-    .from('prompt_analyses')
-    .delete()
-    .is('user_id', null)
-    .eq('is_favorite', false)
-    .eq('is_share_enabled', false)
-    .is('deleted_at', null)
-    .lt('created_at', analysisCutoff)
-    .select('id')
-
-  const deleteUsage = adminClient
-    .from('usage_events')
-    .delete()
-    .lt('created_at', usageCutoff)
-    .select('id')
-
-  const deleteFeedback = adminClient
-    .from('feedback_events')
-    .delete()
-    .lt('created_at', feedbackCutoff)
-    .select('id')
-
-  const [analysisRes, usageRes, feedbackRes] = await Promise.all([
-    deleteAnalysis,
-    deleteUsage,
-    deleteFeedback
-  ])
-
-  // Fail visibly — never silently swallow DB errors
-  if (analysisRes.error) {
-    console.error('[Retention] Error deleting expired prompt analyses:', analysisRes.error)
-    throw new Error(`Failed to delete expired prompt analyses: ${analysisRes.error.message}`)
+  const result = data as {
+    dryRun: boolean
+    promptAnalysesDeleted: number
+    usageEventsDeleted: number
+    feedbackEventsDeleted: number
   }
-  if (usageRes.error) {
-    console.error('[Retention] Error deleting expired usage events:', usageRes.error)
-    throw new Error(`Failed to delete expired usage events: ${usageRes.error.message}`)
-  }
-  if (feedbackRes.error) {
-    console.error('[Retention] Error deleting expired feedback events:', feedbackRes.error)
-    throw new Error(`Failed to delete expired feedback events: ${feedbackRes.error.message}`)
-  }
-
   return {
-    dryRun: false,
-    promptAnalysesDeleted: analysisRes.data?.length ?? 0,
-    usageEventsDeleted: usageRes.data?.length ?? 0,
-    feedbackEventsDeleted: feedbackRes.data?.length ?? 0
+    dryRun: result.dryRun,
+    promptAnalysesDeleted: result.promptAnalysesDeleted,
+    usageEventsDeleted: result.usageEventsDeleted,
+    feedbackEventsDeleted: result.feedbackEventsDeleted
   }
 }
+

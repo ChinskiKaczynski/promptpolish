@@ -11,6 +11,23 @@ vi.mock('@/lib/identity/auth', () => ({
   getAuthUser: vi.fn()
 }))
 
+vi.mock('@/lib/supabase/admin', () => {
+  const builder: Record<string, unknown> = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    then: vi.fn((resolve) => resolve({ data: [], error: null }))
+  }
+  return {
+    getSupabaseAdminClient: vi.fn(() => ({
+      from: vi.fn(() => builder),
+      rpc: vi.fn().mockResolvedValue({ data: [], error: null })
+    }))
+  }
+})
+
 // 2. Mock individual layers to control execution flows
 vi.mock('@/lib/supabase/queries', () => ({
   getModelProfileBySlug: vi.fn(),
@@ -21,7 +38,9 @@ vi.mock('@/lib/supabase/queries', () => ({
   getUsageCountThisMonthForUser: vi.fn(),
   acquireReservation: vi.fn(),
   completeReservation: vi.fn(),
-  releaseReservation: vi.fn()
+  releaseReservation: vi.fn(),
+  saveAnalysisAndCompleteReservation: vi.fn(),
+  getPromptAnalysisForOwner: vi.fn()
 }))
 
 
@@ -42,7 +61,8 @@ import {
   getUsageCountThisMonthForUser,
   acquireReservation,
   completeReservation,
-  releaseReservation
+  releaseReservation,
+  saveAnalysisAndCompleteReservation
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { ProviderError } from '@/lib/ai/provider-errors'
@@ -66,6 +86,7 @@ describe('POST /api/analyze API Route Handler', () => {
     vi.mocked(acquireReservation).mockResolvedValue('success:reserved')
     vi.mocked(completeReservation).mockResolvedValue(true)
     vi.mocked(releaseReservation).mockResolvedValue(true)
+    vi.mocked(saveAnalysisAndCompleteReservation).mockResolvedValue(true)
 
     vi.mocked(getModelProfileBySlug).mockResolvedValue({
       id: 'profile-uuid',
@@ -571,7 +592,8 @@ describe('POST /api/analyze API Route Handler', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.id).toBe('new-analysis-uuid')
+      expect(data.id).toBeDefined()
+      expect(data.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
       expect(data.overall_score).toBe(85)
       expect(data.score_level).toBe('strong')
       expect(data.improved_prompt).toBe('Improved polished prompt')
@@ -590,7 +612,7 @@ describe('POST /api/analyze API Route Handler', () => {
         expect.objectContaining({ mockMode: true })
       )
 
-      expect(createPromptAnalysis).toHaveBeenCalledWith(
+      expect(saveAnalysisAndCompleteReservation).toHaveBeenCalledWith(
         expect.objectContaining({
           owner_anonymous_id: 'mocked-owner-id',
           input_prompt: validPayload.input_prompt,
@@ -656,7 +678,7 @@ describe('POST /api/analyze API Route Handler', () => {
         expect.any(Object)
       )
 
-      expect(createPromptAnalysis).toHaveBeenCalledWith(
+      expect(saveAnalysisAndCompleteReservation).toHaveBeenCalledWith(
         expect.objectContaining({
           audit_mode: 'coding'
         })
@@ -685,7 +707,7 @@ describe('POST /api/analyze API Route Handler', () => {
       }
 
       vi.mocked(analyzePrompt).mockResolvedValue(mockResult as unknown as AnalysisServiceResult)
-      vi.mocked(createPromptAnalysis).mockResolvedValue(null) // Mock DB save failure
+      vi.mocked(saveAnalysisAndCompleteReservation).mockResolvedValue(false) // Mock DB save failure
 
       const response = await POST(makeRequest(validPayload))
       const data = await response.json()

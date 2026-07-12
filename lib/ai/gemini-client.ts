@@ -47,7 +47,7 @@ export const defaultTextGenerator: TextGenerator = async (
 
   try {
     const { object, usage, finishReason } = await generateObject({
-      model: google(model),
+      model: google(model) as unknown as Parameters<typeof generateObject>[0]['model'],
       system: systemInstruction,
       prompt: userPrompt,
       temperature: opts.temperature,
@@ -159,8 +159,13 @@ export async function executeGeminiAnalysis(
       mockOut = mockAnalysisResult
     }
 
+    const cleanMockOut = { ...mockOut } as Record<string, unknown>
+    delete cleanMockOut.id
+    delete cleanMockOut.overallScore
+    delete cleanMockOut.scoreLevel
+
     return {
-      output: mockOut,
+      output: cleanMockOut as AnalysisResult,
       usage: {
         promptTokens: 120,
         completionTokens: 250,

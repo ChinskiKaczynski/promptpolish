@@ -17,6 +17,23 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 
 vi.mock('server-only', () => ({}))
 
+vi.mock('@/lib/supabase/admin', () => {
+  const builder: Record<string, unknown> = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    then: vi.fn((resolve) => resolve({ data: [], error: null }))
+  }
+  return {
+    getSupabaseAdminClient: vi.fn(() => ({
+      from: vi.fn(() => builder),
+      rpc: vi.fn().mockResolvedValue({ data: [], error: null })
+    }))
+  }
+})
+
 vi.mock('@/lib/identity/anonymous', () => ({
   resolveOrCreateOwnerId: vi.fn().mockResolvedValue({ id: 'test-owner-id', isNew: false })
 }))
@@ -70,6 +87,13 @@ vi.mock('@/lib/supabase/queries', () => ({
   releaseReservation: vi.fn().mockImplementation(async (reqId: string) => {
     const r = mockReservations.get(reqId)
     if (r) r.status = 'released'
+    return true
+  }),
+  saveAnalysisAndCompleteReservation: vi.fn().mockImplementation(async (analysis: Record<string, unknown>) => {
+    const record = { ...analysis, id: analysis.id || 'analysis-' + Math.random().toString(36).slice(2) }
+    mockAnalyses.push(record)
+    const r = mockReservations.get(analysis.reservation_id as string)
+    if (r) r.status = 'completed'
     return true
   })
 }))
@@ -227,18 +251,12 @@ describe('P1 Timeout Regression: /api/analyze', () => {
         attempt: 1
       })
 
-      const { createPromptAnalysis: createPA } = await import('@/lib/supabase/queries')
-      vi.mocked(createPA).mockResolvedValueOnce({
-        id: 'second-analysis-uuid',
-        overall_score: 72,
-        score_level: 'decent'
-      } as never)
-
       const secondRes = await POST(makeRequest(VALID_PAYLOAD))
       expect(secondRes.status).toBe(200)
 
       const secondData = await secondRes.json()
-      expect(secondData.id).toBe('second-analysis-uuid')
+      expect(secondData.id).toBeDefined()
+      expect(secondData.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
     })
   })
 

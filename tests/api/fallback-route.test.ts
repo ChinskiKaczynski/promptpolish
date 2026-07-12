@@ -5,6 +5,23 @@ import { mockAnalysisResult } from '@/lib/ai/mock-analysis'
 
 vi.mock('server-only', () => ({}))
 
+vi.mock('@/lib/supabase/admin', () => {
+  const builder: Record<string, unknown> = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    gte: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    then: vi.fn((resolve) => resolve({ data: [], error: null }))
+  }
+  return {
+    getSupabaseAdminClient: vi.fn(() => ({
+      from: vi.fn(() => builder),
+      rpc: vi.fn().mockResolvedValue({ data: [], error: null })
+    }))
+  }
+})
+
 // Mock database storage
 const mockAnalyses: Record<string, unknown>[] = []
 const mockUsageEvents: Record<string, unknown>[] = []
@@ -61,6 +78,15 @@ vi.mock('@/lib/supabase/queries', () => ({
       res.status = 'released'
     }
     return true
+  }),
+  saveAnalysisAndCompleteReservation: vi.fn().mockImplementation(async (analysis: Record<string, unknown>) => {
+    const record = { ...analysis, id: analysis.id || 'analysis-uuid-' + Math.random() }
+    mockAnalyses.push(record)
+    const res = mockReservations.get(analysis.reservation_id as string)
+    if (res) {
+      res.status = 'completed'
+    }
+    return true
   })
 }))
 
@@ -73,7 +99,6 @@ vi.mock('@/lib/identity/auth', () => ({
 }))
 
 describe('Route Handler integration test', () => {
-  const originalEnv = { ...process.env }
 
   beforeEach(() => {
     mockAnalyses.length = 0
@@ -81,15 +106,14 @@ describe('Route Handler integration test', () => {
     mockReservations.clear()
     mockExecuteAnalysis.mockReset()
 
-    process.env = { ...originalEnv }
-    process.env.NODE_ENV = 'development'
-    process.env.GEMINI_MODEL_ID = 'gemini-2.5-flash'
-    process.env.AI_MOCK_MODE = 'false'
-    process.env.NEXT_PUBLIC_ENABLE_MOCK_RESULT = 'false'
+    vi.stubEnv('NODE_ENV', 'development')
+    vi.stubEnv('GEMINI_MODEL_ID', 'gemini-2.5-flash')
+    vi.stubEnv('AI_MOCK_MODE', 'false')
+    vi.stubEnv('NEXT_PUBLIC_ENABLE_MOCK_RESULT', 'false')
   })
 
   afterEach(() => {
-    process.env = originalEnv
+    vi.unstubAllEnvs()
     vi.clearAllMocks()
   })
 

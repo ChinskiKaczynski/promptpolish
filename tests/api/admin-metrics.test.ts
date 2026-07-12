@@ -15,9 +15,10 @@ import { getAuthUser } from '@/lib/identity/auth'
 import { fetchAggregatedMetrics } from '@/lib/admin/metrics'
 import type { User } from '@supabase/supabase-js'
 import type { AggregatedMetrics } from '@/lib/admin/metrics'
+import { NextRequest } from 'next/server'
 
 function makeRequest(window = 'allTime') {
-  return new Request(`http://localhost/api/admin/metrics?window=${window}`)
+  return new NextRequest(`http://localhost/api/admin/metrics?window=${window}`)
 }
 
 const SAFE_METRICS: AggregatedMetrics = {
@@ -40,8 +41,10 @@ const SAFE_METRICS: AggregatedMetrics = {
     feedback_rate: 25,
     feedback_up: 18,
     feedback_down: 2,
+    feedback_up_down_ratio: '18/2',
     positive_feedback_ratio: 90,
     share_link_created: 10,
+    share_link_disabled: 0,
     share_rate: 12.5,
     active_public_shares: 8,
     export_markdown: 3,
@@ -114,7 +117,8 @@ const SAFE_METRICS: AggregatedMetrics = {
     feedback_status: 'strong',
     retention_status: 'strong',
     reliability_status: 'strong',
-    paid_readiness: 'consider_export_pro_value_layer_later'
+    paid_readiness: 'consider_export_pro_value_layer_later',
+    beta_signal: 'STRONG_SIGNAL'
   }
 }
 

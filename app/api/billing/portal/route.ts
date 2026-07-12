@@ -5,9 +5,15 @@ import { getStripeCustomer } from '@/lib/supabase/billing'
 import { checkProductionEnv } from '@/lib/env/server'
 import { createUsageEvent } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
+import { validateSameOrigin } from '@/lib/security/csrf'
 
 export async function POST() {
   try {
+    // CSRF Same-Origin validation
+    if (!(await validateSameOrigin())) {
+      return NextResponse.json({ error: 'CSRF validation failed.' }, { status: 403 })
+    }
+
     const stripeEnabled =
       process.env.STRIPE_ENABLED === 'true' &&
       !!process.env.STRIPE_SECRET_KEY &&

@@ -1,18 +1,33 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 import { getAuthUser } from '@/lib/identity/auth'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { softDeleteAnalysis, createUsageEvent } from '@/lib/supabase/queries'
 
+import { validateSameOrigin } from '@/lib/security/csrf'
+
 export const dynamic = 'force-dynamic'
+
+const deleteSchema = z.object({
+  analysisId: z.string().uuid()
+}).strict()
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { analysisId } = body
-
-    if (!analysisId) {
-      return NextResponse.json({ error: 'Missing analysisId.' }, { status: 400 })
+    // CSRF Same-Origin validation
+    if (!(await validateSameOrigin())) {
+      return NextResponse.json({ error: 'CSRF validation failed.' }, { status: 403 })
     }
+
+    const body = await request.json().catch(() => null)
+    const parsed = deleteSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request payload.' }, { status: 400 })
+    }
+
+    const { analysisId } = parsed.data
+
 
     // 1. Resolve session ownership identities
     const user = await getAuthUser()

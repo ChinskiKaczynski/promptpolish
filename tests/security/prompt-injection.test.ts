@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { constructUserAnalysisPrompt, escapeXmlText } from '@/lib/ai/prompts'
 
-import { ModelProfile } from '@/lib/ai/gemini-client'
+import type { ModelProfile } from '@/lib/ai/model-profiles'
 
 vi.mock('server-only', () => ({}))
 

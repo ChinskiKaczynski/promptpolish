@@ -38,12 +38,22 @@ export async function getStripeCustomer(
 export async function saveStripeCustomer(
   userId: string,
   stripeCustomerId: string,
+  customerIdempotencyKey?: string,
 ): Promise<StripeCustomerRow | null> {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return null
   }
 
-  const supabase = getSupabaseAdminClient()
+  const rawSupabase = getSupabaseAdminClient()
+  const supabase = rawSupabase as unknown as {
+    from: (table: string) => {
+      upsert: (values: Record<string, unknown>, options?: { onConflict?: string }) => {
+        select: () => {
+          single: () => Promise<{ data: StripeCustomerRow | null; error: { message: string } | null }>
+        }
+      }
+    }
+  }
 
   const { data, error } = await supabase
     .from('stripe_customers')
@@ -51,6 +61,7 @@ export async function saveStripeCustomer(
       {
         user_id: userId,
         stripe_customer_id: stripeCustomerId,
+        customer_idempotency_key: customerIdempotencyKey || userId,
         updated_at: new Date().toISOString(),
       },
       {
@@ -569,16 +580,45 @@ export async function completeCheckoutAttempt(stripeSessionId: string): Promise<
 
   const supabase = getSupabaseAdminClient()
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('billing_checkout_attempts')
     .update({ status: 'completed', updated_at: new Date().toISOString() })
     .eq('stripe_checkout_session_id', stripeSessionId)
-    .select()
 
   if (error) {
     console.error('Error completing checkout attempt:', serializeDbError(error))
     return false
   }
 
-  return !!data
+  return true
+}
+
+export async function acquireStripeLock(key: string): Promise<void> {
+  const supabase = getSupabaseAdminClient()
+  const rpcFn = supabase.rpc as unknown as (
+    fnName: string,
+    args: Record<string, unknown>
+  ) => Promise<{ error: { message: string } | null }>
+
+  const { error } = await rpcFn('acquire_stripe_lock', { p_key: key })
+  if (error) {
+    console.error('Error acquiring Stripe lock:', serializeDbError(error))
+    throw new Error(`Lock acquisition failed: ${error.message}`)
+  }
+}
+
+/**
+ * Releases a Postgres session-level advisory lock based on a text key.
+ */
+export async function releaseStripeLock(key: string): Promise<void> {
+  const supabase = getSupabaseAdminClient()
+  const rpcFn = supabase.rpc as unknown as (
+    fnName: string,
+    args: Record<string, unknown>
+  ) => Promise<{ error: { message: string } | null }>
+
+  const { error } = await rpcFn('release_stripe_lock', { p_key: key })
+  if (error) {
+    console.error('Error releasing Stripe lock:', serializeDbError(error))
+  }
 }

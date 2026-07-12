@@ -266,9 +266,10 @@ describe('Supabase Data Access Layer - Mocked Integration', () => {
         owner_anonymous_id: MOCK_OWNER_ID
       }
 
-      mockSingle.mockResolvedValue({ data: { id: 'efefefef-efef-efef-efef-efefefefefef', ...mockFeedback }, error: null })
+      mockRpc.mockResolvedValue({ data: [{ id: 'efefefef-efef-efef-efef-efefefefefef', ...mockFeedback }], error: null })
       const result = await createFeedbackEvent(mockFeedback as unknown as Parameters<typeof createFeedbackEvent>[0])
       expect(result).toEqual({ id: 'efefefef-efef-efef-efef-efefefefefef', ...mockFeedback })
+      expect(mockRpc).toHaveBeenCalledWith('upsert_feedback_event', expect.any(Object))
     })
   })
 

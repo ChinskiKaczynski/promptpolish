@@ -28,7 +28,7 @@ import { getAuthUser } from '@/lib/identity/auth'
 import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
 import { getPlanSlugForUser, canExportPdf, canExportMarkdown, canExportText } from '@/lib/plans/config'
 import type { PromptAnalysisRow } from '@/lib/supabase/types'
-import { formatAnalysis } from '@/lib/export/format-analysis'
+import { formatAnalysis, normalizeNewlines } from '@/lib/export/format-analysis'
 
 const ANALYSIS_ID = 'a1b2c3d4-e5f6-4789-abcd-ef1234567890'
 const OWNER_ID = 'owner-anon-uuid'
@@ -58,12 +58,16 @@ const mockAnalysisRecord: PromptAnalysisRow = {
     top_weaknesses: ['Slabosc 1'],
     improvement_plan: ['Krok 1'],
     criteria_scores: [
-      {
-        criterion: 'goal_clarity',
-        raw_score_0_10: 9,
-        rationale: 'Jasny cel.',
-        improvement_suggestion: 'Drobne poprawki.'
-      }
+      { criterion: 'goal_clarity', raw_score_0_10: 9, rationale: 'Jasny cel.', improvement_suggestion: 'Drobne poprawki.' },
+      { criterion: 'context_completeness', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'structure', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'constraints', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'output_format', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'model_profile_fit', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'resistance_to_misinterpretation', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'cost_efficiency', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'safety', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'testability', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' }
     ],
     change_explanations: ['Zmiana 1'],
     model_fit_notes: ['Zgodny.'],
@@ -342,3 +346,19 @@ describe('Export v1 API Dynamic Routes', () => {
     expect(md).toContain('`````text\nCode:\n```javascript\nconsole.log("hello");\n```\nNested:\n````\nfour backticks\n````\n`````')
   })
 })
+
+describe('normalizeNewlines utility', () => {
+
+  it('correctly unescapes double-escaped newlines in plain text', () => {
+    expect(normalizeNewlines('hello\\nworld')).toBe('hello\nworld')
+    expect(normalizeNewlines('hello\r\nworld')).toBe('hello\nworld')
+  })
+
+  it('avoids corrupting JSON strings', () => {
+    const jsonStr = '{"key": "value\\nwith\\nnewlines"}'
+    const result = normalizeNewlines(jsonStr)
+    expect(result).toBe(jsonStr)
+    expect(() => JSON.parse(result)).not.toThrow()
+  })
+})
+

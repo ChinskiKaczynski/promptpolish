@@ -10,19 +10,16 @@ const nextConfig: NextConfig = {
 
     const cspDirectives = [
       "default-src 'self'",
-      // Next.js Turbopack (and the App Router) injects inline bootstrap scripts during hydration.
-      // A static CSP header without 'unsafe-inline' blocks all of them, breaking client components.
-      // The correct long-term fix is a nonce-based CSP via custom middleware (Next.js docs §CSP).
-      // For this MVP, 'unsafe-inline' is the documented workaround. Remove once nonce flow is wired.
       isProd 
-        ? "script-src 'self' 'unsafe-inline' https://js.stripe.com" 
-        : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
+        ? "script-src 'self' 'unsafe-inline' https://js.stripe.com https://challenges.cloudflare.com" 
+        : "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://challenges.cloudflare.com",
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self'",
       "img-src 'self' data: blob:",
-      `connect-src 'self' https://api.stripe.com${supabaseUrl ? ` ${supabaseUrl} ${supabaseWsUrl}` : ''}`,
-      "frame-src 'self' https://js.stripe.com",
+      `connect-src 'self' https://api.stripe.com https://challenges.cloudflare.com${supabaseUrl ? ` ${supabaseUrl} ${supabaseWsUrl}` : ''}`,
+      "frame-src 'self' https://js.stripe.com https://challenges.cloudflare.com",
       "frame-ancestors 'none'",
+      "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "upgrade-insecure-requests"

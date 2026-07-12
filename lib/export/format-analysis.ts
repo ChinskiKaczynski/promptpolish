@@ -89,7 +89,15 @@ function getModelProfileLabel(slug: string, lang: 'pl' | 'en'): string {
 
 export function normalizeNewlines(str: string): string {
   if (!str) return ''
-  return str.replace(/\\n/g, '\n').replace(/\r\n/g, '\n')
+  try {
+    JSON.parse(str)
+    // It is a valid JSON string, so we must not unescape \\n to literal newlines as it would corrupt JSON syntax.
+    // We only normalize line endings.
+    return str.replace(/\r\n/g, '\n')
+  } catch {
+    // Not a JSON string, safe to normalize both
+    return str.replace(/\\n/g, '\n').replace(/\r\n/g, '\n')
+  }
 }
 
 export function formatAnalysis(record: PromptAnalysisRow, format: 'markdown' | 'txt'): string {

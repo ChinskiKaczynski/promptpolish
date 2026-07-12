@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { randomUUID } from 'node:crypto'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import {
   getPromptAnalysisForOwner,
   createFeedbackEvent,
-  createUsageEvent,
-  getRecentFeedbackCount
+  insertUsageEventWithLimit
 } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
 
 export const dynamic = 'force-dynamic'
+
+import { validateSameOrigin } from '@/lib/security/csrf'
 
 const feedbackSchema = z.object({
   analysis_id: z.string().uuid('analysis_id must be a valid UUID'),
@@ -20,6 +22,11 @@ const feedbackSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    // CSRF Same-Origin validation
+    if (!(await validateSameOrigin())) {
+      return NextResponse.json({ error: 'CSRF validation failed.' }, { status: 403 })
+    }
+
     const envCheck = checkProductionEnv()
     if (!envCheck.valid) {
       return NextResponse.json(
@@ -63,10 +70,24 @@ export async function POST(request: Request) {
     }
 
     const userId = user?.id || null
+    const finalAnonId = ownerAnonymousId || randomUUID()
 
-    // 3. Rate limiting check (max 10 feedbacks per 60 seconds per identity)
-    const recentCount = await getRecentFeedbackCount(ownerAnonymousId, userId, 60)
-    if (recentCount >= 10) {
+    // 3. Atomic rate limiting and telemetry event insertion (max 10 feedbacks per 60 seconds per identity)
+    const eventId = randomUUID()
+    const rateLimitOk = await insertUsageEventWithLimit({
+      eventId,
+      ownerAnonymousId: finalAnonId,
+      userId,
+      eventType: 'feedback_submitted',
+      metadataJson: {
+        analysis_id,
+        rating
+      },
+      windowSeconds: 60,
+      maxCount: 10
+    })
+
+    if (!rateLimitOk) {
       return NextResponse.json(
         {
           error: 'rate_limit_exceeded',
@@ -79,7 +100,7 @@ export async function POST(request: Request) {
     // 4. Verify ownership — non-owners and share viewers cannot submit feedback
     const ownedRecord = await getPromptAnalysisForOwner(
       analysis_id,
-      ownerAnonymousId,
+      finalAnonId,
       userId || undefined
     )
 
@@ -99,7 +120,7 @@ export async function POST(request: Request) {
       rating,
       comment: comment ?? null,
       user_id: userId,
-      owner_anonymous_id: ownerAnonymousId || null
+      owner_anonymous_id: finalAnonId
     })
 
     if (!saved) {
@@ -112,28 +133,15 @@ export async function POST(request: Request) {
       )
     }
 
-    // Telemetry: record feedback_submitted event
-    if (ownerAnonymousId) {
-      await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId,
-        user_id: userId,
-        event_type: 'feedback_submitted',
-        metadata_json: {
-          analysis_id,
-          rating,
-          feedback_id: saved.id
-        }
-      })
-    }
-
     return NextResponse.json({ success: true })
 
   } catch (error) {
     console.error('[POST /api/feedback Error]:', error)
+    const isDbError = error instanceof Error && error.message.includes('Database error')
     return NextResponse.json(
       {
-        error: 'internal_error',
-        message: 'An unexpected server error occurred.'
+        error: isDbError ? 'database_error' : 'internal_error',
+        message: isDbError ? error.message : 'An unexpected server error occurred.'
       },
       { status: 500 }
     )

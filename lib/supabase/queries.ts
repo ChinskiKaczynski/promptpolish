@@ -1,7 +1,7 @@
 import 'server-only'
 import { getSupabaseAdminClient } from './admin'
 import { createShareToken } from '../result-access/share-token'
-import type { Database, ModelProfileRow, PromptAnalysisRow, UsageEventRow, FeedbackEventRow, UserProfileRow } from './types'
+import type { Database, ModelProfileRow, PromptAnalysisRow, UsageEventRow, FeedbackEventRow, UserProfileRow, SensitiveDataFinding, AnalysisResult } from './types'
 import { serializeDbError } from './error-serializer'
 
 export type SharedPromptAnalysis = Pick<
@@ -68,6 +68,86 @@ export async function createPromptAnalysis(
   }
   return data ? (data as unknown as PromptAnalysisRow) : null
 }
+
+/**
+ * Atomically saves prompt analysis and completes the reservation in a database transaction.
+ */
+export async function saveAnalysisAndCompleteReservation(params: {
+  id: string
+  owner_anonymous_id: string
+  user_id: string | null
+  input_prompt: string
+  working_language: string
+  selected_profile_slug: string
+  task_goal?: string | null
+  task_type?: string | null
+  expected_output_format?: string | null
+  constraints?: string | null
+  sensitive_data_risk_level: string
+  sensitive_data_findings_json: SensitiveDataFinding[]
+  overall_score: number
+  score_level: string
+  analysis_json: AnalysisResult
+  improved_prompt: string
+  model_id_used: string
+  provider_used: string
+  analysis_schema_version: string
+  scoring_version: string
+  model_profile_version: string
+  prompt_template_version: string
+  title: string
+  audit_mode: string | null
+  reservation_id: string
+}): Promise<boolean> {
+  validateUuid(params.id, 'id')
+  validateUuid(params.owner_anonymous_id, 'owner_anonymous_id')
+  if (params.user_id) {
+    validateUuid(params.user_id, 'user_id')
+  }
+  validateUuid(params.reservation_id, 'reservation_id')
+
+  const supabase = getSupabaseAdminClient()
+  const rpcFn = supabase.rpc as unknown as (
+    fnName: string,
+    args: Record<string, unknown>
+  ) => Promise<{ data: unknown; error: { message: string } | null }>
+
+  const { data, error } = await rpcFn('save_analysis_and_complete_reservation', {
+    p_analysis_id: params.id,
+    p_owner_anonymous_id: params.owner_anonymous_id,
+    p_user_id: params.user_id,
+    p_input_prompt: params.input_prompt,
+    p_working_language: params.working_language,
+    p_selected_profile_slug: params.selected_profile_slug,
+    p_task_goal: params.task_goal,
+    p_task_type: params.task_type,
+    p_expected_output_format: params.expected_output_format,
+    p_constraints: params.constraints,
+    p_sensitive_data_risk_level: params.sensitive_data_risk_level,
+    p_sensitive_data_findings_json: params.sensitive_data_findings_json,
+    p_overall_score: params.overall_score,
+    p_score_level: params.score_level,
+    p_analysis_json: params.analysis_json,
+    p_improved_prompt: params.improved_prompt,
+    p_model_id_used: params.model_id_used,
+    p_provider_used: params.provider_used,
+    p_analysis_schema_version: params.analysis_schema_version,
+    p_scoring_version: params.scoring_version,
+    p_model_profile_version: params.model_profile_version,
+    p_prompt_template_version: params.prompt_template_version,
+    p_title: params.title,
+    p_audit_mode: params.audit_mode,
+    p_reservation_id: params.reservation_id
+  })
+
+  if (error) {
+    console.error('Error saving analysis and completing reservation:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
+
+  return !!data
+}
+
 
 /**
  * Retrieves a prompt analysis by UUID and owner anonymous ID or authenticated userId.
@@ -485,66 +565,30 @@ export async function createFeedbackEvent(
   if (event.user_id) {
     validateUuid(event.user_id, 'user_id')
   }
-  if (event.owner_anonymous_id !== undefined && event.owner_anonymous_id !== null) {
+  if (event.owner_anonymous_id) {
     validateUuid(event.owner_anonymous_id, 'owner_anonymous_id')
   } else if (!event.user_id) {
     throw new Error('Ownership identity missing: either user_id or owner_anonymous_id must be provided')
   }
 
   const supabase = getSupabaseAdminClient()
+  const { data, error } = await supabase.rpc('upsert_feedback_event', {
+    p_analysis_id: event.analysis_id,
+    p_rating: event.rating,
+    p_comment: event.comment ?? null,
+    p_user_id: event.user_id || null,
+    p_owner_anonymous_id: event.owner_anonymous_id || ''
+  })
 
-  // 1. Check if a feedback record already exists for this identity and analysis
-  let query = supabase
-    .from('feedback_events')
-    .select('id')
-    .eq('analysis_id', event.analysis_id)
-
-  if (event.user_id) {
-    query = query.eq('user_id', event.user_id)
-  } else if (event.owner_anonymous_id) {
-    query = query.eq('owner_anonymous_id', event.owner_anonymous_id).is('user_id', null)
+  if (error) {
+    console.error('Error upserting feedback event:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
   }
 
-  let existingId: string | null = null
-  if (event.user_id || event.owner_anonymous_id) {
-    const { data, error } = await query.maybeSingle()
-    if (error) {
-      console.error('Error checking existing feedback event:', serializeDbError(error))
-      throw new Error(`Database error: ${error.message}`)
-    }
-    if (data) {
-      existingId = (data as { id: string }).id
-    }
-  }
-
-  let dbResult
-  if (existingId) {
-    // Update existing
-    dbResult = await supabase
-      .from('feedback_events')
-      .update({
-        rating: event.rating,
-        comment: event.comment ?? null
-      })
-      .eq('id', existingId)
-      .select()
-      .single()
-  } else {
-    // Insert new
-    dbResult = await supabase
-      .from('feedback_events')
-      .insert(event)
-      .select()
-      .single()
-  }
-
-  if (dbResult.error) {
-    console.error('Error saving feedback event:', serializeDbError(dbResult.error))
-    throw new Error(`Database error: ${dbResult.error.message}`)
-  }
-
-  return dbResult.data ? (dbResult.data as unknown as FeedbackEventRow) : null
+  const rows = data as unknown as FeedbackEventRow[]
+  return rows && rows.length > 0 ? rows[0] : null
 }
+
 
 /**
  * Special copy tracker helper which saves a usage event with the type 'copy'.
@@ -1025,3 +1069,46 @@ export async function getRecentFeedbackCount(
   }
   return count ?? 0
 }
+
+/**
+ * Atomically checks a sliding time-window limit and inserts a usage event if allowed.
+ */
+export async function insertUsageEventWithLimit(params: {
+  eventId: string
+  ownerAnonymousId: string
+  userId: string | null
+  eventType: string
+  metadataJson: Record<string, unknown>
+  windowSeconds: number
+  maxCount: number
+}): Promise<boolean> {
+  validateUuid(params.eventId, 'eventId')
+  validateUuid(params.ownerAnonymousId, 'ownerAnonymousId')
+  if (params.userId) {
+    validateUuid(params.userId, 'userId')
+  }
+
+  const supabase = getSupabaseAdminClient()
+  const rpcFn = supabase.rpc as unknown as (
+    fnName: string,
+    args: Record<string, unknown>
+  ) => Promise<{ data: unknown; error: { message: string } | null }>
+
+  const { data, error } = await rpcFn('insert_usage_event_with_limit', {
+    p_event_id: params.eventId,
+    p_owner_anonymous_id: params.ownerAnonymousId,
+    p_user_id: params.userId,
+    p_event_type: params.eventType,
+    p_metadata_json: params.metadataJson,
+    p_window_seconds: params.windowSeconds,
+    p_max_count: params.maxCount
+  })
+
+  if (error) {
+    console.error('Error inserting usage event with limit:', serializeDbError(error))
+    throw new Error(`Database error: ${error.message}`)
+  }
+
+  return !!data
+}
+

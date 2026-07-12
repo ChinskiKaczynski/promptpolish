@@ -6,14 +6,21 @@ import {
   saveStripeCustomer, 
   getSubscriptionByUserId,
   claimCheckoutAttempt,
-  updateCheckoutAttemptStatus
+  updateCheckoutAttemptStatus,
+  acquireStripeLock,
+  releaseStripeLock
 } from '@/lib/supabase/billing'
 import { checkProductionEnv } from '@/lib/env/server'
 import { createUsageEvent } from '@/lib/supabase/queries'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
+import { validateSameOrigin } from '@/lib/security/csrf'
 
 export async function POST() {
   try {
+    // CSRF Same-Origin validation
+    if (!(await validateSameOrigin())) {
+      return NextResponse.json({ error: 'CSRF validation failed.' }, { status: 403 })
+    }
 
     const stripeEnabled =
       process.env.STRIPE_ENABLED === 'true' &&
@@ -141,20 +148,27 @@ export async function POST() {
     }
 
     if (!stripeCustomerId) {
+      await acquireStripeLock(user.id)
       try {
-        const customer = await stripe.customers.create({
-          email: user.email || '',
-          metadata: { userId: user.id }
-        }, {
-          idempotencyKey: `stripe-customer-creation-${user.id}-${isStaleCustomer ? Date.now() : 'initial'}`
-        })
-        stripeCustomerId = customer.id
-        newCustomerCreated = true
-        
-        // Persist and verify customer mapping in the local database before starting checkout
-        const saved = await saveStripeCustomer(user.id, stripeCustomerId)
-        if (!saved) {
-          throw new Error('Failed to save Stripe customer mapping to local database.')
+        // Double-check lock: check if another concurrent request created it while we were waiting
+        const doubleCheckCustomer = await getStripeCustomer(user.id)
+        if (doubleCheckCustomer && (!customerRow || doubleCheckCustomer.stripe_customer_id !== customerRow.stripe_customer_id)) {
+          stripeCustomerId = doubleCheckCustomer.stripe_customer_id
+        } else {
+          const customer = await stripe.customers.create({
+            email: user.email || '',
+            metadata: { userId: user.id }
+          }, {
+            idempotencyKey: `stripe-customer-creation-${user.id}`
+          })
+          stripeCustomerId = customer.id
+          newCustomerCreated = true
+          
+          // Persist and verify customer mapping in the local database before starting checkout
+          const saved = await saveStripeCustomer(user.id, stripeCustomerId)
+          if (!saved) {
+            throw new Error('Failed to save Stripe customer mapping to local database.')
+          }
         }
       } catch (err) {
         console.error('Failed to create or save Stripe customer:', err)
@@ -165,6 +179,8 @@ export async function POST() {
           },
           { status: 502 }
         )
+      } finally {
+        await releaseStripeLock(user.id)
       }
     }
 

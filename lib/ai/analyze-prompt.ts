@@ -106,7 +106,10 @@ function tryLocalJsonRepair(input: unknown): AnalysisResult | null {
 
   if (parsedObj && typeof parsedObj === 'object') {
     try {
-      const repaired: Record<string, unknown> = { ...parsedObj }
+      const repaired = { ...parsedObj } as Record<string, unknown>
+      delete repaired.id
+      delete repaired.overallScore
+      delete repaired.scoreLevel
       
       // Safe coercion of version contract
       if (!repaired.analysis_schema_version) {

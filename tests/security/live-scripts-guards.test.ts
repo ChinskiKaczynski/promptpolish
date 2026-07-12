@@ -2,6 +2,23 @@ import { describe, expect, it, vi, beforeEach, afterEach, type Mock, type MockIn
 import { validateLiveAiEnvironment } from '../../scripts/live-ai/live-guard'
 import * as geminiClient from '@/lib/ai/gemini-client'
 
+vi.mock('@/lib/supabase/admin', () => ({
+  getSupabaseAdminClient: vi.fn(() => ({
+    rpc: vi.fn(),
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        single: vi.fn()
+      })),
+      insert: vi.fn(),
+      update: vi.fn()
+    }))
+  }))
+}))
+
+vi.mock('@/lib/supabase/server', () => ({
+  getSupabaseServerClient: vi.fn()
+}))
+
 describe('Live Scripts Environment Validation Unit Tests', () => {
   const baseEnv = {
     RUN_LIVE_AI_TESTS: 'true',
@@ -74,18 +91,28 @@ describe('Live Scripts Script-Load Guard Integration Tests', () => {
     providerExecutorSpy = vi.spyOn(geminiClient, 'executeGeminiAnalysis').mockImplementation(async () => {
       return {
         output: {
-          overall_score: 100,
-          score_level: 'excellent',
-          criteria_scores: {
-            clarity: 5,
-            structure: 5,
-            precision: 5,
-            specificity: 5,
-            intent_alignment: 5
-          },
-          top_weaknesses: [],
+          analysis_schema_version: '1.0.0',
+          overall_summary: 'mock summary',
+          detected_task_type: 'mock type',
+          criteria_scores: [
+            { criterion: 'goal_clarity', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
+            { criterion: 'context_completeness', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
+            { criterion: 'structure', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
+            { criterion: 'constraints', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
+            { criterion: 'output_format', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
+            { criterion: 'model_profile_fit', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
+            { criterion: 'resistance_to_misinterpretation', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
+            { criterion: 'cost_efficiency', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
+            { criterion: 'safety', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
+            { criterion: 'testability', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' }
+          ],
+          top_weaknesses: ['mock weakness'],
+          improvement_plan: ['mock plan'],
           improved_prompt: 'mocked',
-          change_explanations: []
+          change_explanations: ['mock explanation'],
+          model_fit_notes: [],
+          uncertainty_warnings: [],
+          safety_notes: []
         },
         finishReason: 'stop',
         selectedModel: 'mock-model',
@@ -149,8 +176,8 @@ describe('Live Scripts Script-Load Guard Integration Tests', () => {
       vi.resetModules()
       try {
         await import(tc.script)
-      } catch {
-        // Ignored: throwing occurs after process.exit in guard
+      } catch (err) {
+        console.error('IMPORT ERROR:', err)
       }
 
       // Assert controlled blocking and zero execution

@@ -4,17 +4,16 @@ import { ProviderError } from '@/lib/ai/provider-errors'
 import type { AnalysisResult } from '@/lib/ai/schemas'
 
 describe('Fallback Classification & Configuration Tests', () => {
-  const originalEnv = { ...process.env }
 
   beforeEach(() => {
-    process.env.AI_MODEL_ALIAS = 'cheap'
-    process.env.GEMINI_MODEL_ID = 'gemini-2.0-flash-lite'
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY = 'mock-google-key'
-    process.env.NODE_ENV = 'test'
+    vi.stubEnv('AI_MODEL_ALIAS', 'cheap')
+    vi.stubEnv('GEMINI_MODEL_ID', 'gemini-2.0-flash-lite')
+    vi.stubEnv('GOOGLE_GENERATIVE_AI_API_KEY', 'mock-google-key')
+    vi.stubEnv('NODE_ENV', 'test')
   })
 
   afterEach(() => {
-    process.env = { ...originalEnv }
+    vi.unstubAllEnvs()
     vi.clearAllMocks()
   })
 

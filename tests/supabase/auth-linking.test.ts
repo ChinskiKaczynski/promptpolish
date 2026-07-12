@@ -44,7 +44,7 @@ describe('Supabase Authentication & History Linking Integration', () => {
   const mockSupabaseClient = {
     from: vi.fn(),
     rpc: mockRpc
-  } as unknown as ReturnType<typeof getSupabaseServerClient>
+  }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -62,7 +62,7 @@ describe('Supabase Authentication & History Linking Integration', () => {
 
     mockSupabaseClient.from.mockReturnValue(builder)
     mockRpc.mockResolvedValue({ data: [], error: null })
-    vi.mocked(getSupabaseServerClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseServerClient>)
+    vi.mocked(getSupabaseServerClient).mockResolvedValue(mockSupabaseClient as unknown as Awaited<ReturnType<typeof getSupabaseServerClient>>)
     vi.mocked(getSupabaseAdminClient).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabaseAdminClient>)
   })
 

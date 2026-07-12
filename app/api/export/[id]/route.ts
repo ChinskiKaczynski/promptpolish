@@ -4,6 +4,7 @@ import { getAuthUser } from '@/lib/identity/auth'
 import { getPromptAnalysisForOwner, createUsageEvent } from '@/lib/supabase/queries'
 import { formatAnalysis } from '@/lib/export/format-analysis'
 import { generatePdf } from '@/lib/export/generate-pdf'
+import { analysisResultSchema } from '@/lib/ai/schemas'
 import {
   getPlanSlugForUser,
   canExportMarkdown,
@@ -12,6 +13,7 @@ import {
 } from '@/lib/plans/config'
 
 export const dynamic = 'force-dynamic'
+
 
 /**
  * Private response headers required for all export routes.
@@ -126,6 +128,14 @@ export async function GET(
           }
         )
       }
+    }
+    // Validate record.analysis_json schema using Zod
+    const parsedAnalysis = analysisResultSchema.safeParse(record.analysis_json)
+    if (!parsedAnalysis.success) {
+      return new NextResponse('Malformed Analysis Data', {
+        status: 422,
+        headers: PRIVATE_CACHE_HEADERS
+      })
     }
 
     // 4. Generate scrubbed formatted content

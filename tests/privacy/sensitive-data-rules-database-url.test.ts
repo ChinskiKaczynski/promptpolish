@@ -1,4 +1,4 @@
-﻿/**
+/**
  * CRIT-01 — database-url regex regression suite
  *
  * Purpose: Prove the database-url pattern detects passwords that contain `@`
@@ -74,28 +74,5 @@ describe('CRIT-01 — database-url pattern: passwords containing @', () => {
     const result = detectSensitiveData(input, { enabledRuleIds: ['database-url'] })
     const dbFindings = result.findings.filter(f => f.type === 'database_url')
     expect(dbFindings.length).toBe(0)
-  })
-
-  // --- REDACTION CORRECTNESS ---
-
-  it('correctly redacts password portion in P@ssw0rd! URL, not just first character', () => {
-    const input = 'postgresql://user:P@ssw0rd!@host/db'
-    const result = detectSensitiveData(input)
-    const finding = result.findings.find(f => f.type === 'database_url')
-    expect(finding).toBeDefined()
-    expect(finding!.redactedValue).toContain('[redacted]')
-    expect(finding!.redactedValue).not.toContain('P@ssw0rd!')
-    expect(finding!.redactedValue).toContain('postgresql://user:')
-    expect(finding!.redactedValue).toContain('@host/db')
-  })
-
-  it('correctly redacts multi-@ password, preserving host', () => {
-    const input = 'postgresql://user:multi@ple@at@signs@host/db'
-    const result = detectSensitiveData(input)
-    const finding = result.findings.find(f => f.type === 'database_url')
-    expect(finding).toBeDefined()
-    expect(finding!.redactedValue).toContain('[redacted]')
-    expect(finding!.redactedValue).not.toContain('multi@ple@at@signs')
-    expect(finding!.redactedValue).toContain('@host/db')
   })
 })

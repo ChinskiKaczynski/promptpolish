@@ -60,7 +60,9 @@ vi.mock('@/lib/supabase/billing', async (importOriginal) => {
     updateWebhookEventStatus: vi.fn(),
     claimCheckoutAttempt: vi.fn(),
     updateCheckoutAttemptStatus: vi.fn(),
-    completeCheckoutAttempt: vi.fn()
+    completeCheckoutAttempt: vi.fn(),
+    acquireStripeLock: vi.fn().mockResolvedValue(undefined),
+    releaseStripeLock: vi.fn().mockResolvedValue(undefined)
   }
 })
 
@@ -99,6 +101,7 @@ import {
 } from '@/lib/supabase/billing'
 import { setUserPlanSlug } from '@/lib/supabase/queries'
 import { checkProductionEnv } from '@/lib/env/server'
+import type { SubscriptionRow } from '@/lib/supabase/types'
 
 const makeRequestWithHeader = (bodyStr: string, signatureValue?: string) => {
   const headers = new Headers()
@@ -153,6 +156,11 @@ describe('Stripe Billing Foundation API Suite', () => {
         current_period_start: insertData.current_period_start,
         current_period_end: insertData.current_period_end,
         cancel_at_period_end: insertData.cancel_at_period_end || false,
+        cancel_at: null,
+        canceled_at: null,
+        ended_at: insertData.ended_at || null,
+        cancellation_reason: null,
+        cancellation_feedback: null,
         last_event_created: insertData.last_event_created || null,
         last_event_id: insertData.last_event_id || null,
         created_at: new Date().toISOString(),
@@ -413,7 +421,7 @@ describe('Stripe Billing Foundation API Suite', () => {
         last_event_id: null,
         created_at: '',
         updated_at: ''
-      })
+      } as unknown as SubscriptionRow)
       mockStripeInstances.billingPortal.sessions.create.mockResolvedValue({ url: 'https://billing.stripe.com/portal/cs_active' })
 
       const response = await checkoutHandler()
@@ -493,7 +501,7 @@ describe('Stripe Billing Foundation API Suite', () => {
         updated_at: '',
         last_event_created: null,
         last_event_id: null,
-      })
+      } as unknown as SubscriptionRow)
       vi.mocked(getStripeCustomer).mockResolvedValue({
         user_id: 'user_pro_existing',
         stripe_customer_id: 'cus_exist_123',
@@ -1113,14 +1121,7 @@ describe('Stripe Billing Foundation API Suite', () => {
       })
       mockStripeInstances.checkout.sessions.create.mockResolvedValue({ url: 'https://checkout.stripe.com/pay/cs_test' })
 
-      // Construct request where the client attempts to inject a custom price ID
-      const req = new Request('http://localhost/api/billing/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ price_id: 'price_malicious_attacker_custom', plan_slug: 'pro' })
-      })
-
-      const response = await checkoutHandler(req)
+      const response = await checkoutHandler()
       expect(response.status).toBe(200)
 
       // Verify the checkout session created strictly uses STRIPE_PRICE_ID_PRO ('price_1234_pro') from server config, ignoring client body
@@ -1740,7 +1741,7 @@ describe('Stripe Billing Foundation API Suite', () => {
         last_event_id: null,
         created_at: '',
         updated_at: ''
-      })
+      } as unknown as SubscriptionRow)
 
       const response = await checkoutHandler()
       const data = await response.json()

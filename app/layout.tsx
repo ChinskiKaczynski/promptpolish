@@ -1,25 +1,22 @@
 import type { Metadata } from 'next'
-import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 import dynamic from 'next/dynamic'
 import './globals.css'
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '600', '700'],
+const spaceGrotesk = localFont({
+  src: './fonts/SpaceGrotesk.woff2',
   variable: '--font-space-grotesk',
   display: 'swap',
 })
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['300', '400', '500', '600', '700'],
+const plusJakartaSans = localFont({
+  src: './fonts/PlusJakartaSans.woff2',
   variable: '--font-plus-jakarta',
   display: 'swap',
 })
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin', 'latin-ext'],
-  weight: ['400', '500', '700'],
+const jetbrainsMono = localFont({
+  src: './fonts/JetBrainsMono.woff2',
   variable: '--font-jetbrains-mono',
   display: 'swap',
 })
@@ -28,7 +25,12 @@ const AuthListener = dynamic(() =>
   import('@/components/auth/auth-listener').then((mod) => mod.AuthListener)
 )
 
+const productionUrl = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL 
+  ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}` 
+  : process.env.APP_URL || 'https://promptpolish.pl'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(productionUrl),
   title: 'PromptPolish — Profesjonalny Audyt i Ulepszanie Promptów',
   description:
     'Darmowy, anonimowy audyt promptów 0–100. Zdiagnozuj luki, zoptymalizuj strukturę instrukcji i odbierz gotowy do skopiowania prompt o podwyższonej precyzji.',

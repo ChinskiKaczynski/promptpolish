@@ -1,6 +1,5 @@
 import 'server-only'
 import nextDynamic from 'next/dynamic'
-import { getAuthUser } from '@/lib/identity/auth'
 import { verifyAdminAccess } from '@/lib/admin/auth'
 
 const AppHeaderClient = nextDynamic(() => import('./app-header-client').then((mod) => mod.AppHeaderClient), {
@@ -25,8 +24,8 @@ export async function AppHeader({ theme = 'light', publicShare = false }: AppHea
     )
   }
 
-  const user = await getAuthUser()
   const adminAuth = await verifyAdminAccess()
+  const user = adminAuth.user
   const isAdmin = adminAuth.authorized
   const isLoggedIn = !!user
 

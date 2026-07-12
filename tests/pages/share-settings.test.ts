@@ -33,7 +33,7 @@ interface MockNode {
   props?: {
     id?: string
     role?: string
-    children?: MockNode | MockNode[]
+    children?: MockNode | MockNode[] | string
     value?: string
     onClick?: (...args: unknown[]) => unknown
   }
@@ -52,7 +52,7 @@ function findInputByVal(node: MockNode | MockNode[] | null | undefined): MockNod
     return node
   }
   if (typeof node === 'object' && node.props?.children) {
-    return findInputByVal(node.props.children)
+    return findInputByVal(node.props.children as MockNode | MockNode[])
   }
   return null
 }
@@ -73,7 +73,7 @@ function findButtonByRoleOrText(node: MockNode | MockNode[] | null | undefined, 
     return node
   }
   if (typeof node === 'object' && node.props?.children) {
-    return findButtonByRoleOrText(node.props.children, attr)
+    return findButtonByRoleOrText(node.props.children as MockNode | MockNode[], attr)
   }
   return null
 }

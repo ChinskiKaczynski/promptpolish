@@ -7,21 +7,22 @@ import { resolveOrCreateOwnerId } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
 import { calculateUsageCost } from '@/lib/ai/pricing'
 import {
-  createPromptAnalysis,
   createUsageEvent,
   getModelProfileBySlug,
   acquireReservation,
-  completeReservation,
-  releaseReservation
+  releaseReservation,
+  saveAnalysisAndCompleteReservation,
+  getPromptAnalysisForOwner
 } from '@/lib/supabase/queries'
 import { analyzePrompt } from '@/lib/ai/analyze-prompt'
 import { SemanticValidationError } from '@/lib/ai/semantic-validation'
 import { ProviderError } from '@/lib/ai/provider-errors'
 import { normalizeNewlines } from '@/lib/export/format-analysis'
+import type { AnalysisResult } from '@/lib/ai/schemas'
 import { recordProviderError } from '@/lib/monitoring/observability'
 import { serverEnv, checkProductionEnv } from '@/lib/env/server'
-import { hashValue, getClientIp } from '@/lib/rate-limit/hash-ip'
-import { PLAN_LIMITS, getPlanSlugForUser } from '@/lib/plans/config'
+import { hashValue, getClientIp, checkIpRateLimit, checkGlobalDailyLimit, checkGlobalDailyCostLimit, verifyTurnstileToken } from '@/lib/rate-limit/hash-ip'
+import { PLAN_LIMITS, getPlanSlugForUser, loadPlanLimitsFromDb } from '@/lib/plans/config'
 import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
 export const runtime = "nodejs";
 export const maxDuration = 220
@@ -34,14 +35,14 @@ export const maxDuration = 220
 type ReservationResult =
   | 'success:reserved'
   | 'success:completed'  // idempotent retry — reservation already existed
+  | 'success:in_progress'
   | 'daily_limit_reached'
   | 'monthly_limit_reached'
 
 // Input validation schema using Zod.
-// input_prompt uses an absolute transport ceiling of 25,000 chars — larger than
-// any valid plan limit (Pro: 24,000). Per-plan enforcement happens AFTER identity
-// and plan resolution below, so Free/Anonymous are not accidentally granted extra capacity.
 const analyzeRequestSchema = z.object({
+  request_id: z.string().uuid().optional(),
+  turnstile_token: z.string().optional(),
   input_prompt: z.string().max(25000, 'Prompt exceeds maximum transport length.'),
   working_language: z.enum(['pl', 'en']),
   selected_profile_slug: z.enum(['general-llm']),
@@ -51,6 +52,8 @@ const analyzeRequestSchema = z.object({
   expected_output_format: z.string().max(1000).optional().nullable(),
   constraints: z.string().max(2000).optional().nullable()
 })
+
+import { validateSameOrigin } from '@/lib/security/csrf'
 
 export async function POST(request: Request) {
   let selectedProfileSlug: string | undefined
@@ -63,6 +66,11 @@ export async function POST(request: Request) {
   let reservationAcquired = false
 
   try {
+    // CSRF Same-Origin validation
+    if (!(await validateSameOrigin())) {
+      return NextResponse.json({ error: 'CSRF validation failed.' }, { status: 403 })
+    }
+
     // 0. Ensure production environment is correctly configured
     const envCheck = checkProductionEnv()
     if (!envCheck.valid) {
@@ -91,6 +99,8 @@ export async function POST(request: Request) {
     }
 
     const {
+      request_id,
+      turnstile_token,
       input_prompt,
       working_language,
       selected_profile_slug,
@@ -126,6 +136,47 @@ export async function POST(request: Request) {
     const rawUa = request.headers.get('user-agent') ?? null
     ipHash = rawIp ? hashValue(rawIp) : null
     userAgentHash = rawUa ? hashValue(rawUa) : null
+
+    // 2a-i. Check global daily limit (budget protection layer)
+    const globalLimitOk = await checkGlobalDailyLimit()
+    if (!globalLimitOk) {
+      return NextResponse.json(
+        {
+          error: 'global_limit_reached',
+          message: 'Serwer osiągnął dzienny limit zapytań. Spróbuj ponownie jutro.'
+        },
+        { status: 429 }
+      )
+    }
+
+    const globalCostLimitOk = await checkGlobalDailyCostLimit()
+    if (!globalCostLimitOk) {
+      return NextResponse.json(
+        {
+          error: 'global_limit_reached',
+          message: 'Serwer osiągnął dzienny limit budżetu kosztów. Spróbuj ponownie jutro.'
+        },
+        { status: 429 }
+      )
+    }
+
+    // 2a-ii. Check client IP rate limit with Cloudflare Turnstile verification fallback
+    if (ipHash) {
+      const ipLimit = await checkIpRateLimit(ipHash)
+      if (!ipLimit.allowed) {
+        const captchaVerified = await verifyTurnstileToken(turnstile_token)
+        if (!captchaVerified) {
+          return NextResponse.json(
+            {
+              error: 'captcha_required',
+              message: 'Weryfikacja CAPTCHA jest wymagana do kontynuowania.',
+              limit: 15
+            },
+            { status: 429 }
+          )
+        }
+      }
+    }
 
     // 2b. Resolve plan server-side BEFORE any validation that is plan-dependent.
     //     The client must never supply or override the plan.
@@ -256,10 +307,62 @@ export async function POST(request: Request) {
 
     // 5. (Prompt length is now validated above in step 2c/2d, after plan resolution.)
 
+    // Load selected model profile from database BEFORE reservation to ensure availability.
+    const dbProfile = await getModelProfileBySlug(selected_profile_slug)
+    if (!dbProfile) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'MODEL_PROFILE_UNAVAILABLE'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      }).catch(() => null)
+
+      return NextResponse.json(
+        {
+          error: 'model_profile_unavailable',
+          message: `Wybrany profil modelu (${selected_profile_slug}) jest niedostępny.`
+        },
+        { status: 404 }
+      )
+    }
+
+    const capabilities = (dbProfile.capabilities_json || {}) as Record<string, unknown>
+    const isProfileEnabled = capabilities.enabled !== false
+    if (!isProfileEnabled) {
+      await createUsageEvent({
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        event_type: 'analysis_failed',
+        metadata_json: {
+          profile_slug: selected_profile_slug,
+          working_language: working_language,
+          error_code: 'MODEL_PROFILE_DISABLED'
+        },
+        ip_hash: ipHash,
+        user_agent_hash: userAgentHash
+      }).catch(() => null)
+
+      return NextResponse.json(
+        {
+          error: 'model_profile_unavailable',
+          message: `Wybrany profil modelu (${selected_profile_slug}) jest niedostępny.`
+        },
+        { status: 404 }
+      )
+    }
+
     // 6. Check plan-based daily abuse and monthly usage limits using atomic reservation ledger.
-    requestId = randomUUID()
+    requestId = request_id || randomUUID()
     let reservationResult: ReservationResult
     try {
+      // Refresh dynamic plan limits from DB
+      await loadPlanLimitsFromDb()
       reservationResult = await acquireReservation(requestId, ownerAnonymousId, userId) as ReservationResult
     } catch (dbError) {
       console.error('[POST /api/analyze Reservation DB Error]:', dbError)
@@ -269,6 +372,40 @@ export async function POST(request: Request) {
           message: 'Usługa jest tymczasowo niedostępna ze względu na błąd bazy danych. Spróbuj ponownie później.'
         },
         { status: 500 }
+      )
+    }
+
+    // If reservation is already completed, return the cached analysis result immediately
+    if (reservationResult === 'success:completed') {
+      const existing = await getPromptAnalysisForOwner(requestId, ownerAnonymousId, userId ?? undefined)
+      if (existing) {
+        const scanResult = {
+          blocked: false,
+          riskLevel: existing.sensitive_data_risk_level,
+          findings: existing.sensitive_data_findings_json
+        }
+        const analysisJson = existing.analysis_json as unknown as AnalysisResult
+        return NextResponse.json({
+          id: existing.id,
+          overall_score: existing.overall_score,
+          score_level: existing.score_level,
+          criteria_scores: analysisJson.criteria_scores,
+          improved_prompt: existing.improved_prompt,
+          change_explanations: analysisJson.change_explanations,
+          analysis: analysisJson,
+          sensitive_data: scanResult
+        })
+      }
+    }
+
+    // If reservation is currently in progress, return 202 Accepted
+    if (reservationResult === 'success:in_progress') {
+      return NextResponse.json(
+        {
+          error: 'in_progress',
+          message: 'Analiza jest obecnie w toku. Spróbuj ponownie za chwilę.'
+        },
+        { status: 202 }
       )
     }
 
@@ -290,7 +427,7 @@ export async function POST(request: Request) {
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
-      })
+      }).catch(() => null)
 
       // Companion analysis_failed event for correct funnel telemetry
       await createUsageEvent({
@@ -304,7 +441,7 @@ export async function POST(request: Request) {
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
-      })
+      }).catch(() => null)
 
       if (reservationResult === 'daily_limit_reached') {
         return NextResponse.json(
@@ -359,55 +496,8 @@ export async function POST(request: Request) {
       user_agent_hash: userAgentHash
     })
 
-    // 7. Load selected model profile from database
-    const dbProfile = await getModelProfileBySlug(selected_profile_slug)
-    if (!dbProfile) {
-      await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId,
-        user_id: userId,
-        event_type: 'analysis_failed',
-        metadata_json: {
-          profile_slug: selected_profile_slug,
-          working_language: working_language,
-          error_code: 'MODEL_PROFILE_UNAVAILABLE'
-        },
-        ip_hash: ipHash,
-        user_agent_hash: userAgentHash
-      })
-
-      return NextResponse.json(
-        {
-          error: 'model_profile_unavailable',
-          message: `Wybrany profil modelu (${selected_profile_slug}) jest niedostępny.`
-        },
-        { status: 404 }
-      )
-    }
-
-    const capabilities = (dbProfile.capabilities_json || {}) as Record<string, unknown>
-    const isProfileEnabled = capabilities.enabled !== false
-    if (!isProfileEnabled) {
-      await createUsageEvent({
-        owner_anonymous_id: ownerAnonymousId,
-        user_id: userId,
-        event_type: 'analysis_failed',
-        metadata_json: {
-          profile_slug: selected_profile_slug,
-          working_language: working_language,
-          error_code: 'MODEL_PROFILE_DISABLED'
-        },
-        ip_hash: ipHash,
-        user_agent_hash: userAgentHash
-      })
-
-      return NextResponse.json(
-        {
-          error: 'model_profile_unavailable',
-          message: `Wybrany profil modelu (${selected_profile_slug}) jest niedostępny.`
-        },
-        { status: 404 }
-      )
-    }
+    // 7. (Checking model profile presence was moved above step 6 for safety)
+    // 8. Model is verified enabled
 
     // 8-12. Build prompt, call Gemini, validate response, and calculate weighted score
     const isMockMode = process.env.AI_MOCK_MODE === 'true' || process.env.NODE_ENV === 'test'
@@ -463,33 +553,57 @@ export async function POST(request: Request) {
     const normalizedImprovedPrompt = normalizeNewlines(analysisResult.analysis.improved_prompt)
     analysisResult.analysis.improved_prompt = normalizedImprovedPrompt
 
-    // 13. Save prompt_analyses record to database
-    const createdRecord = await createPromptAnalysis({
-      owner_anonymous_id: ownerAnonymousId,
-      user_id: userId,
-      input_prompt,
-      working_language,
-      selected_profile_slug,
-      audit_mode,
-      task_goal: task_goal || null,
-      task_type: task_type || null,
-      expected_output_format: expected_output_format || null,
-      constraints: constraints || null,
-      sensitive_data_risk_level: scanResult.riskLevel as 'none' | 'low' | 'medium' | 'high',
-      sensitive_data_findings_json: scanResult.findings,
-      overall_score: analysisResult.scores.overallScore,
-      score_level: analysisResult.scores.scoreLevel as 'weak' | 'needs_work' | 'decent' | 'strong' | 'excellent',
-      analysis_json: analysisResult.analysis,
-      improved_prompt: analysisResult.analysis.improved_prompt,
-      model_id_used: analysisResult.selectedModel || (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId(),
-      provider_used: dbProfile.provider || 'google',
-      analysis_schema_version: process.env.ANALYSIS_SCHEMA_VERSION || '1.0.0',
-      scoring_version: process.env.SCORING_VERSION || '1.0.0',
-      model_profile_version: dbProfile.profile_version || '1.0.0',
-      prompt_template_version: process.env.PROMPT_TEMPLATE_VERSION || '1.0.0'
-    })
+    // 13. Save prompt_analyses record to database and complete reservation atomically in a transaction
+    const modelIdUsed = analysisResult.selectedModel || (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
+    const providerUsed = dbProfile.provider || 'google'
+    const analysisSchemaVersion = process.env.ANALYSIS_SCHEMA_VERSION || '1.0.0'
+    const scoringVersion = process.env.SCORING_VERSION || '1.0.0'
+    const modelProfileVersion = dbProfile.profile_version || '1.0.0'
+    const promptTemplateVersion = process.env.PROMPT_TEMPLATE_VERSION || '1.0.0'
+    
+    const generateAnalysisTitle = (p: string) => {
+      const clean = p.replace(/[\r\n\t]+/g, ' ').trim()
+      return clean.length > 40 ? clean.substring(0, 37) + '...' : clean
+    }
+    const analysisTitle = generateAnalysisTitle(input_prompt)
 
-    if (!createdRecord) {
+    let txSuccess = false
+    try {
+      txSuccess = await saveAnalysisAndCompleteReservation({
+        id: requestId,
+        owner_anonymous_id: ownerAnonymousId,
+        user_id: userId,
+        input_prompt,
+        working_language,
+        selected_profile_slug,
+        audit_mode,
+        task_goal: task_goal || null,
+        task_type: task_type || null,
+        expected_output_format: expected_output_format || null,
+        constraints: constraints || null,
+        sensitive_data_risk_level: scanResult.riskLevel as 'none' | 'low' | 'medium' | 'high',
+        sensitive_data_findings_json: scanResult.findings,
+        overall_score: analysisResult.scores.overallScore,
+        score_level: analysisResult.scores.scoreLevel as 'weak' | 'needs_work' | 'decent' | 'strong' | 'excellent',
+        analysis_json: analysisResult.analysis,
+        improved_prompt: analysisResult.analysis.improved_prompt,
+        model_id_used: modelIdUsed,
+        provider_used: providerUsed,
+        analysis_schema_version: analysisSchemaVersion,
+        scoring_version: scoringVersion,
+        model_profile_version: modelProfileVersion,
+        prompt_template_version: promptTemplateVersion,
+        title: analysisTitle,
+        reservation_id: requestId
+      })
+      if (txSuccess) {
+        reservationAcquired = false // reservation completed by transaction
+      }
+    } catch (txError) {
+      console.error('[POST /api/analyze Transaction Error]:', txError)
+    }
+
+    if (!txSuccess) {
       if (reservationAcquired && requestId) {
         await releaseReservation(requestId).catch((err) => {
           console.error('Failed to release reservation:', err)
@@ -508,7 +622,7 @@ export async function POST(request: Request) {
         },
         ip_hash: ipHash,
         user_agent_hash: userAgentHash
-      })
+      }).catch(() => null)
 
       return NextResponse.json(
         {
@@ -517,14 +631,6 @@ export async function POST(request: Request) {
         },
         { status: 500 }
       )
-    }
-
-    // Mark reservation as completed since database record was saved successfully
-    if (reservationAcquired && requestId) {
-      await completeReservation(requestId).catch((err) => {
-        console.error('Failed to complete reservation:', err)
-      })
-      reservationAcquired = false
     }
 
     // 14. Validate numeric usage values and calculate cost server-side
@@ -550,7 +656,6 @@ export async function POST(request: Request) {
 
     const primaryModelId = (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
     const modelId = analysisResult.selectedModel || primaryModelId
-    const providerUsed = dbProfile.provider || 'google'
     const fallbackUsed = analysisResult.attempt > 1
     const attemptNumber = analysisResult.attempt
     const calculatedCost = usageStatus !== 'unavailable'
@@ -562,7 +667,7 @@ export async function POST(request: Request) {
       user_id: userId,
       event_type: 'analysis_completed',
       metadata_json: {
-        analysis_id: createdRecord.id,
+        analysis_id: requestId,
         profile_slug: selected_profile_slug,
         working_language: working_language,
         primary_model_id: primaryModelId,
@@ -579,13 +684,13 @@ export async function POST(request: Request) {
       },
       ip_hash: ipHash,
       user_agent_hash: userAgentHash
-    })
+    }).catch(() => null)
 
     // 15. Return analysis ID and result payload safely
     return NextResponse.json({
-      id: createdRecord.id,
-      overall_score: createdRecord.overall_score,
-      score_level: createdRecord.score_level,
+      id: requestId,
+      overall_score: analysisResult.scores.overallScore,
+      score_level: analysisResult.scores.scoreLevel,
       criteria_scores: analysisResult.analysis.criteria_scores,
       improved_prompt: analysisResult.analysis.improved_prompt,
       change_explanations: analysisResult.analysis.change_explanations,
@@ -603,13 +708,17 @@ export async function POST(request: Request) {
 
     const errorId = randomUUID()
 
-    // Invoke provider error monitoring hook
-    recordProviderError(error, {
-      request_id: requestId,
-      error_id: errorId,
-      selected_profile_slug: selectedProfileSlug,
-      working_language: workingLanguage
-    })
+    // Invoke provider error monitoring hook (best-effort)
+    try {
+      recordProviderError(error, {
+        request_id: requestId,
+        error_id: errorId,
+        selected_profile_slug: selectedProfileSlug,
+        working_language: workingLanguage
+      })
+    } catch (monitorErr) {
+      console.error('Failed to log error to provider error monitoring:', monitorErr)
+    }
 
     const logFailureEvent = async (errCode: string) => {
       if (!ownerAnonymousId) {
@@ -791,6 +900,12 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   } finally {
-    // No-op
+    if (reservationAcquired && requestId) {
+      try {
+        await releaseReservation(requestId)
+      } catch (releaseErr) {
+        console.error('Failed to release reservation in finally block:', releaseErr)
+      }
+    }
   }
 }

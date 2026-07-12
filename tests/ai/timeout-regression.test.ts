@@ -13,7 +13,7 @@ vi.mock('ai', async (importOriginal) => {
       const state = { timer: undefined as ReturnType<typeof setTimeout> | undefined }
       const onAbort = () => {
         if (state.timer) clearTimeout(state.timer)
-        reject(signal.reason || new Error('Aborted'))
+        reject(signal?.reason || new Error('Aborted'))
       }
 
       if (signal) {
@@ -47,6 +47,7 @@ import { generateObject } from 'ai'
 import { serverEnvSchema } from '@/lib/env/server'
 import { executeGeminiAnalysis } from '@/lib/ai/gemini-client'
 import { isNestedTimeout, normalizeProviderError } from '@/lib/ai/provider-errors'
+import type { ModelProfileRow } from '@/lib/supabase/types'
 
 describe('Timeout and Abort Regression Suite', () => {
   const originalEnv = { ...process.env }
@@ -303,13 +304,12 @@ describe('Timeout and Abort Regression Suite', () => {
           verification_status: 'unverified',
           confidence_level: 'medium',
           profile_version: '1.0.0',
-          is_active: true,
           capabilities_json: {
             fallback_model_id: 'gemini-2.5-flash-lite'
           },
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z'
-        }
+        } as unknown as ModelProfileRow
       })
 
       expect(calls).toEqual(['gemini-2.5-flash', 'gemini-2.5-flash-lite'])
@@ -378,11 +378,10 @@ describe('Timeout and Abort Regression Suite', () => {
           verification_status: 'unverified',
           confidence_level: 'medium',
           profile_version: '1.0.0',
-          is_active: true,
           capabilities_json: { fallback_model_id: 'gemini-2.5-flash-lite' },
           created_at: '2024-01-01T00:00:00Z',
           updated_at: '2024-01-01T00:00:00Z'
-        }
+        } as unknown as ModelProfileRow
       })
 
       // Verification that generateObject's signal is monitored or remaining time is calculated

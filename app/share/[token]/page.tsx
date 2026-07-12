@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getSharedPromptAnalysis } from '@/lib/supabase/queries'
 import { ResultView } from '@/components/result/result-view'
-import type { AnalysisResult } from '@/lib/ai/schemas'
+import { analysisResultSchema } from '@/lib/ai/schemas'
 import { AppHeader } from '@/components/layout/app-header'
 import { AppFooter } from '@/components/layout/app-footer'
 
@@ -31,9 +31,13 @@ export default async function SharedResultPage({ params }: PageProps) {
     notFound()
   }
 
-  // Map scrubbed DB fields to ResultView props.
-  // Deliberately omit: id, shareToken, isShareEnabled — none should leak to the client.
-  const analysisJson = record.analysis_json as unknown as AnalysisResult
+  // Validate the analysis_json using analysisResultSchema
+  const parsed = analysisResultSchema.safeParse(record.analysis_json)
+  if (!parsed.success) {
+    notFound()
+  }
+  const analysisJson = parsed.data
+
   const mappedResult = {
     ...analysisJson,
     overallScore: record.overall_score,

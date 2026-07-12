@@ -87,7 +87,39 @@ export const PLAN_LIMITS: Record<PlanSlug, PlanConfig> = {
     shareResult: true,
     batchAudit: false,
   },
-} as const
+}
+
+export async function loadPlanLimitsFromDb(): Promise<void> {
+  try {
+    const { getSupabaseAdminClient } = await import('../supabase/admin')
+    const supabase = getSupabaseAdminClient()
+    const { data, error } = await supabase
+      .from('plan_limits')
+      .select('plan_slug, daily_analysis_limit, max_prompt_chars, min_prompt_chars')
+
+    if (error) {
+      throw error
+    }
+    if (data) {
+      const rows = data as unknown as Array<{
+        plan_slug: string
+        daily_analysis_limit: number
+        max_prompt_chars: number
+        min_prompt_chars: number
+      }>
+      rows.forEach((row) => {
+        const slug = row.plan_slug as PlanSlug
+        if (PLAN_LIMITS[slug]) {
+          PLAN_LIMITS[slug].dailyAnalyses = row.daily_analysis_limit
+          PLAN_LIMITS[slug].maxPromptChars = row.max_prompt_chars
+        }
+      })
+    }
+  } catch (err) {
+    console.error('Failed to load plan limits from DB:', err)
+  }
+}
+
 
 export interface LimitCheckResult {
   allowed: boolean

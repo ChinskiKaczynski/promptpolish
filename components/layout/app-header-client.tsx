@@ -24,10 +24,15 @@ export function AppHeaderClient({ theme, isLoggedIn, isAdmin, publicShare }: App
     try {
       const { supabaseClient } = await import('@/lib/supabase/client')
       if (supabaseClient) {
-        await supabaseClient.auth.signOut()
+        const { error } = await supabaseClient.auth.signOut()
+        if (error) {
+          throw error
+        }
       }
     } catch (err) {
       console.error('Logout failed:', err)
+      // Provide a user-visible alert or similar if needed, or rethrow
+      alert(err instanceof Error ? err.message : 'Wystąpił błąd podczas wylogowywania.')
     } finally {
       setIsLoggingOut(false)
       setIsMobileMenuOpen(false)

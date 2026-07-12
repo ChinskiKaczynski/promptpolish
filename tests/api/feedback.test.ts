@@ -14,13 +14,14 @@ vi.mock('@/lib/supabase/queries', () => ({
   getPromptAnalysisForOwner: vi.fn(),
   createFeedbackEvent: vi.fn(),
   createUsageEvent: vi.fn(),
-  getRecentFeedbackCount: vi.fn()
+  getRecentFeedbackCount: vi.fn(),
+  insertUsageEventWithLimit: vi.fn()
 }))
 
 import { POST } from '@/app/api/feedback/route'
 import { getOwnerIdFromCookies } from '@/lib/identity/anonymous'
 import { getAuthUser } from '@/lib/identity/auth'
-import { getPromptAnalysisForOwner, createFeedbackEvent, getRecentFeedbackCount } from '@/lib/supabase/queries'
+import { getPromptAnalysisForOwner, createFeedbackEvent, getRecentFeedbackCount, insertUsageEventWithLimit } from '@/lib/supabase/queries'
 import type { PromptAnalysisRow, FeedbackEventRow } from '@/lib/supabase/types'
 import type { User } from '@supabase/supabase-js'
 
@@ -47,6 +48,7 @@ describe('POST /api/feedback', () => {
     vi.mocked(getPromptAnalysisForOwner).mockResolvedValue(mockRecord)
     vi.mocked(createFeedbackEvent).mockResolvedValue(mockFeedback)
     vi.mocked(getRecentFeedbackCount).mockResolvedValue(0)
+    vi.mocked(insertUsageEventWithLimit).mockResolvedValue(true)
   })
 
   describe('Validation', () => {
@@ -202,7 +204,7 @@ describe('POST /api/feedback', () => {
 
   describe('Rate Limiting', () => {
     it('returns 429 when feedback rate limit is exceeded', async () => {
-      vi.mocked(getRecentFeedbackCount).mockResolvedValue(10)
+      vi.mocked(insertUsageEventWithLimit).mockResolvedValue(false)
 
       const response = await POST(makeRequest(validPayload))
       const data = await response.json()

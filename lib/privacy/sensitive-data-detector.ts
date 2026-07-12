@@ -4,7 +4,6 @@ export type SensitiveDataFinding = {
   type: string
   riskLevel: Exclude<SensitiveRiskLevel, 'none'>
   message: string
-  redactedValue: string
 }
 
 export type SensitiveDataDetectionResult = {
@@ -108,6 +107,9 @@ export function redactSecret(value: string, ruleId?: string): string {
   return `${prefix}${redacted}`
 }
 
+/**
+ * Scans an input string for credentials and high-risk sensitive patterns.
+ */
 export function detectSensitiveData(
   input: string,
   config?: DetectionConfig
@@ -150,8 +152,7 @@ export function detectSensitiveData(
       findings.push({
         type: rule.type,
         riskLevel: rule.riskLevel,
-        message: rule.message,
-        redactedValue: redactSecret(matchStr, rule.id)
+        message: rule.message
       })
 
       if (riskRank[rule.riskLevel] > riskRank[riskLevel]) {
@@ -177,7 +178,7 @@ export function detectSensitiveData(
 function dedupeFindings(findings: SensitiveDataFinding[]): SensitiveDataFinding[] {
   const seen = new Set<string>()
   return findings.filter((finding) => {
-    const key = `${finding.type}:${finding.redactedValue}`
+    const key = finding.type
     if (seen.has(key)) return false
     seen.add(key)
     return true

@@ -73,9 +73,9 @@ function findElementProps(
   target: React.ComponentType<unknown>
 ): Record<string, unknown> | null {
   if (!node || typeof node !== 'object') return null
-  const el = node as React.ReactElement
+  const el = node as React.ReactElement<{ children?: unknown }>
   if (el.type === target) return el.props as Record<string, unknown>
-  if (el.props?.children) {
+  if (el.props && 'children' in el.props && el.props.children) {
     const children = Array.isArray(el.props.children)
       ? el.props.children
       : [el.props.children]
@@ -187,6 +187,7 @@ describe('AccountPage Beta & Plan Limitations UI', () => {
 
     const { getSubscriptionByUserId } = await import('@/lib/supabase/billing')
     vi.mocked(getSubscriptionByUserId).mockResolvedValue({
+      id: 'sub_test_pro_id',
       user_id: 'user-pro-sub',
       stripe_customer_id: 'cus_test_pro',
       stripe_subscription_id: 'sub_test_pro',
@@ -196,6 +197,11 @@ describe('AccountPage Beta & Plan Limitations UI', () => {
       current_period_start: '2026-07-01T00:00:00Z',
       current_period_end: '2026-08-01T00:00:00Z',
       cancel_at_period_end: false,
+      cancel_at: null,
+      canceled_at: null,
+      ended_at: null,
+      cancellation_reason: null,
+      cancellation_feedback: null,
       created_at: '',
       updated_at: '',
       last_event_created: null,

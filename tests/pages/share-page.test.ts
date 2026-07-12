@@ -24,9 +24,7 @@ import { notFound } from 'next/navigation'
 import { ResultView } from '@/components/result/result-view'
 import type { SharedPromptAnalysis } from '@/lib/supabase/queries'
 
-// A minimal scrubbed record matching SharedPromptAnalysis shape
 const SCRUBBED_RECORD: SharedPromptAnalysis = {
-  input_prompt: 'Summarize this contract',
   working_language: 'en',
   selected_profile_slug: 'general-llm',
   overall_score: 78,
@@ -34,11 +32,22 @@ const SCRUBBED_RECORD: SharedPromptAnalysis = {
   analysis_json: {
     overall_summary: 'Decent prompt',
     detected_task_type: 'Summarization',
-    criteria_scores: [],
-    top_weaknesses: [],
-    improvement_plan: [],
+    criteria_scores: [
+      { criterion: 'goal_clarity', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'context_completeness', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'structure', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'constraints', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'output_format', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'model_profile_fit', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'resistance_to_misinterpretation', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'cost_efficiency', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'safety', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' },
+      { criterion: 'testability', raw_score_0_10: 8, rationale: 'Ok', improvement_suggestion: 'Better' }
+    ],
+    top_weaknesses: ['Weakness 1'],
+    improvement_plan: ['Step 1'],
     improved_prompt: 'Please summarize the following contract...',
-    change_explanations: [],
+    change_explanations: ['Explanation 1'],
     model_fit_notes: [],
     uncertainty_warnings: [],
     safety_notes: [],

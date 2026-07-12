@@ -223,11 +223,16 @@ export function ResultView({ result, mode, planSlug = 'free' }: ResultViewProps)
                   </p>
                   
                   {isStaleOrUnverified && (
-                    <div className="rounded-lg border border-[#2A2A3A] bg-[#1C1C27] p-3 flex gap-2 text-[#8290A2]">
-                      <span className="text-sm leading-none mt-0.5 shrink-0" aria-hidden="true">ℹ️</span>
-                      <p className="text-[11px] leading-relaxed">
-                        Profil nie deklaruje konkretnych parametrów technicznych modelu — celowe podejście, które eliminuje nieaktualne roszczenia dotyczące możliwości.
-                      </p>
+                    <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3 flex gap-2 text-red-400">
+                      <span className="text-sm leading-none mt-0.5 shrink-0" aria-hidden="true">⚠️</span>
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-red-400">
+                          Ostrzeżenie: Dane niezweryfikowane / przedawnione (Stale/Unverified Data)
+                        </p>
+                        <p className="text-[11px] leading-relaxed mt-0.5 text-gray-400">
+                          Profil nie deklaruje konkretnych parametrów technicznych modelu — celowe podejście, które eliminuje nieaktualne roszczenia dotyczące możliwości.
+                        </p>
+                      </div>
                     </div>
                   )}
 

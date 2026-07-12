@@ -26,21 +26,21 @@ The system scans input prompts for structural and high-entropy indicators of sen
 
 ---
 
-## 2. Anonymous Usage Quota & Rate Limiting
+## 2. Usage Quota & Rate Limiting
 
-As an anonymous-first application, PromptPolish is highly vulnerable to cost exploitation. We enforce tight, layered rate limits:
+PromptPolish enforces tight, layered rate limits:
 
-*   **Daily Quota**: Strict limit of **5 prompt analyses per 24-hour window** per anonymous session.
+*   **Daily Quotas**: Strict limit of **3 prompt analyses per day for anonymous**, **5 for free users**, and **100 for Pro subscribers**.
 *   **IP Hashing**: The user's IP is hashed on the server side using SHA-256 with a rotating salt. The raw IP is **never** stored in the database.
-*   **Dual Tracking**: Rate limiting is tracked against both the active **Anonymous Session Cookie UUID** and the server-side calculated **SHA-256 IP Hash** to prevent evasion via simple cookie purging.
-*   **Zod Max Constraints**: The Zod parser strictly rejects any input prompt exceeding **4,000 characters**.
+*   **Dual Tracking**: Rate limiting is tracked against both the active **Anonymous Session Cookie UUID** or user ID, and the server-side calculated **SHA-256 IP Hash** to prevent evasion via simple cookie purging.
+*   **Prompt Character Constraints**: Enforces max **12,000 characters** for anonymous and free tiers, and **24,000 characters** for Pro subscribers.
 
 ---
 
 ## 3. Model Hallucination & Calibrations
 
 To keep the AI model from generating unverified claims or fabricating system rules, the system instructions sent to the provider contain absolute formatting walls:
-*   **Standardized Rubric**: The LLM must assess prompts strictly on 4 predefined criteria (Context, Role, Constraints, Output Format) with scores between 0 and 100.
+*   **Standardized Rubric**: The LLM must assess prompts strictly on predefined criteria with scores between 0 and 100.
 *   **No Self-Fabrication**: Prompt instructions explicitly forbid the model from discussing its own underlying API features, version dates, or provider parameters.
 *   **Weighted Scoring Backend Logic**: The LLM output provides individual criteria scores. The backend recalculates and applies weights to determine the final composite score, preventing the LLM from simply generating arbitrary, unaligned scores.
 
@@ -52,6 +52,6 @@ Under no circumstance should internal stack traces or raw vendor JSON payloads b
 
 > [!CAUTION]
 > **API Leak Protection Rules**:
-> *   All third-party integrations (Supabase, OpenRouter API) must run inside robust `try/catch` wrappers.
+> *   All third-party integrations (Supabase, Gemini API) must run inside robust `try/catch` wrappers.
 > *   If a provider fails (e.g., rate limits, API down, quota exceeded), the backend catches the error, logs a secure internal trace, and returns a safe standard response: *"Audit service is temporarily congested. Please try again shortly."*
 > *   Do not include native database errors, table names, SQL queries, or remote host URLs in any client responses.
