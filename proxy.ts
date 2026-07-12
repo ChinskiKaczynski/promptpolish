@@ -15,11 +15,31 @@ export async function proxy(request: NextRequest) {
 
   // 0. Canonical Domain Redirection in Production
   if (process.env.NODE_ENV === 'production') {
-    const host = request.headers.get('host')
-    const canonicalDomain = process.env.CANONICAL_DOMAIN || 'promptpolish.com'
-    if (host && host !== canonicalDomain && !host.includes('localhost') && !host.includes('127.0.0.1') && !host.includes('test')) {
-      const canonicalUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, `https://${canonicalDomain}`)
-      return NextResponse.redirect(canonicalUrl, 301)
+    const host = (
+      request.headers.get('x-forwarded-host') ??
+      request.headers.get('host')
+    )
+      ?.split(',')[0]
+      .trim()
+      .toLowerCase()
+
+    const canonicalDomain = process.env.CANONICAL_DOMAIN
+      ?.trim()
+      .toLowerCase()
+
+    if (
+      canonicalDomain &&
+      host &&
+      host !== canonicalDomain &&
+      !host.includes('localhost') &&
+      !host.includes('127.0.0.1')
+    ) {
+      const canonicalUrl = new URL(
+        request.nextUrl.pathname + request.nextUrl.search,
+        `https://${canonicalDomain}`,
+      )
+
+      return NextResponse.redirect(canonicalUrl, 308)
     }
   }
 
