@@ -60,9 +60,7 @@ vi.mock('@/lib/supabase/billing', async (importOriginal) => {
     updateWebhookEventStatus: vi.fn(),
     claimCheckoutAttempt: vi.fn(),
     updateCheckoutAttemptStatus: vi.fn(),
-    completeCheckoutAttempt: vi.fn(),
-    acquireStripeLock: vi.fn().mockResolvedValue(undefined),
-    releaseStripeLock: vi.fn().mockResolvedValue(undefined)
+    completeCheckoutAttempt: vi.fn()
   }
 })
 
@@ -303,7 +301,11 @@ describe('Stripe Billing Foundation API Suite', () => {
           idempotencyKey: expect.stringContaining('stripe-customer-creation-user_uuid_1')
         })
       )
-      expect(saveStripeCustomer).toHaveBeenCalledWith('user_uuid_1', 'cus_new_123')
+      expect(saveStripeCustomer).toHaveBeenCalledWith(
+        'user_uuid_1',
+        'cus_new_123',
+        'stripe-customer-creation-user_uuid_1'
+      )
       expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           mode: 'subscription',
@@ -472,7 +474,8 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(updateCheckoutAttemptStatus).toHaveBeenCalledWith({
         attempt_id: 'attempt-uuid-777',
         status: 'ready',
-        session_id: 'cs_test_777'
+        session_id: 'cs_test_777',
+        stripe_customer_id: 'cus_idempotent'
       })
     })
 
@@ -552,7 +555,11 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(data.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_fresh')
       expect(mockStripeInstances.customers.retrieve).toHaveBeenCalledWith('cus_stale_123')
       expect(mockStripeInstances.customers.create).toHaveBeenCalled()
-      expect(saveStripeCustomer).toHaveBeenCalledWith('user_stale_uuid', 'cus_fresh_777')
+      expect(saveStripeCustomer).toHaveBeenCalledWith(
+        'user_stale_uuid',
+        'cus_fresh_777',
+        'stripe-customer-creation-user_stale_uuid'
+      )
     })
 
     it('retries checkout session creation once if checkout.sessions.create fails with resource_missing for customer', async () => {
@@ -587,7 +594,11 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(response.status).toBe(200)
       expect(data.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_retry_success')
       expect(mockStripeInstances.customers.create).toHaveBeenCalled()
-      expect(saveStripeCustomer).toHaveBeenCalledWith('user_retry_uuid', 'cus_retry_fresh')
+      expect(saveStripeCustomer).toHaveBeenCalledWith(
+        'user_retry_uuid',
+        'cus_retry_fresh',
+        'stripe-customer-recovery-mock-attempt-uuid'
+      )
       expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledTimes(2)
     })
 
@@ -621,6 +632,206 @@ describe('Stripe Billing Foundation API Suite', () => {
       expect(response.status).toBe(502)
       expect(data.error).toBe('stripe_error')
       expect(data.message).toBe('Nie udało się rozpocząć płatności w Stripe. Spróbuj ponownie za chwilę.')
+    })
+
+    describe('Concurrency, Idempotency & Customer Recovery Requirements', () => {
+      it('concurrency and idempotency key checks', async () => {
+        // 1. checkout_in_progress blocks second checkout
+        vi.mocked(getAuthUser).mockResolvedValue({
+          id: 'user_concurrent_1',
+          email: 'concurrent1@promptpolish.com',
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: ''
+        })
+        vi.mocked(getStripeCustomer).mockResolvedValue({
+          user_id: 'user_concurrent_1',
+          stripe_customer_id: 'cus_concurrent_1',
+          created_at: '',
+          updated_at: ''
+        })
+        vi.mocked(claimCheckoutAttempt).mockResolvedValue({
+          status: 'checkout_in_progress',
+          attempt_id: 'attempt-in-progress',
+          stripe_checkout_session_id: null
+        })
+
+        const response1 = await checkoutHandler()
+        expect(response1.status).toBe(409)
+        const data1 = await response1.json()
+        expect(data1.error).toBe('checkout_in_progress')
+
+        // 2. ready returns existing URL
+        vi.mocked(claimCheckoutAttempt).mockResolvedValue({
+          status: 'ready',
+          attempt_id: 'attempt-ready',
+          stripe_checkout_session_id: 'cs_existing_123'
+        })
+        mockStripeInstances.checkout.sessions.retrieve.mockResolvedValue({
+          status: 'open',
+          url: 'https://checkout.stripe.com/pay/cs_existing_123'
+        })
+
+        const response2 = await checkoutHandler()
+        expect(response2.status).toBe(200)
+        const data2 = await response2.json()
+        expect(data2.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_existing_123')
+
+        // 3. expired checkout attempt allows creating a new session
+        mockStripeInstances.checkout.sessions.retrieve.mockResolvedValue({
+          status: 'expired',
+          url: 'https://checkout.stripe.com/pay/cs_existing_123'
+        })
+        vi.mocked(claimCheckoutAttempt)
+          .mockResolvedValueOnce({
+            status: 'ready',
+            attempt_id: 'attempt-ready',
+            stripe_checkout_session_id: 'cs_existing_123'
+          })
+          .mockResolvedValueOnce({
+            status: 'create_new',
+            attempt_id: 'attempt-new-after-expired',
+            stripe_checkout_session_id: null
+          })
+
+        mockStripeInstances.checkout.sessions.create.mockResolvedValue({
+          id: 'cs_newly_created',
+          url: 'https://checkout.stripe.com/pay/cs_newly_created'
+        })
+
+        const response3 = await checkoutHandler()
+        expect(response3.status).toBe(200)
+        const data3 = await response3.json()
+        expect(data3.checkoutUrl).toBe('https://checkout.stripe.com/pay/cs_newly_created')
+        expect(updateCheckoutAttemptStatus).toHaveBeenCalledWith({
+          attempt_id: 'attempt-ready',
+          status: 'expired'
+        })
+
+        // 4. two parallel requests create at most one active checkout attempt
+        vi.mocked(getAuthUser).mockResolvedValue({
+          id: 'user_parallel',
+          email: 'parallel@promptpolish.com',
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: ''
+        })
+        vi.mocked(getStripeCustomer).mockResolvedValue({
+          user_id: 'user_parallel',
+          stripe_customer_id: 'cus_parallel',
+          created_at: '',
+          updated_at: ''
+        })
+
+        vi.mocked(claimCheckoutAttempt)
+          .mockResolvedValueOnce({
+            status: 'create_new',
+            attempt_id: 'attempt-parallel-first',
+            stripe_checkout_session_id: null
+          })
+          .mockResolvedValueOnce({
+            status: 'checkout_in_progress',
+            attempt_id: 'attempt-parallel-second',
+            stripe_checkout_session_id: null
+          })
+
+        mockStripeInstances.checkout.sessions.create.mockResolvedValue({
+          id: 'cs_parallel_first',
+          url: 'https://checkout.stripe.com/pay/cs_parallel_first'
+        })
+
+        const [resParallel1, resParallel2] = await Promise.all([
+          checkoutHandler(),
+          checkoutHandler()
+        ])
+
+        expect(resParallel1.status).toBe(200)
+        expect(resParallel2.status).toBe(409)
+        const dataParallel2 = await resParallel2.json()
+        expect(dataParallel2.error).toBe('checkout_in_progress')
+
+        // 5. Stripe Checkout Session uses checkout-session-${attemptId}
+        expect(mockStripeInstances.checkout.sessions.create).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            idempotencyKey: 'checkout-session-attempt-parallel-first'
+          })
+        )
+
+        // 6. Stripe Customer creation uses stable stripe-customer-creation-${userId}
+        vi.mocked(getAuthUser).mockResolvedValue({
+          id: 'user_cust_creation_check',
+          email: 'creation@promptpolish.com',
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: ''
+        })
+        vi.mocked(getStripeCustomer).mockResolvedValue(null)
+        mockStripeInstances.customers.create.mockResolvedValue({ id: 'cus_created_stable' })
+        vi.mocked(claimCheckoutAttempt).mockResolvedValue({
+          status: 'create_new',
+          attempt_id: 'attempt-stable-creation',
+          stripe_checkout_session_id: null
+        })
+
+        await checkoutHandler()
+        expect(mockStripeInstances.customers.create).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            idempotencyKey: 'stripe-customer-creation-user_cust_creation_check'
+          })
+        )
+
+        // 7. retry after stale customer uses stable stripe-customer-recovery-${attemptId}
+        vi.mocked(getAuthUser).mockResolvedValue({
+          id: 'user_stale_recovery_check',
+          email: 'recovery@promptpolish.com',
+          app_metadata: {},
+          user_metadata: {},
+          aud: 'authenticated',
+          created_at: ''
+        })
+        vi.mocked(getStripeCustomer).mockResolvedValue({
+          user_id: 'user_stale_recovery_check',
+          stripe_customer_id: 'cus_stale_recovery_check',
+          created_at: '',
+          updated_at: ''
+        })
+        mockStripeInstances.customers.retrieve.mockResolvedValue({ id: 'cus_stale_recovery_check' })
+
+        const staleError = new Error('No such customer')
+        Object.assign(staleError, { code: 'resource_missing', param: 'customer', statusCode: 404 })
+
+        mockStripeInstances.checkout.sessions.create
+          .mockRejectedValueOnce(staleError)
+          .mockResolvedValueOnce({ id: 'cs_recovery_success', url: 'https://checkout.stripe.com/pay/cs_recovery_success' })
+
+        mockStripeInstances.customers.create.mockResolvedValue({ id: 'cus_recovered_stable' })
+        vi.mocked(claimCheckoutAttempt).mockResolvedValue({
+          status: 'create_new',
+          attempt_id: 'attempt-stale-recovery-id',
+          stripe_checkout_session_id: null
+        })
+
+        const responseRecovery = await checkoutHandler()
+        expect(responseRecovery.status).toBe(200)
+        expect(mockStripeInstances.customers.create).toHaveBeenCalledWith(
+          expect.any(Object),
+          expect.objectContaining({
+            idempotencyKey: 'stripe-customer-recovery-attempt-stale-recovery-id'
+          })
+        )
+        // Check that active checkout attempt is associated with the new customer ID
+        expect(updateCheckoutAttemptStatus).toHaveBeenCalledWith({
+          attempt_id: 'attempt-stale-recovery-id',
+          status: 'ready',
+          session_id: 'cs_recovery_success',
+          stripe_customer_id: 'cus_recovered_stable'
+        })
+      })
     })
   })
 

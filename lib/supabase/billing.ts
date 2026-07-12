@@ -548,6 +548,7 @@ export async function updateCheckoutAttemptStatus(params: {
   status: 'creating' | 'ready' | 'completed' | 'failed' | 'expired'
   session_id?: string | null
   failure_code?: string | null
+  stripe_customer_id?: string | null
 }): Promise<boolean> {
   if (process.env.STRIPE_ENABLED !== 'true') {
     return true
@@ -559,7 +560,8 @@ export async function updateCheckoutAttemptStatus(params: {
     p_attempt_id: params.attempt_id,
     p_status: params.status,
     p_session_id: params.session_id || null,
-    p_failure_code: params.failure_code || null
+    p_failure_code: params.failure_code || null,
+    p_stripe_customer_id: params.stripe_customer_id || null
   })
 
   if (error) {
@@ -591,34 +593,4 @@ export async function completeCheckoutAttempt(stripeSessionId: string): Promise<
   }
 
   return true
-}
-
-export async function acquireStripeLock(key: string): Promise<void> {
-  const supabase = getSupabaseAdminClient()
-  const rpcFn = supabase.rpc as unknown as (
-    fnName: string,
-    args: Record<string, unknown>
-  ) => Promise<{ error: { message: string } | null }>
-
-  const { error } = await rpcFn('acquire_stripe_lock', { p_key: key })
-  if (error) {
-    console.error('Error acquiring Stripe lock:', serializeDbError(error))
-    throw new Error(`Lock acquisition failed: ${error.message}`)
-  }
-}
-
-/**
- * Releases a Postgres session-level advisory lock based on a text key.
- */
-export async function releaseStripeLock(key: string): Promise<void> {
-  const supabase = getSupabaseAdminClient()
-  const rpcFn = supabase.rpc as unknown as (
-    fnName: string,
-    args: Record<string, unknown>
-  ) => Promise<{ error: { message: string } | null }>
-
-  const { error } = await rpcFn('release_stripe_lock', { p_key: key })
-  if (error) {
-    console.error('Error releasing Stripe lock:', serializeDbError(error))
-  }
 }

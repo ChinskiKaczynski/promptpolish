@@ -7,8 +7,6 @@ import {
   getSubscriptionByUserId,
   claimCheckoutAttempt,
   updateCheckoutAttemptStatus,
-  acquireStripeLock,
-  releaseStripeLock
 } from '@/lib/supabase/billing'
 import { checkProductionEnv } from '@/lib/env/server'
 import { createUsageEvent } from '@/lib/supabase/queries'
@@ -148,39 +146,53 @@ export async function POST() {
     }
 
     if (!stripeCustomerId) {
-      await acquireStripeLock(user.id)
       try {
-        // Double-check lock: check if another concurrent request created it while we were waiting
         const doubleCheckCustomer = await getStripeCustomer(user.id)
-        if (doubleCheckCustomer && (!customerRow || doubleCheckCustomer.stripe_customer_id !== customerRow.stripe_customer_id)) {
+
+        if (
+          doubleCheckCustomer &&
+          (!customerRow ||
+            doubleCheckCustomer.stripe_customer_id !==
+              customerRow.stripe_customer_id)
+        ) {
           stripeCustomerId = doubleCheckCustomer.stripe_customer_id
         } else {
-          const customer = await stripe.customers.create({
-            email: user.email || '',
-            metadata: { userId: user.id }
-          }, {
-            idempotencyKey: `stripe-customer-creation-${user.id}`
-          })
+          const customer = await stripe.customers.create(
+            {
+              email: user.email || '',
+              metadata: { userId: user.id },
+            },
+            {
+              idempotencyKey: `stripe-customer-creation-${user.id}`,
+            },
+          )
+
           stripeCustomerId = customer.id
           newCustomerCreated = true
-          
-          // Persist and verify customer mapping in the local database before starting checkout
-          const saved = await saveStripeCustomer(user.id, stripeCustomerId)
+
+          const saved = await saveStripeCustomer(
+            user.id,
+            stripeCustomerId,
+            `stripe-customer-creation-${user.id}`,
+          )
+
           if (!saved) {
-            throw new Error('Failed to save Stripe customer mapping to local database.')
+            throw new Error(
+              'Failed to save Stripe customer mapping to local database.',
+            )
           }
         }
       } catch (err) {
         console.error('Failed to create or save Stripe customer:', err)
+
         return NextResponse.json(
           {
             error: 'stripe_error',
-            message: 'Nie udało się zarejestrować klienta w systemie płatności.'
+            message:
+              'Nie udało się zarejestrować klienta w systemie płatności.',
           },
-          { status: 502 }
+          { status: 502 },
         )
-      } finally {
-        await releaseStripeLock(user.id)
       }
     }
 
@@ -298,16 +310,23 @@ export async function POST() {
           isStaleCustomer = true
           console.warn(`[Stripe Checkout] Session creation failed for customer ${stripeCustomerId} (resource_missing). Recreating customer and retrying.`)
 
+          const recoveryCustomerIdempotencyKey =
+            `stripe-customer-recovery-${finalClaim.attempt_id}`
+
           const customer = await stripe.customers.create({
             email: user.email || '',
             metadata: { userId: user.id }
           }, {
-            idempotencyKey: `stripe-customer-creation-retry-${user.id}-${Date.now()}`
+            idempotencyKey: recoveryCustomerIdempotencyKey
           })
           stripeCustomerId = customer.id
           newCustomerCreated = true
 
-          const saved = await saveStripeCustomer(user.id, stripeCustomerId)
+          const saved = await saveStripeCustomer(
+            user.id,
+            stripeCustomerId,
+            recoveryCustomerIdempotencyKey
+          )
           if (!saved) {
             throw new Error('Failed to save Stripe customer mapping to local database on retry.')
           }
@@ -327,7 +346,8 @@ export async function POST() {
       await updateCheckoutAttemptStatus({
         attempt_id: finalClaim.attempt_id,
         status: 'ready',
-        session_id: session.id
+        session_id: session.id,
+        stripe_customer_id: stripeCustomerId
       })
 
       console.log(`[Stripe Checkout] Session created successfully. Details: ` +

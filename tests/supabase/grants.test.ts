@@ -2,11 +2,18 @@ import { describe, expect, it } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 
+const migrationFiles = {
+  baseline: '20260601170046_baseline_private_beta.sql',
+  corrective: '20260612182355_corrective_privileges.sql',
+  reservations: '20260612184028_usage_reservations.sql',
+  feedback: '20260612184054_feedback_integrity.sql',
+} as const
+
 describe('Supabase Database Permission Grants - Static SQL Migration Analysis', () => {
   const migrationsDir = path.resolve(__dirname, '../../supabase/migrations')
 
-  it('ensures baseline migration 20260603200000_baseline_private_beta.sql has no unsafe grants to anon/authenticated', () => {
-    const baselineFile = path.join(migrationsDir, '20260603200000_baseline_private_beta.sql')
+  it(`ensures baseline migration ${migrationFiles.baseline} has no unsafe grants to anon/authenticated`, () => {
+    const baselineFile = path.join(migrationsDir, migrationFiles.baseline)
     expect(fs.existsSync(baselineFile), 'Baseline migration must exist').toBe(true)
 
     const sql = fs.readFileSync(baselineFile, 'utf-8')
@@ -26,8 +33,8 @@ describe('Supabase Database Permission Grants - Static SQL Migration Analysis', 
     expect(sql).not.toMatch(/GRANT\s+SELECT\s+ON\s+TABLE\s+[^;]*?model_profiles[^;]*?TO\s+[^;]*?['"]?(anon|authenticated)['"]?/i)
   })
 
-  it('ensures corrective migration 20260612200000_corrective_privileges.sql explicitly revokes dangerous privileges and configures the RPC', () => {
-    const correctiveFile = path.join(migrationsDir, '20260612200000_corrective_privileges.sql')
+  it(`ensures corrective migration ${migrationFiles.corrective} explicitly revokes dangerous privileges and configures the RPC`, () => {
+    const correctiveFile = path.join(migrationsDir, migrationFiles.corrective)
     expect(fs.existsSync(correctiveFile), 'Corrective migration file must exist').toBe(true)
 
     const sql = fs.readFileSync(correctiveFile, 'utf-8')
@@ -59,8 +66,8 @@ describe('Supabase Database Permission Grants - Static SQL Migration Analysis', 
     expect(sql).toContain(`GRANT EXECUTE ON FUNCTION ${signature} TO "service_role";`)
   })
 
-  it('ensures usage_reservations migration 20260612210000_usage_reservations.sql revokes privileges and configures the RPCs', () => {
-    const file = path.join(migrationsDir, '20260612210000_usage_reservations.sql')
+  it(`ensures usage_reservations migration ${migrationFiles.reservations} revokes privileges and configures the RPCs`, () => {
+    const file = path.join(migrationsDir, migrationFiles.reservations)
     expect(fs.existsSync(file), 'Usage reservations migration must exist').toBe(true)
 
     const sql = fs.readFileSync(file, 'utf-8')
@@ -101,8 +108,8 @@ describe('Supabase Database Permission Grants - Static SQL Migration Analysis', 
     expect(sql).toContain('GRANT EXECUTE ON FUNCTION public.release_usage_reservation(UUID) TO "service_role";')
   })
 
-  it('ensures feedback_integrity migration 20260612220000_feedback_integrity.sql revokes direct client access to feedback_events', () => {
-    const file = path.join(migrationsDir, '20260612220000_feedback_integrity.sql')
+  it(`ensures feedback_integrity migration ${migrationFiles.feedback} revokes direct client access to feedback_events`, () => {
+    const file = path.join(migrationsDir, migrationFiles.feedback)
     expect(fs.existsSync(file), 'Feedback integrity migration must exist').toBe(true)
 
     const sql = fs.readFileSync(file, 'utf-8')
