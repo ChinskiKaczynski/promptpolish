@@ -1,0 +1,1 @@
+-- Dummy empty migration file to satisfy Supabase CLI sync for remote version 20260601163657
