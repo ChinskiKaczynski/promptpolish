@@ -33,6 +33,7 @@ Exactly **one** product-facing profile is active in the application:
 
 > [!IMPORTANT]
 > **Profile Rules**:
+>
 > - Do not hardcode model capabilities, token limits, context windows, benchmark scores, or pricing claims in the client-side UI.
 > - The actual provider `model_id` (`gemini-2.5-flash`) must be resolved from env `GEMINI_MODEL_ID` in the backend.
 > - No model/profile selector is shown in the UI. The form always sends `selected_profile_slug: 'general-llm'`.
@@ -46,6 +47,7 @@ To prevent formatting errors, parser failures, or unpredictable LLM responses, w
 
 > [!IMPORTANT]
 > **Mandatory AI SDK Integration Pattern**:
+>
 > - Use the Vercel AI SDK's `generateObject` function with a strictly typed Zod schema via `lib/ai/gemini-client.ts`.
 > - **Do not use** `@openrouter/ai-sdk-provider` or any OpenRouter provider call.
 > - **Do not use** provider-specific call layers directly — go through `lib/ai/gemini-client.ts`.
@@ -55,12 +57,12 @@ To prevent formatting errors, parser failures, or unpredictable LLM responses, w
 ```typescript
 // [ACTIVE PRODUCTION INTEGRATION]
 // Vercel AI SDK with @ai-sdk/google:
-import { google } from '@ai-sdk/google'
-import { generateObject } from 'ai'
-import { z } from 'zod'
+import { google } from "@ai-sdk/google";
+import { generateObject } from "ai";
+import { z } from "zod";
 
 const { object } = await generateObject({
-  model: google(process.env.GEMINI_MODEL_ID || 'gemini-2.5-flash'),
+  model: google(process.env.GEMINI_MODEL_ID || "gemini-2.5-flash"),
   system: systemInstruction,
   prompt: userPrompt,
   temperature: 0.1,
@@ -70,7 +72,7 @@ const { object } = await generateObject({
     improvedPrompt: z.string(),
     explanations: z.array(z.string()),
   }),
-})
+});
 ```
 
 ---
@@ -112,9 +114,9 @@ const { object } = await generateObject({
 1. **Plan First**: Always propose a clear implementation plan before modifying any codebase files.
 2. **Strict TypeScript**: Disable `any` types; enforce strict optional chaining and narrow union typing.
 3. **Secrets & Keys**:
-    - **Never** expose `GOOGLE_GENERATIVE_AI_API_KEY` or `SUPABASE_SECRET_KEY` client-side.
-    - Do not prefix server secrets with `NEXT_PUBLIC_`.
-    - Do not add `OPENROUTER_API_KEY` to any active code path.
+   - **Never** expose `GOOGLE_GENERATIVE_AI_API_KEY` or `SUPABASE_SECRET_KEY` client-side.
+   - Do not prefix server secrets with `NEXT_PUBLIC_`.
+   - Do not add `OPENROUTER_API_KEY` to any active code path.
 4. **Backend Score Owner**: Final prompt score calculations and safety checks must occur in the backend code, not inside client bundles or purely trusting LLM outputs.
 5. **Test Driven**: Add isolated unit tests for scoring calculations, sensitive-data detectors, and result share access policies.
 6. **No Unverified Claims**: Never display unverified claims about LLM pricing, context windows, or provider benchmarks.

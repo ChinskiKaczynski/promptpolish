@@ -153,6 +153,42 @@ export interface Database {
         }
         Relationships: []
       }
+      ai_runtime_config: {
+        Row: {
+          id: string
+          provider: 'google' | 'openrouter'
+          model_id: string
+          fallback_provider: 'google' | 'openrouter' | null
+          fallback_model_id: string | null
+          temperature: number
+          max_output_tokens: number
+          timeout_ms: number
+          thinking_budget: number
+        }
+        Insert: {
+          id: string
+          provider: 'google' | 'openrouter'
+          model_id: string
+          fallback_provider?: 'google' | 'openrouter' | null
+          fallback_model_id?: string | null
+          temperature?: number
+          max_output_tokens?: number
+          timeout_ms?: number
+          thinking_budget?: number
+        }
+        Update: {
+          id?: string
+          provider?: 'google' | 'openrouter'
+          model_id?: string
+          fallback_provider?: 'google' | 'openrouter' | null
+          fallback_model_id?: string | null
+          temperature?: number
+          max_output_tokens?: number
+          timeout_ms?: number
+          thinking_budget?: number
+        }
+        Relationships: []
+      }
       model_profiles: {
         Row: Record<string, unknown>
         Insert: {

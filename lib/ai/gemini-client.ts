@@ -1,12 +1,40 @@
-import { google } from '@ai-sdk/google'
 import { generateObject, NoObjectGeneratedError } from 'ai'
 import { analysisResultSchema, type AnalysisResult } from './schemas'
-import { normalizeProviderError, ProviderError } from './provider-errors'
-import { getOwnerConfiguredModelId } from './model-catalog'
-
+import {
+  normalizeProviderError,
+  ProviderError,
+} from './provider-errors'
+import {
+  createRuntimeLanguageModel,
+  getRuntimeProviderOptions,
+} from './provider-factory'
+import {
+  getActiveAIRuntimeConfig,
+  type AIRuntimeConfig,
+} from './runtime-config'
 import type { ModelProfileRow } from '@/lib/supabase/types'
 
-import { serverEnv } from '@/lib/env/server'
+type RuntimeProvider = AIRuntimeConfig['provider']
+
+type NormalizedUsage = {
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+  reasoningTokens?: number
+  visibleTokens?: number
+}
+
+type RawProviderUsage = {
+  inputTokens?: number
+  promptTokens?: number
+  outputTokens?: number
+  completionTokens?: number
+  totalTokens?: number
+  reasoningTokens?: number
+  outputTokenDetails?: {
+    reasoningTokens?: number
+  }
+}
 
 export type TextGenerator = (
   model: string,
@@ -16,90 +44,136 @@ export type TextGenerator = (
     temperature: number
     maxTokens: number
     abortSignal: AbortSignal
-    providerMetadata?: Record<string, unknown>
+    provider: RuntimeProvider
+    thinkingBudget: number
   }
 ) => Promise<{
   output: AnalysisResult
-  usage?: {
-    promptTokens: number
-    completionTokens: number
-    totalTokens: number
-    reasoningTokens?: number
-    visibleTokens?: number
-  }
+  usage?: NormalizedUsage
   finishReason?: string
 }>
+
+function normalizeUsage(
+  usage: RawProviderUsage | undefined
+): NormalizedUsage | undefined {
+  if (!usage) {
+    return undefined
+  }
+
+  const promptTokens =
+    usage.promptTokens ??
+    usage.inputTokens ??
+    0
+
+  const completionTokens =
+    usage.completionTokens ??
+    usage.outputTokens ??
+    0
+
+  const reasoningTokens =
+    usage.outputTokenDetails?.reasoningTokens ??
+    usage.reasoningTokens ??
+    0
+
+  const totalTokens =
+    usage.totalTokens ??
+    promptTokens + completionTokens
+
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    reasoningTokens,
+    visibleTokens: Math.max(
+      0,
+      completionTokens - reasoningTokens
+    ),
+  }
+}
 
 export const defaultTextGenerator: TextGenerator = async (
   model,
   systemInstruction,
   userPrompt,
-  opts
+  options
 ) => {
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
-  if (!apiKey || apiKey.trim() === '') {
-    throw new ProviderError(
-      'Missing Google Generative AI API Key',
-      'The prompt analysis engine is not configured with an API key. Please check your system environment.',
-      new Error('GOOGLE_GENERATIVE_AI_API_KEY is not defined in environment variables.')
-    )
-  }
-
   try {
-    const { object, usage, finishReason } = await generateObject({
-      model: google(model) as unknown as Parameters<typeof generateObject>[0]['model'],
+    const runtimeModel = createRuntimeLanguageModel(
+      options.provider,
+      model
+    )
+
+    const providerOptions =
+      getRuntimeProviderOptions(
+        options.provider,
+        options.thinkingBudget
+      )
+
+    const {
+      object,
+      usage,
+      finishReason,
+    } = await generateObject({
+      model:
+        runtimeModel as Parameters<
+          typeof generateObject
+        >[0]['model'],
+
       system: systemInstruction,
       prompt: userPrompt,
-      temperature: opts.temperature,
-      maxOutputTokens: opts.maxTokens,
-      abortSignal: opts.abortSignal,
+      temperature: options.temperature,
+      maxOutputTokens: options.maxTokens,
+      abortSignal: options.abortSignal,
       schema: analysisResultSchema,
-      providerOptions: {
-        google: {
-          thinkingConfig: {
-            thinkingBudget: Number(process.env.GEMINI_THINKING_BUDGET ?? 0),
-            includeThoughts: false
-          }
-        }
-      },
-      ...(opts.providerMetadata && Object.keys(opts.providerMetadata).length > 0
-        ? { providerMetadata: opts.providerMetadata }
-        : {})
+      providerOptions,
     })
-
-    const rawUsage = usage as unknown as {
-      promptTokens: number
-      completionTokens: number
-      totalTokens: number
-      reasoningTokens?: number
-      outputTokenDetails?: { reasoningTokens?: number }
-    } | undefined
 
     return {
       output: object,
-      usage: rawUsage
-        ? {
-            promptTokens: rawUsage.promptTokens,
-            completionTokens: rawUsage.completionTokens,
-            totalTokens: rawUsage.totalTokens,
-            reasoningTokens: rawUsage.outputTokenDetails?.reasoningTokens ?? rawUsage.reasoningTokens ?? 0,
-            visibleTokens: Math.max(0, rawUsage.completionTokens - (rawUsage.outputTokenDetails?.reasoningTokens ?? rawUsage.reasoningTokens ?? 0))
-          }
-        : undefined,
-      finishReason: finishReason || 'stop'
+      usage: normalizeUsage(
+        usage as unknown as RawProviderUsage
+      ),
+      finishReason: finishReason || 'stop',
     }
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
-      if (process.env.NODE_ENV !== 'production') {
-        const rawOutput = error.text || ''
-        const redactedRaw = rawOutput.replace(/(?:AIzaSy[A-Za-z0-9_-]{33}|sk-[A-Za-z0-9_-]{20,})/g, '[REDACTED_SECRET]')
-        console.warn('[MALFORMED OBJECT DIAGNOSTIC]', {
-          finishReason: error.finishReason,
-          cause: error.cause instanceof Error ? error.cause.message : String(error.cause),
-          rawOutput: redactedRaw.slice(0, 500)
+      const rawText =
+        typeof error.text === 'string'
+          ? error.text
+          : ''
+
+      const errorUsage =
+        error.usage as unknown as
+          | RawProviderUsage
+          | undefined
+
+      console.warn(
+        '[NO_OBJECT_GENERATED]',
+        JSON.stringify({
+          provider: options.provider,
+          model,
+          finishReason:
+            error.finishReason ?? null,
+          rawTextLength: rawText.length,
+          causeName:
+            error.cause instanceof Error
+              ? error.cause.name
+              : typeof error.cause,
+          inputTokens:
+            errorUsage?.inputTokens ??
+            errorUsage?.promptTokens ??
+            null,
+          outputTokens:
+            errorUsage?.outputTokens ??
+            errorUsage?.completionTokens ??
+            null,
+          totalTokens:
+            errorUsage?.totalTokens ??
+            null,
         })
-      }
+      )
     }
+
     throw error
   }
 }
@@ -108,321 +182,597 @@ export interface GeminiClientOptions {
   mockMode?: boolean
   mockResponse?: AnalysisResult
   temperature?: number
-  /** AbortSignal to cancel the in-flight request (e.g. from an external AbortController). */
-  abortSignal?: AbortSignal
+
   /**
-   * Hard deadline in milliseconds. When set (and no external abortSignal is
-   * provided) the client creates its own AbortController and cancels the
-   * request after this many ms. Defaults to no timeout when omitted.
+   * Signal from the calling HTTP request.
+   */
+  abortSignal?: AbortSignal
+
+  /**
+   * Total generation budget, including a possible fallback attempt.
    */
   timeoutMs?: number
+
+  /**
+   * Retained temporarily for compatibility with existing callers.
+   *
+   * This profile describes the model targeted by the user's prompt.
+   * It no longer selects the model that executes PromptPolish analysis.
+   */
   dbProfile?: ModelProfileRow | null
+
+  /**
+   * Resolved once by the route and shared through all retries.
+   * When omitted, the client reads the active database configuration.
+   */
+  runtimeConfig?: AIRuntimeConfig
+
   requestId?: string
   textGenerator?: TextGenerator
 }
 
 export interface GeminiAnalysisResponse {
   output: AnalysisResult
-  usage?: {
-    promptTokens: number
-    completionTokens: number
-    totalTokens: number
-    reasoningTokens?: number
-    visibleTokens?: number
-  }
+  usage?: NormalizedUsage
   finishReason: string
   selectedModel: string
+  selectedProvider: RuntimeProvider
   attempt: number
   durationMs: number
 }
 
 /**
- * Low-level Gemini client that wraps Vercel AI SDK generateObject with
- * strictly typed structured JSON validation via Zod schema.
- * Supports mocked responses directly for testing and local environments.
- * Supports a single model fallback when a fallback_model_id is configured
- * in the dbProfile capabilities_json.
+ * Low-level structured analysis client.
+ *
+ * The historical function name is retained to avoid a broad refactor, but the
+ * client can now execute through Google or OpenRouter depending on the active
+ * server-side runtime configuration.
  */
 export async function executeGeminiAnalysis(
   systemInstruction: string,
   userPrompt: string,
   options: GeminiClientOptions = {}
 ): Promise<GeminiAnalysisResponse> {
-  const { mockMode = false, mockResponse, temperature, abortSignal, timeoutMs, dbProfile, requestId } = options
+  const {
+    mockMode = false,
+    mockResponse,
+    temperature,
+    abortSignal,
+    timeoutMs,
+    runtimeConfig,
+    requestId,
+  } = options
 
-  // 1. Return Mock response if mock mode is active
+  /*
+   * 1. Mock response
+   */
   if (mockMode || mockResponse) {
-    let mockOut = mockResponse
-    if (!mockOut) {
-      // Lazy load mockAnalysisResult to avoid circular dependency
-      const { mockAnalysisResult } = await import('./mock-analysis')
-      mockOut = mockAnalysisResult
+    let mockOutput = mockResponse
+
+    if (!mockOutput) {
+      const { mockAnalysisResult } =
+        await import('./mock-analysis')
+
+      mockOutput = mockAnalysisResult
     }
 
-    const cleanMockOut = { ...mockOut } as Record<string, unknown>
-    delete cleanMockOut.id
-    delete cleanMockOut.overallScore
-    delete cleanMockOut.scoreLevel
+    const cleanMockOutput = {
+      ...mockOutput,
+    } as Record<string, unknown>
+
+    delete cleanMockOutput.id
+    delete cleanMockOutput.overallScore
+    delete cleanMockOutput.scoreLevel
 
     return {
-      output: cleanMockOut as AnalysisResult,
+      output:
+        cleanMockOutput as AnalysisResult,
+
       usage: {
         promptTokens: 120,
         completionTokens: 250,
         totalTokens: 370,
         reasoningTokens: 0,
-        visibleTokens: 250
+        visibleTokens: 250,
       },
+
       finishReason: 'stop',
       selectedModel: 'mock-model',
+      selectedProvider:
+        runtimeConfig?.provider ??
+        'google',
       attempt: 1,
-      durationMs: 50
+      durationMs: 50,
     }
   }
 
-  // 2. Resolve model ID from dbProfile capabilities or env
-  const capabilities = (dbProfile?.capabilities_json || {}) as Record<string, unknown>
-  const primaryModelId = (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
+  /*
+   * 2. Resolve active execution configuration.
+   *
+   * dbProfile is deliberately not used here. It describes the target prompt
+   * profile and must not decide which provider executes the analysis.
+   */
+  const resolvedRuntimeConfig =
+    runtimeConfig ??
+    await getActiveAIRuntimeConfig()
 
-  const rawFallback = (capabilities.fallback_model_id as string | undefined) ||
-                    (capabilities.fallbackModelId as string | undefined) ||
-                    process.env.GEMINI_MODEL_ID
+  const primaryProvider =
+    resolvedRuntimeConfig.provider
 
-  const fallbackModelId = (rawFallback && rawFallback.trim() !== '') ? rawFallback.trim() : null
-  const isFallbackEnabled = fallbackModelId !== null && fallbackModelId !== primaryModelId
-  const effectiveTemperature = capabilities.temperature !== undefined ? (capabilities.temperature as number) : (temperature ?? 0.1)
-  const maxTokens = capabilities.max_tokens !== undefined ? (capabilities.max_tokens as number) : 4000
+  const primaryModelId =
+    resolvedRuntimeConfig.modelId
+
+  const fallbackProvider =
+    resolvedRuntimeConfig.fallbackProvider
+
+  const fallbackModelId =
+    resolvedRuntimeConfig.fallbackModelId
+
+  const isFallbackEnabled =
+    fallbackProvider !== null &&
+    fallbackModelId !== null &&
+    (
+      fallbackProvider !== primaryProvider ||
+      fallbackModelId !== primaryModelId
+    )
+
+  const effectiveTemperature =
+    temperature ??
+    resolvedRuntimeConfig.temperature
+
+  const maxTokens =
+    resolvedRuntimeConfig.maxOutputTokens
+
+  const totalTimeout =
+    timeoutMs ??
+    resolvedRuntimeConfig.timeoutMs
+
+  const primaryTimeoutMs = Math.min(
+    totalTimeout,
+    resolvedRuntimeConfig.timeoutMs
+  )
 
   const startTime = Date.now()
-  const totalTimeout = timeoutMs ?? 110000 // Total operation budget (default: 110s)
-  const primaryLimit = dbProfile?.capabilities_json?.timeout_ms as number ?? serverEnv.AI_PROVIDER_TIMEOUT_MS ?? 55000
-  const primaryTimeoutMs = Math.min(totalTimeout, primaryLimit)
 
   let attempt = 1
   let lastError: unknown = null
 
   while (attempt <= 2) {
-    const elapsed = Date.now() - startTime
-    const remainingBudgetMs = totalTimeout - elapsed
+    const elapsed =
+      Date.now() - startTime
 
-    if (attempt > 1 && remainingBudgetMs <= 5000) {
-      throw lastError
+    const remainingBudgetMs =
+      totalTimeout - elapsed
+
+    if (
+      attempt > 1 &&
+      remainingBudgetMs <= 5000
+    ) {
+      throw (
+        lastError ??
+        new ProviderError(
+          'Insufficient timeout budget for fallback attempt.',
+          'The prompt analysis request timed out. Please try again.',
+          new Error(
+            'Less than 5000ms remained for the fallback attempt.'
+          ),
+          504,
+          'provider_timeout'
+        )
+      )
     }
 
-    if (attempt === 2 && !fallbackModelId) {
-      throw lastError || new Error('Fallback attempt reached without a configured fallback model.')
+    if (
+      attempt === 2 &&
+      (
+        fallbackProvider === null ||
+        fallbackModelId === null
+      )
+    ) {
+      throw (
+        lastError ??
+        new ProviderError(
+          'Fallback attempt reached without a complete fallback configuration.',
+          'The prompt analysis engine encountered an error. Please try again.',
+          new Error(
+            'Fallback provider or fallback model is missing.'
+          ),
+          500,
+          'provider_configuration_error'
+        )
+      )
     }
-    const selectedModel = attempt === 1 ? primaryModelId : fallbackModelId!
-    const attemptTimeoutMs = attempt === 1 ? primaryTimeoutMs : remainingBudgetMs
 
-    const ownController = new AbortController()
-    const effectiveSignal = ownController.signal
-    let timeoutHandle: ReturnType<typeof setTimeout> | undefined
-    let abortListener: (() => void) | undefined
-    let abortReason: 'provider_timeout' | 'client_cancelled' | 'unknown_abort' | undefined
+    const selectedProvider =
+      attempt === 1
+        ? primaryProvider
+        : fallbackProvider!
 
+    const selectedModel =
+      attempt === 1
+        ? primaryModelId
+        : fallbackModelId!
+
+    const attemptTimeoutMs =
+      attempt === 1
+        ? primaryTimeoutMs
+        : Math.min(
+            remainingBudgetMs,
+            resolvedRuntimeConfig.timeoutMs
+          )
+
+    const ownController =
+      new AbortController()
+
+    const effectiveSignal =
+      ownController.signal
+
+    let timeoutHandle:
+      | ReturnType<typeof setTimeout>
+      | undefined
+
+    let abortListener:
+      | (() => void)
+      | undefined
+
+    let abortReason:
+      | 'provider_timeout'
+      | 'client_cancelled'
+      | 'unknown_abort'
+      | undefined
+
+    /*
+     * Forward cancellation from the incoming HTTP request.
+     */
     if (abortSignal) {
       if (abortSignal.aborted) {
-        abortReason = 'client_cancelled'
-        ownController.abort('client_cancelled')
+        abortReason =
+          'client_cancelled'
+
+        ownController.abort(
+          'client_cancelled'
+        )
       } else {
         abortListener = () => {
           if (!abortReason) {
-            abortReason = 'client_cancelled'
-            ownController.abort('client_cancelled')
+            abortReason =
+              'client_cancelled'
+
+            ownController.abort(
+              'client_cancelled'
+            )
           }
         }
-        abortSignal.addEventListener('abort', abortListener)
+
+        abortSignal.addEventListener(
+          'abort',
+          abortListener
+        )
       }
     }
 
+    /*
+     * Per-attempt provider timeout.
+     */
     if (attemptTimeoutMs > 0) {
       timeoutHandle = setTimeout(() => {
         if (!abortReason) {
-          abortReason = 'provider_timeout'
-          ownController.abort('provider_timeout')
+          abortReason =
+            'provider_timeout'
+
+          ownController.abort(
+            'provider_timeout'
+          )
         }
       }, attemptTimeoutMs)
     }
 
-    const attemptStartTime = Date.now()
+    const attemptStartTime =
+      Date.now()
 
     try {
-      const generator = options.textGenerator || defaultTextGenerator
+      const generator =
+        options.textGenerator ??
+        defaultTextGenerator
 
-      const supportsReasoning = capabilities.supportsReasoning as boolean | undefined
-      const reasoningMode = capabilities.reasoningMode as 'enabled' | 'disabled' | 'provider-default' | undefined
-
-      const providerMetadata: Record<string, unknown> = {}
-      let finalReasoning: boolean | undefined = undefined
-
-      if (attempt === 1) {
-        if (reasoningMode === 'enabled') {
-          finalReasoning = true
-        } else if (reasoningMode === 'disabled') {
-          finalReasoning = false
-        } else if (supportsReasoning !== undefined) {
-          finalReasoning = supportsReasoning
-        } else if (capabilities.reasoning !== undefined) {
-          finalReasoning = capabilities.reasoning as boolean
-        } else {
-          // Prefer disabled unless explicitly enabled
-          finalReasoning = false
-        }
-      } else {
-        // Fallback model defaults to no forced reasoning
-        finalReasoning = false
-      }
-
-      if (finalReasoning !== undefined) {
-        // Provider-neutral reasoning hint — ignored by providers that don't support it
-        providerMetadata.reasoning = finalReasoning
-      }
-
-      const { output, usage, finishReason } = await generator(
+      const {
+        output,
+        usage,
+        finishReason,
+      } = await generator(
         selectedModel,
         systemInstruction,
         userPrompt,
         {
-          temperature: effectiveTemperature,
+          temperature:
+            effectiveTemperature,
+
           maxTokens,
-          abortSignal: effectiveSignal,
-          providerMetadata: Object.keys(providerMetadata).length > 0 ? providerMetadata : undefined
+
+          abortSignal:
+            effectiveSignal,
+
+          provider:
+            selectedProvider,
+
+          thinkingBudget:
+            selectedProvider === 'google'
+              ? resolvedRuntimeConfig
+                  .thinkingBudget
+              : 0,
         }
       )
 
-      const rawUsage = usage as {
-        promptTokens?: number
-        inputTokens?: number
-        completionTokens?: number
-        outputTokens?: number
-        totalTokens?: number
-        reasoningTokens?: number
-        outputTokenDetails?: { reasoningTokens?: number }
-      } | undefined
+      const normalizedUsage =
+        normalizeUsage(
+          usage as RawProviderUsage | undefined
+        )
 
-      const totalOutputTokens = rawUsage?.completionTokens ?? rawUsage?.outputTokens ?? 0
-      const reasoningTokens = rawUsage?.outputTokenDetails?.reasoningTokens ?? rawUsage?.reasoningTokens ?? 0
-      const visibleOutputTokens = Math.max(0, totalOutputTokens - reasoningTokens)
-      const promptTokens = rawUsage?.promptTokens ?? rawUsage?.inputTokens ?? 0
-      const totalTokens = rawUsage?.totalTokens ?? (promptTokens + totalOutputTokens)
+      const durationMs =
+        Date.now() -
+        attemptStartTime
 
-      const durationMs = Date.now() - attemptStartTime
+      console.info(
+        '[AI Reliability Log]',
+        JSON.stringify({
+          requestId:
+            requestId || 'N/A',
 
-      console.info('[AI Reliability Log]', JSON.stringify({
-        requestId: requestId || 'N/A',
-        attempt,
-        selectedModel,
-        provider: dbProfile?.provider || 'google',
-        durationMs,
-        remainingBudgetMs: totalTimeout - (Date.now() - startTime),
-        errorCategory: undefined,
-        upstreamStatus: undefined,
-        finishReason: finishReason || 'stop',
-        promptChars: userPrompt.length + systemInstruction.length,
-        visibleOutputTokens,
-        reasoningTokens,
-        totalOutputTokens
-      }))
+          attempt,
+          selectedModel,
+          provider:
+            selectedProvider,
+
+          durationMs,
+
+          remainingBudgetMs:
+            totalTimeout -
+            (
+              Date.now() -
+              startTime
+            ),
+
+          errorCategory:
+            undefined,
+
+          upstreamStatus:
+            undefined,
+
+          finishReason:
+            finishReason ||
+            'stop',
+
+          promptChars:
+            userPrompt.length +
+            systemInstruction.length,
+
+          visibleOutputTokens:
+            normalizedUsage
+              ?.visibleTokens ??
+            0,
+
+          reasoningTokens:
+            normalizedUsage
+              ?.reasoningTokens ??
+            0,
+
+          totalOutputTokens:
+            normalizedUsage
+              ?.completionTokens ??
+            0,
+        })
+      )
 
       return {
         output,
-        usage: {
-          promptTokens,
-          completionTokens: totalOutputTokens,
-          totalTokens,
-          reasoningTokens,
-          visibleTokens: visibleOutputTokens
-        },
-        finishReason: finishReason || 'stop',
+        usage:
+          normalizedUsage,
+        finishReason:
+          finishReason ||
+          'stop',
         selectedModel,
+        selectedProvider,
         attempt,
-        durationMs
+        durationMs,
       }
     } catch (error) {
-      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle)
-      if (abortSignal && abortListener) {
-        abortSignal.removeEventListener('abort', abortListener)
-      }
+      let normalizedError:
+        ProviderError
 
-      let normalizedError: ProviderError
       if (effectiveSignal.aborted) {
-        const reason = abortReason || 'unknown_abort'
-        if (reason === 'provider_timeout') {
-          normalizedError = new ProviderError(
-            `PROVIDER_TIMEOUT: Request aborted after ${attemptTimeoutMs}ms`,
-            'The prompt analysis request timed out. Please try again.',
-            error,
-            504,
-            'provider_timeout'
+        const reason =
+          abortReason ??
+          'unknown_abort'
+
+        if (
+          reason ===
+          'provider_timeout'
+        ) {
+          normalizedError =
+            new ProviderError(
+              `PROVIDER_TIMEOUT: Request aborted after ${attemptTimeoutMs}ms`,
+              'The prompt analysis request timed out. Please try again.',
+              error,
+              504,
+              'provider_timeout'
+            )
+        } else if (
+          reason ===
+          'client_cancelled'
+        ) {
+          throw new Error(
+            'CLIENT_CLOSED'
           )
-        } else if (reason === 'client_cancelled') {
-          throw new Error('CLIENT_CLOSED')
         } else {
-          normalizedError = new ProviderError(
-            'Request aborted due to an unknown abort.',
-            'The prompt analysis request was interrupted.',
-            error,
-            499,
-            'unknown_abort'
-          )
+          normalizedError =
+            new ProviderError(
+              'Request aborted due to an unknown abort.',
+              'The prompt analysis request was interrupted.',
+              error,
+              499,
+              'unknown_abort'
+            )
         }
       } else {
-        normalizedError = normalizeProviderError(error)
+        normalizedError =
+          normalizeProviderError(error)
       }
 
-      const durationMs = Date.now() - attemptStartTime
-      const elapsedNow = Date.now() - startTime
-      const remainingBudgetNow = totalTimeout - elapsedNow
+      const durationMs =
+        Date.now() -
+        attemptStartTime
 
-      console.info('[AI Reliability Log]', JSON.stringify({
-        requestId: requestId || 'N/A',
-        attempt,
-        selectedModel,
-        provider: dbProfile?.provider || 'google',
-        durationMs,
-        remainingBudgetMs: remainingBudgetNow,
-        errorCategory: normalizedError.errorCode || 'unknown_error',
-        upstreamStatus: normalizedError.statusCode,
-        finishReason: undefined,
-        promptChars: userPrompt.length + systemInstruction.length,
-        visibleOutputTokens: 0,
-        reasoningTokens: 0,
-        totalOutputTokens: 0
-      }))
+      const elapsedNow =
+        Date.now() -
+        startTime
+
+      const remainingBudgetNow =
+        totalTimeout -
+        elapsedNow
+
+      console.info(
+        '[AI Reliability Log]',
+        JSON.stringify({
+          requestId:
+            requestId || 'N/A',
+
+          attempt,
+          selectedModel,
+          provider:
+            selectedProvider,
+
+          durationMs,
+
+          remainingBudgetMs:
+            remainingBudgetNow,
+
+          errorCategory:
+            normalizedError.errorCode ||
+            'unknown_error',
+
+          upstreamStatus:
+            normalizedError.statusCode,
+
+          finishReason:
+            undefined,
+
+          promptChars:
+            userPrompt.length +
+            systemInstruction.length,
+
+          visibleOutputTokens: 0,
+          reasoningTokens: 0,
+          totalOutputTokens: 0,
+        })
+      )
+
+      const normalizedMessage =
+        normalizedError.message
+          .toLowerCase()
 
       const isFallbackSafe =
-        normalizedError.errorCode === 'provider_timeout' ||
-        normalizedError.errorCode === 'upstream_provider_error' ||
-        normalizedError.errorCode === 'function_platform_timeout' ||
-        normalizedError.statusCode === 408 ||
-        normalizedError.errorCode === 'provider_rate_limit' ||
-        normalizedError.statusCode === 429 ||
-        normalizedError.statusCode === 502 ||
-        normalizedError.statusCode === 503 ||
-        normalizedError.statusCode === 504 ||
-        (normalizedError.errorCode === 'provider_unavailable' && (
-          normalizedError.message.toLowerCase().includes('fetch') ||
-          normalizedError.message.toLowerCase().includes('network') ||
-          normalizedError.message.toLowerCase().includes('econnrefused')
-        )) ||
-        normalizedError.errorCode === 'malformed_provider_output'
+        normalizedError.errorCode ===
+          'provider_timeout' ||
 
-      if (attempt === 1 && isFallbackEnabled && isFallbackSafe && remainingBudgetNow > 5000) {
-        attempt++
-        lastError = normalizedError
-        console.warn(`[executeGeminiAnalysis] Attempt 1 failed. Error: ${normalizedError.message}. Initiating fallback to ${fallbackModelId} in ${remainingBudgetNow}ms...`)
+        normalizedError.errorCode ===
+          'upstream_provider_error' ||
+
+        normalizedError.errorCode ===
+          'function_platform_timeout' ||
+
+        normalizedError.errorCode ===
+          'provider_rate_limit' ||
+
+        normalizedError.errorCode ===
+          'malformed_provider_output' ||
+
+        normalizedError.statusCode ===
+          408 ||
+
+        normalizedError.statusCode ===
+          429 ||
+
+        normalizedError.statusCode ===
+          502 ||
+
+        normalizedError.statusCode ===
+          503 ||
+
+        normalizedError.statusCode ===
+          504 ||
+
+        (
+          normalizedError.errorCode ===
+            'provider_unavailable' &&
+          (
+            normalizedMessage.includes(
+              'fetch'
+            ) ||
+            normalizedMessage.includes(
+              'network'
+            ) ||
+            normalizedMessage.includes(
+              'econnrefused'
+            ) ||
+            normalizedMessage.includes(
+              'econnreset'
+            )
+          )
+        )
+
+      if (
+        attempt === 1 &&
+        isFallbackEnabled &&
+        isFallbackSafe &&
+        remainingBudgetNow > 5000
+      ) {
+        attempt += 1
+        lastError =
+          normalizedError
+
+        console.warn(
+          '[executeGeminiAnalysis] ' +
+          `Primary provider failed: ${selectedProvider}/${selectedModel}. ` +
+          `Error: ${normalizedError.message}. ` +
+          `Falling back to ${fallbackProvider}/${fallbackModelId}. ` +
+          `Remaining budget: ${remainingBudgetNow}ms.`
+        )
+
         continue
       }
 
       throw normalizedError
     } finally {
-      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle)
-      if (abortSignal && abortListener) {
-        abortSignal.removeEventListener('abort', abortListener)
+      if (
+        timeoutHandle !== undefined
+      ) {
+        clearTimeout(
+          timeoutHandle
+        )
+      }
+
+      if (
+        abortSignal &&
+        abortListener
+      ) {
+        abortSignal.removeEventListener(
+          'abort',
+          abortListener
+        )
       }
     }
   }
 
-  throw lastError || new Error('Unknown generation failure')
+  throw (
+    lastError ??
+    new ProviderError(
+      'Unknown generation failure.',
+      'The prompt analysis engine encountered an unexpected error.',
+      new Error(
+        'Generation loop completed without a result or explicit error.'
+      ),
+      500,
+      'provider_unavailable'
+    )
+  )
 }

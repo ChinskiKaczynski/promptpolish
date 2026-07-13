@@ -97,6 +97,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
           selectedModel: 'gemini-2.5-flash',
+          selectedProvider: 'google',
           attempt: 1,
           durationMs: 200
         })
@@ -124,6 +125,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
           output: invalidJson,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
           selectedModel: 'gemini-2.5-flash',
+          selectedProvider: 'google',
           attempt: 1,
           durationMs: 200
         })
@@ -131,6 +133,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
           selectedModel: 'gemini-2.5-flash',
+          selectedProvider: 'google',
           attempt: 1,
           durationMs: 200
         })
@@ -185,6 +188,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
           selectedModel: 'gemini-2.5-flash',
+          selectedProvider: 'google',
           attempt: 1,
           durationMs: 200
         })
@@ -261,6 +265,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
         output: outputText,
         usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
         selectedModel: 'gemini-2.5-flash',
+        selectedProvider: 'google',
         attempt: 1,
         durationMs: 200
       })
@@ -282,6 +287,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
         output: JSON.stringify(resultWithNumericStrings),
         usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
         selectedModel: 'gemini-2.5-flash',
+        selectedProvider: 'google',
         attempt: 1,
         durationMs: 200
       })
@@ -303,6 +309,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
           output: JSON.stringify(invalidJson),
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
           selectedModel: 'gemini-2.5-flash',
+          selectedProvider: 'google',
           attempt: 1,
           durationMs: 200
         })
@@ -310,6 +317,7 @@ describe('Structured Output Retry and Size Control Tests', () => {
           output: mockAnalysisResult,
           usage: { promptTokens: 50, completionTokens: 50, totalTokens: 100 },
           selectedModel: 'gemini-2.5-flash',
+          selectedProvider: 'google',
           attempt: 1,
           durationMs: 200
         })

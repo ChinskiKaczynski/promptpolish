@@ -84,43 +84,114 @@ describe('Live Scripts Script-Load Guard Integration Tests', () => {
   let providerExecutorSpy: MockInstance
   let fetchSpy: MockInstance
 
-  beforeEach(() => {
+    beforeEach(() => {
     process.env = { ...originalEnv }
     processExitSpy = vi.fn() as unknown as Mock
-    process.exit = processExitSpy as unknown as (code?: number | string | null) => never
-    providerExecutorSpy = vi.spyOn(geminiClient, 'executeGeminiAnalysis').mockImplementation(async () => {
-      return {
-        output: {
-          analysis_schema_version: '1.0.0',
-          overall_summary: 'mock summary',
-          detected_task_type: 'mock type',
-          criteria_scores: [
-            { criterion: 'goal_clarity', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
-            { criterion: 'context_completeness', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
-            { criterion: 'structure', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
-            { criterion: 'constraints', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
-            { criterion: 'output_format', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
-            { criterion: 'model_profile_fit', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
-            { criterion: 'resistance_to_misinterpretation', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
-            { criterion: 'cost_efficiency', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
-            { criterion: 'safety', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' },
-            { criterion: 'testability', raw_score_0_10: 10, rationale: 'ok', improvement_suggestion: 'ok' }
-          ],
-          top_weaknesses: ['mock weakness'],
-          improvement_plan: ['mock plan'],
-          improved_prompt: 'mocked',
-          change_explanations: ['mock explanation'],
-          model_fit_notes: [],
-          uncertainty_warnings: [],
-          safety_notes: []
-        },
-        finishReason: 'stop',
-        selectedModel: 'mock-model',
-        attempt: 1,
-        durationMs: 1
-      }
-    })
-    fetchSpy = vi.spyOn(globalThis, 'fetch')
+    process.exit =
+      processExitSpy as unknown as (
+        code?: number | string | null
+      ) => never
+
+    providerExecutorSpy = vi
+      .spyOn(
+        geminiClient,
+        'executeGeminiAnalysis'
+      )
+      .mockImplementation(async () => {
+        return {
+          output: {
+            analysis_schema_version: '1.0.0',
+            overall_summary: 'mock summary',
+            detected_task_type: 'mock type',
+            criteria_scores: [
+              {
+                criterion: 'goal_clarity',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              },
+              {
+                criterion: 'context_completeness',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              },
+              {
+                criterion: 'structure',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              },
+              {
+                criterion: 'constraints',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              },
+              {
+                criterion: 'output_format',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              },
+              {
+                criterion: 'model_profile_fit',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              },
+              {
+                criterion:
+                  'resistance_to_misinterpretation',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              },
+              {
+                criterion: 'cost_efficiency',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              },
+              {
+                criterion: 'safety',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              },
+              {
+                criterion: 'testability',
+                raw_score_0_10: 10,
+                rationale: 'ok',
+                improvement_suggestion: 'ok'
+              }
+            ],
+            top_weaknesses: [
+              'mock weakness'
+            ],
+            improvement_plan: [
+              'mock plan'
+            ],
+            improved_prompt: 'mocked',
+            change_explanations: [
+              'mock explanation'
+            ],
+            model_fit_notes: [],
+            uncertainty_warnings: [],
+            safety_notes: []
+          },
+          finishReason: 'stop',
+          selectedModel: 'mock-model',
+          selectedProvider: 'google',
+          attempt: 1,
+          durationMs: 1
+        }
+      })
+
+    fetchSpy = vi.spyOn(
+      globalThis,
+      'fetch'
+    )
   })
 
   afterEach(() => {

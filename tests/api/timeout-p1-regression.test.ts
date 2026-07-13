@@ -248,6 +248,7 @@ describe('P1 Timeout Regression: /api/analyze', () => {
         scores: { overallScore: 72, scoreLevel: 'decent' },
         usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
         selectedModel: 'gemini-2.5-flash',
+        selectedProvider: 'google',
         attempt: 1
       })
 
@@ -325,6 +326,7 @@ describe('P1 Timeout Regression: /api/analyze', () => {
         scores: { overallScore: 72, scoreLevel: 'decent' },
         usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
         selectedModel: 'gemini-2.5-flash',
+        selectedProvider: 'google',
         attempt: 1
       })
 

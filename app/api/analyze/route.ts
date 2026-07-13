@@ -23,7 +23,7 @@ import { recordProviderError } from '@/lib/monitoring/observability'
 import { serverEnv, checkProductionEnv } from '@/lib/env/server'
 import { hashValue, getClientIp, checkIpRateLimit, checkGlobalDailyLimit, checkGlobalDailyCostLimit, verifyTurnstileToken } from '@/lib/rate-limit/hash-ip'
 import { PLAN_LIMITS, getPlanSlugForUser, loadPlanLimitsFromDb } from '@/lib/plans/config'
-import { getOwnerConfiguredModelId } from '@/lib/ai/model-catalog'
+import { getActiveAIRuntimeConfig } from '@/lib/ai/runtime-config'
 export const runtime = "nodejs";
 export const maxDuration = 220
 
@@ -518,23 +518,29 @@ export async function POST(request: Request) {
       working_language: working_language
     }))
 
+    const runtimeConfig =
+        await getActiveAIRuntimeConfig()
+
     const analysisResult = await analyzePrompt(
       {
         inputPrompt: input_prompt,
         workingLanguage: working_language,
-        selectedProfileSlug: selected_profile_slug,
+        selectedProfileSlug:
+          selected_profile_slug,
         auditMode: audit_mode,
-        taskGoal: task_goal || null,
-        taskType: task_type || null,
-        expectedOutputFormat: expected_output_format || null,
-        constraints: constraints || null,
-        dbProfile
+        taskGoal: task_goal,
+        taskType: task_type,
+        expectedOutputFormat:
+          expected_output_format,
+        constraints,
+        dbProfile,
       },
       {
         mockMode: isMockMode,
-        abortSignal: request.signal || undefined,
         timeoutMs,
-        requestId
+        abortSignal: request.signal,
+        requestId,
+        runtimeConfig,
       }
     )
 
@@ -554,8 +560,14 @@ export async function POST(request: Request) {
     analysisResult.analysis.improved_prompt = normalizedImprovedPrompt
 
     // 13. Save prompt_analyses record to database and complete reservation atomically in a transaction
-    const modelIdUsed = analysisResult.selectedModel || (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
-    const providerUsed = dbProfile.provider || 'google'
+    const modelIdUsed =
+      analysisResult.selectedModel
+
+    const providerUsed =
+      analysisResult.selectedProvider
+
+    const primaryModelId =
+      runtimeConfig.modelId
     const analysisSchemaVersion = process.env.ANALYSIS_SCHEMA_VERSION || '1.0.0'
     const scoringVersion = process.env.SCORING_VERSION || '1.0.0'
     const modelProfileVersion = dbProfile.profile_version || '1.0.0'
@@ -654,13 +666,24 @@ export async function POST(request: Request) {
       }
     }
 
-    const primaryModelId = (capabilities.model_id as string | undefined) || getOwnerConfiguredModelId()
-    const modelId = analysisResult.selectedModel || primaryModelId
-    const fallbackUsed = analysisResult.attempt > 1
-    const attemptNumber = analysisResult.attempt
-    const calculatedCost = usageStatus !== 'unavailable'
-      ? calculateUsageCost(providerUsed, modelId, promptTokens, completionTokens)
-      : null
+    const modelId =
+  analysisResult.selectedModel
+
+const fallbackUsed =
+  analysisResult.attempt > 1
+
+const attemptNumber =
+  analysisResult.attempt
+
+const calculatedCost =
+  usageStatus !== 'unavailable'
+    ? calculateUsageCost(
+        analysisResult.selectedProvider,
+        modelId,
+        promptTokens,
+        completionTokens
+      )
+    : null
 
     await createUsageEvent({
       owner_anonymous_id: ownerAnonymousId,

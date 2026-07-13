@@ -123,6 +123,7 @@ describe('Route Handler integration test', () => {
       usage: { promptTokens: 100, completionTokens: 150, totalTokens: 250, reasoningTokens: 0, visibleTokens: 150 },
       finishReason: 'stop',
       selectedModel: 'gemini-2.5-flash',
+      selectedProvider: 'google',
       attempt: 1,
       durationMs: 400
     })
