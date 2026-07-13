@@ -107,12 +107,22 @@ export async function saveAnalysisAndCompleteReservation(params: {
   validateUuid(params.reservation_id, 'reservation_id')
 
   const supabase = getSupabaseAdminClient()
-  const rpcFn = supabase.rpc as unknown as (
-    fnName: string,
-    args: Record<string, unknown>
-  ) => Promise<{ data: unknown; error: { message: string } | null }>
+  const rpcClient = supabase as unknown as {
+    rpc: (
+      fnName: string,
+      args: Record<string, unknown>
+    ) => Promise<{
+      data: unknown
+      error: {
+        message: string
+        code?: string
+        details?: string
+        hint?: string
+      } | null
+    }>
+  }
 
-  const { data, error } = await rpcFn('save_analysis_and_complete_reservation', {
+  const { data, error } = await rpcClient.rpc('save_analysis_and_complete_reservation', {
     p_analysis_id: params.id,
     p_owner_anonymous_id: params.owner_anonymous_id,
     p_user_id: params.user_id,
@@ -145,7 +155,7 @@ export async function saveAnalysisAndCompleteReservation(params: {
     throw new Error(`Database error: ${error.message}`)
   }
 
-  return !!data
+  return data === true
 }
 
 
@@ -1089,12 +1099,22 @@ export async function insertUsageEventWithLimit(params: {
   }
 
   const supabase = getSupabaseAdminClient()
-  const rpcFn = supabase.rpc as unknown as (
-    fnName: string,
-    args: Record<string, unknown>
-  ) => Promise<{ data: unknown; error: { message: string } | null }>
+  const rpcClient = supabase as unknown as {
+    rpc: (
+      fnName: string,
+      args: Record<string, unknown>
+    ) => Promise<{
+      data: unknown
+      error: {
+        message: string
+        code?: string
+        details?: string
+        hint?: string
+      } | null
+    }>
+  }
 
-  const { data, error } = await rpcFn('insert_usage_event_with_limit', {
+  const { data, error } = await rpcClient.rpc('insert_usage_event_with_limit', {
     p_event_id: params.eventId,
     p_owner_anonymous_id: params.ownerAnonymousId,
     p_user_id: params.userId,
@@ -1111,4 +1131,3 @@ export async function insertUsageEventWithLimit(params: {
 
   return !!data
 }
-
